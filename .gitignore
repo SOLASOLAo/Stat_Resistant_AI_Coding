@@ -25,3 +25,6 @@ data/*
 ~$*
 *.tmp
 Thumbs.db
+# CODESYS/ctrlX project containers (binary, never commit)
+*.project
+*.project.bak_*
