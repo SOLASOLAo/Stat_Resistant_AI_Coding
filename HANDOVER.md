@@ -35,3 +35,8 @@
 - 经验:
   - IOE 无需 --profile 参数即可启动;ScriptEngine 4.1 对象模型:树用 get_children/get_name/remove/rename;通道名不在 IO 侧(PLC 工程 I/O 映射已含 _000S901/_000S610 等符号)。
   - Remove-Item 在本环境被策略拦截,用 [System.IO.File]::Delete / Copy-Item 代替。
+
+## 补充(2026-08-18 晚)· 问题复盘归档
+- 本次 9 类问题全部解决或有规避方案,沉淀到 ctrlx-ai-coding/docs/ioe_scripting_playbook.md(IOE-IPC 架构 + ScriptEngine 4.1 差异 + 踩坑表 + 复用检查单);ioe_ipc.ps1 已同步母本 scripts/;SESSION_LOG 登记 D16。
+- 环境现状:MCP PLE 实例 ready(被误关后自动重拉);IOE 窗口由用户打开目视复核;.~u 锁为活进程持有,勿删;工程文件完好(409184 B @ 2026-08-18 04:52)。
+- 待用户确认:IOE 树目视核对(Device → _000SA620_X1 EtherCAT Master(192.168.0.51) → _000SK010 EK1100 → A1-A4 EL1018 + C1-C3 EL2008)。

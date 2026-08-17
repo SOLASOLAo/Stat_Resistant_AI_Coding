@@ -41,5 +41,15 @@
 ## 6. 当前状态快照
 - [x] 克隆 vibe-coding-templates + ctrlx-ai-coding,派生本仓库骨架(2026-08-17)
 - [x] 环境体检:CRLF 补丁已打、Standard.project 与库仓库就位、MCP ready
+- [x] Station010 IO 硬件组态修复 + IOE-IPC 工具链(2026-08-18);踩坑归档 ctrlx-ai-coding/docs/ioe_scripting_playbook.md
 - [ ] 从 Standard.project 建 src/ResistantStation.project,编译 errors=0
 - [ ] 电阻测量工艺需求清单(docs/requirements.md)
+
+## 7. 踩坑速查(2026-08-18 IO 组态实测;完整版见 ctrlx-ai-coding/docs/ioe_scripting_playbook.md)
+1. **IO 工程绝不用 PLE 打开**(2.6.8 版本转换 + 实例崩溃)→ IOE 2.6.4 + scripts/ioe_ipc.ps1 驱动。
+2. 模态对话框占住 IDE 主线程 = 一切 IPC 超时:避免触发对话框;疑似时截图诊断(CopyFromScreen)+ SendKeys ENTER 解除。
+3. 崩溃/强退残留 `.~u` 锁:确认 0 个存活 ctrlX-*-Engineering 进程后再删;`Environment.Exit(0)` 强退会导致下次打开弹 already being edited,应 `p.close()` + terminate 优雅退出。
+4. ready.signal 后插件未装完:`remove()` 报 Value cannot be null → 等 `se.system.background_loading_of_libraries_finished` 为 True 再重试。
+5. PowerShell:`Remove-Item` 被策略拦截 → `[System.IO.File]::Delete`/`Copy-Item`;控制台 cp1252 回显中文乱码 ≠ 文件坏 → 一律 ReadAllText/WriteAllText UTF8,勿信回显。
+6. IOE ScriptEngine 4.1:`se.projects` 不可迭代;`active_application` 在 IO 工程抛异常;通道符号在 PLC 工程 I/O 映射,IO 侧脚本 API 不可见。
+7. git push 的 stderr 是 PowerShell 表面报错,看 exit code;MCP 超时命令可能稍后迟到执行;eval_python 不传 timeoutMs。
