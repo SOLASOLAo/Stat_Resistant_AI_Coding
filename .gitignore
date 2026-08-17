@@ -1,7 +1,7 @@
-# 模板仓库本体(参考用,不入库)
+# æ¨¡æ¿ä»“åº“æœ¬ä½“(å‚è€ƒç”¨,ä¸å…¥åº“)
 vibe-coding-templates/
 
-# CODESYS 工程副产物(编译缓存/用户配置/备份)
+# CODESYS å·¥ç¨‹å‰¯äº§ç‰©(ç¼–è¯‘ç¼“å­˜/ç”¨æˆ·é…ç½®/å¤‡ä»½)
 *.precompilecache
 *.Sync.json
 *.project.~u
@@ -11,16 +11,16 @@ vibe-coding-templates/
 *.Backup.*
 *.compiled-library
 
-# 数据与日志(机器生成;结论写进 docs/)
+# æ•°æ®ä¸Žæ—¥å¿—(æœºå™¨ç”Ÿæˆ;ç»“è®ºå†™è¿› docs/)
 data/*
 !data/.gitkeep
 *.log
 
-# 大文件与原始资料
+# å¤§æ–‡ä»¶ä¸ŽåŽŸå§‹èµ„æ–™
 *.zip
 *.pdf
 
-# 临时文件
+# ä¸´æ—¶æ–‡ä»¶
 ~$*
 *.tmp
 Thumbs.db
