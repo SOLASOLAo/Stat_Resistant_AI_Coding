@@ -11,7 +11,7 @@
 - [ ] 🟢 HMI 界面(OpCon Modulo 或路线②自研)
 - [ ] 🟢 测量数据记录(CSV/数据库)与追溯
 - [ ] 🟢 对接 OpCon DataSetAccess / EventRecorder 接口
-- [ ] 🟢 硬件组态:ctrlX + EtherCAT IO(阶段 2,用户主导)
+- [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 scripts/ioe_ipc.ps1 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
