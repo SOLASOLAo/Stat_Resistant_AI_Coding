@@ -1,0 +1,26 @@
+# 模板仓库本体(参考用,不入库)
+vibe-coding-templates/
+
+# CODESYS 工程副产物(编译缓存/用户配置/备份)
+*.precompilecache
+*.Sync.json
+*.project.~u
+*.~u
+*.opt
+*.Backup
+*.Backup.*
+*.compiled-library
+
+# 数据与日志(机器生成;结论写进 docs/)
+data/*
+!data/.gitkeep
+*.log
+
+# 大文件与原始资料
+*.zip
+*.pdf
+
+# 临时文件
+~$*
+*.tmp
+Thumbs.db
