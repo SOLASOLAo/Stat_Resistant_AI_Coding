@@ -10,7 +10,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 |---|---|---|
 | Station/Module/Command 层级、Handler、HMI、生成符号 | CpStudio | 先在 CpStudio 修改，再生成 |
 | `Engineering_Data.xml`、HMI、公开配置和生成快照 | Git | 用于审计和生成机制分析，不直接代替 CpStudio |
-| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | PLE + MCP | 优先放独立、带项目前缀的 POU 或官方扩展钩子 |
+| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | PLE + MCP | `../Station010_0708` 已获用户授权作为受控集成工作工程；优先放独立、带项目前缀的 POU 或官方扩展钩子 |
 | EtherCAT/IO 工程 | IOE 2.6.4 | PLE 不得打开 IO 工程 |
 | 真机连接、下载、启停、FORCE | 用户批准后执行 | 默认只做离线编译和仿真 |
 
@@ -60,7 +60,7 @@ execfile(r"C:\path\McpCoding\scripts\export_plc_snapshot.py")
 
 - `Plc/Stat010_V5.11_CtrlX_PLC.Struct.json` 中有 350 个 POU/GVL/DUT/Method/Action 类型对象；实际文本快照只收录声明或实现非空的对象。
 - 当前私有仓库已经跟踪 CpStudio 模型、HMI/config、Symbolconfiguration 和两个 `.project`，但此前没有纯文本 ST 镜像。
-- `../Station010_0708` 仍是本项目的只读参考目录。在用户明确批准写入该私有仓库前，快照只输出到本仓库被忽略的 `data/` 目录做验证。
+- `../Station010_0708` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入仍必须先备份、导出文本快照，并且只经 MCP 执行。
 - `.project` 是否作为 Station010 私有备份仓库的受控例外继续纳管，需要单独形成项目决策；不能依赖二进制 diff 理解 PLC 逻辑。
 
 ### 2026-08-18 当前未提交生成批次

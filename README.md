@@ -31,7 +31,7 @@
 ```
 
 ## 相关仓库 / 文档
-- 参考工位:`../Station010_0708`(OpCon V5.11 ctrlX 标准工位,只读)
+- 集成工作工程:`../Station010_0708`(OpCon V5.11 ctrlX；CpStudio 生成 + AI 经 MCP 写 PLC ST)
 - 标准库:`../Std`(OpCon/Nexeed 标准组件,只读)
 - 开发模板:`vibe-coding-templates/`(github.com/SOLASOLAo/vibe-coding-templates)
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)

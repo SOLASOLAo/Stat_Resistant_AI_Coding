@@ -14,7 +14,7 @@
 ## 3. 红线(违反会出事故)
 1. **`.project` 是加密容器**——绝不手改文件字节,只能经 MCP 工具(IDE 脚本引擎)修改;`.project` 二进制不入库。
 2. **真机操作必须先与用户确认**:`connect_to_device` 到实体 PLC、`download_to_device`、`start_stop_application`、`write_variable`(**FORCE 强制,不解除一直生效**);仿真模式(set_simulation_mode)不受限。
-3. `../Station010_0708/` 与 `../Std/` 为只读参考:不修改、不删除、不移动。
+3. `../Station010_0708/` 已由用户批准升级为 **CpStudio + MCP 受控集成工作工程**(2026-08-18):用户经 CpStudio 修改模型/HMI并生成;AI 可在备份 + Git diff/文本快照后经 MCP 修改 PLC ST、经 IOE-IPC 修改 IO 工程。禁止手改 `.project` 字节、禁止无备份覆盖、禁止绕开相应 IDE。`../Std/` 仍为严格只读参考:不修改、不删除、不移动。
 4. **npm 升级 `codesys-mcp-persistent` 会覆盖 CRLF 补丁** → 升级后必重跑 `ctrlx-ai-coding/patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`(先 `-Check`)。
 5. **同一时间只开一个使用 codesys MCP 的 Codex 窗口**(多实例抢 profile 致 IDE 退出)。
 6. CpStudio 重新生成会覆盖 AI 代码:生成前必备份 + diff;AI 自定义代码放独立 POU 并带项目前缀。
@@ -31,7 +31,7 @@
 | 新建工程 | `create_project(templatePath=Standard.project)` → `src/ResistantStation.project` |
 | 编译 | `compile_project`(基准 errors=0;`get_compile_messages` 是缓存,改代码后先编译再取) |
 | 测试 | `set_simulation_mode(true)` → `connect_to_device` → `read_variable`/`write_variable`/`monitor_variables` |
-| 参考工程 | `../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project` |
+| CpStudio/MCP 集成工作工程 | `../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project`(写入遵守红线 1/2/3/6) |
 
 ## 5. 文档与提交约定
 - 事实源:README(是什么)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md

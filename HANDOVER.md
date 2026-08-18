@@ -110,4 +110,11 @@
 - MCP 打开 Station010 PLC 工程；两次快照均返回 215 个文本对象和相同 project SHA-256。PowerShell verifier 通过；文本树 SHA-256=`4e556b44bb2212c91d7c86d260a87b325b7dfeba8fe0f2b9622089a1dab63241`。
 - 离线编译基线：66 errors / 40 warnings。3 errors 是已知 SymbolConfig 陈旧 BinIo 条目；其余 63 errors 是删除 Unit 后遗留在 10 个 ST 对象中的安全门/压缸/扫码枪引用，详见 `docs/cpstudio_generation_analysis.md`。
 - 编译没有改写 project：当前哈希仍为 `24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`，与备份一致。
-- 下一步需要用户作一个所有权决策：① 明确授权 AI 经 MCP 修改原本只读的 `../Station010_0708`；或 ② 把当前干净生成结果复制为 `src/ResistantStation.project`，在新工作工程中清理并迭代。未获决策前不写 PLC。
+- 用户已明确选择方案①：授权 AI 经 MCP 修改 `../Station010_0708`，并将其正式定义为 CpStudio + MCP 受控集成工作工程；`../Std` 继续严格只读。下一步清理 10 个旧 ST 对象，SymbolConfig 的 3 个陈旧条目仍由用户在 PLE Symbols 编辑器删除。
+
+## GitHub 凭据绑定(2026-08-18)
+
+- `gh auth status`：账号 `SOLASOLAo` 已登录 keyring，HTTPS token scope 含 `repo`。
+- 公司环境的默认全局 Git 路径为不可写的 `U:\.gitconfig`，导致 `gh auth setup-git` 初次失败。
+- 已建立/复用 `C:\Users\AGZ1WX\.gitconfig`，设置用户环境变量 `GIT_CONFIG_GLOBAL`，由 `gh auth setup-git` 写入 github.com/gist.github.com 的 gh credential helper；三个相关仓库的本地 `.git/config` 均 include 该文件，当前 VS Code 无需等待环境变量重启即可生效。
+- 三仓库 `git credential fill` 均无弹窗返回 `SOLASOLAo`；私有 `Stat_Resistant_Station010` 经 3128 代理非交互 `ls-remote` 成功。配置中不存明文 token，凭据由 gh keyring 提供。
