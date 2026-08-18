@@ -118,3 +118,11 @@
 - 公司环境的默认全局 Git 路径为不可写的 `U:\.gitconfig`，导致 `gh auth setup-git` 初次失败。
 - 已建立/复用 `C:\Users\AGZ1WX\.gitconfig`，设置用户环境变量 `GIT_CONFIG_GLOBAL`，由 `gh auth setup-git` 写入 github.com/gist.github.com 的 gh credential helper；三个相关仓库的本地 `.git/config` 均 include 该文件，当前 VS Code 无需等待环境变量重启即可生效。
 - 三仓库 `git credential fill` 均无弹窗返回 `SOLASOLAo`；私有 `Stat_Resistant_Station010` 经 3128 代理非交互 `ls-remote` 成功。配置中不存明文 token，凭据由 gh keyring 提供。
+
+## ST 清理进展(2026-08-18 11:55)
+
+- 用户已授权 Station010 为受控集成工作工程；权限规则提交 `5124d62`。
+- persistent MCP 修改 10 个对象：空 Wp100 `OnApplyOutputs` + 9 个已删除设备的旧 Chain actions；清理前后快照对比恰好仅这 10 个对象变化，215 对象 manifest 校验通过。
+- 编译从 66 errors / 40 warnings 降到 **3 errors / 40 warnings**；剩余错误只有 `bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7` 三个 SymbolConfig 陈旧条目。
+- 当前 project SHA-256=`619B8B8FBB748AC141FCC5510CE1227D4EE208B7B02434BCF55F688A8FEE8AE7`；清理前 project 和文本快照均在被忽略的 `data/` 下备份。
+- 下一步：用户在当前 MCP PLE 的 `Device → PLC Logic → Application → Symbols` 中手动删除上述 3 行并保存；然后 AI 立即重新编译，目标 0 errors，再提交/推送 Station010 私有仓库。

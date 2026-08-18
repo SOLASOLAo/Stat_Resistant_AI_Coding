@@ -74,4 +74,14 @@
    - `SqC_Wp100_Run` 的 `_aN050_active`、`_aN055_active`、`_aN060_active`；
    - `SqS_Wp100_Home` 的 `_aN110_active`、`_aN120_active`、`_aN130_active`、`_aN140_active`、`_aN150_active`、`_aN160_active`。
 
-最小清理方案是把空 Wp100 的 `IsInHomePosition` 设为安全的框架默认值，并把上述 9 个旧设备步骤中和为 `_retVal := OK;`。但 `../Station010_0708` 当前仍被 AGENTS 定义为只读参考；在用户明确决定修改参考工程或复制为新工作工程前，不执行这些 ST 写入。
+最小清理方案是把空 Wp100 的 `IsInHomePosition` 设为安全的框架默认值，并把上述 9 个旧设备步骤中和为 `_retVal := OK;`。方案形成时 `../Station010_0708` 仍被定义为只读参考，因此先等待用户作所有权决策；后续授权与执行结果见下节。
+
+### 用户授权后的 ST 清理结果
+
+用户已把 `../Station010_0708` 正式授权为 CpStudio + MCP 受控集成工作工程。AI 经 persistent MCP 完成上述 10 个对象的最小清理：
+
+- `Wp100Unit.OnApplyOutputs`：空 Wp100 的 `IsInHomePosition := TRUE`，保留既有 `IsEmpty` 传感器逻辑；
+- 9 个旧设备步骤：改为带说明的 `_retVal := OK;` pass-through，等待后续逐设备重建 Chains；
+- 清理前后文本 manifest 对比恰好只有这 10 个对象哈希变化；更新后快照仍为 215 个对象并通过校验；
+- project SHA-256 更新为 `619B8B8FBB748AC141FCC5510CE1227D4EE208B7B02434BCF55F688A8FEE8AE7`；
+- 编译由 66 errors / 40 warnings 降到 **3 errors / 40 warnings**。剩余 3 errors 仅为 ScriptEngine 无法访问的 SymbolConfig 陈旧条目，需用户在 PLE Symbols 编辑器手动删除。
