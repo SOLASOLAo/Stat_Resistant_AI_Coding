@@ -374,4 +374,32 @@ ReleaseStartMeas := CommonManRelease AND TRUE;
 
 保留 `CommonManRelease` 很重要：它继续执行 Mode Handler 的全局手动功能互斥，不允许绕过模式层直接运行。AI 前后 231 对象快照新增/删除为 0，唯一变化对象为 OnManRelease；最终编译 **0 errors / 7 warnings**，project SHA-256=`81199BDB36D5E65381190CD9C0973D65D1A2BB9CE36D68831F016618B5D50D9C`，Station010 提交为 `6a2121f`。
 
-由于 HMI 配置是在该 MCP 修改之前由 CpStudio 生成，其条件分析树仍包含旧 Constant FALSE，虽然 `ReleaseSetRange/ReleaseStartMeas` OPC 变量本身已经存在。下一次完整 CpStudio 导出需要验证该分析树是否同步为 TRUE；继续遵守不直接改写 `Engineering_Data.xml` 的边界。
+由于 HMI 配置是在该 MCP 修改之前由 CpStudio 生成，其条件分析树仍包含旧 Constant FALSE，虽然 `ReleaseSetRange/ReleaseStartMeas` OPC 变量本身已经存在。样本 9 的后续完整导出已验证该分析树不会从 PLE 反向同步；继续遵守不直接改写 `Engineering_Data.xml` 的边界。
+
+## 样本 9：安全回路描述、停用参数与 StationData 公开字段
+
+### 本次 CpStudio 模型变化
+
+本次导出中的安全回路有效变化为：
+
+| 变量 | 变化 |
+|---|---|
+| `_000K980_A` | 英文描述 `Safety door A closed` → `Maintenance door A closed` |
+| `_000K981_B` | 英文描述 `Safety door B closed` → `Maintenance door B closed` |
+| `_000K913_Y32` | 英文描述 `Loading door Ok` → `Safety door Ok` |
+| `_000K912_Y32` | 英文描述 `All ready` → `All door ready` |
+| `_000K980D` | 名称、英文和中文描述清空，即停用该参数 |
+
+对应变化已一致传播到 BusConfig、EventRecorder、HMI 语言文件和 PLC `BinIo` 注释。工程文本中不再存在 `_000K980D`、`Safety door D closed` 或 `门锁D`。
+
+同一批模型还从 StationData 公开结构中移除了 `LineNo`、`TestMode`、`NokCounter`，并移除了 `Wp100StationDataStruct.Active`。DataSetAccess、HMI 数据集及 PublicInterface 均已同步删除这些条目；PLC 的 `StationDataStruct`、`StationSdNokCounter` 和 `Wp100StationDataStruct` 暂时仍保留原字段。该差异不会造成编译错误，但说明 CpStudio 模型/HMI 的公开接口收缩并不必然删除已有 PLC 类型成员，因此后续必须先确认这些字段是否永久弃用，再决定是否经 MCP 清理 PLC 兼容残留。
+
+### 快速审计结果
+
+- 导出后 PLC 文本仍为 231 个对象，相对 `station010_after_subchain_burster_manual_release` 无新增、无删除，唯一变化对象为 `Application/Peripherals/BinIo`，且只改了上述注释；
+- Burster `ReleaseSetRange/ReleaseStartMeas := CommonManRelease AND TRUE`、两个通用 FB、按钮 SFC Action/取消复位、主气压周期调用及 Wp100 Home 联锁均未被覆盖；
+- Symbol Configuration 的 `BinIo` 为 62 个已选成员，实际权限全部 `ReadWrite`；`_000K980D` 为 0，四个仍使用成员各为 1；
+- 完整离线编译为 **0 errors / 7 warnings**，没有旧 I/O Mapping 或失效 Symbol 警告，因此本次不需要调用 REST/MCP 修复；
+- project SHA-256=`FCDF252C1D4E6B0D65EA3230B0A133418FF3B8EDF5A1E51827E199A5BD573067`，14 个有效生成文件提交为 Station010 `7c4422e`。
+
+本次完整导出还验证了一个边界：CpStudio 没有从 PLE 回读 Burster OnManRelease 的 `AND TRUE`，HMI 条件分析树仍生成 `<Constant state="False">`。因此该 HMI 元数据不能靠下一次导出自动恢复，必须在 CpStudio 模型中设置对应对象级条件；继续禁止直接修改 `Engineering_Data.xml`。

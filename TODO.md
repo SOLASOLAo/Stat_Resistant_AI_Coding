@@ -37,8 +37,10 @@
 - [x] 🔴 操作按钮 FB：新增可复用 `Application/Fbs/FB_OperatorButton`，以 `Execute` 管理初始化/执行生命周期；接入 `SqS_Wp100_Home` 的 `_000S610/_000P610` 步骤，并在 `OnChainFinish` 强制复位，编译 0 errors / 7 warnings(2026-08-18)
 - [x] 🔴 SubChain 受控增量：CpStudio 新增 `Wp100.SqS_Run : SqS_Wp100_Run`，核对实例、SubChain ID=2、rUnit 引用、状态概览及 5 个新增 PLC 对象，基线编译 0 errors / 7 warnings(2026-08-18)
 - [x] 🔴 Burster 手动放行：`Wp100K103ResistantDetector` 的 `SetRange/StartMeas` 均改为 `CommonManRelease AND TRUE`，AI 前后快照仅改变 `OnManRelease`，编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 CpStudio 参数/描述改动快速闭环：核对 4 条安全回路英文描述、停用 `_000K980D`、StationData 公开字段变化；Symbol Configuration 无旧成员，既有 AI 代码未被覆盖，编译 0 errors / 7 warnings；Station010 `7c4422e`(2026-08-18)
 - [ ] 🔴 定义 `SqS_Wp100_Run` 的首个原子工艺：确定输入参数、启动条件、完成条件和取消清理；在调用方 READY 时写参数并置 Execute，使用 `CheckSubChainDone` 等待；确认是否需要允许多个调用方顺序复用
-- [ ] 🟡 下次 CpStudio 完整导出后，确认 HMI 手动功能分析树将 Burster 的两个 `<Constant state="False">` 同步为 TRUE，并补充 `SqS_Run` 当前为空的中英文显示文本；不直接编辑 `Engineering_Data.xml`
+- [ ] 🟡 在 CpStudio 模型中把 Burster `SetRange/StartMeas` 的对象级手动放行条件设为 TRUE，并补充 `SqS_Run` 当前为空的中英文显示文本；本次完整导出已证明 PLE 内的 MCP 修改不会反向同步 HMI 条件分析树，继续禁止直接编辑 `Engineering_Data.xml`
+- [ ] 🟡 确认本次移除的 StationData 字段（`LineNo`、`TestMode`、`NokCounter`、`Wp100.Active`）是否永久弃用；当前 CpStudio/HMI/PublicInterface 已删除，PLC 结构仍保留兼容字段，待后续受控导出决定是否清理
 - [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成
 - [ ] 🔴 真机专项验证主气压时序：确认 `_000B085A_LOW/HIGH` 电气逻辑、5 s 阈值、故障下电及恢复流程；补充两个事件的中文文本，并决定是否新增独立的“高低压信号同时出现”事件
 - [ ] 🟡 利用 CpStudio 5.11 官方 `Pre-export script` / `Post-export script` 钩子实现导出后自动审计：Git 差异、旧 Symbol 引用、PLC 编译与结果摘要；不直接改写 `Engineering_Data.xml`

@@ -202,4 +202,13 @@
 - 本次 CpStudio 导出完整保留 `FB_MainPressureControl`、`FB_OperatorButton`、`SqS_Wp100_Home` 按钮 Action 和 OnChainFinish 复位。导出基线为 231 个 PLC 对象、**0 errors / 7 warnings**，project SHA-256=`7C17C4B1DB1F1921DA6A0CCA71BCCEEB307591C083AD6230FCC3573FFF0F4818`；生成批次提交 `9d4f9b0`（`feat: add Wp100 run subchain skeleton`）。
 - AI 经 MCP 仅修改 `Wp100K103ResistantDetectorExtension.OnManRelease`：`ReleaseSetRange` 与 `ReleaseStartMeas` 均为 `CommonManRelease AND TRUE`。这会取消对象级默认 FALSE，但保留 Mode Handler 的公共手动互斥/允许条件，不是无条件旁路。
 - AI 后快照仍为 231 个对象，新增/删除均为 0，唯一变化对象为上述 OnManRelease；最终编译 **0 errors / 7 warnings**，project SHA-256=`81199BDB36D5E65381190CD9C0973D65D1A2BB9CE36D68831F016618B5D50D9C`，Station010 提交 `6a2121f`。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
-- 当前 HMI `ReleaseSetRange/ReleaseStartMeas` 变量已在 OPC 列表中，但本次 AI 修改发生在 CpStudio 导出之后，所以生成的 HMI 条件分析树仍记录旧的 Constant FALSE。下次完整导出应验证 CpStudio 是否像此前 BasMove 联锁一样回读并同步为 TRUE；本次不直接改写 `Engineering_Data.xml`。
+- 当前 HMI `ReleaseSetRange/ReleaseStartMeas` 变量已在 OPC 列表中，但生成的 HMI 条件分析树仍记录旧的 Constant FALSE。后续完整导出已证明 CpStudio 不会从 PLE 回读这项 MCP 修改；要同步 HMI 分析树，必须在 CpStudio 模型中配置对象级 TRUE 条件，仍不得直接改写 `Engineering_Data.xml`。
+
+## CpStudio 安全回路描述 + StationData 参数批次(2026-08-18)
+
+- 用户在 CpStudio 中更新安全回路参数/描述并完整导出：`_000K980_A/_000K981_B` 的英文描述改为 Maintenance door A/B closed，`_000K913_Y32` 改为 Safety door Ok，`_000K912_Y32` 改为 All door ready；原 `_000K980D` 名称及描述被清空。BusConfig、事件、HMI 语言和 PLC `BinIo` 注释保持同一语义。
+- CpStudio 模型同时从 StationData 公开结构移除 `LineNo`、`TestMode`、`NokCounter` 与 `Wp100.Active`，HMI DataSetAccess 和 PublicInterface 已同步删除。PLC 文本结构暂仍保留这些兼容字段；本次 231 对象快照相对上一版本唯一变化对象为 `Application/Peripherals/BinIo`，因此没有擅自删除 PLC 数据结构。
+- Symbol Configuration 低层复核：63 个已配置数据类型，`BinIo` 仍为 62 个成员且全部 `ReadWrite`；`_000K980D` 为 0，四个仍使用的安全回路成员各为 1。没有复现旧 I/O Mapping + 旧公开符号的双层残留，不需要 REST/MCP 修复。
+- `FB_MainPressureControl`、`FB_OperatorButton`、按钮 Action/OnChainFinish、Wp100 Home 联锁及 Burster `CommonManRelease AND TRUE` 全部保持。完整离线编译为 **0 errors / 7 warnings**；project SHA-256=`FCDF252C1D4E6B0D65EA3230B0A133418FF3B8EDF5A1E51827E199A5BD573067`。
+- 本次完整导出后，HMI 中 Burster `SetRange/StartMeas` 的条件分析树仍是 Constant FALSE，确认 CpStudio 不会反向读取 PLE 的 ST 修改；后续必须在 CpStudio 模型中设置，而不是直接编辑生成 XML。
+- 14 个有效生成文件已提交为 Station010 `7c4422e`（`feat: update safety IO and station data parameters`）；两个仅时间戳变化的 `.Sync.json` 未提交。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
