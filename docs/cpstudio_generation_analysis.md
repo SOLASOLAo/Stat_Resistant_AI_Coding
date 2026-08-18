@@ -36,7 +36,7 @@
 - PLC `.project`：1,738,192 B → 1,597,120 B；Git 只能确认二进制发生变化，无法判断具体 POU/ST 差异。
 - `Stat010_V5.11_CtrlX_PLC.Sync.json` 的 `LastChange` 更新，`MachineName` 保持 `SZHM-C-002YK`。
 - PublicInterface 的导出时间更新为 `2026-08-18T03:15:51`。
-- 需要在用户关闭当前 PLE 后，用 `scripts/export_plc_snapshot.py` 导出文本快照，才能补齐 PLC POU 层的精确变化。
+- 需要在用户关闭当前 PLE 后，用 `scripts/plc/export_plc_snapshot.py` 导出文本快照，才能补齐 PLC POU 层的精确变化。
 
 ### 用户确认与实验定位
 

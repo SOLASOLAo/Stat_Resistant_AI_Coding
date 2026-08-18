@@ -1,0 +1,152 @@
+schema_version: 1
+
+source_of_truth:
+  model: ../Station010_0708/Engineering/Engineering_Data.xml
+  bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
+  plc_mapping: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project
+
+signals:
+  - bmk: _000S901
+    direction: input
+    purpose: Control On push button
+    module: _000SK010A1
+    channel: 1
+    verification: verified
+  - bmk: _000S902
+    direction: input
+    purpose: Control Off push button
+    module: _000SK010A1
+    channel: 2
+    verification: verified
+  - bmk: _000B085A_LOW
+    direction: input
+    purpose: Main pressure below lower threshold
+    module: _000SK010A1
+    channel: 6
+    verification: verified
+  - bmk: _000B085A_HIGH
+    direction: input
+    purpose: Main pressure above upper threshold
+    module: _000SK010A1
+    channel: 7
+    verification: verified
+  - bmk: _000S610
+    direction: input
+    purpose: Operator acknowledgement button
+    module: _000SK010A1
+    channel: 8
+    verification: verified
+  - bmk: _000S900A
+    direction: input
+    purpose: Emergency stop channel A
+    module: _000SK010A2
+    channel: 1
+    verification: verified
+  - bmk: _000S900B
+    direction: input
+    purpose: Emergency stop channel B
+    module: _000SK010A2
+    channel: 2
+    verification: verified
+  - bmk: _100B101B
+    direction: input
+    purpose: Safety door base/open position
+    module: _000SK010A3
+    channel: 6
+    verification: verified
+  - bmk: _100B101A
+    direction: input
+    purpose: Safety door work/closed position
+    module: _000SK010A3
+    channel: 7
+    verification: verified
+  - bmk: _100B102B
+    direction: input
+    purpose: Press cylinder base/raised position
+    module: _000SK010A4
+    channel: 6
+    verification: verified
+  - bmk: _100B102A
+    direction: input
+    purpose: Press cylinder work/lowered position
+    module: _000SK010A4
+    channel: 7
+    verification: verified
+  - bmk: _000P960_1
+    direction: output
+    purpose: Station lamp yellow
+    module: _000SK010C2
+    channel: 1
+    verification: verified
+  - bmk: _000P960_2
+    direction: output
+    purpose: Station lamp green
+    module: _000SK010C2
+    channel: 2
+    verification: verified
+  - bmk: _000P960_3
+    direction: output
+    purpose: Station lamp red
+    module: _000SK010C2
+    channel: 3
+    verification: verified
+  - bmk: _100K102B
+    direction: output
+    purpose: Press cylinder to base/raised position
+    module: _000SK010C2
+    channel: 4
+    verification: verified
+  - bmk: _100K102A
+    direction: output
+    purpose: Press cylinder to work/lowered position
+    module: _000SK010C2
+    channel: 5
+    verification: verified
+  - bmk: _100K101B
+    direction: output
+    purpose: Safety door to base/open position
+    module: _000SK010C2
+    channel: 6
+    verification: verified
+  - bmk: _100K101A
+    direction: output
+    purpose: Safety door to work/closed position
+    module: _000SK010C2
+    channel: 7
+    verification: verified
+  - bmk: _000P610
+    direction: output
+    purpose: Operator acknowledgement lamp
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record
+  - bmk: _000K085A
+    direction: output
+    purpose: Main pressure valve
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record
+  - bmk: _000K980
+    direction: output
+    purpose: Maintenance door A lock
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record
+  - bmk: _000K981
+    direction: output
+    purpose: Maintenance door B lock
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record
+  - bmk: _000K980_A
+    direction: input
+    purpose: Maintenance door A closed feedback
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record
+  - bmk: _000K981_B
+    direction: input
+    purpose: Maintenance door B closed feedback
+    module: null
+    channel: null
+    verification: pending_physical_mapping_record

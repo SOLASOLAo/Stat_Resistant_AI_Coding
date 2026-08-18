@@ -1,0 +1,23 @@
+schema_version: 1
+
+objects:
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
+    api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
+    language: SFC
+    write_strategy:
+      - GET complete object
+      - verify implementation hash
+      - replace only declared attributes
+      - PUT complete object
+      - GET and compare normalized readback
+    step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
+    step_comments:
+      N000: Initialize home
+      N010: Wait start button
+      N110: Close safety door
+      N120: Wait door closed
+      N130: Raise press cylinder
+      N140: Wait press raised
+      N150: Open safety door
+      N160: Wait door open
+      N999: Finish home

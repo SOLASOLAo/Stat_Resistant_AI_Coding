@@ -1,0 +1,20 @@
+schema_version: 1
+kind: peripheral
+name: NexeedIpBurster2316
+version: V1.0
+vendor_source: ../Std/Peripherals/NexeedIpBurster2316/V1.0
+manual: null
+
+transport:
+  protocol: TCP client
+  remote_role: Burster 2316 server
+
+station010_binding:
+  instance: _Wp100K103ResistantInterface
+  host_name: Station.StationData.BursterSetting.HostName
+  use_auto_range: true
+  generic_port_field_consumed: false
+
+verified_in:
+  project: Station010
+  date: 2026-08-18

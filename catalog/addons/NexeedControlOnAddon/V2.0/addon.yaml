@@ -1,0 +1,18 @@
+schema_version: 1
+kind: addon
+name: NexeedControlOnAddon
+version: V2.0
+vendor_source: ../Std/Objects/NexeedControlOnAddon/V2.0
+manual: ../Std/Objects/NexeedControlOnAddon/V2.0/Documentation/NexeedControlOnAddon_TechnicalManual_EN.chm
+
+application_interfaces:
+  control_on_feedback: OutImm.IsCtrlOn
+  application_release: ParImm.UserEnableControlOn
+
+verified_rules:
+  - application faults may revoke Control On through ParImm.UserEnableControlOn
+  - application code must not directly take ownership of the standard Control On output
+
+verified_in:
+  project: Station010
+  date: 2026-08-18

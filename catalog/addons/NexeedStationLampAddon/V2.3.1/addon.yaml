@@ -1,0 +1,24 @@
+schema_version: 1
+kind: addon
+name: NexeedStationLampAddon
+model_version: V2.3.1.0
+vendor_directory_version: V2.3
+vendor_source: ../Std/Objects/NexeedStationLampAddon/V2.3
+manual: ../Std/Objects/NexeedStationLampAddon/V2.3/Documentation/NexeedStationLampAddon_TechnicalManual_EN.chm
+
+hardware_type: MULTIPLE_LEDS
+outputs:
+  yellow: _000P960_1
+  green: _000P960_2
+  red: _000P960_3
+
+standard_inputs:
+  - mode_id
+  - is_stepping
+  - control_on
+  - emergency_stop
+
+verified_in:
+  project: Station010
+  instance_id: 7
+  date: 2026-08-18

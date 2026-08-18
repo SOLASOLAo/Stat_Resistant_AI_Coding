@@ -4,14 +4,14 @@
 
 ## 当前阶段:阶段 0 项目初始化
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
-- [ ] 🔴 create_project(templatePath=Standard.project) 建 src/ResistantStation.project,compile_project errors=0(验收标准:结构化错误为 0,警告基线记录在案)
+- [x] 🔴 使用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 7 warnings(2026-08-18)
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
 - [ ] 🟢 HMI 界面(OpCon Modulo 或路线②自研)
 - [ ] 🟢 测量数据记录(CSV/数据库)与追溯
 - [ ] 🟢 对接 OpCon DataSetAccess / EventRecorder 接口
-- [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 scripts/ioe_ipc.ps1 驱动 IOE 完成;通道符号在 PLC 侧已存在)
+- [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
@@ -20,7 +20,10 @@
 - [x] 🔴 清理 3 个非 ST 残留并编译到 0 errors：最终定位为 A1 的旧 I/O 映射，离线重映射后为 0 errors / 7 warnings(2026-08-18)
 - [ ] 🟡 用户决定:是否在 CpStudio 删除 Wp100A740* 站(Engineering_Data.xml 残留,不删则重新生成会带回)
 - [ ] 🟡 CpStudio 重新生成后 git diff 分析 → docs/cpstudio_generation_analysis.md
-- [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/export_plc_snapshot.py`,`scripts/verify_plc_snapshot.ps1`)
+- [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/plc/export_plc_snapshot.py`,`scripts/plc/verify_plc_snapshot.ps1`)
+- [x] 🔴 建立可跨项目复制的目录标准：`config/specs/ai/src/catalog/scripts/tests/data/docs`，录入 Station010 当前规格、AI 归属、通用 FB 源码和已验证 Unit Catalog；加入结构冒烟测试与自定义 Post-export 信号脚本(2026-08-18)
+- [ ] 🟡 在 CpStudio 工程中配置官方 Post-export hook 指向 `scripts/cpstudio/post_export_signal.bat`，完成一次真实导出信号验证
+- [ ] 🟡 实现 export request 消费器：diff → 快照 → ownership/hooks/graphical 审计 → I/O/Symbol 审计 → 编译 → 报告；保持唯一 persistent MCP 会话
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010_0708` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
 - [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)

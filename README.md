@@ -9,25 +9,32 @@
 - HMI(OpCon Modulo,后期)
 
 ## 快速上手
-本项目经 CODESYS MCP 开发,无需手工打开 IDE:
+
+本仓库是 `../Station010_0708` 的 AI 工程旁车；CpStudio 负责标准模型，AI 经
+PLC Engineering MCP/REST 维护应用逻辑：
+
 ```text
-1. 确认 codesys MCP(persistent 模式)状态 ready
-2. create_project → src/ResistantStation.project
-3. compile_project 验证编译
-4. set_simulation_mode(true) + connect_to_device 做仿真测试
+1. 阅读 AGENTS.md、HANDOVER.md、TODO.md
+2. 运行 tests/static/Test-ProjectFramework.ps1
+3. 从 config/project.yaml 定位集成工程和工具版本
+4. 模型改动走 CpStudio；应用逻辑走 specs → MCP/REST → readback
+5. 完整离线编译，以 0 errors 和已记录 warning 基线验收
 ```
 
 ## 仓库结构
 ```
+├── config/        工程路径、版本和质量门禁
+├── specs/         Station/IO/Event/Unit/Chain 需求事实源
+├── ai/            AI 对象归属、混合钩子和 SFC 图形属性
+├── src/plc/       AI-owned 通用与项目专用 PLC 源码
+├── catalog/       已验证 Unit/AddOn/Peripheral 知识库
+├── scripts/       CpStudio/PLC/IOE/Git 自动化
+├── tests/         静态、编译与仿真测试
+├── data/          请求、快照、报告和本地备份(不入 Git)
+├── docs/          技术文档与生成机制分析
 ├── AGENTS.md      AI Agent 工作指南(先读)
 ├── HANDOVER.md    会话交接状态
-├── TODO.md        任务清单
-├── docs/          技术文档(需求/架构/结论)
-├── src/           源码(CODESYS 工程将建在此)
-├── tests/         测试
-├── data/          原始数据(机器生成,大文件入 .gitignore)
-├── examples/      示例
-└── tools/         辅助脚本
+└── TODO.md        任务清单
 ```
 
 ## 相关仓库 / 文档
@@ -37,6 +44,7 @@
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)
 - CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
+- 跨项目目录标准:`docs/project_structure_standard.md`
 
 ## 版权说明
 - OpCon / Nexeed / ctrlX 为 Bosch 商标,相关参考代码与组件仅限本工程内部使用

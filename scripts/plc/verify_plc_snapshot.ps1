@@ -82,4 +82,3 @@ if ($failures.Count -gt 0) {
 }
 
 Write-Output ("Snapshot OK: {0} objects; project={1}" -f $manifest.objectCount, $manifest.sourceProject)
-

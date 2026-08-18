@@ -1,8 +1,8 @@
-# æ¨¡æ¿ä»“åº“æœ¬ä½“(å‚è€ƒç”¨,ä¸å…¥åº“)
+# 方法论/模板仓库本体（旁级参考，不嵌套入库）
 vibe-coding-templates/
 ctrlx-ai-coding/
 
-# CODESYS å·¥ç¨‹å‰¯äº§ç‰©(ç¼–è¯‘ç¼“å­˜/ç”¨æˆ·é…ç½®/å¤‡ä»½)
+# CODESYS/ctrlX 编译缓存、用户配置和本地备份
 *.precompilecache
 *.Sync.json
 *.project.~u
@@ -11,20 +11,27 @@ ctrlx-ai-coding/
 *.Backup
 *.Backup.*
 *.compiled-library
+*.projectarchive
 
-# æ•°æ®ä¸Žæ—¥å¿—(æœºå™¨ç”Ÿæˆ;ç»“è®ºå†™è¿› docs/)
+# 加密工程容器由受控集成仓库/IDE 管理，不进入 AI 工程仓库
+*.project
+*.project.bak_*
+
+# 运行数据、请求、快照、报告和日志
 data/*
 !data/.gitkeep
 *.log
 
-# å¤§æ–‡ä»¶ä¸ŽåŽŸå§‹èµ„æ–™
+# Python/测试缓存
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 大文件和原始资料
 *.zip
 *.pdf
 
-# ä¸´æ—¶æ–‡ä»¶
+# 临时文件
 ~$*
 *.tmp
 Thumbs.db
-# CODESYS/ctrlX project containers (binary, never commit)
-*.project
-*.project.bak_*

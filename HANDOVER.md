@@ -22,12 +22,12 @@
 
 ## 下次会话建议第一步
 1. 解析 ../电阻测试台.pdf,整理工艺需求清单到 docs/requirements.md 并请用户确认。
-2. create_project(templatePath=Standard.project) 建 src/ResistantStation.project,编译 errors=0。
+2. 该早期 `src/ResistantStation.project` 建议已废止；当前统一使用旁级 `Station010_0708` 受控集成工程。
 ## 最近会话(2026-08-18)
 - 做了什么:
   1. 解析 ../电阻测试台.pdf:39 页渲染到 data/pdf_pages/;页 4 = EtherCAT 目标树;页 19-25 = K010A1-A4(EL1018)/K010C1-C3(EL2008)通道信号表;页 28 = 电阻测量 -A740(Burster 5877A,USB 接入,不在 EtherCAT 上)。
   2. 发现 PLE(2.6.8)打开 IO 工程会触发版本转换且 PLE 实例崩溃;IO 工程必须用 IOE(2.6.4)编辑。
-  3. 新工具 scripts/ioe_ipc.ps1:复用 MCP 的 watcher 机制(--runscript + 文件 IPC),直接驱动一个独立的 ctrlX IO Engineering 2.6.4 实例(%TEMP%\ioe-ipc 会话目录)。已验证:open/树遍历/remove/save 全通。
+  3. 新工具 `scripts/ioe/ioe_ipc.ps1`:复用 MCP 的 watcher 机制(--runscript + 文件 IPC),直接驱动一个独立的 ctrlX IO Engineering 2.6.4 实例(%TEMP%\ioe-ipc 会话目录)。已验证:open/树遍历/remove/save 全通。
   4. 硬件组态核对:Device→_000SA620_X1(EtherCAT Master,IP 192.168.0.51)→_000SK010(EK1100)→A1-A4=EL1018、C1-C3=EL2008,与图纸页 4 一致;类型 ID 校验通过(EK1100=2_044C2C52…,EL1018=2_03FA3052…,EL2008=2_07D83052…)。
   5. 坏节点 _100A740_BL(5877A,描述符缺失红?)在副本 IO_copy.project 上已 remove 并 save 验证;真工程备份 Stat010_V5.11_CtrlX_IO.project.bak_20260818 已建。
 - 已完成:真工程 remove _100A740_BL + save(2026-08-18 04:52,409184 B);备份 .bak_20260818。回验实例因强退后重启弹已被编辑对话框,保守起见直接杀掉,未再写文件;最终由用户自行开 IOE 目验。
@@ -77,8 +77,8 @@
 
 ### 已完成
 1. 建立 `docs/cpstudio_git_mcp_workflow.md`：CpStudio 管模型/HMI/符号，Git 管生成差异，AI+MCP 管底层 ST 与编译闭环。
-2. 新增只读确定性导出器 `scripts/export_plc_snapshot.py`：只遍历 primary PLC 的 Application，跳过 Library Manager/Task Configuration/Symbols；一个代码对象一个稳定 `.st`，manifest 无时间戳并含 SHA-256；不 open/save/compile/online。
-3. 新增 `scripts/verify_plc_snapshot.ps1`；已通过成功样本和篡改检测自测。内置 `get_all_pou_code` 在 Station010 上因从根遍历设备树超过 120s，不适合作为该工程的批量导出实现。
+2. 新增只读确定性导出器 `scripts/plc/export_plc_snapshot.py`：只遍历 primary PLC 的 Application，跳过 Library Manager/Task Configuration/Symbols；一个代码对象一个稳定 `.st`，manifest 无时间戳并含 SHA-256；不 open/save/compile/online。
+3. 新增 `scripts/plc/verify_plc_snapshot.ps1`；已通过成功样本和篡改检测自测。内置 `get_all_pou_code` 在 Station010 上因从根遍历设备树超过 120s，不适合作为该工程的批量导出实现。
 4. 新增 `docs/cpstudio_generation_analysis.md`，记录 `b9b1161` 后当前未提交生成批次。
 
 ### 新发现：Station010 当前有外部生成改动，勿覆盖
@@ -238,3 +238,13 @@
 - `SqS_Wp100_Home` 的 9 个 Step Comment 改为短动作说明：N000 `Initialize home`、N010 `Wait start button`、N110 `Close safety door`、N120 `Wait door closed`、N130 `Raise press cylinder`、N140 `Wait press raised`、N150 `Open safety door`、N160 `Wait door open`、N999 `Finish home`。
 - Step Comment 经 PLC Engineering 官方本地 REST 扩展接口 GET/PUT 写回 `SqS_Wp100_Home` 的 SFC XML 属性；没有手改 `.project` 字节，也没有逐项 UI 自动化。回读及标准化前后比较确认只替换 9 个 Comment，Action、Transition、Jump、动作顺序和声明均未改变。
 - 完整离线编译保持 **0 errors / 7 warnings**，最终 project SHA-256=`C2F2DAEE9661E289B303C8E529AE64AC079EF4E0B22C5D62075A7A4DF384B11F`。StationLamp 生成批次与 Home 注释已提交并推送为 Station010 `6399377`（`feat: add station lamp and label home sequence`）；仅 `.Sync.json` 和 HMI Logbook 日期滚动噪声保留在工作树、未提交。未连接、下载、启停或写入实体 PLC。
+
+## 跨项目标准目录 + AI 增量层骨架(2026-08-18)
+
+- `McpCoding` 已按 `config/specs/ai/src/catalog/scripts/tests/data/docs` 标准重组；`../Station010_0708` 供应商生成布局和 `../Std` 只读目录均未移动、未修改。标准全文见 `docs/project_structure_standard.md`，后续项目复制同一旁车骨架后只需修改 `config/project.yaml`。
+- 当前 Station010 已落入结构化事实源：Station/AddOn、IO、Events、Wp100 Units、Home/Run Chains；未核实的物理映射明确标记为 pending，不伪装成已验证数据。
+- `ai/ownership.yaml` 区分完整 AI-owned、implementation、mixed semantic merge 与 SFC graphical attributes；`ai/hooks.yaml` 记录主气压、维修门、Wp100 Home 和 Burster 手动放行的必要接线；`ai/graphical.yaml` 记录 Home 的 9 个 Step Comment 和正式 REST 写入属性。
+- `src/plc/common` 保存 `FB_OperatorButton`、`FB_MainPressureControl`、`FB_MaintenanceDoorControl` 三个当前已编译 POU 的可读规范源；任何同步仍必须通过 MCP 并执行 readback + compile，绝不直接写 `.project`。
+- Catalog 首批登记 BasMove Standard V2.1、Burster 2316 V1.0、ControlOn V2.0、EmergencySwitch V2.0、StationLamp V2.3.1 和 IpBurster2316 V1.0；仅保存接口事实与本地手册路径，不复制闭源手册或供应商代码。
+- 现有工具分类到 `scripts/plc` 与 `scripts/ioe`；新增 `scripts/cpstudio/post_export_signal.bat` + `write_export_request.ps1`。CpStudio 的 Post-export hook 是官方能力，该自定义脚本只原子发布 `data/requests/export_request.json`，不启动第二个 PLE/MCP。真实 CpStudio hook 配置和 request 消费器仍列为下一步。
+- 新增 `tests/static/Test-ProjectFramework.ps1`，检查标准文件、兄弟目录、POU 分段标记和 Post-export 脚本不含 PLE/MCP/在线启动入口。本批只改 AI 工程仓库文件，没有连接、下载、启停或写入实体 PLC，也没有修改 Station010 PLC 工程。

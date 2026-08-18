@@ -1,0 +1,27 @@
+schema_version: 1
+kind: unit
+name: NexeedBursterResis2316
+version: V1.0
+vendor_source: ../Std/Objects/NexeedBursterResis2316/V1.0
+manual: ../Std/Objects/NexeedBursterResis2316/V1.0/Documentation/NexeedBursterResis2316_TechnicalManual_EN.chm
+
+commands:
+  - SET_RANGE
+  - SINGLE_MEAS
+
+single_measure:
+  inputs:
+    - lower_limit
+    - upper_limit
+    - read_temperature
+  outputs:
+    - below_limit
+    - above_limit
+    - measurement_ok
+    - resistance
+    - temperature
+
+peripheral_interface: NexeedIpBurster2316
+verified_in:
+  project: Station010
+  date: 2026-08-18

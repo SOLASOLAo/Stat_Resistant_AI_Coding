@@ -1,0 +1,52 @@
+schema_version: 1
+
+chain:
+  name: SqS_Wp100_Home
+  kind: subchain
+  caller: SqC_Wp100_Home
+  unit_reference: Wp100Unit
+
+steps:
+  - id: N000
+    comment: Initialize home
+    purpose: initialize per-execution flags
+  - id: N010
+    comment: Wait start button
+    action: FB_OperatorButton
+    input: _000S610
+    lamp: _000P610
+    blink: Station.FlashBits.Pulse500ms
+  - id: N110
+    comment: Close safety door
+    when: >-
+      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos AND
+      NOT Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
+    command: Wp100K101SafetyDoor.WRKPOS
+  - id: N120
+    comment: Wait door closed
+    wait_for: Wp100K101SafetyDoor command started by N110
+  - id: N130
+    comment: Raise press cylinder
+    when: NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+    command: Wp100K102PressingCylinder.BASPOS
+  - id: N140
+    comment: Wait press raised
+    wait_for: Wp100K102PressingCylinder command started by N130
+  - id: N150
+    comment: Open safety door
+    when: NOT Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos
+    command: Wp100K101SafetyDoor.BASPOS
+  - id: N160
+    comment: Wait door open
+    wait_for: Wp100K101SafetyDoor command started by N150
+  - id: N999
+    comment: Finish home
+    result: DONE
+
+cleanup:
+  on: [DONE, ERROR, CANCEL]
+  reset:
+    - operator button Execute and _000P610
+    - safety door Unit Execute
+    - pressing cylinder Unit Execute
+    - per-execution started flags

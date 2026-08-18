@@ -1,0 +1,19 @@
+* text=auto
+
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+*.ps1 text eol=lf
+*.st text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.project binary
+*.compiled-library binary
+*.chm binary
+*.pdf binary
+*.zip binary

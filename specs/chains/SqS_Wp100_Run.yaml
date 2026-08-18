@@ -1,0 +1,25 @@
+schema_version: 1
+
+chain:
+  name: SqS_Wp100_Run
+  kind: subchain
+  instance: Wp100.SqS_Run
+  subchain_id: 2
+  unit_reference: Wp100Unit
+  status: skeleton
+
+steps:
+  - id: N000
+    purpose: initialize
+  - id: N100
+    purpose: reserved atomic process step
+    current_behavior: return OK without process action
+  - id: N999
+    purpose: finish
+
+open_requirements:
+  - input parameters
+  - start conditions
+  - completion conditions
+  - cancel cleanup
+  - caller arbitration when reused

@@ -1,0 +1,47 @@
+schema_version: 1
+
+handler:
+  name: Wp100
+  type: command_handler
+
+units:
+  - instance: Wp100K101SafetyDoor
+    type: NexeedBasMoveStandard
+    version: V2.1
+    base_position:
+      sensor: _100B101B
+      output: _100K101B
+      meaning: safety door open
+    work_position:
+      sensor: _100B101A
+      output: _100K101A
+      meaning: safety door closed
+    manual_release: CommonManRelease AND TRUE
+  - instance: Wp100K102PressingCylinder
+    type: NexeedBasMoveStandard
+    version: V2.1
+    base_position:
+      sensor: _100B102B
+      output: _100K102B
+      meaning: pressing cylinder raised
+    work_position:
+      sensor: _100B102A
+      output: _100K102A
+      meaning: pressing cylinder lowered
+    manual_release: >-
+      CommonManRelease AND
+      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
+  - instance: Wp100K103ResistantDetector
+    type: NexeedBursterResis2316
+    version: V1.0
+    peripheral: _Wp100K103ResistantInterface
+    station_data_host_name: Station.StationData.BursterSetting.HostName
+    commands:
+      - SET_RANGE
+      - SINGLE_MEAS
+    manual_release: CommonManRelease AND TRUE
+
+handler_home_condition:
+  all:
+    - Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos
+    - Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos

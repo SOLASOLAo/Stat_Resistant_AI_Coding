@@ -1,0 +1,16 @@
+schema_version: 1
+kind: addon
+name: NexeedEmergencySwitchAddon
+version: V2.0
+vendor_source: ../Std/Objects/NexeedEmergencySwitchAddon/V2.0
+manual: null
+
+station010_binding:
+  emergency_stop_inputs: [_000S900A, _000S900B]
+  control_off_input: _000S902
+  control_off_suppression_time_ms: 300
+  second_input_depends_on_previous: false
+
+verified_in:
+  project: Station010
+  date: 2026-08-18

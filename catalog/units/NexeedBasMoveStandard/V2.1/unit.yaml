@@ -1,0 +1,23 @@
+schema_version: 1
+kind: unit
+name: NexeedBasMoveStandard
+version: V2.1
+vendor_source: ../Std/Objects/NexeedBasMoveStandard/V2.1
+manual: ../Std/Objects/NexeedBasMoveStandard/V2.1/Documentation/NexeedBasMoveStandard_TechnicalManual_EN.chm
+
+commands:
+  - BASPOS
+  - WRKPOS
+
+feedback:
+  base_position: Unit.OutImm.IsInBasPos
+  work_position: Unit.OutImm.IsInWrkPos
+
+integration_protocol:
+  start: Unit READY plus Chain StepPulse
+  wait: CheckUnitDone with RepeatOnError as required by the process
+  cleanup: set active command Execute to FALSE in OnChainFinish
+
+verified_in:
+  project: Station010
+  date: 2026-08-18

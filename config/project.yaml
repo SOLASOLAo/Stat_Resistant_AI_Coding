@@ -1,0 +1,32 @@
+schema_version: 1
+
+project:
+  id: bpp-resistant-station
+  display_name: BPP Resistant Station
+  station_id: Station010
+  platform: Bosch OpCon V5.11 / ctrlX
+
+paths:
+  station_root: ../Station010_0708
+  standard_library_root: ../Std
+  cpstudio_project: ../Station010_0708/Engineering/Stat010_V5.11_CtrlX.cpsp
+  plc_project: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project
+  io_project: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_IO.project
+  bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
+  export_request: data/requests/export_request.json
+
+tools:
+  plc_engineering_profile: ctrlX PLC 2.6.8
+  plc_engineering_version: PLE_V_0206
+  io_engineering_version: IOE 2.6.4
+  plc_rest_base_url: http://localhost:9002/plc/engineering/api/v2
+  persistent_mcp_single_session: true
+
+repositories:
+  engineering: https://github.com/SOLASOLAo/Stat_Resistant_AI_Coding
+  integration: https://github.com/SOLASOLAo/Stat_Resistant_Station010
+
+manifests:
+  ownership: ai/ownership.yaml
+  hooks: ai/hooks.yaml
+  graphical: ai/graphical.yaml

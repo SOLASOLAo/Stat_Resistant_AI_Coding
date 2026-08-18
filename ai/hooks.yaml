@@ -1,0 +1,44 @@
+schema_version: 1
+
+hooks:
+  - id: station_application_instances
+    object: Application/Station/_this/Station
+    required_symbols:
+      MainPressureControl: FB_MainPressureControl
+      MaintenanceDoorControl: FB_MaintenanceDoorControl
+  - id: station_cyclic_controls
+    object: Application/Station/_this/StationUnit/OnCall
+    required_calls:
+      - Station.MaintenanceDoorControl
+      - Station.MainPressureControl
+    invariants:
+      - Station not OPERATIONAL or bus not OK drives controlled outputs to safe state
+      - maintenance-door release gates the main-pressure valve
+      - pressure faults use the generated Station event constants
+  - id: station_output_wiring
+    object: Application/Station/_this/StationUnit/OnApplyOutputs
+    required_outputs:
+      - _000K980
+      - _000K981
+      - _000K085A
+    invariants:
+      - each physical output has one application business writer
+  - id: wp100_home_output
+    object: Application/Station/Wp100/_this/Wp100Unit/OnApplyOutputs
+    required_expression: >-
+      Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos AND
+      Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+  - id: burster_manual_release
+    object: Application/Station/Wp100/Wp100K103ResistantDetector/Wp100K103ResistantDetectorExtension/OnManRelease
+    required_release_prefix: CommonManRelease
+    required_releases:
+      - ReleaseSetRange
+      - ReleaseStartMeas
+  - id: home_chain_cleanup
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/OnChainFinish
+    required_cleanup:
+      - FB_OperatorButton Execute false
+      - _000P610 false through FB output
+      - safety-door Execute false
+      - pressing-cylinder Execute false
+      - started flags false

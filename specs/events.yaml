@@ -1,0 +1,21 @@
+schema_version: 1
+
+events:
+  - owner: Station
+    symbol: EVENT_MAINTENANCE_DOOR_NOT_LOAKED
+    designator: -2
+    class: ERROR
+    lock: true
+    reset: Control Off after both lock commands are removed
+  - owner: Station
+    symbol: EVENT_PRESSURE_NOT_HIGHER
+    designator: -4
+    class: ERROR
+    lock: true
+    reset: Control On removed and only low-pressure feedback active
+  - owner: Station
+    symbol: EVENT_PRESSURE_NOT_LOWER
+    designator: -5
+    class: ERROR
+    lock: true
+    reset: Control On removed and only low-pressure feedback active

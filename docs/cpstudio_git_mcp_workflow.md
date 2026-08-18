@@ -10,7 +10,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 |---|---|---|
 | Station/Module/Command 层级、Handler、HMI、生成符号 | CpStudio | 先在 CpStudio 修改，再生成 |
 | `Engineering_Data.xml`、HMI、公开配置和生成快照 | Git | 用于审计和生成机制分析，不直接代替 CpStudio |
-| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | PLE + MCP | `../Station010_0708` 已获用户授权作为受控集成工作工程；优先放独立、带项目前缀的 POU 或官方扩展钩子 |
+| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | `specs/` + `ai/` + `src/plc/` → PLE MCP/REST | `../Station010_0708` 已获用户授权作为受控集成工作工程；完整 AI-owned 对象和混合生成钩子分开管理 |
 | EtherCAT/IO 工程 | IOE 2.6.4 | PLE 不得打开 IO 工程 |
 | 真机连接、下载、启停、FORCE | 用户批准后执行 | 默认只做离线编译和仿真 |
 
@@ -27,7 +27,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 
 ## PLC 文本快照
 
-内置 `get_all_pou_code` 会从项目根递归。在 Station010 上它会进入庞大的设备树并超过 120 秒。因此本仓库提供 `scripts/export_plc_snapshot.py`：
+内置 `get_all_pou_code` 会从项目根递归。在 Station010 上它会进入庞大的设备树并超过 120 秒。因此本仓库提供 `scripts/plc/export_plc_snapshot.py`：
 
 - 使用已经打开的 primary PLC 工程，绝不自行 `se.projects.open()`；
 - 只遍历 `Application` 分支；
@@ -43,18 +43,27 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 ```python
 SNAPSHOT_PROJECT_PATH = r"C:\path\Station.project"
 SNAPSHOT_OUTPUT_DIR = r"C:\path\snapshot"
-execfile(r"C:\path\McpCoding\scripts\export_plc_snapshot.py")
+execfile(r"C:\path\McpCoding\scripts\plc\export_plc_snapshot.py")
 ```
 
 导出后在 PowerShell 验证：
 
 ```powershell
-.\scripts\verify_plc_snapshot.ps1 `
+.\scripts\plc\verify_plc_snapshot.ps1 `
   -SnapshotDirectory .\data\plc_snapshots\station010 `
   -ProjectPath ..\Station010_0708\Plc\Stat010_V5.11_CtrlX_PLC.project
 ```
 
 连续导出同一工程应保持 `manifest.json` 和所有 `.st` 文件逐字不变。只有 PLC 对象路径、声明或实现发生变化时，Git diff 才应变化。
+
+## 标准目录与 Post-export 信号
+
+所有新项目采用 `docs/project_structure_standard.md` 定义的旁车结构。CpStudio
+官方提供 Post-export script 挂钩；本项目自定义脚本
+`scripts/cpstudio/post_export_signal.bat` 只发布被忽略的
+`data/requests/export_request.json`，不启动 PLC Engineering/MCP、不编译也不执行
+在线操作。当前唯一 persistent MCP 会话读取请求后，再根据
+`ai/ownership.yaml`、`ai/hooks.yaml` 和 `ai/graphical.yaml` 串行完成审计与写回。
 
 ## Station010 当前基线
 

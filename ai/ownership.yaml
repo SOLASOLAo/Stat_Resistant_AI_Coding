@@ -1,0 +1,53 @@
+schema_version: 1
+
+write_modes:
+  full_object: replace declaration and implementation through MCP, then read back
+  implementation: replace only the implementation through MCP, then read back
+  semantic_merge: preserve CpStudio-owned content and restore only declared hooks
+  graphical_attributes: use official PLC Engineering REST GET/PUT with hash guard
+
+objects:
+  - path: Application/Fbs/FB_OperatorButton
+    owner: ai
+    source: src/plc/common/FB_OperatorButton.st
+    write_mode: full_object
+  - path: Application/Fbs/FB_MainPressureControl
+    owner: ai
+    source: src/plc/common/FB_MainPressureControl.st
+    write_mode: full_object
+  - path: Application/Fbs/FB_MaintenanceDoorControl
+    owner: ai
+    source: src/plc/common/FB_MaintenanceDoorControl.st
+    write_mode: full_object
+  - path: Application/Station/_this/Station
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [station_application_instances]
+  - path: Application/Station/_this/StationUnit/OnCall
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [station_cyclic_controls]
+  - path: Application/Station/_this/StationUnit/OnApplyOutputs
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [station_output_wiring]
+  - path: Application/Station/Wp100/_this/Wp100Unit/OnApplyOutputs
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [wp100_home_output]
+  - path: Application/Station/Wp100/Wp100K103ResistantDetector/Wp100K103ResistantDetectorExtension/OnManRelease
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [burster_manual_release]
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
+    owner: mixed
+    specification: specs/chains/SqS_Wp100_Home.yaml
+    write_mode: graphical_attributes
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN010_active
+    owner: ai_implementation
+    specification: specs/chains/SqS_Wp100_Home.yaml
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/OnChainFinish
+    owner: ai_implementation
+    specification: specs/chains/SqS_Wp100_Home.yaml
+    write_mode: implementation
