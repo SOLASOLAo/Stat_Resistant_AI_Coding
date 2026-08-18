@@ -194,3 +194,12 @@
 - `SqS_Wp100_Home` 增加 `_startButton` 实例；`_aN010_active` 将 `_000S610` 和 `FlashBits.Pulse500ms` 接入 FB，完成后先置 `_retVal=OK`，再以 `Execute=FALSE` 初始化实例，允许同一步骤再次进入。`OnChainFinish` 对任意结束原因再次执行 `Execute=FALSE` 并把 `LampOn` 写给 `_000P610`，覆盖模式切换产生的 CANCEL，也覆盖 ERROR/DONE。
 - 离线编译 **0 errors / 7 warnings**；快照从 225 增至 226 个对象，新增恰好 `FB_OperatorButton`，只改变 `SqS_Wp100_Home`、`_aN010_active` 与 `OnChainFinish` 三个既有对象。快照校验通过，project SHA-256=`C85EAED6C36559BE97CD6D6C89202700D53BCF7CD30BBEC20A076072F51828C5`；Station010 提交 `1531e71`。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
 - CpStudio 后续重新生成可能覆盖 SFC Action 与 `OnChainFinish` 方法体；每次导出必须通过文本快照/审计确认并重新合入调用代码。通用 FB 继续放在 `Application/Fbs`，Chain 实例声明放在 CpStudio 合并区外。
+
+## `SqS_Wp100_Run` + Burster 手动放行增量(2026-08-18)
+
+- CpStudio 在 `Wp100` 下新增 `SqS_Wp100_Run EXTENDS OpconSfcChain`，实例为 `Wp100.SqS_Run`，通过 `AddSubChain(..., 2)` 注册；STARTUP/ONLINE_CHANGE 均建立 `rUnit REF= THIS^`，StateOverview/HMI ChainAnalysis 已加入其 ExecState/SFCCurrentStep。新增 5 个 PLC 对象：Chain 本体、N000、N100、N999 和 OnChainFinish；无删除，只改变 StateOverview、Wp100、Wp100Unit.OnApplyParameters/OnInitHierarchy。
+- 当前 `SqS_Run` 仍是空骨架：除 `rUnit` 外没有工艺输入，N100 直接返回 OK；全工程只有实例、引用初始化、层级注册和状态概览 5 个结构性引用，没有任何 `.Execute := TRUE` 调用。HMI 的 SubChain 名称为 Run，但对应中英文文本条目当前为空。
+- 本次 CpStudio 导出完整保留 `FB_MainPressureControl`、`FB_OperatorButton`、`SqS_Wp100_Home` 按钮 Action 和 OnChainFinish 复位。导出基线为 231 个 PLC 对象、**0 errors / 7 warnings**，project SHA-256=`7C17C4B1DB1F1921DA6A0CCA71BCCEEB307591C083AD6230FCC3573FFF0F4818`；生成批次提交 `9d4f9b0`（`feat: add Wp100 run subchain skeleton`）。
+- AI 经 MCP 仅修改 `Wp100K103ResistantDetectorExtension.OnManRelease`：`ReleaseSetRange` 与 `ReleaseStartMeas` 均为 `CommonManRelease AND TRUE`。这会取消对象级默认 FALSE，但保留 Mode Handler 的公共手动互斥/允许条件，不是无条件旁路。
+- AI 后快照仍为 231 个对象，新增/删除均为 0，唯一变化对象为上述 OnManRelease；最终编译 **0 errors / 7 warnings**，project SHA-256=`81199BDB36D5E65381190CD9C0973D65D1A2BB9CE36D68831F016618B5D50D9C`，Station010 提交 `6a2121f`。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
+- 当前 HMI `ReleaseSetRange/ReleaseStartMeas` 变量已在 OPC 列表中，但本次 AI 修改发生在 CpStudio 导出之后，所以生成的 HMI 条件分析树仍记录旧的 Constant FALSE。下次完整导出应验证 CpStudio 是否像此前 BasMove 联锁一样回读并同步为 TRUE；本次不直接改写 `Engineering_Data.xml`。

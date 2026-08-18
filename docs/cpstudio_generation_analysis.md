@@ -332,3 +332,46 @@ FB 不引用 `Station`、`BinIo`、SFC 基类或项目 BMK，因此其他项目�
 `OnChainFinish` 在调用 `SUPER^.OnChainFinish(Reason)` 后无条件以 `Execute=FALSE` 调用实例并更新灯输出。因此不仅 CANCEL，ERROR、DONE 以及未来新增的其他结束原因也都会把 `_000P610` 置为 FALSE。静态引用检查确认 `_000P610` 的业务写入仅位于该 Action 和复位方法，没有其他 Chain 抢写。
 
 离线编译结果为 **0 errors / 7 warnings**。快照从 225 增至 226 个对象：新增 `Application/Fbs/FB_OperatorButton`，无删除，只改变 Chain 声明、`_aN010_active` 和 `OnChainFinish`。project SHA-256=`C85EAED6C36559BE97CD6D6C89202700D53BCF7CD30BBEC20A076072F51828C5`，Station010 提交为 `1531e71`。SFC Action 与 `OnChainFinish` 可能被后续 CpStudio 导出覆盖，必须纳入 post-export 差异审计；不得直接脚本改写 `Engineering_Data.xml`。
+
+## 样本 8：Wp100 Run SubChain 骨架 + Burster 手动放行
+
+### CpStudio 生成的 SubChain 结构
+
+新增对象 `SqS_Wp100_Run EXTENDS OpconSfcChain` 位于 `Wp100/_this/Chains/Sub`，全局实例为 `Wp100.SqS_Run`。CpStudio 同步完成四层接线：
+
+1. `Wp100` 声明 `SqS_Run : SqS_Wp100_Run`；
+2. `Wp100Unit.OnApplyParameters` 在 STARTUP 与 ONLINE_CHANGE 中执行 `Wp100.SqS_Run.rUnit REF= THIS^`；
+3. `Wp100Unit.OnInitHierarchy` 以 `AddSubChain(Wp100.SqS_Run, 2)` 注册；
+4. StateOverview 与 HMI ChainAnalysis 加入 ExecState/SFCCurrentStep。
+
+PLC 快照从 226 增至 231 个对象，新增恰好 Chain、本体的 N000/N100/N999 三个 Action 和 `OnChainFinish`，删除为 0。此前两个通用 FB、按钮 Action 和取消复位代码全部保持哈希不变。CpStudio 基线编译为 **0 errors / 7 warnings**，生成提交为 `9d4f9b0`。
+
+当前它还不是可工作的原子工艺：唯一输入是 `rUnit`，N100 直接 `_retVal := OK`，并且没有调用方设置 `Wp100.SqS_Run.Execute := TRUE`。要实现“同一原子操作以不同参数/条件重复复用”，推荐固定调用协议：
+
+```st
+// Start action: only write parameters while the SubChain is READY
+IF Wp100.SqS_Run.ExecState = OpconExecState.READY
+THEN
+  // Wp100.SqS_Run.<InputParameter> := ...;
+  Wp100.SqS_Run.Execute := TRUE;
+  _retVal := OK;
+END_IF
+
+// Following action: wait for DONE/ERROR/CANCEL with the framework helper
+_retVal := CheckSubChainDone(Wp100.SqS_Run);
+```
+
+工艺输入应在 READY→RUNNING 边界一次性写入，并在 N000 复制到内部快照，避免父 Chain 运行中改变参数；设备命令、按钮灯等资源必须在 `OnChainFinish` 对 DONE/ERROR/CANCEL 统一复位。同一个 SubChain 实例适合多个调用方顺序复用，不应被两个并发 Chain 同时启动；确需并行时应建立两个实例。
+
+### Burster 手动功能
+
+CpStudio 导出时，`Wp100K103ResistantDetectorExtension.OnManRelease` 的两个对象级条件仍为 FALSE。AI 经 MCP 改为：
+
+```st
+ReleaseSetRange := CommonManRelease AND TRUE;
+ReleaseStartMeas := CommonManRelease AND TRUE;
+```
+
+保留 `CommonManRelease` 很重要：它继续执行 Mode Handler 的全局手动功能互斥，不允许绕过模式层直接运行。AI 前后 231 对象快照新增/删除为 0，唯一变化对象为 OnManRelease；最终编译 **0 errors / 7 warnings**，project SHA-256=`81199BDB36D5E65381190CD9C0973D65D1A2BB9CE36D68831F016618B5D50D9C`，Station010 提交为 `6a2121f`。
+
+由于 HMI 配置是在该 MCP 修改之前由 CpStudio 生成，其条件分析树仍包含旧 Constant FALSE，虽然 `ReleaseSetRange/ReleaseStartMeas` OPC 变量本身已经存在。下一次完整 CpStudio 导出需要验证该分析树是否同步为 TRUE；继续遵守不直接改写 `Engineering_Data.xml` 的边界。
