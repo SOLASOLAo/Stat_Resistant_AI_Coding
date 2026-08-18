@@ -20,6 +20,8 @@
 - [ ] 🔴 清理 3 个陈旧 SymbolConfig 条目(bus_000S900 / bus_000SK010A1_Channel_6 / _7),编译 → 0 errors(路线①:用户 PLE Symbols 编辑器手删;路线②:AI 试 import_xml 整表)
 - [ ] 🟡 用户决定:是否在 CpStudio 删除 Wp100A740* 站(Engineering_Data.xml 残留,不删则重新生成会带回)
 - [ ] 🟡 CpStudio 重新生成后 git diff 分析 → docs/cpstudio_generation_analysis.md
+- [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/export_plc_snapshot.py`,`scripts/verify_plc_snapshot.ps1`)
+- [ ] 🔴 用户确认当前 CpStudio 生成是否有意删除 Wp100 下全部 5 个 Unit;关闭持锁 PLE 后导出首份 PLC 文本快照并编译
 
 ## 已完成(近期)补充
 - [x] Station010_0708 GitHub 私有备份 Stat_Resistant_Station010(基线+快照,本地已同步 origin/main)(2026-08-18)

@@ -35,6 +35,8 @@
 - 标准库:`../Std`(OpCon/Nexeed 标准组件,只读)
 - 开发模板:`vibe-coding-templates/`(github.com/SOLASOLAo/vibe-coding-templates)
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)
+- CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
+- CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 
 ## 版权说明
 - OpCon / Nexeed / ctrlX 为 Bosch 商标,相关参考代码与组件仅限本工程内部使用

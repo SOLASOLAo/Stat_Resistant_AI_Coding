@@ -72,3 +72,22 @@
 2. 符号清理:先问用户是否接受在 PLE Symbols 编辑器手删 3 行;不接受再试 import_xml 整表方案。
 3. 用户若在 CpStudio 做了重新生成:立即 `git -C ../Station010_0708 diff` 归档分析。
 4. 红线:真机操作(下载/启动/write_variable 强制)必须先经用户确认;PLE 绝不打开 IO 工程;.project 只能经 IDE/脚本引擎改。
+
+## 最近会话(2026-08-18 午)· CpStudio/Git/MCP 闭环 + PLC 文本快照工具
+
+### 已完成
+1. 建立 `docs/cpstudio_git_mcp_workflow.md`：CpStudio 管模型/HMI/符号，Git 管生成差异，AI+MCP 管底层 ST 与编译闭环。
+2. 新增只读确定性导出器 `scripts/export_plc_snapshot.py`：只遍历 primary PLC 的 Application，跳过 Library Manager/Task Configuration/Symbols；一个代码对象一个稳定 `.st`，manifest 无时间戳并含 SHA-256；不 open/save/compile/online。
+3. 新增 `scripts/verify_plc_snapshot.ps1`；已通过成功样本和篡改检测自测。内置 `get_all_pou_code` 在 Station010 上因从根遍历设备树超过 120s，不适合作为该工程的批量导出实现。
+4. 新增 `docs/cpstudio_generation_analysis.md`，记录 `b9b1161` 后当前未提交生成批次。
+
+### 新发现：Station010 当前有外部生成改动，勿覆盖
+- 本会话检查期间发现 `../Station010_0708` 已有 26 个未提交变化；不是本会话工具写入。
+- `Wp100` 保留，但其下 5 个 Unit 全部从 PublicInterface/HMI 移除：安全门、下压缸、扫码枪、Kistler、Burster 2316；相关对象版本/类型/事件/SmartForms 同步裁剪。
+- PLC `.project` 1,738,192 B → 1,597,120 B；当前 SHA-256 `FB437287F2482A9FA34408DC01F5DBD34F33FB281E6A33B34CBCF5D690E78819`。
+- 用户 PLE PID 3888 以该 PLC project 启动并持有 `.~u` 锁。本会话已关闭自己因全量读取卡住的 MCP PLE PID 4316，没有触碰 PID 3888。
+
+### 下一步 / 阻塞
+1. 用户确认：删除 Wp100 下全部 5 个 Unit 是否是有意的 CpStudio 操作，而不仅是删除 `_100A740`。
+2. 用户关闭 PID 3888 对应的 PLE 窗口后，再启动唯一 MCP 实例，执行首份文本快照到 `data/plc_snapshots/station010`，连续导出两次验证零 diff。
+3. 快照验证通过后，再决定是否获准把文本镜像写入只读参考目录对应的私有 GitHub 仓库。
