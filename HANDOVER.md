@@ -175,3 +175,13 @@
 - 221→224 对象的 CpStudio 差异：新增恰好三个电阻仪对象、删除 0、改变八个既有生成对象、其余 213 个不变；首次编译即 **0 errors / 7 warnings**。Peripheral OOD 对 CXA 标记 `NotTested`，后续真机通信必须专项验证。
 - AI 经 MCP 改两处：压缸两个手动动作要求安全门 `OutImm.IsInWrkPos`；Wp100 Home 要求安全门和压缸 `OutImm.IsInBasPos` 同时成立。修改前后 224 对象快照恰好只变这两处，最终编译仍为 **0 errors / 7 warnings**。
 - 最终 PLC project SHA-256=`B1DF6EDE55E20FBCD472FF2A4309CFC903B3639B8C317F97DB3B31C42AD92E71`；未操作实体 PLC，未创建额外二进制备份。Station010 已提交并推送 `8014419`（`feat: add Burster resistance unit and motion interlocks`），工作树干净并与 `origin/main` 一致。
+
+## EmergencySwitch + 主气压控制增量(2026-08-18)
+
+- CpStudio 将 `Station.EmergencySwitch` 的两路急停输入绑定到 `_000S900A/_000S900B`，Control Off 绑定到 `_000S902`；生成参数分别为 `IdxIsEmSwitchPressed[1/2]`、`IdxIsControlOffButtonPressed`，两路 `IsEmSwitchInverted=FALSE`、第二路 `DependsOnPreviousSignal=FALSE`、Control Off 抑制延时 300 ms。物理映射已回读：A2 Channel 1/2 与 A1 Channel 2。`_000S901` 仍仅由 `Station.ControlOn` 作为 Control On 按钮使用。
+- 同一批 CpStudio 输出新增 `Station.EVENT_PRESSURE_NOT_HIGHER=-4` 与 `EVENT_PRESSURE_NOT_LOWER=-5` 及英文 HMI 文本；中文文本当前为空。生成批次基线编译 **0 errors / 7 warnings**，已作为 Station010 提交 `77abe3c`（`feat: configure emergency and pressure events`）。
+- 新增项目专用 `Application/Fbs/FB_Stat010MainPressureControl`，实例为 `Station.MainPressureControl`。它只在 `Station.UnitState=OPERATIONAL` 且 EtherCAT `BusOk` 时监控；以 `Station.ControlOn.OutImm.IsCtrlOn` 作为电气安全回路已上电反馈，驱动 `_000K085A`，并按阀输出状态在 5 s 内检查 `_000B085A_HIGH` 或 `_000B085A_LOW`。
+- 高压未到触发 `EVENT_PRESSURE_NOT_HIGHER`，低压未到触发 `EVENT_PRESSURE_NOT_LOWER`；两路反馈同时为 TRUE 时立即锁存两个故障。任一故障都会关闭 `_000K085A`，并通过官方应用接口 `Station.ControlOn.ParImm.UserEnableControlOn:=FALSE` 撤销 Control On 允许条件。故障仅在 Control On 已撤销且反馈恢复为“仅 LOW”时复位。
+- FB 由 `StationUnit.OnCall` 每周期调用，而不是只放在 `OnUnitOperational`；这样 Station 离开 OPERATIONAL 时仍会主动写 FALSE，避免输出保持。事件以 `OpconEventClass.ERROR` 锁定；当前 NxBase 的 `UnlockEvent` 实际为两参数版本，恢复时使用 `UnlockEvent` + `ClearEvent`，与随附手册所述三参数新版接口存在版本差异。
+- 最终文本快照为 225 个对象，相对 Burster 后 224 对象新增恰好一个 FB；变化对象为 EventList designator、Station、StationUnit、StationUnit.OnApplyParameters/OnCall。快照校验通过，project SHA-256=`A099CD4649D4BB9C4311627986FC33E0908B2742F6118BAF54CCB89E5CD8F90E`，离线编译 **0 errors / 7 warnings**。AI 逻辑提交为 `123845d`（`feat: add main pressure control monitor`）。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
+- CpStudio 5.11 随附官方帮助确认：`Engineering > Export` 支持以相对路径配置 `Pre-export script` / `Post-export script`（`.bat` 或 Python），并支持 `Fast export (code only)`；安装帮助和配置中未发现受支持的无界面/命令行项目编辑接口。后续优先用导出钩子自动完成差异、旧 Symbol 与编译审计，CpStudio 本身只保留层级、标准对象、BMK/I/O、HMI/Event/StationData 等声明式配置，不直接脚本改写 `Engineering_Data.xml`。

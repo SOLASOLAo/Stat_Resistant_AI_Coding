@@ -241,3 +241,66 @@ BursterSetting : StationDataTcpIpGeneralSettingStruct;
 2. `Wp100.IsInHomePosition` 要求安全门与压缸两个 Unit 的 `OutImm.IsInBasPos` 同时成立。
 
 AI 修改前后 224 对象快照无新增、无删除，恰好只有上述两个 ST 对象变化；离线编译仍为 **0 errors / 7 warnings**。最终 PLC project SHA-256=`B1DF6EDE55E20FBCD472FF2A4309CFC903B3639B8C317F97DB3B31C42AD92E71`。全程未连接、下载、启停或写入实体 PLC，也未创建额外 `.project` 备份。生成结果与两处联锁已提交并推送到 Station010 私有仓库：`8014419`（`feat: add Burster resistance unit and motion interlocks`）。
+
+## 样本 6：EmergencySwitch 绑定 + 项目专用主气压控制 FB
+
+### CpStudio 生成边界
+
+本批次 CpStudio 首先完成三路 AddOn 绑定：
+
+| 用途 | AddOn 参数 | BinIo / 实际通道 |
+|---|---|---|
+| 急停 1 | `EmergencySwitch.ParStart.IdxIsEmSwitchPressed[1]` | `_000S900A` / A2 Channel 1 |
+| 急停 2 | `EmergencySwitch.ParStart.IdxIsEmSwitchPressed[2]` | `_000S900B` / A2 Channel 2 |
+| Control Off | `EmergencySwitch.ParStart.IdxIsControlOffButtonPressed` | `_000S902` / A1 Channel 2 |
+
+两路急停均为 `IsEmSwitchInverted=FALSE`，符合 AddOn OOD 对标准 `S900` 常开/“按下为 TRUE”信号的定义；第二路 `DependsOnPreviousSignal=FALSE`，表示两个独立反馈，不是无独立反馈触点的串联诊断。Control Off 延时为 300 ms，只用于避免按下下电按钮时短暂误报急停。原 `_000S901` 已从 EmergencySwitch HMI 中移除，但仍正确绑定到 `ControlOn.ParStart.IsCtrlOnBtnPressedIndex`。
+
+CpStudio 同时在 Station 增加两个事件常量和 HMI 文本：
+
+```st
+EVENT_PRESSURE_NOT_HIGHER : DINT := -4; // The pressure is not higher than 4.5bar
+EVENT_PRESSURE_NOT_LOWER  : DINT := -5; // The pressure is not lower than 0.3bar
+```
+
+中文事件文本目前为空。该生成批次未改变三个压力 I/O 的物理映射：`_000B085A_LOW/HIGH` 位于 A1 Channel 6/7，`_000K085A` 位于 C1 Channel 8。首次离线编译即为 **0 errors / 7 warnings**，生成边界提交为 `77abe3c`。
+
+### ControlOn 的正确集成接口
+
+本地 `NexeedControlOnAddon` OOD/CHM 明确区分：
+
+- `_000S901`：用户按下 Control On 的原始按钮输入；
+- `ControlOn.OutImm.IsCtrlOn`：来自 `_000K911_Y32` 的“电气控制已经上电”反馈；
+- `ControlOn.ParImm.UserEnableControlOn`：应用侧允许条件，运行中变为 FALSE 时标准 AddOn 会撤销 Control On；
+- `ControlOn.ParImm.UserControlOn`：仅用于按下过程中的附加上电条件，本批次不需要修改。
+
+因此主气阀不能直接由 `_000S901` 驱动，也不应由自定义代码抢写 `_000K911`。本实现用 `OutImm.IsCtrlOn` 启动气路，并在压力故障时通过 `UserEnableControlOn` 请求标准 AddOn 下电。ControlOn 手册推荐的完全标准化方案是使用 MainValve AddOn；当前 Std 对象集中没有对应对象包，所以本项目暂用独立 FB 实现同一集成边界。
+
+### `FB_Stat010MainPressureControl` 行为
+
+FB 位于 `Application/Fbs`，实例位于 `Station.MainPressureControl`，由 `StationUnit.OnCall` 每周期调用。监控只在 Station 为 OPERATIONAL 且 EtherCAT BusOk 时启用；其他状态主动关闭主气阀并禁止 Control On。
+
+| 条件 | 结果 |
+|---|---|
+| Control On 反馈为 FALSE | `_000K085A=FALSE`，5 s 内等待“仅 LOW” |
+| Control On 反馈为 TRUE，且当前“仅 LOW” | `_000K085A=TRUE`，开始 5 s 高压到位计时 |
+| 阀为 TRUE，5 s 内变成“仅 HIGH” | 压力 Ready，保持阀输出 |
+| 阀为 TRUE，5 s 后仍非“仅 HIGH” | 锁存 `EVENT_PRESSURE_NOT_HIGHER`，关闭阀并撤销 UserEnableControlOn |
+| 阀为 FALSE，5 s 后仍非“仅 LOW” | 锁存 `EVENT_PRESSURE_NOT_LOWER`，保持阀关闭并撤销 UserEnableControlOn |
+| LOW 与 HIGH 同时为 TRUE | 立即锁存两个事件并关闭阀 |
+| Control On 已撤销且恢复“仅 LOW” | 复位故障、解锁并清除事件，等待下一次人工 Control On |
+
+两个压力事件使用 `OpconEventClass.ERROR` 和锁定事件句柄，防止状态未恢复时被提前确认删除。当前 NxBase 编译接口要求两参数 `UnlockEvent(Class, Index)`，随后再调用 `ClearEvent(Class, Index)`；这与本地 CHM 中记录的较新三参数 `UnlockEvent(..., Clear)` 不一致，实际编译接口优先。
+
+最终离线编译为 **0 errors / 7 warnings**；文本快照从 224 增至 225 个对象，仅新增 `FB_Stat010MainPressureControl`，并改变 EventList designator、Station、StationUnit、StationUnit.OnApplyParameters 与 OnCall。快照校验通过，project SHA-256=`A099CD4649D4BB9C4311627986FC33E0908B2742F6118BAF54CCB89E5CD8F90E`；AI 逻辑提交为 `123845d`。本逻辑只是标准控制与诊断层，不能代替硬件安全继电器/安全 PLC；真机下载和 I/O 时序验证仍需用户批准。
+
+### 减少 CpStudio 手工工作的可行边界
+
+CpStudio 5.11 随附英文帮助明确提供两个官方能力：
+
+1. `Engineering > Export` 可配置相对路径形式的 `Pre-export script` 与 `Post-export script`，脚本类型为批处理或 Python，每次导出前后自动执行；
+2. 目标系统右键菜单提供 `Fast export (code only)`，仅重新导出 PLC 代码。
+
+当前安装帮助和文本配置中没有发现受支持的无界面项目编辑/命令行导出接口。`DDP.CommandLineRegex.dll` 只是桌面框架组件，不能据此认定存在公开 CLI；`CpStudio_Export_Classes.chm` 描述的是导出模板可读取的数据接口，不是外部项目编辑 API。因此暂不采用 UI 自动点击或直接改写 `Engineering_Data.xml`，这两种方式都容易破坏闭源生成器的数据一致性。
+
+推荐把工作边界固定为：CpStudio 仅负责模型层级、标准 Unit/AddOn/Peripheral、BMK 与 I/O 绑定、HMI/Event 和 StationData；项目专用联锁、状态机和设备算法由 AI 经 MCP 写入独立 FB 及 CpStudio 合并区外代码。Post-export 脚本可进一步自动触发 Git 差异检查、旧 Symbol 引用审计、PLC 编译和摘要输出，让人工动作缩减为“在 CpStudio 做必要声明式配置并点击导出”。如果后续取得标准 MainValve AddOn 对象包，应优先用标准对象替代本项目专用主气压 FB 的框架部分。
