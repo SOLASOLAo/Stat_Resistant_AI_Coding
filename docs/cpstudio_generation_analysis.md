@@ -127,8 +127,8 @@ CpStudio 已生成新的 `BinIo` 声明，但没有同步清理 PLC 工程内的
 最终采用 ctrlX PLC Engineering 2.6.8 自带的正式本地 REST API，而不是跨进程 UI 自动化或私有反射写入：
 
 ```text
-GET /devices/Device/Plc%20Logic/Application/symbol-config
-PUT /devices/Device/Plc%20Logic/Application/symbol-config?symbolsAction=Select
+GET http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Application/symbol-config
+PUT http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Application/symbol-config?symbolsAction=Select
 ```
 
 REST `GET` 中已选变量的 `accessRights` 仍显示 `Void`，这是可用编译符号视图的字段语义；底层已保存的 `SelectedTypes` 才是权限事实源。本次底层复核结果为：
@@ -139,3 +139,24 @@ REST `GET` 中已选变量的 `accessRights` 仍显示 `Void`，这是可用编�
 - 63 个成员的实际保存权限：全部 `ReadWrite`。
 
 保存后完整离线编译为 **0 errors / 7 warnings**，回到最小骨架基线。全过程没有连接、下载、启停或写入实体 PLC；按照用户要求，本批次没有再创建额外 `.project` 备份。当前 PLC project SHA-256=`F53548B8C8A12571615DA0C5B7DDC46B3257D0FADC972F016E9843168E6CACBB`。该批次 15 个生成/工程文件已提交并推送到 Station010 私有仓库：`78f91e8`（`fix: sync I/O BMK mappings after CpStudio export`）。
+
+## 样本 3：C1 门锁描述与停用通道的小改动
+
+### Git 差异与故障签名
+
+用户再次从 CpStudio 导出后，相对 `78f91e8` 有 14 个文件变化，但有效模型差异只有三项：
+
+- `_000K980` 中文描述由“安全门上锁”改为 `100K980 door lock`；
+- `_000K981` 事件描述中的设备号由 `100K980` 纠正为 `100K981`；
+- 生成的 `BinIo` 与事件配置不再包含停用占位成员 `_000SK010C1_Channel_6`。
+
+首次离线编译为 **1 error / 9 warnings**。唯一错误是 C1 `Channel_6.Output` 的旧 I/O Mapping 仍引用 `Application.Peripherals.BinIo.bus_000SK010C1_Channel_6`；额外警告则来自 Symbol Configuration 中同名的失效公开成员。因此样本 2 的“双层残留”不是一次性偶发现象。
+
+### 可复用的快速修复顺序
+
+1. 先做 Git diff，确认 CpStudio 当前声明的新增、改名与删除集合；
+2. 用扩展后的正式 `map_io_channel` 工具按 `Channel_6.Output` 定位 connector parameter，清空旧绑定并强制回读；编译变为 **0 errors / 8 warnings**；
+3. 调用 `PUT http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Application/symbol-config?symbolsAction=UnSelect`，以 `BinIo + _000SK010C1_Channel_6` 的最小请求删除旧公开成员；
+4. 保存、审计并重新编译，最终为 **0 errors / 7 warnings** 基线；`BinIo` 有 62 个已选成员且权限均为 `ReadWrite`。
+
+ctrlX/DataLayer 的实际通道位于 `device.connectors → connector.host_parameters → parameter.io_mapping`，不是 `device.get_children(False)`。该支持已并入 `ctrlx-ai-coding` 的兼容补丁脚本并推送为 `142721c`。本批次未操作实体 PLC、未创建额外二进制备份；最终 project SHA-256=`E89D8C0732990B572B2B52305D0215F4099AEA550A5779D6D5444B6EE5BD860C`，Station010 提交为 `482c77a`。

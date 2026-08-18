@@ -144,7 +144,16 @@
 - 用户在 CpStudio 中修改 A1-A4 四个 DI 模块和 C1-C3 三个 DO 模块的 BMK/描述并重新导出；Station010 工作树形成 15 个生成文件变化。既有 10 处最小骨架 ST 清理没有被覆盖。
 - 首次编译为 **33 errors / 73 warnings**：CpStudio 已更新 `BinIo` 声明，但 EtherCAT I/O Mapping 仍引用旧变量。AI 经 PLE 接口重映射 16 个有效通道、清空 17 个已停用通道；最终 39 条映射无重复，编译变为 **0 errors / 40 warnings**。
 - 剩余 33 条警告来自 Symbol Configuration 的失效旧成员。上层脚本接口 `get_all_datatypes()` 因插件的 duplicate-key 缺陷不可用；已确认不是工程数据损坏。
-- 稳定解法是 ctrlX PLC Engineering 自带本地 REST API：`GET/PUT http://localhost:9002/devices/Device/Plc%20Logic/Application/symbol-config`。用 `symbolsAction=Select` 精确补选 15 个新成员后，`BinIo` 最终为 63 个已选成员，18 个新 BMK 全部存在、33 个旧名为 0，底层访问权限均为 `ReadWrite`。
+- 稳定解法是 ctrlX PLC Engineering 自带本地 REST API：`GET/PUT http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Application/symbol-config`。用 `symbolsAction=Select` 精确补选 15 个新成员后，`BinIo` 最终为 63 个已选成员，18 个新 BMK 全部存在、33 个旧名为 0，底层访问权限均为 `ReadWrite`。
 - 保存后完整离线编译恢复到 **0 errors / 7 warnings**（4 条未知 `OPC.UA.DA`、2 条 plausibility 提示、1 条 `ErrorCodes`/`DWord` 基线警告）。当前 PLC project：1,547,840 B，SHA-256=`F53548B8C8A12571615DA0C5B7DDC46B3257D0FADC972F016E9843168E6CACBB`。
 - CpStudio 输出中的 persistent-variable 提示没有形成 PLC 编译错误；本批次未重新生成、未连接/下载/启停实体 PLC，也未再创建额外二进制备份。
 - 上述 15 个生成/工程文件已提交并推送到 Station010 私有仓库：`78f91e8`（`fix: sync I/O BMK mappings after CpStudio export`）；工作树干净，可进入下一项 CpStudio 增量。
+
+## CpStudio C1 小改动快速闭环(2026-08-18)
+
+- 本次导出相对 `78f91e8` 的有效模型变化很小：`_000K980` 中文描述由“安全门上锁”改为 `100K980 door lock`，`_000K981` 事件描述中的设备号由 `100K980` 纠正为 `100K981`，并从生成的 `BinIo`/事件配置中移除停用占位成员 `_000SK010C1_Channel_6`。共有 14 个生成/工程文件随 CpStudio 同步变化。
+- 首次离线编译为 **1 error / 9 warnings**：C1 的 `Channel_6.Output` I/O Mapping 仍绑定 `Application.Peripherals.BinIo.bus_000SK010C1_Channel_6`；Symbol Configuration 也仍保留同一旧成员。这再次确认 CpStudio 小改动可能留下“物理映射 + 公开符号”两层旧引用。
+- 原 MCP `map_io_channel` 只遍历设备树子节点，无法看到 ctrlX/DataLayer 的 connector 通道。已将正式工具扩展为遍历 `connectors → host_parameters → is_mappable_io → io_mapping`，按 `Channel_6.Output` 清空绑定并写后回读；编译先恢复到 **0 errors / 8 warnings**。
+- 随后通过官方 REST 基地址 `http://localhost:9002/plc/engineering/api/v2`，以 `symbolsAction=UnSelect` 精确移除 `BinIo._000SK010C1_Channel_6`；最终 `BinIo` 为 62 个已选成员、全部 `ReadWrite`，完整离线编译恢复到 **0 errors / 7 warnings** 基线。
+- connector 映射扩展、REST 路径及双层修复顺序已固化并推送到方法论仓库 `ctrlx-ai-coding`：`142721c`（`patches: support ctrlX connector I/O mappings`）。补丁入口仍为 `patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`，npm 升级后先运行 `-Check`。
+- 本次未连接、下载、启停或写入实体 PLC，也未创建额外 `.project` 备份。最终 PLC project SHA-256=`E89D8C0732990B572B2B52305D0215F4099AEA550A5779D6D5444B6EE5BD860C`；14 个文件已提交并推送到 Station010 私有仓库：`482c77a`（`fix: sync C1 door-lock channel after CpStudio export`）。
