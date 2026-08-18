@@ -55,3 +55,23 @@
 - 不提交或回滚 `../Station010_0708` 工作区；
 - 不启动第二个 PLE/MCP 实例；
 - 不对 `.project` 做任何写操作。
+
+### 最小骨架 PLC 文本与编译基线
+
+用户关闭 PLE 并重启 Codex MCP 扩展后，已在单一 persistent 会话中完成两次只读导出和一次离线编译：
+
+- MCP：persistent，PLE PID 24368；没有连接设备、下载或在线写变量；
+- 文本快照：215 个有文本对象，输出到被忽略的 `data/plc_snapshots/station010`；
+- 快照校验：manifest、215 个对象文件和源 project SHA-256 全部通过；当前文本树 SHA-256=`4e556b44bb2212c91d7c86d260a87b325b7dfeba8fe0f2b9622089a1dab63241`；
+- 源 project SHA-256=`24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`，编译后仍与预操作备份一致；
+- 编译基线：66 errors / 40 warnings。
+
+66 个错误可归为两类：
+
+1. 3 个既有 SymbolConfig 陈旧条目：`bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`。文本快照中没有这三个精确标识符，进一步确认它们不在 ST 内；
+2. 63 个错误来自删除 Unit 后仍保留的旧 ST 步骤，集中在 10 个对象：
+   - `Application/Station/Wp100/_this/Wp100Unit/OnApplyOutputs`；
+   - `SqC_Wp100_Run` 的 `_aN050_active`、`_aN055_active`、`_aN060_active`；
+   - `SqS_Wp100_Home` 的 `_aN110_active`、`_aN120_active`、`_aN130_active`、`_aN140_active`、`_aN150_active`、`_aN160_active`。
+
+最小清理方案是把空 Wp100 的 `IsInHomePosition` 设为安全的框架默认值，并把上述 9 个旧设备步骤中和为 `_retVal := OK;`。但 `../Station010_0708` 当前仍被 AGENTS 定义为只读参考；在用户明确决定修改参考工程或复制为新工作工程前，不执行这些 ST 写入。

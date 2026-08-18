@@ -103,3 +103,11 @@
 ### 重载后的唯一第一步
 
 在一次 MCP 调用链中依次完成：`get_codesys_status/launch` → `open_project` → 两次 `eval_python(execfile export_plc_snapshot.py)` → 本地校验零 diff → `compile_project`。避免把这些调用拆到多个独立 MCP client；不得再次走 headless。
+
+## 恢复后结果(2026-08-18 11:50)· 最小骨架只读基线完成
+
+- 扩展重启后状态正常：唯一 MCP Node + 唯一 persistent PLE，session `0b4dd2b0-85c1-44cd-a260-aa5fdfe470b0`，PLE PID 24368。
+- MCP 打开 Station010 PLC 工程；两次快照均返回 215 个文本对象和相同 project SHA-256。PowerShell verifier 通过；文本树 SHA-256=`4e556b44bb2212c91d7c86d260a87b325b7dfeba8fe0f2b9622089a1dab63241`。
+- 离线编译基线：66 errors / 40 warnings。3 errors 是已知 SymbolConfig 陈旧 BinIo 条目；其余 63 errors 是删除 Unit 后遗留在 10 个 ST 对象中的安全门/压缸/扫码枪引用，详见 `docs/cpstudio_generation_analysis.md`。
+- 编译没有改写 project：当前哈希仍为 `24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`，与备份一致。
+- 下一步需要用户作一个所有权决策：① 明确授权 AI 经 MCP 修改原本只读的 `../Station010_0708`；或 ② 把当前干净生成结果复制为 `src/ResistantStation.project`，在新工作工程中清理并迭代。未获决策前不写 PLC。
