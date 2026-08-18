@@ -438,3 +438,34 @@ CpStudio 本轮把 `_000K980/_000K981` 的英文描述细化为 A/B door lock；
 相对 `station010_cpstudio_param_rename_before_ai` 的 231 对象基线，最终快照为 232 个对象：新增恰好 `Application/Fbs/FB_MaintenanceDoorControl`，删除为 0；改变 13 个既有目标对象，未影响 N010、Burster 手动放行或其他 Chain。三个现场输出 `_000K980/_000K981/_000K085A` 的业务写入各只有 `StationUnit.OnCall` 一处（生成的 `BinIo.SetState` 通用接口除外）。完整离线编译为 **0 errors / 7 warnings**，project SHA-256=`EB76CF911AE933D33B3CFFF77024B61060198C78995BB954B237ADDD8D16A0E4`，Station010 提交为 `bb853e5`。
 
 CpStudio 后续导出可能覆盖 SFC Action、`OnChainFinish`、Station 调用接线或 FB 接口，因此 post-export 审计至少应验证上述 14 个新增/改变对象、三个输出的唯一业务写入点和编译结果；仍不得直接编辑 `.project` 字节或生成 XML 来补 PLC 逻辑。
+
+## 样本 11：维修门未锁事件 + 5 s 诊断
+
+### CpStudio 生成边界
+
+本次导出新增 `Station.EVENT_MAINTENANCE_DOOR_NOT_LOAKED : DINT := -2` 及 HMI/EventRecorder 文本 `The maintenance door should be locked!!`。`LOAKED` 虽然不是标准英文拼写，但它是 CpStudio 当前生成的正式 PLC 接口名，因此应用代码必须精确使用该名称，不能在 PLE 中私自重命名。2052 中文资源目前同样是英文，后续翻译应回到 CpStudio 修改。
+
+相对样本 10，导出后 PLC 仍为 232 个对象，无新增/删除，只改变四个生成对象：
+
+- `Station`：新增事件常量，且完整保留两个 AI-owned FB 实例；
+- `BinIo`：同步 A/B door lock 注释；
+- `StationDataStruct`：移除 `Wp100/LineNo/TestMode/NokCounter`；
+- `StationDataSetManagerAddon.OnCheckData`：移除对应 NokCounter 检查。
+
+同一批导出把 Burster `SetRange/StartMeas` 的对象级条件从 FALSE 正式改为 TRUE，HMI `config.xml` 的两个 ReleaseCondition 已同步，解决了此前 MCP 手动放行与 HMI 条件树不同步的问题。旧 `StationSdNokCounter` 和 `Wp100StationDataStruct` DUT 仍存在，但静态引用各只有自身声明，暂作为待确认的生成残留保留。
+
+### AI 诊断逻辑
+
+`FB_MaintenanceDoorControl` 新增可配置输入 `tLockMonitoringTime`（当前调用传 `T#5S`）、内部 TON 与 `xFaultDoorNotLocked`：
+
+1. `_000K980/_000K981` 两路锁命令均为 TRUE 且 A/B 反馈未同时成立时启动计时；
+2. 门反馈缺失会立即令 `xMainPressureRelease=FALSE`，因此 `_000K085A` 无需等待 5 s 就会关闭；
+3. 条件持续 5 s 后锁存 `xFaultDoorNotLocked=TRUE`；
+4. 即使门反馈随后恢复，锁存仍保持并继续禁止主气压；只有 Control Off 使两路锁命令都撤销后才复位；
+5. `StationUnit.OnCall` 使用 `SetEvent(OpconEventClass.ERROR, Station.EVENT_MAINTENANCE_DOOR_NOT_LOAKED, '', Lock := TRUE)` 建立事件，并沿用主气压的 `UnlockEvent + ClearEvent` 清除流程。
+
+这种分层使安全输出和报警时间彼此独立：门信号一丢就撤销气压许可，5 s 仅用于避免门锁机械动作期间产生误报警。当前没有让门锁故障直接写 `ControlOn.ParImm.UserEnableControlOn=FALSE`，避免报警瞬间撤销门锁输出而破坏恢复路径；事件和模式层仍会显示/处理 ERROR，实际电气时序留待真机验证。
+
+### 验证结果
+
+CpStudio 后、AI 前快照 SHA-256=`4F5522E919E3B8CA504D0981CB788E9D0F01CFC037DA6C947C476B456B5BD2CE`。AI 后对象数仍为 232，新增/删除均为 0，唯一改变的三个对象为 `FB_MaintenanceDoorControl`、`StationUnit` 和 `StationUnit.OnCall`；最终 SHA-256=`5E364DD99EDA0786055A3E11211D41F70C6DFE8026A977AD2C3E3A40EED816B0`。事件常量只有声明和调用各一次，完整离线编译为 **0 errors / 7 warnings**，Station010 提交为 `93379fd`。

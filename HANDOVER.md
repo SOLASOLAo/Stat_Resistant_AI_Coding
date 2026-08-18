@@ -222,3 +222,12 @@
 - 当前没有为“维修门未在限定时间关闭”新增事件：任一反馈为 FALSE 时只是不放行主气压和模式。门锁 FB 在 Station 非 OPERATIONAL、总线异常或 ControlOn 撤销后输出 FALSE；保持/释放时序和是否需要门超时事件留待真机验证确认。
 - 文本快照由 231 增至 232 个对象：新增恰好 `FB_MaintenanceDoorControl`，无删除；既有对象只改变主气压 FB、Station/StationUnit 接线，以及 Home Chain 声明、N000、N110~N160、OnChainFinish 共 13 个目标对象。快照校验通过，project SHA-256=`EB76CF911AE933D33B3CFFF77024B61060198C78995BB954B237ADDD8D16A0E4`，离线编译 **0 errors / 7 warnings**。
 - Station010 有效生成变化与 PLC 逻辑已提交并推送为 `bb853e5`（`feat: implement home sequence and door interlock`）。仅时间戳变化的 `Plc/*.Sync.json`、HMI `.vwn` 与 Logbook 日期滚动未提交，也未被 AI 回退。未连接、下载、启停或写入实体 PLC，未创建额外二进制备份。
+
+## 维修门未锁报警 + CpStudio 模型收口(2026-08-18)
+
+- 用户经 CpStudio 新增 `Station.EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2`，英文事件文本为 `The maintenance door should be locked!!`。名称中的 `LOAKED` 是当前生成接口的准确拼写，PLC 调用保持一致，不擅自改名或另造事件号。中文语言资源当前也使用同一英文文本。
+- `FB_MaintenanceDoorControl` 新增 `tLockMonitoringTime`、TON 和锁存输出 `xFaultDoorNotLocked`。两路门锁输出被请求且 `_000K980_A/_000K981_B` 未同时成立时开始 5 s 计时；反馈缺失期间主气压许可从第一周期起即为 FALSE，5 s 到时再锁存报警。报警后即使反馈恢复，也要先 Control Off 使两路锁请求撤销，才允许清除并开始下一次 Control On。
+- `StationUnit` 新增事件句柄，并在 `OnCall` 按已有主气压事件相同的 `SetEvent(Lock := TRUE) → UnlockEvent → ClearEvent` 生命周期管理该事件。事件常量全工程只有声明与调用各一处。
+- 本次 CpStudio 导出还完成两个既有待办：Burster `SetRange/StartMeas` 的对象级手动条件已正式生成为 TRUE 并同步到 HMI；`LineNo/TestMode/NokCounter/Wp100.Active` 已从 `StationDataStruct` 和 `OnCheckData` 移除。`StationSdNokCounter`、`Wp100StationDataStruct` 两个 DUT 目前只剩自身声明、无业务引用，暂不擅自删除。
+- CpStudio 后、AI 前快照为 232 个对象，project SHA-256=`4F5522E919E3B8CA504D0981CB788E9D0F01CFC037DA6C947C476B456B5BD2CE`；AI 后仍为 232 个对象，只改变 `FB_MaintenanceDoorControl`、`StationUnit`、`StationUnit.OnCall` 三个对象，最终 SHA-256=`5E364DD99EDA0786055A3E11211D41F70C6DFE8026A977AD2C3E3A40EED816B0`。完整离线编译 **0 errors / 7 warnings**。
+- 有效 CpStudio 生成文件与 PLC 报警逻辑已提交并推送为 Station010 `93379fd`（`feat: add maintenance door lock alarm`）。`.Sync.json` 时间戳和内容相同的 Logbook 日期改名未提交、未回退。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
