@@ -49,15 +49,15 @@
    - `b9b1161` IDE/CpStudio 现状快照
    - 本地仓库已加 origin 并跟踪 origin/main,与远端完全一致。**以后 CpStudio 每次重新生成后先 `git -C ../Station010_0708 diff`**,即可逐文件分析低代码生成机制。
 2. **3 个编译错误的定性(重要结论)**:
-   - 现状:编译 3 errors / 16 warnings。3 个错误全是陈旧符号表条目:`bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`("is no component of 'BinIo'")。
+   - 当时现状:编译 3 errors / 16 warnings；三个名称为 `bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`。当时暂归因为陈旧符号表条目；后续已纠正为 A1 的旧 I/O 映射残留，见文末 0-error 收口记录。
    - 对照 `Engineering/Engineering_Data.xml`(CpStudio 模型)确认:模型里只有 `_000S900A/_000S900B`,**没有**裸 `_000S900`、Channel_6/7、IpKeyenceSr2000 → 这 3 个错误是旧残留,**不是 CpStudio 当前产物**,用户无需在 CpStudio 操作,在 PLE 里删即可。
    - `_Wp100A830Scanner` 警告条目在 CpStudio 模型中存在 → 属 CpStudio 管辖,勿擅删,由用户决定;`IpKeyenceSr2000(ParCfg)` 不在模型中 → 可删。
-   - **SymbolConfig 条目对 ScriptEngine 不可见**:find/get_children/export_xml 全部返回空(已实测)。可读形态只有 IDE 导出的 Symbolconfiguration XML:`Plc/Stat010_V5.11_CtrlX_PLC.Device.Application.xml`(4208 行,其中不含 3 个陈旧条目)。下次路线:① 让用户在 PLE Symbols 编辑器手删 3 行(30 秒,最快);② AI 试验对 Symbols 节点 import_xml 的整表覆盖语义。
+   - 当时使用错误显示名查找 SymbolConfig，误判为 ScriptEngine 不可见。后续确认脚本树内部名称为 `Symbols`，支持 `is_symbol_config`、`get_only_configured_signatures()` 等 API；导出的 Symbolconfiguration XML 本身也不含三个报错名称。
 3. **CpStudio 定位**:Bosch OpCon/Nexeed "Control plus Studio" V5.11;模型 = `Engineering/Engineering_Data.xml`(10.7 MB,Bosch.OpCon.Data schema);索引 = `Engineering/Stat010_V5.11_CtrlX.cpsp`;HMI = `OpCon.HMI.Modulo`。**注意:模型中仍有 `Wp100A740*` 残留**——PLC/IO 侧 `_100A740_BL` 已删,若不在 CpStudio 删除 740 站,下次重新生成可能带回相关符号。
 4. 后台副本实例(PID 32724)已被用户关闭,无副作用;MCP 附着的主 PLE(PID 9048)全程正常。
 
 ### 当前状态
-- 编译:3 errors / 16 warnings(错误全为上所述陈旧符号条目,暂停处理等用户指示)。
+- 当时编译:3 errors / 16 warnings；后续已完成根因纠正和 0-error 收口，见文末。
 - 进程:PLE PID 9048(MCP 附着,session 6c072ed3-349c-45e1-93d9-158ecb1a83e5)、IOE PID 30656(持有 IO 工程)、gateway 正常。
 - 仓库映射:McpCoding → `Stat_Resistant_AI_Coding`(public);`../Station010_0708` → `Stat_Resistant_Station010`(private);`McpCoding/ctrlx-ai-coding` → `SOLASOLAo/ctrlx-ai-coding`(独立子仓库)。
 
@@ -108,9 +108,9 @@
 
 - 扩展重启后状态正常：唯一 MCP Node + 唯一 persistent PLE，session `0b4dd2b0-85c1-44cd-a260-aa5fdfe470b0`，PLE PID 24368。
 - MCP 打开 Station010 PLC 工程；两次快照均返回 215 个文本对象和相同 project SHA-256。PowerShell verifier 通过；文本树 SHA-256=`4e556b44bb2212c91d7c86d260a87b325b7dfeba8fe0f2b9622089a1dab63241`。
-- 离线编译基线：66 errors / 40 warnings。3 errors 是已知 SymbolConfig 陈旧 BinIo 条目；其余 63 errors 是删除 Unit 后遗留在 10 个 ST 对象中的安全门/压缸/扫码枪引用，详见 `docs/cpstudio_generation_analysis.md`。
+- 离线编译基线：66 errors / 40 warnings。3 errors 当时暂归为 SymbolConfig 残留，后续确认是 A1 旧 I/O 映射；其余 63 errors 是删除 Unit 后遗留在 10 个 ST 对象中的安全门/压缸/扫码枪引用，详见 `docs/cpstudio_generation_analysis.md`。
 - 编译没有改写 project：当前哈希仍为 `24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`，与备份一致。
-- 用户已明确选择方案①：授权 AI 经 MCP 修改 `../Station010_0708`，并将其正式定义为 CpStudio + MCP 受控集成工作工程；`../Std` 继续严格只读。下一步清理 10 个旧 ST 对象，SymbolConfig 的 3 个陈旧条目仍由用户在 PLE Symbols 编辑器删除。
+- 用户已明确选择方案①：授权 AI 经 MCP 修改 `../Station010_0708`，并将其正式定义为 CpStudio + MCP 受控集成工作工程；`../Std` 继续严格只读。后续已完成 10 个旧 ST 对象和三条 A1 I/O 映射的清理。
 
 ## GitHub 凭据绑定(2026-08-18)
 
@@ -123,6 +123,18 @@
 
 - 用户已授权 Station010 为受控集成工作工程；权限规则提交 `5124d62`。
 - persistent MCP 修改 10 个对象：空 Wp100 `OnApplyOutputs` + 9 个已删除设备的旧 Chain actions；清理前后快照对比恰好仅这 10 个对象变化，215 对象 manifest 校验通过。
-- 编译从 66 errors / 40 warnings 降到 **3 errors / 40 warnings**；剩余错误只有 `bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7` 三个 SymbolConfig 陈旧条目。
+- 编译从 66 errors / 40 warnings 降到 **3 errors / 40 warnings**；三个剩余名称后来确认来自 A1 的旧 I/O 映射，而非 SymbolConfig。
 - 当前 project SHA-256=`619B8B8FBB748AC141FCC5510CE1227D4EE208B7B02434BCF55F688A8FEE8AE7`；清理前 project 和文本快照均在被忽略的 `data/` 下备份。
-- 下一步：用户在当前 MCP PLE 的 `Device → PLC Logic → Application → Symbols` 中手动删除上述 3 行并保存；然后 AI 立即重新编译，目标 0 errors，再提交/推送 Station010 私有仓库。
+- 该阶段的后续处理已在下节完成；无需再从 Symbol Configuration 中查找这三个名称。
+
+## 最小骨架 0-error 收口(2026-08-18)
+
+- 用户在 PLE Symbol Configuration 顶部执行 `Remove...`，清除了 25 个已失效签名。实时 ScriptEngine 随后确认 `Symbols` 对象内的 `BinIo` 配置已不含三个报错名称；因此原先的 SymbolConfig 定性被推翻。
+- 实际根因位于 `_000SK010A1` 的 I/O Mapping：
+  - `%IX0.2`：`bus_000S900` → `bus_000SK010A1_Channel_3`；
+  - `%IX0.5`：`bus_000SK010A1_Channel_6` → `bus_000B085A_LOW`；
+  - `%IX0.6`：`bus_000SK010A1_Channel_7` → `bus_000B085A_HIGH`。
+- 修复前 `BinIo` 的 56 个 `bus_*` 声明与 56 条物理映射各有三个集合差异；修复后两集合完全一致。离线编译结果 **0 errors / 7 warnings**。
+- 更新快照仍为 215 个对象并通过校验；相对 ST 清理前快照恰好只有既定 10 个对象变化。最终 project SHA-256=`132213CF6B566C255885F036800CD85B5893846704D23DE3ED2555DC8291B9F8`。
+- 回退备份位于被忽略的 `data/backups/Stat010_V5.11_CtrlX_PLC.pre_symbol_save_20260818.project` 与 `...pre_io_mapping_fix_20260818.project`。没有连接、下载、启动或停止实体 PLC。
+- Station010 私有仓库已提交并推送 `987d8fb`（`refactor: establish minimal CpStudio skeleton baseline`）；工作树干净。当前不要用 CpStudio 重新生成，下一步从“只增加一个设备”的受控实验开始。

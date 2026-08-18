@@ -17,14 +17,14 @@
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
 - [x] 吸收 ctrlx-ai-coding 方法论;环境体检(CRLF 补丁/模板/库仓库)通过(2026-08-17)
 ## 补充(2026-08-18 夜 转接)
-- [ ] 🔴 清理 3 个陈旧 SymbolConfig 条目(bus_000S900 / bus_000SK010A1_Channel_6 / _7),编译 → 0 errors(路线①:用户 PLE Symbols 编辑器手删;路线②:AI 试 import_xml 整表)
+- [x] 🔴 清理 3 个非 ST 残留并编译到 0 errors：最终定位为 A1 的旧 I/O 映射，离线重映射后为 0 errors / 7 warnings(2026-08-18)
 - [ ] 🟡 用户决定:是否在 CpStudio 删除 Wp100A740* 站(Engineering_Data.xml 残留,不删则重新生成会带回)
 - [ ] 🟡 CpStudio 重新生成后 git diff 分析 → docs/cpstudio_generation_analysis.md
 - [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/export_plc_snapshot.py`,`scripts/verify_plc_snapshot.ps1`)
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010_0708` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
 - [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)
-- [ ] 🔴 用户在 PLE Symbols 编辑器删除 3 个陈旧 SymbolConfig 条目(`bus_000S900`/`bus_000SK010A1_Channel_6`/`_7`);AI 随后编译到 0 errors
+- [x] 🔴 Symbol/I/O 联合审计完成：用户清理 25 个失效 Symbol 签名；AI 修正 A1 三条旧映射并编译到 0 errors(2026-08-18)
 - [ ] 🔴 受控增量实验:每次只添加 1 个设备并完成生成→Git diff→ST 快照→编译→提交;设备稳定后再逐条添加自动 Chains
 - [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
 

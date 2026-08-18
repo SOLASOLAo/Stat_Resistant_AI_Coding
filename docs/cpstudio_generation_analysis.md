@@ -68,7 +68,7 @@
 
 66 个错误可归为两类：
 
-1. 3 个既有 SymbolConfig 陈旧条目：`bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`。文本快照中没有这三个精确标识符，进一步确认它们不在 ST 内；
+1. 3 个非 ST 错误：`bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`。当时因文本快照中没有这三个精确标识符而暂归为 SymbolConfig 残留；后续实时 ScriptEngine 审计证明实际来源是 A1 的旧 I/O 通道映射，见下节；
 2. 63 个错误来自删除 Unit 后仍保留的旧 ST 步骤，集中在 10 个对象：
    - `Application/Station/Wp100/_this/Wp100Unit/OnApplyOutputs`；
    - `SqC_Wp100_Run` 的 `_aN050_active`、`_aN055_active`、`_aN060_active`；
@@ -84,4 +84,24 @@
 - 9 个旧设备步骤：改为带说明的 `_retVal := OK;` pass-through，等待后续逐设备重建 Chains；
 - 清理前后文本 manifest 对比恰好只有这 10 个对象哈希变化；更新后快照仍为 215 个对象并通过校验；
 - project SHA-256 更新为 `619B8B8FBB748AC141FCC5510CE1227D4EE208B7B02434BCF55F688A8FEE8AE7`；
-- 编译由 66 errors / 40 warnings 降到 **3 errors / 40 warnings**。剩余 3 errors 仅为 ScriptEngine 无法访问的 SymbolConfig 陈旧条目，需用户在 PLE Symbols 编辑器手动删除。
+- 编译由 66 errors / 40 warnings 降到 **3 errors / 40 warnings**。此时剩余 3 errors 尚待对 Symbol Configuration 与 I/O 映射分别审计；最终定性与修复见下节。
+
+### 最小骨架 0-error 收口：三条 A1 I/O 映射
+
+用户在 PLE 的 Symbol Configuration 中移除了 25 个已失效签名后，3 个 `BinIo` 错误仍然存在。实时 ScriptEngine 审计得到以下事实：
+
+- Symbol Configuration 对象在脚本树中的内部名称为 `Symbols`；`get_only_configured_signatures()` 返回的 `BinIo` 已不包含三个报错名称，说明符号清理已经生效；
+- `BinIo` 声明包含 56 个 `bus_*` 变量，EtherCAT 树也有 56 条映射，但修复前两边集合各有三个差异；
+- 三条错误全部位于 `Device/Realtime_Data/ethercat_master_instances_000SA620_X1/_000SK010/_000SK010A1`。
+
+离线修正如下：
+
+| 通道 | 原映射 | 修正后映射 |
+|---|---|---|
+| `%IX0.2` / `Channel_3.Input` | `bus_000S900` | `bus_000SK010A1_Channel_3` |
+| `%IX0.5` / `Channel_6.Input` | `bus_000SK010A1_Channel_6` | `bus_000B085A_LOW` |
+| `%IX0.6` / `Channel_7.Input` | `bus_000SK010A1_Channel_7` | `bus_000B085A_HIGH` |
+
+修正后声明集合与映射集合完全一致，离线编译为 **0 errors / 7 warnings**。215 个 PLC 文本对象再次通过 manifest 校验；与 ST 清理前快照相比仍恰好只有既定的 10 个对象变化，说明 I/O 映射修正没有扩散到其他 ST。最终 project SHA-256=`132213CF6B566C255885F036800CD85B5893846704D23DE3ED2555DC8291B9F8`。全过程未连接、下载或启停实体 PLC。
+
+该最小骨架已提交并推送到 Station010 私有仓库：`987d8fb`（`refactor: establish minimal CpStudio skeleton baseline`）。当前不应再次用 CpStudio 全量生成；否则可能覆盖已经完成的 10 处 ST 最小清理。下一次生成应从“每次只增加一个设备”的受控实验开始。
