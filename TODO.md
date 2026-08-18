@@ -23,6 +23,7 @@
 - [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/export_plc_snapshot.py`,`scripts/verify_plc_snapshot.ps1`)
 - [ ] 🔴 最小骨架基线:删除 Wp100 下全部 5 个 Unit 已获用户确认;关闭持锁 PLE 后导出首份 PLC 文本快照并编译
 - [ ] 🔴 受控增量实验:每次只添加 1 个设备并完成生成→Git diff→ST 快照→编译→提交;设备稳定后再逐条添加自动 Chains
+- [ ] 🔴 重载 Codex/VS Code 恢复已关闭的 MCP transport；恢复后用单一 persistent 调用链完成最小骨架快照和编译(工程备份/哈希见 HANDOVER 恢复点)
 
 ## 已完成(近期)补充
 - [x] Station010_0708 GitHub 私有备份 Stat_Resistant_Station010(基线+快照,本地已同步 origin/main)(2026-08-18)

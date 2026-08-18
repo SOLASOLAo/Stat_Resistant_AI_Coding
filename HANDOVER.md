@@ -91,3 +91,15 @@
 1. 用户已确认删除 Wp100 下全部 5 个 Unit 是有意建立最小干净框架；后续逐个添加设备，设备稳定后再逐条添加自动 Chains。
 2. 用户关闭 PID 3888 对应的 PLE 窗口后，再启动唯一 MCP 实例，执行首份文本快照到 `data/plc_snapshots/station010`，连续导出两次验证零 diff并编译。
 3. 快照验证通过后，再决定是否获准把文本镜像写入只读参考目录对应的私有 GitHub 仓库。
+
+## 恢复点(2026-08-18 11:40)· 等待 Codex/VS Code 重载
+
+- 用户已正常关闭原 PLE PID 3888，工程锁已消失；最小骨架删除范围已确认有效。
+- 启动 MCP 前已备份 PLC 工程到 `data/backups/Stat010_V5.11_CtrlX_PLC.pre_snapshot_20260818.project`(被 gitignore 排除)。源文件与备份均为 1,587,104 B，SHA-256=`24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`。
+- 首次 `open_project` 失败时查明：同一 Codex app-server 意外派生了 4 个 `codesys-mcp-persistent` Node 子进程，服务状态错误退化为 headless。已核验这些进程全部属于当前 Codex 后停止；当前 PLE=0、MCP Node=0。
+- 停止 MCP 子进程也关闭了本会话的 stdio transport；后续工具返回 `Transport closed`。需要用户重载当前 Codex/VS Code 会话以恢复 MCP 注册。
+- 整个失败路径没有改写 PLC project；事后源文件哈希仍与备份完全一致。`../Station010_0708` 仍保留 27 个有意的未提交生成变化，未提交、未回滚。
+
+### 重载后的唯一第一步
+
+在一次 MCP 调用链中依次完成：`get_codesys_status/launch` → `open_project` → 两次 `eval_python(execfile export_plc_snapshot.py)` → 本地校验零 diff → `compile_project`。避免把这些调用拆到多个独立 MCP client；不得再次走 headless。
