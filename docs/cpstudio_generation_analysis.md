@@ -403,3 +403,38 @@ ReleaseStartMeas := CommonManRelease AND TRUE;
 - project SHA-256=`FCDF252C1D4E6B0D65EA3230B0A133418FF3B8EDF5A1E51827E199A5BD573067`，14 个有效生成文件提交为 Station010 `7c4422e`。
 
 本次完整导出还验证了一个边界：CpStudio 没有从 PLE 回读 Burster OnManRelease 的 `AND TRUE`，HMI 条件分析树仍生成 `<Constant state="False">`。因此该 HMI 元数据不能靠下一次导出自动恢复，必须在 CpStudio 模型中设置对应对象级条件；继续禁止直接修改 `Engineering_Data.xml`。
+
+## 样本 10：Wp100 Home 原子操作 + 维修门主气压联锁
+
+### Home SubChain 的条件分支
+
+用户定义的 Home 原子操作已落到 `SqS_Wp100_Home`。N010 先通过 `FB_OperatorButton` 等待 `_000S610`，并用 `_000P610` 显示 500 ms 闪烁；确认后按设备初态执行：
+
+| 压缸 Base | 安全门 Base/Work | 实际动作 |
+|---|---|---|
+| TRUE | Base | 全部动作跳过 |
+| TRUE | 非 Base | 安全门 BASPOS |
+| FALSE | Work | 压缸 BASPOS → 安全门 BASPOS |
+| FALSE | 非 Work | 安全门 WRKPOS → 压缸 BASPOS → 安全门 BASPOS |
+
+N110/N130/N150 只在目标 Unit 为 READY 且 `StepPulse` 有效时发起标准 BasMove 命令；N120/N140/N160 只对本轮真正发起的命令调用 `CheckUnitDone(..., RepeatOnError := TRUE)`。三个 started 标志使“已在目标位而跳过”不会误进入等待。`OnChainFinish` 无条件撤销按钮 Execute、熄灭 `_000P610`、撤销两个 BasMove Unit 的 Execute 并清除标志，因此模式切换产生的 CANCEL 与 DONE/ERROR 使用同一清理路径。
+
+### 维修门锁和主气压许可
+
+CpStudio 本轮把 `_000K980/_000K981` 的英文描述细化为 A/B door lock；AI 没有在生成 XML 中写逻辑，而是经 PLC MCP 新增通用 `FB_MaintenanceDoorControl`。该 FB 不引用 Station 或具体 BMK，接口由 Control On 请求/确认、A/B 关闭反馈和 A/B 锁命令组成。
+
+当前 Station 周期接线如下：
+
+1. `_000S901` 按下时立即请求 `_000K980/_000K981=TRUE`；
+2. `Station.ControlOn.OutImm.IsCtrlOn=TRUE` 后保持两路门锁输出；
+3. 只有 `_000K980_A AND _000K981_B` 且两路锁命令均为 TRUE，`xMainPressureRelease` 才为 TRUE；
+4. `FB_MainPressureControl` 仅在该许可成立后允许 `_000K085A` 上电，任一门反馈丢失会在同一扫描周期撤销许可；
+5. 原 `BinIo._dummyFlagIsEveryDoorLockClosed := TRUE` 改为真实 `xAllDoorsClosed`，既有 Mode Handler 的 AUTO/MANUAL/HOME/CHANGEOVER 放行同步受两扇维修门约束。
+
+这里没有擅自增加“门未关闭”超时报警，因为需求只定义了禁止主气压上电；后续真机验证门锁反馈时序后，再决定是否需要独立事件和延时。主气压原有 5 s HIGH/LOW 诊断与 `ControlOn.ParImm.UserEnableControlOn` 故障下电接口保持不变，只新增前级 `xValveRelease`。
+
+### 审计边界
+
+相对 `station010_cpstudio_param_rename_before_ai` 的 231 对象基线，最终快照为 232 个对象：新增恰好 `Application/Fbs/FB_MaintenanceDoorControl`，删除为 0；改变 13 个既有目标对象，未影响 N010、Burster 手动放行或其他 Chain。三个现场输出 `_000K980/_000K981/_000K085A` 的业务写入各只有 `StationUnit.OnCall` 一处（生成的 `BinIo.SetState` 通用接口除外）。完整离线编译为 **0 errors / 7 warnings**，project SHA-256=`EB76CF911AE933D33B3CFFF77024B61060198C78995BB954B237ADDD8D16A0E4`，Station010 提交为 `bb853e5`。
+
+CpStudio 后续导出可能覆盖 SFC Action、`OnChainFinish`、Station 调用接线或 FB 接口，因此 post-export 审计至少应验证上述 14 个新增/改变对象、三个输出的唯一业务写入点和编译结果；仍不得直接编辑 `.project` 字节或生成 XML 来补 PLC 逻辑。

@@ -212,3 +212,13 @@
 - `FB_MainPressureControl`、`FB_OperatorButton`、按钮 Action/OnChainFinish、Wp100 Home 联锁及 Burster `CommonManRelease AND TRUE` 全部保持。完整离线编译为 **0 errors / 7 warnings**；project SHA-256=`FCDF252C1D4E6B0D65EA3230B0A133418FF3B8EDF5A1E51827E199A5BD573067`。
 - 本次完整导出后，HMI 中 Burster `SetRange/StartMeas` 的条件分析树仍是 Constant FALSE，确认 CpStudio 不会反向读取 PLE 的 ST 修改；后续必须在 CpStudio 模型中设置，而不是直接编辑生成 XML。
 - 14 个有效生成文件已提交为 Station010 `7c4422e`（`feat: update safety IO and station data parameters`）；两个仅时间戳变化的 `.Sync.json` 未提交。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
+
+## Wp100 Home 原子操作 + 维修门主气压联锁(2026-08-18)
+
+- `SqS_Wp100_Home` 保留 N010 的通用按钮握手，N110~N160 实现条件式回原位：压缸不在 Base 时，先让 `Wp100K101SafetyDoor` 执行 WRKPOS 并等待完成，再让 `Wp100K102PressingCylinder` 执行 BASPOS；压缸已在 Base 时跳过这两段。最后仅在安全门尚未到 Base 时执行其 BASPOS。四种设备初态都会跳过不必要动作。
+- 三段命令沿用 OpCon BasMove 标准调用协议：READY + `StepPulse` 时设置 `PreStartCheck/OutputPulsing`、Command 与 Execute，后一 Action 用 `CheckUnitDone(..., RepeatOnError := TRUE)` 等待。三个 started 标志区分“本轮启动”与“条件跳过”。`OnChainFinish` 对任意结束原因复位按钮 FB/`_000P610`、两个 Unit 的 Execute 和三个标志，覆盖 DONE/ERROR/CANCEL。
+- 新增无项目 BMK 依赖的通用 `Application/Fbs/FB_MaintenanceDoorControl`。Station 接线为：`_000S901` 原始 Control On 请求使 `_000K980/_000K981` 上电，`Station.ControlOn.OutImm.IsCtrlOn` 成立后保持；`_000K980_A AND _000K981_B` 形成 `xAllDoorsClosed`，再与两路锁命令共同生成 `xMainPressureRelease`。
+- `FB_MainPressureControl` 新增 `xValveRelease` 输入；许可为 FALSE 时立即关闭 `_000K085A`，仅许可为 TRUE 后才按既有 LOW/HIGH 与 5 s 诊断逻辑工作。原来固定 TRUE 的 `_dummyFlagIsEveryDoorLockClosed` 已接到 `xAllDoorsClosed`，所以 AUTO/MANUAL/HOME/CHANGEOVER 的既有 `OnModeRelease` 同时使用真实的两扇维修门反馈。
+- 当前没有为“维修门未在限定时间关闭”新增事件：任一反馈为 FALSE 时只是不放行主气压和模式。门锁 FB 在 Station 非 OPERATIONAL、总线异常或 ControlOn 撤销后输出 FALSE；保持/释放时序和是否需要门超时事件留待真机验证确认。
+- 文本快照由 231 增至 232 个对象：新增恰好 `FB_MaintenanceDoorControl`，无删除；既有对象只改变主气压 FB、Station/StationUnit 接线，以及 Home Chain 声明、N000、N110~N160、OnChainFinish 共 13 个目标对象。快照校验通过，project SHA-256=`EB76CF911AE933D33B3CFFF77024B61060198C78995BB954B237ADDD8D16A0E4`，离线编译 **0 errors / 7 warnings**。
+- Station010 有效生成变化与 PLC 逻辑已提交并推送为 `bb853e5`（`feat: implement home sequence and door interlock`）。仅时间戳变化的 `Plc/*.Sync.json`、HMI `.vwn` 与 Logbook 日期滚动未提交，也未被 AI 回退。未连接、下载、启停或写入实体 PLC，未创建额外二进制备份。
