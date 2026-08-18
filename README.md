@@ -21,6 +21,9 @@ PLC Engineering MCP/REST 维护应用逻辑：
 5. 完整离线编译，以 0 errors 和已记录 warning 基线验收
 ```
 
+新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
+不要从历史型 `HANDOVER.md` 反推安装步骤。
+
 ## 仓库结构
 ```
 ├── config/        工程路径、版本和质量门禁
@@ -32,6 +35,7 @@ PLC Engineering MCP/REST 维护应用逻辑：
 ├── tests/         静态、编译与仿真测试
 ├── data/          请求、快照、报告和本地备份(不入 Git)
 ├── docs/          技术文档与生成机制分析
+├── TEAM_SETUP.md  团队交接与新电脑部署
 ├── AGENTS.md      AI Agent 工作指南(先读)
 ├── HANDOVER.md    会话交接状态
 └── TODO.md        任务清单
@@ -45,6 +49,7 @@ PLC Engineering MCP/REST 维护应用逻辑：
 - CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 - 跨项目目录标准:`docs/project_structure_standard.md`
+- 团队工作站部署:`TEAM_SETUP.md`
 
 ## 版权说明
 - OpCon / Nexeed / ctrlX 为 Bosch 商标,相关参考代码与组件仅限本工程内部使用

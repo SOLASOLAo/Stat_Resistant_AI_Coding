@@ -27,6 +27,10 @@ Git 同时记录生成结果和可读工程资产。
    └─ docs/                     架构、分析和操作文档
 ```
 
+每个工程旁车根目录还必须有 `TEAM_SETUP.md`，记录团队工作站部署、外部闭源资产、固定工具版本、
+MCP 配置和首次离线验收；它与记录开发进度的 `HANDOVER.md` 分离。`scripts/setup/` 保存不会启动
+IDE、不会写工程的环境体检脚本。
+
 Station 目录继续保留供应商原始结构，例如 `Engineering/`、`Plc/`、`Hmi/`、
 `EventRecorder/` 和 `PublicConfig/`。这些目录可能被 CpStudio 的相对路径和
 生成逻辑引用，禁止为了美观重新组织。
@@ -100,6 +104,7 @@ catalog/peripherals/NexeedIpBurster2316/V1.0/peripheral.yaml
 - `plc/`：PLE ScriptEngine/MCP/REST 辅助；
 - `ioe/`：IO Engineering IPC；
 - `git/`：差异、审计、报告和提交辅助。
+- `setup/`：新电脑所需目录、软件、MCP、补丁和配置的只读体检。
 
 Post-export 脚本只允许发布 `data/requests/export_request.json`，禁止启动第二个
 PLC Engineering 或 MCP server。PLC 工作由当前唯一 persistent MCP 会话串行处理。

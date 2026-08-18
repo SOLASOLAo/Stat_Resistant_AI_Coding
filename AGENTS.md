@@ -33,7 +33,7 @@
 | CpStudio/MCP 集成工作工程 | `../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project`(写入遵守红线 1/2/3/6) |
 
 ## 5. 文档与提交约定
-- 事实源:README(是什么)/ `config/`(路径与门禁)/ `specs/`(确认需求)/ `ai/`(对象归属与钩子)/ `src/plc/`(AI-owned 源码)/ `catalog/`(已验证标准对象接口)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md
+- 事实源:README(是什么)/ TEAM_SETUP.md(同事工作站部署)/ `config/`(路径与门禁)/ `specs/`(确认需求)/ `ai/`(对象归属与钩子)/ `src/plc/`(AI-owned 源码)/ `catalog/`(已验证标准对象接口)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md
 - 会话循环:进场读 AGENTS → HANDOVER → TODO;收场更新 HANDOVER + TODO 勾选 + 提交推送
 - 提交前缀:`feat:` `fix:` `docs:` `test:` `tools:` `refactor:`
 

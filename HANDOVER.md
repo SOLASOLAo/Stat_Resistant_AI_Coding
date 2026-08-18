@@ -248,3 +248,11 @@
 - Catalog 首批登记 BasMove Standard V2.1、Burster 2316 V1.0、ControlOn V2.0、EmergencySwitch V2.0、StationLamp V2.3.1 和 IpBurster2316 V1.0；仅保存接口事实与本地手册路径，不复制闭源手册或供应商代码。
 - 现有工具分类到 `scripts/plc` 与 `scripts/ioe`；新增 `scripts/cpstudio/post_export_signal.bat` + `write_export_request.ps1`。CpStudio 的 Post-export hook 是官方能力，该自定义脚本只原子发布 `data/requests/export_request.json`，不启动第二个 PLE/MCP。真实 CpStudio hook 配置和 request 消费器仍列为下一步。
 - 新增 `tests/static/Test-ProjectFramework.ps1`，检查标准文件、兄弟目录、POU 分段标记和 Post-export 脚本不含 PLE/MCP/在线启动入口。本批只改 AI 工程仓库文件，没有连接、下载、启停或写入实体 PLC，也没有修改 Station010 PLC 工程。
+
+## 团队工作站部署交接(2026-08-19)
+
+- 新增根目录 `TEAM_SETUP.md`，作为同事/新电脑的一次性部署权威入口；原 `HANDOVER.md` 继续只保存项目状态和工程历史，不再承担安装手册职责。
+- 文档明确标准四目录布局：`Station010_0708`、只读 `Std`、`McpCoding`、嵌套独立仓库 `McpCoding/ctrlx-ai-coding`；记录三个 GitHub 仓库、私有仓库授权和不能经 GitHub 分发的闭源资产/许可证。
+- 新增 `config/codex-mcp.toml.example`，只含干净的 `codesys-persistent` STDIO 配置，不复制任何个人模型供应商、账号、Token 或 API Key。Codex 官方配置事实核对于 2026-08-19：默认 `~/.codex/config.toml`，同一主机的桌面/CLI/IDE 扩展共享配置。
+- 新增只读 `scripts/setup/Test-TeamWorkstation.ps1`：从 `config/project.yaml` 解析工程相对路径，检查 CpStudio/PLE/IOE、Managed Libraries、Node/npm、固定 MCP 0.6.3、补丁和 Codex 配置；不启动 IDE、不打开或写入工程、不连接 PLC。
+- 同事首次交接验收固定为：环境体检 + 目录静态测试 + 唯一 persistent MCP 会话 + Station010 完整离线编译 0 errors / 7 warnings。闭源 `Std`、安装介质和许可证仍必须由公司授权渠道提供。

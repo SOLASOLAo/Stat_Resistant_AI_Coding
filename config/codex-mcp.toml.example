@@ -1,0 +1,18 @@
+# Merge only this block into %USERPROFILE%\.codex\config.toml.
+# Do not copy another developer's model provider, account, token or API key.
+
+[mcp_servers.codesys-persistent]
+command = "codesys-mcp-persistent"
+args = [
+  "--codesys-path",
+  "C:\\ctrlXWORKS\\ctrlXPLCEngineering\\PLE_V_0206\\StudioPlc\\Common\\ctrlX-PLC-Engineering.exe",
+  "--codesys-profile",
+  "ctrlX PLC 2.6.8",
+  "--workspace",
+  "C:\\Engineering\\BPP_ResistantStation",
+  "--mode",
+  "persistent",
+]
+startup_timeout_sec = 120
+tool_timeout_sec = 180
+enabled = true

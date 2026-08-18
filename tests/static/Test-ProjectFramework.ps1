@@ -5,8 +5,10 @@ $ErrorActionPreference = 'Stop'
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 
 $requiredFiles = @(
+    'TEAM_SETUP.md',
     'config/project.yaml',
     'config/quality-gates.yaml',
+    'config/codex-mcp.toml.example',
     'specs/station.yaml',
     'specs/io.yaml',
     'specs/events.yaml',
@@ -22,7 +24,8 @@ $requiredFiles = @(
     'scripts/cpstudio/write_export_request.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
-    'scripts/ioe/ioe_ipc.ps1'
+    'scripts/ioe/ioe_ipc.ps1',
+    'scripts/setup/Test-TeamWorkstation.ps1'
 )
 
 $failures = New-Object System.Collections.Generic.List[string]

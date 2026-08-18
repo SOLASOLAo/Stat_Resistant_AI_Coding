@@ -4,6 +4,7 @@
 - `plc/`: PLC Engineering snapshot/readback helpers.
 - `ioe/`: ctrlX IO Engineering IPC helpers.
 - `git/`: post-export diff/report orchestration helpers.
+- `setup/`: read-only teammate workstation deployment checks.
 
 CpStudio hook scripts must never launch a second PLC Engineering or
 `codesys-mcp-persistent` instance. They only publish a request under the ignored
