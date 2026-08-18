@@ -73,7 +73,7 @@ execfile(r"C:\path\McpCoding\scripts\export_plc_snapshot.py")
 - PLC `.project` 从 1,738,192 B 变为 1,597,120 B；
 - 当前仍有用户 PLE 实例持有 PLC 工程锁，因此未执行 MCP 文本导出或编译。
 
-这批变化应先由用户确认其 CpStudio 操作意图。确认后，把它作为第一个完整的“生成前基线 → CpStudio 改动 → 生成后 diff → PLC 文本快照 → 编译”分析样本。
+用户已确认这批删除是有意建立最小干净框架。它将作为第一个完整的“生成前基线 → CpStudio 改动 → 生成后 diff → PLC 文本快照 → 编译”分析样本；此后逐个添加设备，设备层稳定后再增加自动 Chains。
 
 ## 生成机制实验记录
 
