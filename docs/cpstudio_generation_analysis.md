@@ -160,3 +160,29 @@ REST `GET` 中已选变量的 `accessRights` 仍显示 `Void`，这是可用编�
 4. 保存、审计并重新编译，最终为 **0 errors / 7 warnings** 基线；`BinIo` 有 62 个已选成员且权限均为 `ReadWrite`。
 
 ctrlX/DataLayer 的实际通道位于 `device.connectors → connector.host_parameters → parameter.io_mapping`，不是 `device.get_children(False)`。该支持已并入 `ctrlx-ai-coding` 的兼容补丁脚本并推送为 `142721c`。本批次未操作实体 PLC、未创建额外二进制备份；最终 project SHA-256=`E89D8C0732990B572B2B52305D0215F4099AEA550A5779D6D5444B6EE5BD860C`，Station010 提交为 `482c77a`。
+
+## 样本 4：Wp100 下依次加入两个 BasMove Standard Unit
+
+### 已验证的 OpCon Plus 层级与生成边界
+
+CpStudio 是 OpCon Plus 的闭源低代码生成平台，公司用它生成标准化的自动化设备状态机框架。当前工程中已经直接观察到的层级是：`Station`（Mode Handler）包含 `Wp100`（Command Handler），`Wp100` 再包含标准设备 Unit。设备先以成熟 Unit 封装，自动 Chains 后续再按工艺顺序调用 Unit；这也是本项目采用“先设备、后 Chains”增量策略的原因。
+
+用户分两次 CpStudio 导出，在 `Wp100` 下依次加入：
+
+| 实例 | 类型/版本 | InstanceID | Base/B 端 | Work/A 端 |
+|---|---|---:|---|---|
+| `Wp100K101SafetyDoor` | BasMove Standard 2.1.11.0 | 4 | `_100B101B` 原位传感器；`_100K101B` 原位电磁阀 | `_100B101A` 工作位传感器；`_100K101A` 工作位电磁阀 |
+| `Wp100K102PressingCylinder` | BasMove Standard 2.1.11.0 | 5 | `_100B102B` 上位传感器；`_100K102B` 上升电磁阀 | `_100B102A` 下位传感器；`_100K102A` 下降电磁阀 |
+
+当前 BMK 规律得到两个样本的共同验证：末尾 `B` 表示 Base/原位，末尾 `A` 表示 Work/工作位；中间 `B` 表示传感器，中间 `K` 表示电磁阀。实际物理映射也已通过 PLE connector 接口逐条回读：安全门输入位于 A3 通道 6/7、输出位于 C2 通道 6/7；压缸输入位于 A4 通道 6/7、输出位于 C2 通道 4/5。
+
+第二次导出前后的 PLC 文本快照从 218 个对象增加到 221 个对象，只新增压缸本体、Extension 和 `OnManRelease` 三个对象；没有删除对象。除这三个新增对象外，CpStudio 只更新了 `BinIo`、`StateOverview`、`EventListAddon.OnGetDesignator`、`Wp100.OnApplyParameters` 和 `Wp100.OnInitHierarchy`。这说明新增一个标准 BasMove Unit 的 PLC 生成边界已经可以稳定识别。
+
+### 本次 MCP 集成逻辑
+
+在第二次导出后的 221 对象快照上，AI 只修改了两个 ST 对象：
+
+1. `Wp100K101SafetyDoorExtension.OnManRelease`：保持框架级 `CommonManRelease`，把两个附加条件由 `FALSE` 改为 `TRUE`；安全门手动去原位/工作位不再依赖其他设备或联锁信号。
+2. `Wp100Unit.OnApplyOutputs`：把 `IsInHomePosition := TRUE` 改为 `IsInHomePosition := Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos`，使 Wp100 Home 直接跟随安全门 Unit 已配置的原位状态。
+
+压缸 `Wp100K102PressingCylinderExtension.OnManRelease` 仍保留生成值 `CommonManRelease AND FALSE`，所有自动 Chains 仍保持 pass-through，等待后续逐步放行。MCP 修改前后快照无新增、无删除，恰好只有上述两个对象哈希变化。最终离线编译为 **0 errors / 7 warnings**，PLC project SHA-256=`8DFB10EA386B7DC0733F67A1D5D636E739D5371DBD7CCD5D059A072379877286`。全程未连接、下载、启停或写入实体 PLC，也没有创建额外 `.project` 备份。两次 CpStudio 生成结果与两处 MCP 集成逻辑已一并提交并推送到 Station010 私有仓库：`972cfcb`（`feat: add Wp100 BasMove units and home integration`）。

@@ -157,3 +157,12 @@
 - 随后通过官方 REST 基地址 `http://localhost:9002/plc/engineering/api/v2`，以 `symbolsAction=UnSelect` 精确移除 `BinIo._000SK010C1_Channel_6`；最终 `BinIo` 为 62 个已选成员、全部 `ReadWrite`，完整离线编译恢复到 **0 errors / 7 warnings** 基线。
 - connector 映射扩展、REST 路径及双层修复顺序已固化并推送到方法论仓库 `ctrlx-ai-coding`：`142721c`（`patches: support ctrlX connector I/O mappings`）。补丁入口仍为 `patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`，npm 升级后先运行 `-Check`。
 - 本次未连接、下载、启停或写入实体 PLC，也未创建额外 `.project` 备份。最终 PLC project SHA-256=`E89D8C0732990B572B2B52305D0215F4099AEA550A5779D6D5444B6EE5BD860C`；14 个文件已提交并推送到 Station010 私有仓库：`482c77a`（`fix: sync C1 door-lock channel after CpStudio export`）。
+
+## Wp100 两个 BasMove Unit 增量(2026-08-18)
+
+- 用户分两次 CpStudio 导出，在 `Station`（Mode Handler）→ `Wp100`（Command Handler）下依次加入 BasMove Standard 2.1.11.0：`Wp100K101SafetyDoor`（InstanceID 4）与 `Wp100K102PressingCylinder`（InstanceID 5）。
+- 安全门 2I2O：`_100B101B/_100B101A`（A3 通道 6/7）与 `_100K101B/_100K101A`（C2 通道 6/7）；压缸 2I2O：`_100B102B/_100B102A`（A4 通道 6/7）与 `_100K102B/_100K102A`（C2 通道 4/5）。PLE connector 接口已逐条回读确认物理映射。
+- 第二个 Unit 导出使 PLC 文本对象由 218 增至 221，只新增压缸本体、Extension、`OnManRelease`；其余生成差异限于 `BinIo`、`StateOverview`、事件设计号、Wp100 参数与层级初始化。
+- AI 经 persistent MCP 只改两处 ST：安全门 `OnManRelease` 的两路附加条件改为 `TRUE`；`Wp100Unit.OnApplyOutputs` 的 Home 改为 `Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos`。压缸手动功能仍为 `FALSE`，自动 Chains 未改。
+- 修改前后 221 对象快照对比恰好只有上述两处变化；最终离线编译 **0 errors / 7 warnings**，PLC project SHA-256=`8DFB10EA386B7DC0733F67A1D5D636E739D5371DBD7CCD5D059A072379877286`。未操作实体 PLC，未创建额外二进制备份。
+- 两次 CpStudio Unit 生成结果和上述两处 MCP 集成逻辑已提交并推送到 Station010 私有仓库：`972cfcb`（`feat: add Wp100 BasMove units and home integration`）；提交后工作树干净并与 `origin/main` 一致。
