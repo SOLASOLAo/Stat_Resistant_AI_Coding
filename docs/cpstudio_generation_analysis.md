@@ -304,3 +304,31 @@ CpStudio 5.11 随附英文帮助明确提供两个官方能力：
 当前安装帮助和文本配置中没有发现受支持的无界面项目编辑/命令行导出接口。`DDP.CommandLineRegex.dll` 只是桌面框架组件，不能据此认定存在公开 CLI；`CpStudio_Export_Classes.chm` 描述的是导出模板可读取的数据接口，不是外部项目编辑 API。因此暂不采用 UI 自动点击或直接改写 `Engineering_Data.xml`，这两种方式都容易破坏闭源生成器的数据一致性。
 
 推荐把工作边界固定为：CpStudio 仅负责模型层级、标准 Unit/AddOn/Peripheral、BMK 与 I/O 绑定、HMI/Event 和 StationData；项目专用联锁、状态机和设备算法由 AI 经 MCP 写入独立 FB 及 CpStudio 合并区外代码。Post-export 脚本可进一步自动触发 Git 差异检查、旧 Symbol 引用审计、PLC 编译和摘要输出，让人工动作缩减为“在 CpStudio 做必要声明式配置并点击导出”。当前 ctrlX 没有 MainValve AddOn，继续使用接口通用、项目接线外置的 `FB_MainPressureControl`。
+
+## 样本 7：通用操作按钮 FB + SFC 取消复位
+
+### 原始生成逻辑与缺口
+
+`SqS_Wp100_Home._aN010_active` 原来直接写 I/O：按钮 `_000S610=TRUE` 时令 `_retVal=OK` 并熄灭 `_000P610`，否则令 `_000P610=FlashBits.Pulse500ms`。这个逻辑覆盖正常步骤跳转，但状态和输出散落在 Action 中；如果模式切换使 Chain 在该步骤被 CANCEL，活动 Action 不再运行，原 `OnChainFinish` 又没有熄灯代码。
+
+### `FB_OperatorButton` 接口与生命周期
+
+FB 位于 `Application/Fbs`，只包含通用接口：
+
+| 接口 | 方向 | 含义 |
+|---|---|---|
+| `Execute` | 输入 | TRUE 开始/保持请求；FALSE 结束并初始化 |
+| `ButtonPressed` | 输入 | 物理按钮状态 |
+| `Blink500ms` | 输入 | 调用方提供的 500 ms 闪烁相位 |
+| `Done` | 输出 | 检测到按钮后锁存，直到 `Execute=FALSE` |
+| `LampOn` | 输出 | 等待时跟随闪烁相位，完成或复位时为 FALSE |
+
+FB 不引用 `Station`、`BinIo`、SFC 基类或项目 BMK，因此其他项目只需更换调用处的按钮、灯和闪烁位。当前语义与原逻辑一致：步骤激活时按钮若已经为 TRUE，会立即完成；若工艺要求必须“先松开再重新按下”，后续应增加释放/上升沿资格判断。
+
+### 首个 SFC 集成
+
+`SqS_Wp100_Home` 在 CpStudio 合并区外增加 `_startButton : FB_OperatorButton`。Action 每周期以 `Execute=TRUE` 调用，接入 `_000S610` 与 `FlashBits.Pulse500ms`；`Done=TRUE` 时先设置 `_retVal=OK`，再用 `Execute=FALSE` 完成握手并初始化实例，随后将 `LampOn` 写入 `_000P610`。
+
+`OnChainFinish` 在调用 `SUPER^.OnChainFinish(Reason)` 后无条件以 `Execute=FALSE` 调用实例并更新灯输出。因此不仅 CANCEL，ERROR、DONE 以及未来新增的其他结束原因也都会把 `_000P610` 置为 FALSE。静态引用检查确认 `_000P610` 的业务写入仅位于该 Action 和复位方法，没有其他 Chain 抢写。
+
+离线编译结果为 **0 errors / 7 warnings**。快照从 225 增至 226 个对象：新增 `Application/Fbs/FB_OperatorButton`，无删除，只改变 Chain 声明、`_aN010_active` 和 `OnChainFinish`。project SHA-256=`C85EAED6C36559BE97CD6D6C89202700D53BCF7CD30BBEC20A076072F51828C5`，Station010 提交为 `1531e71`。SFC Action 与 `OnChainFinish` 可能被后续 CpStudio 导出覆盖，必须纳入 post-export 差异审计；不得直接脚本改写 `Engineering_Data.xml`。

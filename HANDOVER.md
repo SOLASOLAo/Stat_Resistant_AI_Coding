@@ -186,3 +186,11 @@
 - 最终文本快照为 225 个对象，相对 Burster 后 224 对象新增恰好一个 FB；变化对象为 EventList designator、Station、StationUnit、StationUnit.OnApplyParameters/OnCall。快照校验通过，project SHA-256=`A099CD4649D4BB9C4311627986FC33E0908B2742F6118BAF54CCB89E5CD8F90E`，离线编译 **0 errors / 7 warnings**。AI 逻辑提交为 `123845d`（`feat: add main pressure control monitor`）。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
 - CpStudio 5.11 随附官方帮助确认：`Engineering > Export` 支持以相对路径配置 `Pre-export script` / `Post-export script`（`.bat` 或 Python），并支持 `Fast export (code only)`；安装帮助和配置中未发现受支持的无界面/命令行项目编辑接口。后续优先用导出钩子自动完成差异、旧 Symbol 与编译审计，CpStudio 本身只保留层级、标准对象、BMK/I/O、HMI/Event/StationData 等声明式配置，不直接脚本改写 `Engineering_Data.xml`。
 - 按跨项目复用要求，POU 从 `FB_Stat010MainPressureControl` 重命名为 `FB_MainPressureControl`，实例名及行为不变。旧名引用为 0、新名引用为 2；225 对象快照对比仅表现为 FB 路径改名及 Station 类型引用变化，编译仍为 **0 errors / 7 warnings**。新 project SHA-256=`FE8610EA5946FEA657788D9A6B143ADC96F55E89403A8DFAFAB8E99A317DBC68`，Station010 提交 `4db6c8a`。
+
+## 通用操作按钮 FB 增量(2026-08-18)
+
+- 原 `SqS_Wp100_Home._aN010_active` 直接根据 `_000S610` 结束步骤、以 `FlashBits.Pulse500ms` 写 `_000P610`；正常按下可以熄灯，但没有独立生命周期，也没有在 Chain 被取消时统一复位。
+- 新增可复用 `Application/Fbs/FB_OperatorButton`。输入为 `Execute/ButtonPressed/Blink500ms`，输出为 `Done/LampOn`；`Execute=FALSE` 会清除锁存完成状态并强制 `LampOn=FALSE`，`Execute=TRUE` 且未按按钮时透传 500 ms 闪烁位，检测到按钮后锁存 `Done=TRUE` 并在同一扫描周期熄灯。FB 本体不引用 Station、SFC、BMK 或具体 I/O。
+- `SqS_Wp100_Home` 增加 `_startButton` 实例；`_aN010_active` 将 `_000S610` 和 `FlashBits.Pulse500ms` 接入 FB，完成后先置 `_retVal=OK`，再以 `Execute=FALSE` 初始化实例，允许同一步骤再次进入。`OnChainFinish` 对任意结束原因再次执行 `Execute=FALSE` 并把 `LampOn` 写给 `_000P610`，覆盖模式切换产生的 CANCEL，也覆盖 ERROR/DONE。
+- 离线编译 **0 errors / 7 warnings**；快照从 225 增至 226 个对象，新增恰好 `FB_OperatorButton`，只改变 `SqS_Wp100_Home`、`_aN010_active` 与 `OnChainFinish` 三个既有对象。快照校验通过，project SHA-256=`C85EAED6C36559BE97CD6D6C89202700D53BCF7CD30BBEC20A076072F51828C5`；Station010 提交 `1531e71`。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
+- CpStudio 后续重新生成可能覆盖 SFC Action 与 `OnChainFinish` 方法体；每次导出必须通过文本快照/审计确认并重新合入调用代码。通用 FB 继续放在 `Application/Fbs`，Chain 实例声明放在 CpStudio 合并区外。
