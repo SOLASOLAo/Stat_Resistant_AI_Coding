@@ -105,3 +105,37 @@
 修正后声明集合与映射集合完全一致，离线编译为 **0 errors / 7 warnings**。215 个 PLC 文本对象再次通过 manifest 校验；与 ST 清理前快照相比仍恰好只有既定的 10 个对象变化，说明 I/O 映射修正没有扩散到其他 ST。最终 project SHA-256=`132213CF6B566C255885F036800CD85B5893846704D23DE3ED2555DC8291B9F8`。全过程未连接、下载或启停实体 PLC。
 
 该最小骨架已提交并推送到 Station010 私有仓库：`987d8fb`（`refactor: establish minimal CpStudio skeleton baseline`）。当前不应再次用 CpStudio 全量生成；否则可能覆盖已经完成的 10 处 ST 最小清理。下一次生成应从“每次只增加一个设备”的受控实验开始。
+
+## 样本 2：七个 I/O 模块的 BMK 与描述改名
+
+### 生成范围与首轮故障
+
+用户在 CpStudio 中修改 A1-A4 四个 EL1018（DI）和 C1-C3 三个 EL2008（DO）模块的变量 BMK/描述后重新导出。相对最小骨架提交 `987d8fb`，Station010 有 15 个文件变化，覆盖 Engineering 模型、EventRecorder、HMI、PublicConfig、PLC/IO project 与同步元数据。既有 10 处最小骨架 ST 清理没有被覆盖。
+
+CpStudio 已生成新的 `BinIo` 声明，但没有同步清理 PLC 工程内的 EtherCAT I/O Mapping，导致首次离线编译为 **33 errors / 73 warnings**。修复动作严格限定在映射层：
+
+- 把 16 个仍启用的物理通道重映射到新 `bus_*` 名；
+- 清空 17 个已停用通道的旧映射；
+- 最终保留 39 条有效映射，变量集合唯一且无重复。
+
+映射修复后编译为 **0 errors / 40 warnings**，说明 33 个编译错误全部来自旧 I/O Mapping，而不是 ST 代码。
+
+### Symbol Configuration 的两层接口结论
+
+映射修复后的 33 条新增警告来自 `BinIo` 内失效的旧公开成员。PLE ScriptEngine 的上层 `get_all_datatypes()` 在本工程会抛出 `An item with the same key has already been added`；底层 `ISymbolConfigObject.GetAvailableDatatypeSignatures(False)` 则能正常返回 599 个数据类型并唯一找到 `BinIo`。因此 duplicate-key 是脚本包装插件缺陷，不是 Symbol Configuration 数据损坏。
+
+最终采用 ctrlX PLC Engineering 2.6.8 自带的正式本地 REST API，而不是跨进程 UI 自动化或私有反射写入：
+
+```text
+GET /devices/Device/Plc%20Logic/Application/symbol-config
+PUT /devices/Device/Plc%20Logic/Application/symbol-config?symbolsAction=Select
+```
+
+REST `GET` 中已选变量的 `accessRights` 仍显示 `Void`，这是可用编译符号视图的字段语义；底层已保存的 `SelectedTypes` 才是权限事实源。本次底层复核结果为：
+
+- `BinIo` 已选成员：63；
+- 18 个当前新 BMK：全部存在；
+- 33 个失效旧名：0；
+- 63 个成员的实际保存权限：全部 `ReadWrite`。
+
+保存后完整离线编译为 **0 errors / 7 warnings**，回到最小骨架基线。全过程没有连接、下载、启停或写入实体 PLC；按照用户要求，本批次没有再创建额外 `.project` 备份。当前 PLC project SHA-256=`F53548B8C8A12571615DA0C5B7DDC46B3257D0FADC972F016E9843168E6CACBB`。该批次 15 个生成/工程文件已提交并推送到 Station010 私有仓库：`78f91e8`（`fix: sync I/O BMK mappings after CpStudio export`）。
