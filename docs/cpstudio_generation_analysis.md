@@ -186,3 +186,58 @@ CpStudio 是 OpCon Plus 的闭源低代码生成平台，公司用它生成标�
 2. `Wp100Unit.OnApplyOutputs`：把 `IsInHomePosition := TRUE` 改为 `IsInHomePosition := Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos`，使 Wp100 Home 直接跟随安全门 Unit 已配置的原位状态。
 
 压缸 `Wp100K102PressingCylinderExtension.OnManRelease` 仍保留生成值 `CommonManRelease AND FALSE`，所有自动 Chains 仍保持 pass-through，等待后续逐步放行。MCP 修改前后快照无新增、无删除，恰好只有上述两个对象哈希变化。最终离线编译为 **0 errors / 7 warnings**，PLC project SHA-256=`8DFB10EA386B7DC0733F67A1D5D636E739D5371DBD7CCD5D059A072379877286`。全程未连接、下载、启停或写入实体 PLC，也没有创建额外 `.project` 备份。两次 CpStudio 生成结果与两处 MCP 集成逻辑已一并提交并推送到 Station010 私有仓库：`972cfcb`（`feat: add Wp100 BasMove units and home integration`）。
+
+## 样本 5：Burster Resistomat 2316 Unit + IP Peripheral
+
+### 生成结构与依赖绑定
+
+用户在 `Wp100` 下新增电阻仪 Unit。CpStudio 生成的实际实例名为 `Wp100K103ResistantDetector`，类型是 `BursterResis2316Unit`，Extension 继承 `BursterResis2316Extension`，InstanceID 为 6。`ObjectVersions.xml` 同时加入三个闭源标准对象：
+
+- Burster 2316 Peripheral `1.0.3.0`；
+- BursterResis2316Base `1.0.1.0`；
+- Burster Resistomat 2316 Unit `1.0.4.0`。
+
+Unit 与通信 Peripheral 的 PLC 绑定链如下：
+
+```text
+Wp100K103ResistantDetector.Unit
+  .ParCfg.iBursterResis2316
+       → _Wp100K103ResistantInterface : IpBurster2316
+       → .ParCfg.Hostname := Station.StationData.BursterSetting.HostName
+```
+
+`_Wp100K103ResistantInterface` 被加入 `Peripherals` GVL 和 `PeripheralRoot`，并由 `PeripheralRoot.OnInitHierarchy` 注册。其 Hostname 在 `OpconApplyParReason.CONFIGURATION`（Station 每次进入 OPERATIONAL）时从 StationData 应用；`UseAutoRange` 当前固定为 `TRUE`。
+
+Peripheral OOD 将它定义为 `NonBus`、接口 `IP`，继承 `NxSocketSysDep`，并把 Hostname 描述为“IP server 的地址”。这与“PLC 侧作为 socket/TCP 客户端，Burster 2316 作为 server”的工程模型一致。具体连接状态机、端口和报文协议封装在 compiled-library 中，当前源码层无法继续审计。值得注意的是，该 Peripheral OOD 对 ctrlX/CXA 的支持状态标记为 `NotTested`；离线编译通过只证明接口兼容，后续真机联调仍需单独验证。
+
+### StationData 的准确语义
+
+`StationDataStruct` 原先已经包含：
+
+```st
+BursterSetting : StationDataTcpIpGeneralSettingStruct;
+```
+
+其中 `HostName : STRING(128)`、`PortNo : DWORD`。本次真正新增的是 Peripheral 对 `BursterSetting.HostName` 的消费绑定，StationData 类型本身没有发生变化。当前生成的 HMI/DataSet 配置允许用户编辑该字段；`StationDataSetManager` 把文件数据加载/校验/应用到 `Station.StationDataNew` 与 `Station.StationData`，并配置了本地二进制文件 `StationData/StationDataSetManager.bin`。因此它在概念上确实是“硬盘数据进入 PLC 内存”，但实现上是 DataSetManager 的加载、反序列化与应用，不是操作系统意义上的逐字节 memory-mapped file。
+
+当前 `Hmi/StationDataSetManagerL1.dat` 中 Burster HostName 默认值仍为空，真机通信前必须由用户配置有效地址。通用结构虽然还有 `PortNo`，但 `IpBurster2316` 当前生成参数只消费 Hostname 和 UseAutoRange，未消费 `BursterSetting.PortNo`；端口未通过该 StationData 路径开放。
+
+### Unit 能力与本轮集成范围
+
+本地技术手册确认该 Unit 提供两个命令：
+
+| 命令 | 输入 | 输出 |
+|---|---|---|
+| `SET_RANGE` | `UpperRange`、`LowerRange` | 无命令结果 |
+| `SINGLE_MEAS` | `UpperLimit`、`LowerLimit`、`ReadTemperature` | `OutOfLimit`、`ResistOk`、`Resistance`、`Temperature` |
+
+新 Unit 的 HMI 同步新增 `Overview.sfc`，其手动功能 `SetRange` 和 `StartMeas` 仍保持 `CommonManRelease AND FALSE`，自动 Chains 也未调用电阻仪。
+
+相对上一个 221 对象快照，本次 CpStudio 导出得到 224 个对象：只新增电阻仪本体、Extension、`OnManRelease` 三个对象；无删除；改变了 PeripheralRoot 四个对象、StateOverview、事件 Designator、Wp100 参数和层级初始化共八个已有对象，其他 213 个对象不变。首次离线编译即为 **0 errors / 7 warnings**。
+
+按用户要求，AI 随后只补两条既定联锁：
+
+1. 压缸 `MoveBasPos` 和 `MoveWrkPos` 均要求 `CommonManRelease AND Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos`，即安全门确认下降到位后压缸才允许手动动作；
+2. `Wp100.IsInHomePosition` 要求安全门与压缸两个 Unit 的 `OutImm.IsInBasPos` 同时成立。
+
+AI 修改前后 224 对象快照无新增、无删除，恰好只有上述两个 ST 对象变化；离线编译仍为 **0 errors / 7 warnings**。最终 PLC project SHA-256=`B1DF6EDE55E20FBCD472FF2A4309CFC903B3639B8C317F97DB3B31C42AD92E71`。全程未连接、下载、启停或写入实体 PLC，也未创建额外 `.project` 备份。生成结果与两处联锁已提交并推送到 Station010 私有仓库：`8014419`（`feat: add Burster resistance unit and motion interlocks`）。

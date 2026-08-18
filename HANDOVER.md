@@ -166,3 +166,12 @@
 - AI 经 persistent MCP 只改两处 ST：安全门 `OnManRelease` 的两路附加条件改为 `TRUE`；`Wp100Unit.OnApplyOutputs` 的 Home 改为 `Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos`。压缸手动功能仍为 `FALSE`，自动 Chains 未改。
 - 修改前后 221 对象快照对比恰好只有上述两处变化；最终离线编译 **0 errors / 7 warnings**，PLC project SHA-256=`8DFB10EA386B7DC0733F67A1D5D636E739D5371DBD7CCD5D059A072379877286`。未操作实体 PLC，未创建额外二进制备份。
 - 两次 CpStudio Unit 生成结果和上述两处 MCP 集成逻辑已提交并推送到 Station010 私有仓库：`972cfcb`（`feat: add Wp100 BasMove units and home integration`）；提交后工作树干净并与 `origin/main` 一致。
+
+## Burster 2316 Unit + 压缸联锁增量(2026-08-18)
+
+- CpStudio 在 `Wp100` 下新增 `Wp100K103ResistantDetector : BursterResis2316Unit`（InstanceID 6），并加入 `_Wp100K103ResistantInterface : IpBurster2316` Peripheral。Unit 的 `ParCfg.iBursterResis2316` 已绑定该 Peripheral。
+- Peripheral 在 Station 进入 OPERATIONAL 时取 `Station.StationData.BursterSetting.HostName`，并固定 `UseAutoRange := TRUE`。StationData 通过 DataSetManager 从文件加载/应用到 PLC 内存；当前 HMI `.dat` 默认 HostName 为空。通用 `PortNo` 字段未被 IpBurster 生成代码消费。
+- 本地 CHM 已核对：Unit 命令为 `SET_RANGE` 与 `SINGLE_MEAS`；后者输入上下限/是否读温度，输出越界、OK、电阻值和温度。新 Unit 的 `SetRange/StartMeas` 手动放行仍为 `FALSE`，自动 Chains 未改。
+- 221→224 对象的 CpStudio 差异：新增恰好三个电阻仪对象、删除 0、改变八个既有生成对象、其余 213 个不变；首次编译即 **0 errors / 7 warnings**。Peripheral OOD 对 CXA 标记 `NotTested`，后续真机通信必须专项验证。
+- AI 经 MCP 改两处：压缸两个手动动作要求安全门 `OutImm.IsInWrkPos`；Wp100 Home 要求安全门和压缸 `OutImm.IsInBasPos` 同时成立。修改前后 224 对象快照恰好只变这两处，最终编译仍为 **0 errors / 7 warnings**。
+- 最终 PLC project SHA-256=`B1DF6EDE55E20FBCD472FF2A4309CFC903B3639B8C317F97DB3B31C42AD92E71`；未操作实体 PLC，未创建额外二进制备份。Station010 已提交并推送 `8014419`（`feat: add Burster resistance unit and motion interlocks`），工作树干净并与 `origin/main` 一致。
