@@ -267,18 +267,18 @@ EVENT_PRESSURE_NOT_LOWER  : DINT := -5; // The pressure is not lower than 0.3bar
 
 ### ControlOn 的正确集成接口
 
-本地 `NexeedControlOnAddon` OOD/CHM 明确区分：
+本地 `Std/Objects/NexeedControlOnAddon/V2.0/Documentation/NexeedControlOnAddon_TechnicalManual_EN.chm` 及同版本 OOD 明确区分：
 
 - `_000S901`：用户按下 Control On 的原始按钮输入；
 - `ControlOn.OutImm.IsCtrlOn`：来自 `_000K911_Y32` 的“电气控制已经上电”反馈；
 - `ControlOn.ParImm.UserEnableControlOn`：应用侧允许条件，运行中变为 FALSE 时标准 AddOn 会撤销 Control On；
 - `ControlOn.ParImm.UserControlOn`：仅用于按下过程中的附加上电条件，本批次不需要修改。
 
-因此主气阀不能直接由 `_000S901` 驱动，也不应由自定义代码抢写 `_000K911`。本实现用 `OutImm.IsCtrlOn` 启动气路，并在压力故障时通过 `UserEnableControlOn` 请求标准 AddOn 下电。ControlOn 手册推荐的完全标准化方案是使用 MainValve AddOn；当前 Std 对象集中没有对应对象包，所以本项目暂用独立 FB 实现同一集成边界。
+因此主气阀不能直接由 `_000S901` 驱动，也不应由自定义代码抢写 `_000K911`。本实现用 `OutImm.IsCtrlOn` 启动气路，并在压力故障时通过 `UserEnableControlOn` 请求标准 AddOn 下电。ControlOn 手册推荐的完全标准化方案是使用 MainValve AddOn；当前 ctrlX/Std 对象集中确认没有对应对象包，所以本项目使用独立 FB 实现同一集成边界。
 
-### `FB_Stat010MainPressureControl` 行为
+### `FB_MainPressureControl` 行为
 
-FB 位于 `Application/Fbs`，实例位于 `Station.MainPressureControl`，由 `StationUnit.OnCall` 每周期调用。监控只在 Station 为 OPERATIONAL 且 EtherCAT BusOk 时启用；其他状态主动关闭主气阀并禁止 Control On。
+FB 位于 `Application/Fbs`，实例位于 `Station.MainPressureControl`，由 `StationUnit.OnCall` 每周期调用。FB 接口本身只有布尔量和时间，不引用 `Station`、`Peripherals` 或任何项目 BMK，因而可复制到其他项目；具体 ControlOn、I/O 和事件接线保留在调用处。监控只在 Station 为 OPERATIONAL 且 EtherCAT BusOk 时启用；其他状态主动关闭主气阀并禁止 Control On。
 
 | 条件 | 结果 |
 |---|---|
@@ -292,7 +292,7 @@ FB 位于 `Application/Fbs`，实例位于 `Station.MainPressureControl`，由 `
 
 两个压力事件使用 `OpconEventClass.ERROR` 和锁定事件句柄，防止状态未恢复时被提前确认删除。当前 NxBase 编译接口要求两参数 `UnlockEvent(Class, Index)`，随后再调用 `ClearEvent(Class, Index)`；这与本地 CHM 中记录的较新三参数 `UnlockEvent(..., Clear)` 不一致，实际编译接口优先。
 
-最终离线编译为 **0 errors / 7 warnings**；文本快照从 224 增至 225 个对象，仅新增 `FB_Stat010MainPressureControl`，并改变 EventList designator、Station、StationUnit、StationUnit.OnApplyParameters 与 OnCall。快照校验通过，project SHA-256=`A099CD4649D4BB9C4311627986FC33E0908B2742F6118BAF54CCB89E5CD8F90E`；AI 逻辑提交为 `123845d`。本逻辑只是标准控制与诊断层，不能代替硬件安全继电器/安全 PLC；真机下载和 I/O 时序验证仍需用户批准。
+首次实现时离线编译为 **0 errors / 7 warnings**；文本快照从 224 增至 225 个对象，新增的 POU 最初名为 `FB_Stat010MainPressureControl`，AI 逻辑提交为 `123845d`。随后按跨项目复用要求，经 MCP 将其重命名为 `FB_MainPressureControl`：旧名引用为 0、新名引用为 2，225 对象对比仅有旧 FB 路径删除、新 FB 路径增加以及 Station 类型引用变化，行为代码不变；再次编译仍为 **0 errors / 7 warnings**。重命名后 project SHA-256=`FE8610EA5946FEA657788D9A6B143ADC96F55E89403A8DFAFAB8E99A317DBC68`，Station010 提交为 `4db6c8a`。本逻辑只是标准控制与诊断层，不能代替硬件安全继电器/安全 PLC；真机下载和 I/O 时序验证仍需用户批准。
 
 ### 减少 CpStudio 手工工作的可行边界
 
@@ -303,4 +303,4 @@ CpStudio 5.11 随附英文帮助明确提供两个官方能力：
 
 当前安装帮助和文本配置中没有发现受支持的无界面项目编辑/命令行导出接口。`DDP.CommandLineRegex.dll` 只是桌面框架组件，不能据此认定存在公开 CLI；`CpStudio_Export_Classes.chm` 描述的是导出模板可读取的数据接口，不是外部项目编辑 API。因此暂不采用 UI 自动点击或直接改写 `Engineering_Data.xml`，这两种方式都容易破坏闭源生成器的数据一致性。
 
-推荐把工作边界固定为：CpStudio 仅负责模型层级、标准 Unit/AddOn/Peripheral、BMK 与 I/O 绑定、HMI/Event 和 StationData；项目专用联锁、状态机和设备算法由 AI 经 MCP 写入独立 FB 及 CpStudio 合并区外代码。Post-export 脚本可进一步自动触发 Git 差异检查、旧 Symbol 引用审计、PLC 编译和摘要输出，让人工动作缩减为“在 CpStudio 做必要声明式配置并点击导出”。如果后续取得标准 MainValve AddOn 对象包，应优先用标准对象替代本项目专用主气压 FB 的框架部分。
+推荐把工作边界固定为：CpStudio 仅负责模型层级、标准 Unit/AddOn/Peripheral、BMK 与 I/O 绑定、HMI/Event 和 StationData；项目专用联锁、状态机和设备算法由 AI 经 MCP 写入独立 FB 及 CpStudio 合并区外代码。Post-export 脚本可进一步自动触发 Git 差异检查、旧 Symbol 引用审计、PLC 编译和摘要输出，让人工动作缩减为“在 CpStudio 做必要声明式配置并点击导出”。当前 ctrlX 没有 MainValve AddOn，继续使用接口通用、项目接线外置的 `FB_MainPressureControl`。
