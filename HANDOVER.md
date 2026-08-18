@@ -231,3 +231,10 @@
 - 本次 CpStudio 导出还完成两个既有待办：Burster `SetRange/StartMeas` 的对象级手动条件已正式生成为 TRUE 并同步到 HMI；`LineNo/TestMode/NokCounter/Wp100.Active` 已从 `StationDataStruct` 和 `OnCheckData` 移除。`StationSdNokCounter`、`Wp100StationDataStruct` 两个 DUT 目前只剩自身声明、无业务引用，暂不擅自删除。
 - CpStudio 后、AI 前快照为 232 个对象，project SHA-256=`4F5522E919E3B8CA504D0981CB788E9D0F01CFC037DA6C947C476B456B5BD2CE`；AI 后仍为 232 个对象，只改变 `FB_MaintenanceDoorControl`、`StationUnit`、`StationUnit.OnCall` 三个对象，最终 SHA-256=`5E364DD99EDA0786055A3E11211D41F70C6DFE8026A977AD2C3E3A40EED816B0`。完整离线编译 **0 errors / 7 warnings**。
 - 有效 CpStudio 生成文件与 PLC 报警逻辑已提交并推送为 Station010 `93379fd`（`feat: add maintenance door lock alarm`）。`.Sync.json` 时间戳和内容相同的 Logbook 日期改名未提交、未回退。未连接、下载、启停或写入实体 PLC，也未创建额外二进制备份。
+
+## StationLamp AddOn + Home 步骤短注释(2026-08-18)
+
+- CpStudio 在 Station 下新增 `Station.StationLamp : StationLampUnit`（Station Lamp V2.3.1.0，InstanceId 7），通过 `AddAddOn` 注册并配置为 `MULTIPLE_LEDS`。黄/绿/红分别绑定 `_000P960_1/_000P960_2/_000P960_3`；PLC 参数对应 `IDX_000P960_1/2/3`，三路输出继续使用既有 BinIo 映射。
+- `SqS_Wp100_Home` 的 9 个 Step Comment 改为短动作说明：N000 `Initialize home`、N010 `Wait start button`、N110 `Close safety door`、N120 `Wait door closed`、N130 `Raise press cylinder`、N140 `Wait press raised`、N150 `Open safety door`、N160 `Wait door open`、N999 `Finish home`。
+- Step Comment 经 PLC Engineering 官方本地 REST 扩展接口 GET/PUT 写回 `SqS_Wp100_Home` 的 SFC XML 属性；没有手改 `.project` 字节，也没有逐项 UI 自动化。回读及标准化前后比较确认只替换 9 个 Comment，Action、Transition、Jump、动作顺序和声明均未改变。
+- 完整离线编译保持 **0 errors / 7 warnings**，最终 project SHA-256=`C2F2DAEE9661E289B303C8E529AE64AC079EF4E0B22C5D62075A7A4DF384B11F`。StationLamp 生成批次与 Home 注释已提交并推送为 Station010 `6399377`（`feat: add station lamp and label home sequence`）；仅 `.Sync.json` 和 HMI Logbook 日期滚动噪声保留在工作树、未提交。未连接、下载、启停或写入实体 PLC。

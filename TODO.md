@@ -41,6 +41,8 @@
 - [x] 🔴 Wp100 Home 原子操作：`SqS_Wp100_Home` 实现拍按钮后按状态跳过/执行“安全门到工作位 → 压缸回原位 → 安全门回原位”，并在 `OnChainFinish` 复位按钮灯、两个 Unit Execute 与本轮标记；编译 0 errors / 7 warnings，Station010 `bb853e5`(2026-08-18)
 - [x] 🔴 维修门—主气压联锁：新增通用 `FB_MaintenanceDoorControl`，由 `_000S901`/ControlOn 状态驱动 `_000K980/_000K981`，仅在 `_000K980_A AND _000K981_B` 时向 `FB_MainPressureControl.xValveRelease` 放行；原门锁 dummy 条件同步改为真实反馈，Station010 `bb853e5`(2026-08-18)
 - [x] 🔴 维修门未锁报警：使用 CpStudio 生成的 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2`；门锁请求后 5 s 内 A/B 反馈未同时到位则锁存报警并保持主气压禁止，Control Off 后按 `UnlockEvent + ClearEvent` 清除；编译 0 errors / 7 warnings，Station010 `93379fd`(2026-08-18)
+- [x] 🔴 StationLamp AddOn 受控增量：CpStudio 新增 Station Lamp V2.3.1.0（InstanceId 7），黄/绿/红绑定 `_000P960_1/_000P960_2/_000P960_3`，层级、参数、HMI 和输出映射核对完成(2026-08-18)
+- [x] 🔴 Home Chain 步骤检索注释：经 PLC Engineering 官方 REST 扩展接口为 `SqS_Wp100_Home` 的 9 个 Step 写入简短 Comment；标准化差异确认 Action/Transition/顺序均未改变，编译 0 errors / 7 warnings，Station010 `6399377`(2026-08-18)
 - [ ] 🔴 定义 `SqS_Wp100_Run` 的首个原子工艺：确定输入参数、启动条件、完成条件和取消清理；在调用方 READY 时写参数并置 Execute，使用 `CheckSubChainDone` 等待；确认是否需要允许多个调用方顺序复用
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [ ] 🟡 补充 `SqS_Run` 当前为空的中英文显示文本

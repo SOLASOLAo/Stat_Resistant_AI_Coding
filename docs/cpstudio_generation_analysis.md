@@ -469,3 +469,21 @@ CpStudio 后续导出可能覆盖 SFC Action、`OnChainFinish`、Station 调用�
 ### 验证结果
 
 CpStudio 后、AI 前快照 SHA-256=`4F5522E919E3B8CA504D0981CB788E9D0F01CFC037DA6C947C476B456B5BD2CE`。AI 后对象数仍为 232，新增/删除均为 0，唯一改变的三个对象为 `FB_MaintenanceDoorControl`、`StationUnit` 和 `StationUnit.OnCall`；最终 SHA-256=`5E364DD99EDA0786055A3E11211D41F70C6DFE8026A977AD2C3E3A40EED816B0`。事件常量只有声明和调用各一次，完整离线编译为 **0 errors / 7 warnings**，Station010 提交为 `93379fd`。
+
+## 样本 12：StationLamp AddOn + SFC Step Comment 接口化
+
+### CpStudio 生成边界
+
+CpStudio 在 Station 层新增 Station Lamp V2.3.1.0：PLC 实例为 `Station.StationLamp : StationLampUnit`，InstanceId 为 7，经 `AddAddOn` 纳入 Station 层级。硬件类型为 `MULTIPLE_LEDS`，黄色、绿色、红色依次使用 `_000P960_1/_000P960_2/_000P960_3`；标准 AddOn 自行根据 Mode、ControlOn、EmergencyStop 与错误状态生成灯态，应用侧本轮没有另写灯色状态机。
+
+### 图形 SFC 属性的正式写入路径
+
+SFC Step 的 Comment 不属于 Action ST，因此 `set_pou_code` 不是正确落点。此次使用 PLC Engineering 自带的本地 REST 扩展接口，对下列对象先 GET、再以完整对象 PUT：
+
+```text
+http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
+```
+
+在返回的 SFC XML 中，按 Step `name` 精确定位，并只替换 Comment 属性 `7d894980-aeea-405c-a0f6-e2b26429c58f` 的文本。写入前校验当前 implementation 哈希，写入后再次 GET 回读；把 9 个新 Comment 反向替换为旧值并统一 CRLF/LF 后，可逐字复现写入前 implementation。由此确认 Step 数 9、Transition 数 9、Jump 数 1，以及所有 Action 引用和图形顺序均未改变。
+
+这类图形属性后续统一优先使用官方 REST/扩展接口，不手改 `.project` 二进制，也不依赖逐项 UI 自动化。界面只用于可视确认，F11 用于完整离线编译；本次结果为 **0 errors / 7 warnings**，Station010 提交 `6399377`。
