@@ -512,4 +512,17 @@ Wp100A104Kistler.Unit.ParCfg.iKistlerForceStroke := _100A104;
 
 AI 经 persistent MCP 只替换 `Wp100A104KistlerExtension.OnManRelease` implementation，把八路对象级固定条件从 `FALSE` 改为 `TRUE`，同时保留 `CommonManRelease`。接口回读为 8 个 `TRUE`、0 个活动 `FALSE`；400-byte PDO 再审计仍为 400/400 bound、0 mismatch，完整离线编译为 **0 errors / 7 warnings**。
 
-与样本 9 一致，PLC implementation 与 CpStudio/HMI 条件分析树是两层事实：当前 HMI `config.xml` 的八个 `<Constant state="False" />` 不会因 MCP 写 PLC 而自动改变。为了保持 CpStudio 为模型/HMI 事实源，必须在 CpStudio 中把八个对象级条件改为 `TRUE` 后重新导出；禁止直接改写 `Engineering_Data.xml` 或生成 HMI XML。
+与样本 9 一致，PLC implementation 与 CpStudio/HMI 条件分析树是两层事实，MCP 写 PLC 不会反向修改 HMI。用户随后已在 CpStudio 把八个对象级条件改为 `TRUE` 并重新导出；接口审计为 8 个 ManualFunction、8 个 `<Constant state="True" />`、0 个 FALSE，与 PLC 八路 `CommonManRelease AND TRUE` 一致。全过程没有直接改写 `Engineering_Data.xml` 或生成 HMI XML。
+
+## 样本 15：维修门继电器反馈 + 安全回路分层联锁
+
+本批把“门机械关闭”“维修门安全继电器正常”“安全门安全继电器正常”和“全安全回路正常”分成独立条件，避免只凭气缸/门传感器放行动作：
+
+1. `FB_MaintenanceDoorControl` 在 `_000K980/_000K981` 锁输出有效后继续用 5 s 监控 `_000K980_A/_000K981_B`；两门都关闭后，再用独立 TON 要求 `_000K981_Y32` 在 1 s 内成立。
+2. 三种明细故障锁存为 `xFaultDoorANotClosed`、`xFaultDoorBNotClosed`、`xFaultRelayFeedbackMissing`，汇总到既有 `xFaultDoorNotLocked`。主气压许可同时要求两锁、两门、继电器反馈和无锁存故障。
+3. `StationUnit.OnCall` 不另造事件号，而在 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED` 的 AdditionalInfo 中写入具体异常 BMK；A/B 同时缺失也有单独文本。
+4. 安全门手动动作要求 `_000K981_Y32`；压缸手动动作要求安全门工作位、`_000K913_Y32` 和 `_000K912_Y32`。
+5. 当前唯一关安全门的 Chain 是 `SqS_Wp100_Home`：N120 在门动作 DONE 后等待两路安全反馈，N130 启动压缸前再次检查，从而覆盖安全门原本已经关闭、N110 无需执行的路径。
+6. Station 四种运行模式都要求 `_000K911_Y32` 与 `_000K981_Y32`，并保留原“两门已关”条件；CHANGEOVER 仍保留空站条件。
+
+AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station OnCall、OnModeRelease、两个 OnManRelease、Home Chain 声明及 N120/N130 共 8 个对象。快照校验通过，完整离线编译为 **0 errors / 7 warnings**，project SHA-256=`27659F3C3EE4F4D85093B3B9304CCDA2ABDE871183D7412FA4ABACC3EA678436`。DIDO 56 个通道中 38 个有效映射与 38 个 `BinIo.bus_*` 声明精确一致，Kistler 400/400 PDO 映射零差异。未进行实体 PLC 在线操作；1 s/5 s 现场时序和继电器触点逻辑仍须真机验收。

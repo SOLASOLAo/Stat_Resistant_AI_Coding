@@ -16,8 +16,12 @@ VAR_INPUT
   xDoorAClosed        : BOOL;
   /// Feedback: maintenance door B is closed
   xDoorBClosed        : BOOL;
+  /// Feedback: maintenance-door safety relay is energized
+  xMaintenanceRelayFeedback : BOOL;
   /// Maximum time for both lock feedbacks to become active
   tLockMonitoringTime : TIME := T#5S;
+  /// Maximum delay from both doors closed to safety-relay feedback
+  tRelayMonitoringTime : TIME := T#1S;
 END_VAR
 VAR_OUTPUT
   /// Command for maintenance door A lock
@@ -28,11 +32,18 @@ VAR_OUTPUT
   xAllDoorsClosed       : BOOL;
   /// Additional release for the main-pressure valve
   xMainPressureRelease  : BOOL;
-  /// Latched fault: both maintenance doors were not locked in time
+  /// Latched aggregate maintenance-door interlock fault
   xFaultDoorNotLocked   : BOOL;
+  /// Latched detail: maintenance door A closed feedback was missing
+  xFaultDoorANotClosed  : BOOL;
+  /// Latched detail: maintenance door B closed feedback was missing
+  xFaultDoorBNotClosed  : BOOL;
+  /// Latched detail: safety-relay feedback was missing after both doors closed
+  xFaultRelayFeedbackMissing : BOOL;
 END_VAR
 VAR
-  _timerDoorLock : TON;
+  _timerDoorLock      : TON;
+  _timerRelayFeedback : TON;
 END_VAR
 
 (* ===== IMPLEMENTATION ===== *)
@@ -41,12 +52,16 @@ END_VAR
 IF NOT xEnable
 THEN
   _timerDoorLock(IN := FALSE, PT := tLockMonitoringTime);
+  _timerRelayFeedback(IN := FALSE, PT := tRelayMonitoringTime);
 
   xDoorLockAOn         := FALSE;
   xDoorLockBOn         := FALSE;
   xAllDoorsClosed      := FALSE;
   xMainPressureRelease := FALSE;
   xFaultDoorNotLocked  := FALSE;
+  xFaultDoorANotClosed := FALSE;
+  xFaultDoorBNotClosed := FALSE;
+  xFaultRelayFeedbackMissing := FALSE;
   RETURN;
 END_IF
 
@@ -70,7 +85,30 @@ _timerDoorLock(
 
 IF _timerDoorLock.Q
 THEN
-  xFaultDoorNotLocked := TRUE;
+  IF NOT xDoorAClosed
+  THEN
+    xFaultDoorANotClosed := TRUE;
+  END_IF
+
+  IF NOT xDoorBClosed
+  THEN
+    xFaultDoorBNotClosed := TRUE;
+  END_IF
+END_IF
+
+// Once both door-closed inputs are present, the maintenance safety relay must
+// confirm the electrical safety circuit within one second.
+_timerRelayFeedback(
+  IN := xDoorLockAOn
+        AND xDoorLockBOn
+        AND xAllDoorsClosed
+        AND NOT xMaintenanceRelayFeedback,
+  PT := tRelayMonitoringTime
+);
+
+IF _timerRelayFeedback.Q
+THEN
+  xFaultRelayFeedbackMissing := TRUE;
 END_IF
 
 // Keep the fault latched until the lock request has been removed. This gives
@@ -79,8 +117,14 @@ END_IF
 IF NOT xDoorLockAOn
    AND NOT xDoorLockBOn
 THEN
-  xFaultDoorNotLocked := FALSE;
+  xFaultDoorANotClosed          := FALSE;
+  xFaultDoorBNotClosed          := FALSE;
+  xFaultRelayFeedbackMissing    := FALSE;
 END_IF
+
+xFaultDoorNotLocked := xFaultDoorANotClosed
+                       OR xFaultDoorBNotClosed
+                       OR xFaultRelayFeedbackMissing;
 
 // Pressure is released only when both commanded locks and both independent
 // closed feedbacks are present. A latched timeout requires Control Off before
@@ -88,4 +132,5 @@ END_IF
 xMainPressureRelease := xDoorLockAOn
                         AND xDoorLockBOn
                         AND xAllDoorsClosed
+                        AND xMaintenanceRelayFeedback
                         AND NOT xFaultDoorNotLocked;

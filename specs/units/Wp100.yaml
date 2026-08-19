@@ -16,7 +16,9 @@ units:
       sensor: _100B101A
       output: _100K101A
       meaning: safety door closed
-    manual_release: CommonManRelease AND TRUE
+    manual_release: >-
+      CommonManRelease AND
+      Peripherals.BinIo._000K981_Y32
   - instance: Wp100K102PressingCylinder
     type: NexeedBasMoveStandard
     version: V2.1
@@ -30,7 +32,9 @@ units:
       meaning: pressing cylinder lowered
     manual_release: >-
       CommonManRelease AND
-      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
+      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos AND
+      Peripherals.BinIo._000K913_Y32 AND
+      Peripherals.BinIo._000K912_Y32
   - instance: Wp100A103ResistantDetector
     type: NexeedBursterResis2316
     version: V1.0
@@ -56,7 +60,7 @@ units:
       - ReadData
       - WriteData
     manual_release: CommonManRelease AND TRUE
-    hmi_release_condition: pending_cpstudio_true
+    hmi_release_condition: confirmed_cpstudio_true
 
 handler_home_condition:
   all:

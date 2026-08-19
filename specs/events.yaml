@@ -6,6 +6,13 @@ events:
     designator: -2
     class: ERROR
     lock: true
+    conditions:
+      - _000K980_A missing after T#5S lock monitoring
+      - _000K981_B missing after T#5S lock monitoring
+      - _000K981_Y32 missing T#1S after both doors are closed
+    additional_info:
+      requirement: identify the failed BMK and signal condition
+      signals: [_000K980_A, _000K981_B, _000K981_Y32]
     reset: Control Off after both lock commands are removed
   - owner: Station
     symbol: EVENT_PRESSURE_NOT_HIGHER

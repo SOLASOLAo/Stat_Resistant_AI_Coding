@@ -14,6 +14,8 @@ hooks:
     invariants:
       - Station not OPERATIONAL or bus not OK drives controlled outputs to safe state
       - maintenance-door release gates the main-pressure valve
+      - maintenance relay feedback is required within T#1S after both doors close
+      - maintenance-door event AdditionalInfo identifies the failed BMK
       - pressure faults use the generated Station event constants
   - id: station_output_wiring
     object: Application/Station/_this/StationUnit/OnApplyOutputs
@@ -28,6 +30,27 @@ hooks:
     required_expression: >-
       Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos AND
       Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+  - id: station_mode_release
+    object: Application/Station/_this/StationExtension/OnModeRelease
+    required_signals:
+      - Peripherals.BinIo._000K911_Y32
+      - Peripherals.BinIo._000K981_Y32
+    modes: [AUTO, MANUAL, HOME, CHANGEOVER]
+    invariants:
+      - existing maintenance-door closed condition remains active
+      - CHANGEOVER additionally requires Station.Unit.IsEmpty
+  - id: safety_door_manual_release
+    object: Application/Station/Wp100/Wp100K101SafetyDoor/Wp100K101SafetyDoorExtension/OnManRelease
+    required_release_prefix: CommonManRelease
+    required_signals:
+      - Peripherals.BinIo._000K981_Y32
+  - id: pressing_cylinder_manual_release
+    object: Application/Station/Wp100/Wp100K102PressingCylinder/Wp100K102PressingCylinderExtension/OnManRelease
+    required_release_prefix: CommonManRelease
+    required_signals:
+      - Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
   - id: burster_manual_release
     object: Application/Station/Wp100/Wp100A103ResistantDetector/Wp100A103ResistantDetectorExtension/OnManRelease
     required_release_prefix: CommonManRelease
@@ -54,3 +77,11 @@ hooks:
       - safety-door Execute false
       - pressing-cylinder Execute false
       - started flags false
+  - id: safety_door_close_confirmation
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN120_active
+    required_signals:
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
+    invariants:
+      - a safety-door close command cannot complete the step until both safety feedbacks are true
+      - pressing-cylinder start repeats the same interlock for an already-closed door

@@ -31,6 +31,10 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [station_output_wiring]
+  - path: Application/Station/_this/StationExtension/OnModeRelease
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [station_mode_release]
   - path: Application/Station/Wp100/_this/Wp100Unit/OnApplyOutputs
     owner: mixed
     write_mode: semantic_merge
@@ -43,11 +47,27 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [kistler_manual_release]
+  - path: Application/Station/Wp100/Wp100K101SafetyDoor/Wp100K101SafetyDoorExtension/OnManRelease
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [safety_door_manual_release]
+  - path: Application/Station/Wp100/Wp100K102PressingCylinder/Wp100K102PressingCylinderExtension/OnManRelease
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [pressing_cylinder_manual_release]
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
     owner: mixed
     specification: specs/chains/SqS_Wp100_Home.yaml
     write_mode: graphical_attributes
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN010_active
+    owner: ai_implementation
+    specification: specs/chains/SqS_Wp100_Home.yaml
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN120_active
+    owner: ai_implementation
+    specification: specs/chains/SqS_Wp100_Home.yaml
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN130_active
     owner: ai_implementation
     specification: specs/chains/SqS_Wp100_Home.yaml
     write_mode: implementation

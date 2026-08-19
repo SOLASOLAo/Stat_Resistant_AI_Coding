@@ -25,9 +25,16 @@ steps:
   - id: N120
     comment: Wait door closed
     wait_for: Wp100K101SafetyDoor command started by N110
+    completion_requires:
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
   - id: N130
     comment: Raise press cylinder
-    when: NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+    when: >-
+      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos AND
+      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos AND
+      Peripherals.BinIo._000K913_Y32 AND
+      Peripherals.BinIo._000K912_Y32
     command: Wp100K102PressingCylinder.BASPOS
   - id: N140
     comment: Wait press raised

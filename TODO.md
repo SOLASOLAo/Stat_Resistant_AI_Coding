@@ -68,4 +68,6 @@
 - [x] 🔴 CpStudio 一键读取 ctrlX IDE EtherCAT IO 组态：`_100A104` 已自动匹配旧标题 `Kistler MaXYmos BL5867B TL5877B0`；Peripheral 已成功生成到 PLC/HMI(2026-08-19)
 - [x] 🔴 Kistler Peripheral 导出闭环：修复同批 Burster BMK 改名的 PLC/Symbol 双层旧引用；经 IOE EtherCAT 离线导出 + PLE `keepExisting` 导入同步从站，400 个 PDO byte 全部映射且回读零差异；PLC 快照 234 objects，离线编译 0 errors / 7 warnings(2026-08-19)
 - [x] 🔴 在 CpStudio 添加 `NexeedKistlerForceStroke` Unit，放到 `Wp100` 下并把 `IKistlerForceStroke` Channel 绑定到 `_100A104` Peripheral；PLC 侧 8 个手动功能均为 `CommonManRelease AND TRUE`，400/400 PDO 映射零差异，离线编译 0 errors / 7 warnings(2026-08-19)
-- [ ] 🔴 在 CpStudio 模型中把 `Wp100A104Kistler` 的 8 个对象级手动条件改成 `TRUE` 并重新导出；确认 HMI `config.xml` 的 8 个 `<Constant state="True" />` 与 PLC OnManRelease 一致
+- [x] 🔴 CpStudio 模型中 `Wp100A104Kistler` 的 8 个对象级手动条件已改为 `TRUE` 并重新导出；HMI 回读 8 个 TRUE、0 个 FALSE，与 PLC OnManRelease 一致(2026-08-19)
+- [x] 🔴 维修门/安全回路反馈闭环：维修门 A/B 缺失与 `_000K981_Y32` 1 s 超时共用 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED` 并写入具体 BMK AdditionalInfo；安全门、压缸手动与 Home 关门步骤加入 `_000K981_Y32/_000K913_Y32/_000K912_Y32` 联锁；四种 Mode Release 加入急停和维修门继电器反馈，离线编译 0 errors / 7 warnings(2026-08-19)
+- [ ] 🔴 真机专项验证维修门安全继电器：两门关闭后 `_000K981_Y32` 应在 1 s 内成立；分别断开 A 门、B 门和继电器反馈，核对 AdditionalInfo BMK、主气压禁止、模式释放与 Control Off 恢复流程

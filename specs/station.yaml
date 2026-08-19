@@ -28,6 +28,30 @@ cyclic_application_controls:
   - instance: Station.MaintenanceDoorControl
     type: FB_MaintenanceDoorControl
 
+maintenance_door_control:
+  lock_outputs: [_000K980, _000K981]
+  closed_feedbacks:
+    door_a: _000K980_A
+    door_b: _000K981_B
+  closed_feedback_timeout: T#5S
+  safety_relay_feedback: _000K981_Y32
+  safety_relay_timeout_after_both_doors_closed: T#1S
+  main_pressure_release_requires:
+    - both lock outputs active
+    - both door-closed feedbacks active
+    - _000K981_Y32
+    - no latched maintenance-door fault
+
+mode_release:
+  modes: [AUTO, MANUAL, HOME, CHANGEOVER]
+  all:
+    - _000K911_Y32
+    - _000K981_Y32
+    - Station.MaintenanceDoorControl.xAllDoorsClosed
+  additional:
+    CHANGEOVER:
+      - Station.Unit.IsEmpty
+
 home_condition:
   expression: >-
     Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos AND

@@ -264,7 +264,7 @@
 - 页面用当前工程事实演示 `SqS_Wp100_Home` 四种初态路径、操作按钮 500 ms 闪烁与取消清理、维修门到主气压的 5 s 联锁，以及 BMK 改名后 BinIo / I/O Mapping / Symbol Configuration 三层审计；未核实的物理映射未包装成已验证结果。
 - 支持流程 Tab、Home 路径切换、滚动进度、键盘演示模式和打印样式。已用 Edge 隔离临时 profile 检查 1440×1000 首页及 Home 章节渲染；临时截图不在仓库。本批只改文档仓库，没有修改 PLC/IO 工程，也没有连接、下载、启停或写入实体 PLC。
 
-## Kistler maXYmos BL 5867C EtherCAT ESI（2026-08-19，进行中）
+## Kistler maXYmos BL 5867C EtherCAT ESI（2026-08-19，已完成）
 
 - 硬件已确认：`5867C001`，SN `6575138`，EtherCAT，Little-Endian。新 ESI 为 `Technical Docs/.../EtherCAT/Kistler_Type_5867C_V1.xml`，SHA-256=`7AE6DF840A704DBBBC628A6DAFC9FA6BEE8BE3571C83C3F22874F422C11838FC`；身份为 Vendor `0x58A/1418`、Product `0xE52F/58671`、Revision `1`，输入/输出各 200 byte。
 - `Std` 严格只读。标准 `NexeedEcKistlerMaxymosBl V2.0.7.0` Peripheral 提供 `IKistlerForceStroke`，与 `NexeedKistlerForceStroke V1.2` Unit 端口一致。其旧名称仍写 5867B/TL，旧 ESI 的显示名甚至是 5877A，但 Vendor/Product/Revision 与新 5867C 完全一致；新 ESI 用于 IO 设备描述，标准 Peripheral 继续用于 OpCon PLC/Channel 适配。
@@ -294,8 +294,18 @@
 
 - 用户经 CpStudio 在 `Wp100` 下添加 `Wp100A104Kistler`（Instance ID 8，`NexeedKistlerForceStroke V1.2`），并把 `ParCfg.iKistlerForceStroke` 绑定 `_100A104`；CTA、PublicInterface、HMI 和 PLC hierarchy 的设计号与实例号一致。
 - AI 经 persistent MCP 只修改 `Wp100A104KistlerExtension.OnManRelease`：`Measure/LockKeyboard/UnlockKeyboard/SetProgram/ZeroX/TareY/ReadData/WriteData` 八路均为 `CommonManRelease AND TRUE`。公共 Mode Handler 手动互斥仍保留，不是无条件旁路。
-- 当前 CpStudio 模型/HMI 条件分析树的八个对象级常量仍为 `FALSE`；已验证 CpStudio 不会从 PLE 反向同步这层元数据。下一步需由用户在 CpStudio 把八项改为 `TRUE` 后重导出，AI 再审计 `Hmi/config.xml`；不得直接补丁生成 XML。
+- 用户已在 CpStudio 把八个对象级条件改为 `TRUE` 并重新导出；AI 回读 `Hmi/config.xml` 为 8 个 ManualFunction、8 个 `<Constant state="True" />`、0 个 FALSE。CpStudio/HMI 与 PLC `OnManRelease` 两层现在一致，未直接补丁生成 XML。
 - MCP 回读为 8 个活动 `TRUE`、0 个残留 `FALSE`；Kistler EtherCAT 映射复核为 **400/400 bound，0 mismatch**。离线编译为 **0 errors / 7 warnings**；确定性文本快照为 237 objects，project SHA-256=`628ec31baee6a6cc55bf03f40357319025537c4fdf5b6c102090272b127cfcfa`。
 - 本批 CpStudio 同时移除了旧 `Wp100/MachineView` 和 `StationSensorsView` 中 `_101M1B601A_3` 灯控件；两者引用的旧设备已不在当前最小框架中，因此随生成批次保留。若后续需要恢复，必须回到 CpStudio 模型处理，禁止手改生成 HMI 绕过模型。
 - CpStudio 生成批次、Kistler Unit 与 PLC 手动放行已提交为 Station010 `36ec1a5`（`feat: add Kistler force-stroke unit`）；两个 `.Sync.json` 与 HMI Logbook 日期滚动继续作为本地工具噪声保留，未暂存、未回退。
 - 未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 保持只读，`.project` 仅经 PLC Engineering/MCP 接口修改。
+
+## 维修门继电器、运动手动与 Mode Release 安全反馈（2026-08-19）
+
+- `FB_MaintenanceDoorControl` 保留 5 s 的 A/B 门关闭监控，并新增 `_000K981_Y32` 输入及 1 s 继电器反馈监控。两门关闭后，维修门安全继电器未在 1 s 内成立会锁存故障；`xMainPressureRelease` 从第一周期起就要求两门输入、两路锁输出和继电器反馈同时成立。
+- 同一个 CpStudio 事件 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2` 继续按 `SetEvent(Lock := TRUE) → UnlockEvent → ClearEvent` 管理。AdditionalInfo 会在故障锁存时明确写入 `_000K980_A`、`_000K981_B`、两门同时缺失，或 `_000K981_Y32` 1 s 超时；未新增或改名事件号。
+- `Wp100K101SafetyDoor.OnManRelease` 的两个动作均要求 `CommonManRelease AND _000K981_Y32`。`Wp100K102PressingCylinder.OnManRelease` 的两个动作均要求安全门 `IsInWrkPos`、`_000K913_Y32` 和 `_000K912_Y32`。
+- 当前唯一关闭安全门的自动步骤是 `SqS_Wp100_Home.N110`。N120 在 `CheckUnitDone=OK` 后继续等待 `_000K913_Y32 AND _000K912_Y32`，N130 启动压缸前再次检查同一联锁，覆盖“门本来已关闭、N110 被跳过”的分支。
+- Station `AUTO/MANUAL/HOME/CHANGEOVER` 的 `OnModeRelease` 均要求 `_000K911_Y32`、`_000K981_Y32` 和既有的两门关闭标志；CHANGEOVER 继续额外要求 `Station.Unit.IsEmpty`，没有削弱原条件。
+- AI 前后文本快照均为 237 objects，恰好只改变 8 个计划对象；最终 PLC project SHA-256=`27659F3C3EE4F4D85093B3B9304CCDA2ABDE871183D7412FA4ABACC3EA678436`，完整离线编译 **0 errors / 7 warnings**。DIDO 为 56 channels、38 bound、18 inactive，声明/映射差异为 0；Kistler 为 400/400 bound、0 mismatch。有效 CpStudio/IO/PLC/HMI 批次已提交为 Station010 `71df380`（`feat: enforce safety relay interlocks`）。
+- 本批没有连接、下载、启停、写变量或 FORCE 实体 PLC，没有创建额外 `.project` 二进制备份；`Std` 未修改。真机仍需分别断开 A 门、B 门、维修门继电器和安全门两个继电器反馈，核对时序、报警 AdditionalInfo 与恢复路径。
