@@ -275,7 +275,7 @@
 - AI 已通过 IOE 2.6.4 官方 ScriptEngine 在受控 IO 工程中添加 Kistler 从站，并按用户指定的 BMK 命名为 `_100A104`；它位于 `_000SA620_X1` 下并与 `_000SK010` 同级。在保存、关闭、重新打开后回读为 `maXYmos BL 5867C / type 65 / 58A_0000E52F00000001 / Revision=16#00000001`。
 - IO 工程变更已单独提交为 Station010 `3976d8b` (`feat: add Kistler 5867C EtherCAT slave`)，没有带入工作树中原有的 CpStudio、PLC Sync 或 HMI Logbook 改动。
 - 真实硬件名在 IOE/ESI 层保持 `maXYmos BL 5867C`；CpStudio 后续自动匹配的 `Kistler MaXYmos BL5867B TL5877B0` 是标准库兼容适配器的旧标题。为了保持自动匹配且遵守 `Std` 只读红线，不修改该标准对象标题。
-- 本节记录的“等待 CpStudio 一键读取”已在下节完成；`_100A104` 自动匹配已验证，尚余 `NexeedKistlerForceStroke` Unit 的 `IKistlerForceStroke` Channel 绑定。
+- 本节记录的“等待 CpStudio 一键读取”及 `NexeedKistlerForceStroke` Unit Channel 绑定均已在后续批次完成；`_100A104` 自动匹配和 Unit/Peripheral 两层接线均已验证。
 - 该 ESI/IOE 阶段仅修改 IO project，没有修改 PLC project，也没有连接、下载、启停或 FORCE 实体 PLC；随后 CpStudio/PLC 的闭环结果见下节。
 
 ## Kistler CpStudio 导入、Burster BMK 改名修复与 400-byte PDO 映射（2026-08-19）
@@ -286,6 +286,16 @@
 - CpStudio 的“写 peripheral 和 I/O designator 到 PLC IDE”在 Kistler 大 PDO 上触发 IOE 2.6.4 REST 序列化缺陷：设备 JSON 在 `ioMapping[350].subChannels[2].address` 附近混入 Critical 对象，错误文本为 `The stream is currently in use by a previous operation on the stream.`。这不是 BMK、ESI 或 Little-Endian 配置错误，禁止通过改 ESI 绕过。
 - 已验证的接口化替代路径：IOE `ExportEthercatConfigJob` 导出 EtherCAT master → PLE `ImportOfflineFieldbusConfigJob(forceInsert=false, keepExisting=true)` 导入 `Realtime_Data` → persistent MCP connector mapping 绑定 400 个父 BYTE 通道。输入/输出均为前 20 byte 对应 `Ctrl[0..19]`，后 180 byte 对应 `Data[0..179]`；最终读回 **400/400 bound，0 mismatch**。
 - 为避免原 `map_io_channel` 每个字节保存一次工程，`ctrlx-ai-coding` 兼容补丁新增 `@batch-json` 扩展：先完整校验索引与变量，逐项回读，失败时尽力回滚，全部成功后只保存一次。IDE 内部刷新仍耗时约 2.5 分钟，MCP 30 s 可能表面超时；必须遵守“超时先查状态，禁止立即重发”。
-- 最终只读文本快照为 234 objects，project SHA-256=`f1348397a4f29506390b97e1f7185774e3756aa0b2fdc1701889d49b8b123747`。尚未添加 `NexeedKistlerForceStroke` Unit；下一步由用户在 CpStudio 将其放到 `Wp100` 并把 `IKistlerForceStroke` Channel 绑定 `_100A104`。
+- 本阶段只读文本快照为 234 objects，project SHA-256=`f1348397a4f29506390b97e1f7185774e3756aa0b2fdc1701889d49b8b123747`；随后的 Unit 添加和手动放行结果见下节。
 - 有效 CpStudio/IO/PLC/HMI 批次已提交并推送 Station010 `17c63e5`（`feat: integrate Kistler peripheral and rename Burster BMK`）；通用大 PDO 与批量映射方法已提交并推送 `ctrlx-ai-coding` `924ca25`（`tools: batch ctrlX connector IO mappings`）。两个 `.Sync.json` 和 HMI Logbook 日期滚动继续作为用户/工具噪声保留在本地，未暂存、未回退。
 - 全程未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 保持只读，`.project` 未被直接编辑字节。
+
+## Kistler Force Stroke Unit 绑定与手动放行（2026-08-19）
+
+- 用户经 CpStudio 在 `Wp100` 下添加 `Wp100A104Kistler`（Instance ID 8，`NexeedKistlerForceStroke V1.2`），并把 `ParCfg.iKistlerForceStroke` 绑定 `_100A104`；CTA、PublicInterface、HMI 和 PLC hierarchy 的设计号与实例号一致。
+- AI 经 persistent MCP 只修改 `Wp100A104KistlerExtension.OnManRelease`：`Measure/LockKeyboard/UnlockKeyboard/SetProgram/ZeroX/TareY/ReadData/WriteData` 八路均为 `CommonManRelease AND TRUE`。公共 Mode Handler 手动互斥仍保留，不是无条件旁路。
+- 当前 CpStudio 模型/HMI 条件分析树的八个对象级常量仍为 `FALSE`；已验证 CpStudio 不会从 PLE 反向同步这层元数据。下一步需由用户在 CpStudio 把八项改为 `TRUE` 后重导出，AI 再审计 `Hmi/config.xml`；不得直接补丁生成 XML。
+- MCP 回读为 8 个活动 `TRUE`、0 个残留 `FALSE`；Kistler EtherCAT 映射复核为 **400/400 bound，0 mismatch**。离线编译为 **0 errors / 7 warnings**；确定性文本快照为 237 objects，project SHA-256=`628ec31baee6a6cc55bf03f40357319025537c4fdf5b6c102090272b127cfcfa`。
+- 本批 CpStudio 同时移除了旧 `Wp100/MachineView` 和 `StationSensorsView` 中 `_101M1B601A_3` 灯控件；两者引用的旧设备已不在当前最小框架中，因此随生成批次保留。若后续需要恢复，必须回到 CpStudio 模型处理，禁止手改生成 HMI 绕过模型。
+- CpStudio 生成批次、Kistler Unit 与 PLC 手动放行已提交为 Station010 `36ec1a5`（`feat: add Kistler force-stroke unit`）；两个 `.Sync.json` 与 HMI Logbook 日期滚动继续作为本地工具噪声保留，未暂存、未回退。
+- 未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 保持只读，`.project` 仅经 PLC Engineering/MCP 接口修改。

@@ -134,8 +134,15 @@ integration flow.
   snapshot contains 234 objects and source-project SHA-256
   `f1348397a4f29506390b97e1f7185774e3756aa0b2fdc1701889d49b8b123747`.
   Offline compilation is `0 errors / 7 warnings`.
-- Adding `NexeedKistlerForceStroke` below `Wp100` and binding its
-  `IKistlerForceStroke` Unit channel remains the next CpStudio step.
+- `NexeedKistlerForceStroke` is now generated below `Wp100` as
+  `Wp100A104Kistler` (instance ID 8), and its `IKistlerForceStroke` channel is
+  bound to `_100A104`. On the PLC side, all eight manual functions retain the
+  Mode Handler gate and are enabled with `CommonManRelease AND TRUE`.
+  CpStudio's HMI condition-analysis tree still contains its generated
+  `Constant FALSE` values; those eight model-level conditions must be changed
+  in CpStudio and re-exported rather than patched directly in generated XML.
+  Post-change PLC readback remains 400/400 bound PDO bytes with zero mismatches;
+  offline compilation remains `0 errors / 7 warnings`.
 - The verified generated batch is pushed as Station010 commit `17c63e5`; the
   reusable large-PDO/batch-mapping compatibility patch is pushed as
   `ctrlx-ai-coding` commit `924ca25`.

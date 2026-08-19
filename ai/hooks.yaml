@@ -29,11 +29,23 @@ hooks:
       Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos AND
       Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
   - id: burster_manual_release
-    object: Application/Station/Wp100/Wp100K103ResistantDetector/Wp100K103ResistantDetectorExtension/OnManRelease
+    object: Application/Station/Wp100/Wp100A103ResistantDetector/Wp100A103ResistantDetectorExtension/OnManRelease
     required_release_prefix: CommonManRelease
     required_releases:
       - ReleaseSetRange
       - ReleaseStartMeas
+  - id: kistler_manual_release
+    object: Application/Station/Wp100/Wp100A104Kistler/Wp100A104KistlerExtension/OnManRelease
+    required_release_prefix: CommonManRelease
+    required_releases:
+      - ReleaseMeasure
+      - ReleaseLockKeyboard
+      - ReleaseUnlockKeyboard
+      - ReleaseSetProgram
+      - ReleaseZeroX
+      - ReleaseTareY
+      - ReleaseReadData
+      - ReleaseWriteData
   - id: home_chain_cleanup
     object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/OnChainFinish
     required_cleanup:

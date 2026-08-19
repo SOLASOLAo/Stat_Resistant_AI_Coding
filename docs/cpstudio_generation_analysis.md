@@ -501,3 +501,15 @@ http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Applicat
 5. 复测 `PublishMarkedMethodsJob` 与 `AddAllInstancePaths`，最后完整编译。
 
 Kistler 另暴露了一个与代码生成无关的工具缺陷：IOE 2.6.4 对 200-byte input + 200-byte output 的设备生成 REST JSON 时，在大 `subChannels` 数组中插入 `stream is currently in use` Critical 对象，导致 CpStudio 的“写 I/O designator 到 PLC IDE”解析失败。正式替代路线为 IOE EtherCAT 离线导出、PLE `keepExisting` 导入，再经 MCP connector mapping 绑定 400 个父 BYTE；最终读回 400/400、零差异，编译 **0 errors / 7 warnings**。不得为规避该缺陷修改供应商 ESI 或直接编辑 `.project`。
+
+## 样本 14：Kistler Force Stroke Unit 与手动放行
+
+用户在 CpStudio 的 `Wp100` 下添加 `Wp100A104Kistler`（Instance ID 8，`NexeedKistlerForceStroke V1.2`），并把 `IKistlerForceStroke` Channel 绑定 `_100A104`。CpStudio 同步生成 Unit、Extension、`OnManRelease`、CTA Commands、PublicInterface、HMI Default/Chart/Tile 三个页面和 StateOverview；PLC 文本对象从 234 增至 237。`Wp100Unit.OnApplyParameters` 的正式绑定为：
+
+```iecst
+Wp100A104Kistler.Unit.ParCfg.iKistlerForceStroke := _100A104;
+```
+
+AI 经 persistent MCP 只替换 `Wp100A104KistlerExtension.OnManRelease` implementation，把八路对象级固定条件从 `FALSE` 改为 `TRUE`，同时保留 `CommonManRelease`。接口回读为 8 个 `TRUE`、0 个活动 `FALSE`；400-byte PDO 再审计仍为 400/400 bound、0 mismatch，完整离线编译为 **0 errors / 7 warnings**。
+
+与样本 9 一致，PLC implementation 与 CpStudio/HMI 条件分析树是两层事实：当前 HMI `config.xml` 的八个 `<Constant state="False" />` 不会因 MCP 写 PLC 而自动改变。为了保持 CpStudio 为模型/HMI 事实源，必须在 CpStudio 中把八个对象级条件改为 `TRUE` 后重新导出；禁止直接改写 `Engineering_Data.xml` 或生成 HMI XML。

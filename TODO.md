@@ -67,4 +67,5 @@
 - [x] 🔴 在 IOE 受控工程中添加 Kistler `_100A104`：位于 `_000SA620_X1` 下并与 EK1100 同级，保存后重开精确回读 `58A_0000E52F00000001 / Revision=1`(2026-08-19)
 - [x] 🔴 CpStudio 一键读取 ctrlX IDE EtherCAT IO 组态：`_100A104` 已自动匹配旧标题 `Kistler MaXYmos BL5867B TL5877B0`；Peripheral 已成功生成到 PLC/HMI(2026-08-19)
 - [x] 🔴 Kistler Peripheral 导出闭环：修复同批 Burster BMK 改名的 PLC/Symbol 双层旧引用；经 IOE EtherCAT 离线导出 + PLE `keepExisting` 导入同步从站，400 个 PDO byte 全部映射且回读零差异；PLC 快照 234 objects，离线编译 0 errors / 7 warnings(2026-08-19)
-- [ ] 🔴 在 CpStudio 添加 `NexeedKistlerForceStroke` Unit，放到 `Wp100` 下并把 `IKistlerForceStroke` Channel 绑定到 `_100A104` Peripheral；导出后复跑同一审计闭环
+- [x] 🔴 在 CpStudio 添加 `NexeedKistlerForceStroke` Unit，放到 `Wp100` 下并把 `IKistlerForceStroke` Channel 绑定到 `_100A104` Peripheral；PLC 侧 8 个手动功能均为 `CommonManRelease AND TRUE`，400/400 PDO 映射零差异，离线编译 0 errors / 7 warnings(2026-08-19)
+- [ ] 🔴 在 CpStudio 模型中把 `Wp100A104Kistler` 的 8 个对象级手动条件改成 `TRUE` 并重新导出；确认 HMI `config.xml` 的 8 个 `<Constant state="True" />` 与 PLC OnManRelease 一致

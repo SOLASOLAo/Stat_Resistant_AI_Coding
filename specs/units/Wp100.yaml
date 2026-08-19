@@ -31,15 +31,32 @@ units:
     manual_release: >-
       CommonManRelease AND
       Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
-  - instance: Wp100K103ResistantDetector
+  - instance: Wp100A103ResistantDetector
     type: NexeedBursterResis2316
     version: V1.0
-    peripheral: _Wp100K103ResistantInterface
+    peripheral: _Wp100A103ResistantInterface
     station_data_host_name: Station.StationData.BursterSetting.HostName
     commands:
       - SET_RANGE
       - SINGLE_MEAS
     manual_release: CommonManRelease AND TRUE
+  - instance: Wp100A104Kistler
+    type: NexeedKistlerForceStroke
+    version: V1.2
+    peripheral: _100A104
+    channel: IKistlerForceStroke
+    display_stroke_force: true
+    manual_functions:
+      - Measure
+      - LockKeyboard
+      - UnlockKeyboard
+      - SetProgram
+      - ZeroX
+      - TareY
+      - ReadData
+      - WriteData
+    manual_release: CommonManRelease AND TRUE
+    hmi_release_condition: pending_cpstudio_true
 
 handler_home_condition:
   all:

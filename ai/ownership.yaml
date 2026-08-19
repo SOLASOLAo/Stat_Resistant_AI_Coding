@@ -35,10 +35,14 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [wp100_home_output]
-  - path: Application/Station/Wp100/Wp100K103ResistantDetector/Wp100K103ResistantDetectorExtension/OnManRelease
+  - path: Application/Station/Wp100/Wp100A103ResistantDetector/Wp100A103ResistantDetectorExtension/OnManRelease
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [burster_manual_release]
+  - path: Application/Station/Wp100/Wp100A104Kistler/Wp100A104KistlerExtension/OnManRelease
+    owner: mixed
+    write_mode: semantic_merge
+    hook_ids: [kistler_manual_release]
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
     owner: mixed
     specification: specs/chains/SqS_Wp100_Home.yaml
