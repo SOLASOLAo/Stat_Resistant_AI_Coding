@@ -111,9 +111,13 @@ ctrlX IO Engineering，然后在 `McpCoding` 根目录运行：
 ```
 
 脚本只通过 ctrlX IO Engineering 2.6.4 的官方设备仓库接口导入并回读 ESI，不打开或修改 PLC/IO 工程，也不连接
-控制器。PLE 2.6.8 的设备仓库不带 EtherCAT XML 转换插件，不要把同一 ESI 导入 PLE。导入后重启 CpStudio，
-EtherCAT Slave 必须拖到 `Peripherals → EtherCAT master channel`，与 EK1100 同级，而不是拖到 Peripherals 根或
-EK1100 下方。
+控制器。PLE 2.6.8 的设备仓库不带 EtherCAT XML 转换插件，不要把同一 ESI 导入 PLE。
+
+EtherCAT Peripheral 的正确建立顺序是：先用 ctrlX IO Engineering 在同一 Station 目录的 `*_CtrlX_IO.project` 中完成从站组态并保存，
+再在 CpStudio 中点击“读取/导入 ctrlX IDE EtherCAT IO 组态”。CpStudio 会依据导入的 IO 设备自动匹配标准
+Peripheral；不在 CpStudio 工具箱中手动拖 EtherCAT Peripheral。Station010 的 Kistler 节点为 `_100A104`，真实设备由 ESI
+显示为 `maXYmos BL 5867C`；CpStudio 自动匹配的 `Kistler MaXYmos BL5867B TL5877B0` 是旧标准适配器标题，不应通过修改
+只读 `Std` 来改名。
 
 ## 5. 安装 persistent MCP 和 ctrlX 补丁
 

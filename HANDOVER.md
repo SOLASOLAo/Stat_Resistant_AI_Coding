@@ -271,5 +271,9 @@
 - 初查 IOE System Repository 对 Kistler/maXYmos/5867 均为 0 条。AI 启动独立 IOE 2.6.4 watcher，经官方 `device_repository.import_device` + EtherCAT converter GUID 导入；回读恰好一条 `maXYmos BL 5867C / Kistler / type 65 / 58A_0000E52F00000001 / Revision=16#00000001`。
 - PLE 2.6.8 的 REST Device Repository 不含 EtherCAT converter，POST 同一 ESI 返回 `{3992...} could not be found`；这是正常工具边界，不应复制设备仓库文件或再次尝试用 PLE 导入。EtherCAT ESI 只进 IOE，PLC 侧由 IO 集成流带入节点。
 - 新增 `scripts/ioe/Install-EtherCatEsi.ps1`：唯一临时 IPC、等待后台插件、精确身份校验、幂等跳过、优雅关闭，不打开任何 project。已实测第二次运行识别既有设备、零重复写入、IOE 退出、临时目录清零。`TEAM_SETUP.md`、工作站体检、`specs/io.yaml`、Peripheral Catalog 与专题文档已同步。
-- 当前等待用户重启 CpStudio 后，把 `Kistler MaXYmos BL5867B TL5877B0` 拖到 `Peripherals → =000+S-A620-X1 EtherCAT master channel`，作为 `_000SK010` 的同级 Slave；不能拖到 Peripherals 根或 EK1100 下。若仍被拒绝，再进入项目本地适配 Peripheral 方案，仍禁止修改 `Std`。
-- 本轮没有修改 PLC/IO project，没有连接、下载、启停或 FORCE 实体 PLC。Station010 当前既有未提交状态被完整保留：`Engineering_Data.xml` 仅 `PlcExportId` 变化；`.Sync.json` 与 HMI Logbook 日期滚动也仍为用户噪声，未回退、未提交。
+- 用户补充并纠正了 CpStudio EtherCAT Peripheral 工作流：先在 ctrlX IO Engineering 中添加真实从站，再由 CpStudio 的“一键读取 ctrlX IDE IO 组态”导入，导入后自动匹配标准 Peripheral；不是在 CpStudio 中手动拖 EtherCAT Peripheral。
+- AI 已通过 IOE 2.6.4 官方 ScriptEngine 在受控 IO 工程中添加 Kistler 从站，并按用户指定的 BMK 命名为 `_100A104`；它位于 `_000SA620_X1` 下并与 `_000SK010` 同级。在保存、关闭、重新打开后回读为 `maXYmos BL 5867C / type 65 / 58A_0000E52F00000001 / Revision=16#00000001`。
+- IO 工程变更已单独提交为 Station010 `3976d8b` (`feat: add Kistler 5867C EtherCAT slave`)，没有带入工作树中原有的 CpStudio、PLC Sync 或 HMI Logbook 改动。
+- 真实硬件名在 IOE/ESI 层保持 `maXYmos BL 5867C`；CpStudio 后续自动匹配的 `Kistler MaXYmos BL5867B TL5877B0` 是标准库兼容适配器的旧标题。为了保持自动匹配且遵守 `Std` 只读红线，不修改该标准对象标题。
+- 当前等待用户在 CpStudio 点击一键读取 IO 组态，核对 `_100A104` 自动匹配后，再将 `NexeedKistlerForceStroke` Unit 的 `IKistlerForceStroke` Channel 绑定到该 Peripheral。
+- 本轮仅修改 IO project，没有修改 PLC project，也没有连接、下载、启停或 FORCE 实体 PLC。Station010 当前既有用户未提交状态被保留：`Engineering_Data.xml`、PLC `.Sync.json` 与 HMI Logbook 日期滚动均未回退。IOE 保存同时更新了 IO `.Sync.json`。

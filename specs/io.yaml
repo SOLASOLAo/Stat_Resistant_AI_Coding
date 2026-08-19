@@ -15,9 +15,15 @@ ethercat_devices:
     byte_order: little_endian
     input_bytes: 200
     output_bytes: 200
+    ioe_node: _100A104
+    ioe_parent: _000SA620_X1
+    ioe_project: verified_after_reopen
     opcon_peripheral: NexeedEcKistlerMaxymosBl V2.0.7.0
+    opcon_legacy_label: Kistler MaXYmos BL5867B TL5877B0
+    opcon_matching: automatic_after_cpstudio_io_import
     opcon_channel: IKistlerForceStroke
     ioe_repository: verified
+    cpstudio_io_import: pending
     cpstudio_binding: pending
 
 signals:

@@ -34,6 +34,8 @@ opcon_interface:
   type: IKistlerForceStroke
   consumer: NexeedKistlerForceStroke V1.2
   legacy_object_label: Kistler MaXYmos BL5867B TL5877B0
+  matching: automatic_after_cpstudio_io_import
+  rename_legacy_label: false
 
 external_esi:
   path: ../Technical Docs/5867c-maxymos-bl-fieldbus-descr-ec-pn-eip-25.1.0/EtherCAT/Kistler_Type_5867C_V1.xml
@@ -42,8 +44,11 @@ external_esi:
 
 station010_status:
   ioe_repository: installed_and_verified
-  cpstudio_peripheral_drag: pending_restart_validation
-  project_instance: pending
+  io_project_node: _100A104
+  io_project_parent: _000SA620_X1
+  io_project_identity: verified_after_reopen
+  cpstudio_io_import: pending_user_action
+  cpstudio_peripheral_match: pending_user_action
   unit_channel_binding: pending
 
 verified_in:

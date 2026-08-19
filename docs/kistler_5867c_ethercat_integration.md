@@ -41,24 +41,38 @@ The read-only `Std` contains the required application interface:
 - provided Peripheral channel: `ForceStroke Channel` /
   `IKistlerForceStroke`.
 
-The Peripheral display name still says `BL5867B/TL5877B0`, but its EtherCAT
-identity for the BL variant is vendor `1418`, product `58671`, revision `1`.
-That identity is exactly the same as the supplied 5867C ESI. The legacy ESI in
-the standard Peripheral package also exposes 200 input and 200 output bytes,
-but its display name is stale (`5877A`) and its Sync Manager control bytes are
-from the older device generation. The supplied 5867C ESI is therefore the
-device description used for the IO repository; the standard Peripheral remains
-the OpCon PLC/channel adapter.
+The integration deliberately keeps two names with different responsibilities:
+
+- actual EtherCAT hardware: IOE node `_100A104`, described by the supplied ESI
+  as `maXYmos BL 5867C`;
+- OpCon compatibility adapter automatically selected by CpStudio:
+  `Kistler MaXYmos BL5867B TL5877B0` /
+  `NexeedEcKistlerMaxymosBl V2.0.7.0`.
+
+The standard adapter title is a legacy library label, not the detected hardware
+model. Do not rename or fork it merely to correct the title: CpStudio uses this
+standard object during automatic matching and `Std` must remain read-only. Its
+BL EtherCAT identity is vendor `1418`, product `58671`, revision `1`, exactly
+the same identity as the supplied 5867C ESI. The legacy ESI in the standard
+Peripheral package also exposes 200 input and 200 output bytes, but its display
+name is stale (`5877A`) and its Sync Manager control bytes are from the older
+device generation. The supplied 5867C ESI is therefore the authoritative IO
+device description; the legacy-named standard Peripheral remains the OpCon
+PLC/channel adapter.
 
 ## Supported integration path
 
 1. Close manually opened ctrlX IO Engineering windows.
 2. Run `scripts/ioe/Install-EtherCatEsi.ps1` with the exact identity shown in
    `scripts/ioe/README.md`.
-3. Restart CpStudio so it reloads the IO device catalog.
-4. In CpStudio, drag `Kistler MaXYmos BL5867B TL5877B0` to
-   `Peripherals → =000+S-A620-X1 EtherCAT master channel` as a sibling of
-   `_000SK010`; do not drop it on the Peripherals root or below EK1100.
+3. Open `Stat010_V5.11_CtrlX_IO.project` only with ctrlX IO Engineering 2.6.4.
+   Add `maXYmos BL 5867C` below `_000SA620_X1` as a sibling of `_000SK010`,
+   name the project node `_100A104`, then save and close the IO project.
+4. In CpStudio, use the command that reads/imports the ctrlX IDE EtherCAT IO
+   configuration from the IO project in the same Station project directory.
+   CpStudio then automatically matches `_100A104` to the legacy-named standard
+   Peripheral `Kistler MaXYmos BL5867B TL5877B0`; do not manually drag that
+   Peripheral from the toolbox.
 5. Add the Kistler force/stroke Unit below `Wp100` and bind its
    `IKistlerForceStroke` port to the Peripheral channel. The port must not be
    left empty even though the OOD marks it optional.
@@ -83,8 +97,13 @@ integration flow.
 - The reusable installer passed an idempotency test: a second run detected the
   exact existing identity, performed no import, closed IOE and removed its
   temporary session.
-- CpStudio drag/drop, project instance naming, Unit channel binding, generated
-  IO project and PLC offline compilation remain pending.
+- The controlled IO project now contains `_100A104` below
+  `_000SA620_X1`, as a sibling of `_000SK010`. A save/close/reopen readback
+  returned exactly type `65`, ID `58A_0000E52F00000001`, version
+  `Revision=16#00000001`.
+- CpStudio one-click IO import/automatic Peripheral matching, Unit channel
+  binding, CpStudio export and PLC offline compilation remain pending.
 
-No PLC/IO project was changed, and no physical controller was connected,
-downloaded, started, stopped or forced during the repository work.
+The IO project was changed only through the official IO Engineering
+ScriptEngine. No PLC project was changed, and no physical controller was
+connected, downloaded, started, stopped or forced.
