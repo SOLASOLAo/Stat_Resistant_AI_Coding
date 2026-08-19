@@ -25,6 +25,7 @@ $requiredFiles = @(
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
     'scripts/ioe/ioe_ipc.ps1',
+    'scripts/ioe/Install-EtherCatEsi.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1'
 )
 

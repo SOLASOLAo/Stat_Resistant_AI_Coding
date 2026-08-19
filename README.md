@@ -49,6 +49,7 @@ PLC Engineering MCP/REST 维护应用逻辑：
 - CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
 - AI Coding 展示页（离线 HTML，含演示与打印模式）:`docs/ai_coding_showcase.html`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
+- Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`
 - 跨项目目录标准:`docs/project_structure_standard.md`
 - 团队工作站部署:`TEAM_SETUP.md`
 

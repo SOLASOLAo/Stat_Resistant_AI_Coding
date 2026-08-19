@@ -1,0 +1,52 @@
+schema_version: 1
+kind: peripheral
+name: NexeedEcKistlerMaxymosBl
+version: V2.0
+object_version: 2.0.7.0
+vendor_source: ../Std/Peripherals/NexeedEcKistlerMaxymosBl/V2.0
+manual: ../Std/Peripherals/NexeedEcKistlerMaxymosBl/V2.0/Documentation/NexeedEcKistlerMaxymosBl_TechnicalManual_EN.chm
+
+hardware:
+  vendor: Kistler
+  model: 5867C001
+  serial_number: '6575138'
+  product_name: maXYmos BL 5867C
+
+transport:
+  protocol: EtherCAT
+  byte_order: little_endian
+  process_data:
+    input_bytes: 200
+    output_bytes: 200
+
+ethercat_identity:
+  vendor_id_hex: '0x0000058A'
+  vendor_id_decimal: 1418
+  product_code_hex: '0x0000E52F'
+  product_code_decimal: 58671
+  revision_hex: '0x00000001'
+  ioe_device_type: 65
+  ioe_device_id: 58A_0000E52F00000001
+  ioe_version: Revision=16#00000001
+
+opcon_interface:
+  provided_channel: ForceStroke Channel
+  type: IKistlerForceStroke
+  consumer: NexeedKistlerForceStroke V1.2
+  legacy_object_label: Kistler MaXYmos BL5867B TL5877B0
+
+external_esi:
+  path: ../Technical Docs/5867c-maxymos-bl-fieldbus-descr-ec-pn-eip-25.1.0/EtherCAT/Kistler_Type_5867C_V1.xml
+  sha256: 7AE6DF840A704DBBBC628A6DAFC9FA6BEE8BE3571C83C3F22874F422C11838FC
+  install_command: scripts/ioe/Install-EtherCatEsi.ps1
+
+station010_status:
+  ioe_repository: installed_and_verified
+  cpstudio_peripheral_drag: pending_restart_validation
+  project_instance: pending
+  unit_channel_binding: pending
+
+verified_in:
+  project: Station010
+  date: 2026-08-19
+  scope: IO Engineering device repository only

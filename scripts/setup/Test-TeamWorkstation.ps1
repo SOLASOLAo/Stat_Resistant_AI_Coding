@@ -5,7 +5,8 @@ Runs the read-only workstation acceptance checks documented in TEAM_SETUP.md.
 .DESCRIPTION
 Reads config/project.yaml to locate the current CpStudio, PLC and IO projects,
 then checks the standard repository layout, pinned vendor tools, Node/npm,
-codesys-mcp-persistent, the Codex MCP block and the ctrlX compatibility patch.
+codesys-mcp-persistent, the Codex MCP block, the ctrlX compatibility patch and
+the project-specific Kistler 5867C ESI source/repository entry.
 The script never starts an IDE, opens or saves a project, or contacts a PLC.
 
 .PARAMETER RepositoryRoot
@@ -140,6 +141,8 @@ $standardRoot = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $
 $cpstudioProject = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $configPath 'cpstudio_project')
 $plcProject = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $configPath 'plc_project')
 $ioProject = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $configPath 'io_project')
+$kistlerEsi = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $configPath 'kistler_5867c_esi')
+$kistlerQuickStart = Resolve-RepositoryPath $RepositoryRoot (Get-ProjectConfigValue $configPath 'kistler_5867c_quick_start')
 $methodologyRoot = Join-Path $RepositoryRoot 'ctrlx-ai-coding'
 
 Add-CheckResult 'Station directory' ([System.IO.Directory]::Exists($stationRoot)) $true $stationRoot
@@ -147,6 +150,19 @@ Add-CheckResult 'Standard library directory' ([System.IO.Directory]::Exists($sta
 Add-CheckResult 'CpStudio project' ([System.IO.File]::Exists($cpstudioProject)) $true $cpstudioProject
 Add-CheckResult 'PLC project' ([System.IO.File]::Exists($plcProject)) $true $plcProject
 Add-CheckResult 'IO project' ([System.IO.File]::Exists($ioProject)) $true $ioProject
+
+$expectedKistlerEsiHash = '7AE6DF840A704DBBBC628A6DAFC9FA6BEE8BE3571C83C3F22874F422C11838FC'
+$actualKistlerEsiHash = if ([System.IO.File]::Exists($kistlerEsi)) {
+    (Get-FileHash -LiteralPath $kistlerEsi -Algorithm SHA256).Hash
+}
+else {
+    $null
+}
+$kistlerRepositoryEntry = 'C:\ProgramData\Rexroth\IOE-V-0206\0\Studio\Devices\65\58A_0000E52F00000001\Revision%3D16%2300000001\device.xml'
+Add-CheckResult 'Kistler 5867C ESI source' ([System.IO.File]::Exists($kistlerEsi)) $true $kistlerEsi
+Add-CheckResult 'Kistler 5867C ESI SHA-256' ($actualKistlerEsiHash -eq $expectedKistlerEsiHash) $true ($(if ($actualKistlerEsiHash) { $actualKistlerEsiHash } else { 'source missing' }))
+Add-CheckResult 'Kistler 5867C quick-start guide' ([System.IO.File]::Exists($kistlerQuickStart)) $true $kistlerQuickStart
+Add-CheckResult 'Kistler 5867C IOE repository entry' ([System.IO.File]::Exists($kistlerRepositoryEntry)) $true $kistlerRepositoryEntry
 
 $aiOrigin = Get-GitOrigin $RepositoryRoot
 $stationOrigin = Get-GitOrigin $stationRoot

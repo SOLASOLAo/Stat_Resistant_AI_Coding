@@ -263,3 +263,13 @@
 - 展示叙事覆盖 CpStudio/用户、Git/AI、ctrlX IDE 三方职责，标准旁车目录，两类变更闭环，full object / implementation / semantic merge 三种写入模式，以及安全红线和跨项目复用路线。
 - 页面用当前工程事实演示 `SqS_Wp100_Home` 四种初态路径、操作按钮 500 ms 闪烁与取消清理、维修门到主气压的 5 s 联锁，以及 BMK 改名后 BinIo / I/O Mapping / Symbol Configuration 三层审计；未核实的物理映射未包装成已验证结果。
 - 支持流程 Tab、Home 路径切换、滚动进度、键盘演示模式和打印样式。已用 Edge 隔离临时 profile 检查 1440×1000 首页及 Home 章节渲染；临时截图不在仓库。本批只改文档仓库，没有修改 PLC/IO 工程，也没有连接、下载、启停或写入实体 PLC。
+
+## Kistler maXYmos BL 5867C EtherCAT ESI（2026-08-19，进行中）
+
+- 硬件已确认：`5867C001`，SN `6575138`，EtherCAT，Little-Endian。新 ESI 为 `Technical Docs/.../EtherCAT/Kistler_Type_5867C_V1.xml`，SHA-256=`7AE6DF840A704DBBBC628A6DAFC9FA6BEE8BE3571C83C3F22874F422C11838FC`；身份为 Vendor `0x58A/1418`、Product `0xE52F/58671`、Revision `1`，输入/输出各 200 byte。
+- `Std` 严格只读。标准 `NexeedEcKistlerMaxymosBl V2.0.7.0` Peripheral 提供 `IKistlerForceStroke`，与 `NexeedKistlerForceStroke V1.2` Unit 端口一致。其旧名称仍写 5867B/TL，旧 ESI 的显示名甚至是 5877A，但 Vendor/Product/Revision 与新 5867C 完全一致；新 ESI 用于 IO 设备描述，标准 Peripheral 继续用于 OpCon PLC/Channel 适配。
+- 初查 IOE System Repository 对 Kistler/maXYmos/5867 均为 0 条。AI 启动独立 IOE 2.6.4 watcher，经官方 `device_repository.import_device` + EtherCAT converter GUID 导入；回读恰好一条 `maXYmos BL 5867C / Kistler / type 65 / 58A_0000E52F00000001 / Revision=16#00000001`。
+- PLE 2.6.8 的 REST Device Repository 不含 EtherCAT converter，POST 同一 ESI 返回 `{3992...} could not be found`；这是正常工具边界，不应复制设备仓库文件或再次尝试用 PLE 导入。EtherCAT ESI 只进 IOE，PLC 侧由 IO 集成流带入节点。
+- 新增 `scripts/ioe/Install-EtherCatEsi.ps1`：唯一临时 IPC、等待后台插件、精确身份校验、幂等跳过、优雅关闭，不打开任何 project。已实测第二次运行识别既有设备、零重复写入、IOE 退出、临时目录清零。`TEAM_SETUP.md`、工作站体检、`specs/io.yaml`、Peripheral Catalog 与专题文档已同步。
+- 当前等待用户重启 CpStudio 后，把 `Kistler MaXYmos BL5867B TL5877B0` 拖到 `Peripherals → =000+S-A620-X1 EtherCAT master channel`，作为 `_000SK010` 的同级 Slave；不能拖到 Peripherals 根或 EK1100 下。若仍被拒绝，再进入项目本地适配 Peripheral 方案，仍禁止修改 `Std`。
+- 本轮没有修改 PLC/IO project，没有连接、下载、启停或 FORCE 实体 PLC。Station010 当前既有未提交状态被完整保留：`Engineering_Data.xml` 仅 `PlcExportId` 变化；`.Sync.json` 与 HMI Logbook 日期滚动也仍为用户噪声，未回退、未提交。

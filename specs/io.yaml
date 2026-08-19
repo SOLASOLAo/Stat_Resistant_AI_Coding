@@ -5,6 +5,21 @@ source_of_truth:
   bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
   plc_mapping: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project
 
+ethercat_devices:
+  - equipment: Kistler maXYmos BL
+    model: 5867C001
+    serial_number: '6575138'
+    vendor_id: '0x0000058A'
+    product_code: '0x0000E52F'
+    revision: '0x00000001'
+    byte_order: little_endian
+    input_bytes: 200
+    output_bytes: 200
+    opcon_peripheral: NexeedEcKistlerMaxymosBl V2.0.7.0
+    opcon_channel: IKistlerForceStroke
+    ioe_repository: verified
+    cpstudio_binding: pending
+
 signals:
   - bmk: _000S901
     direction: input

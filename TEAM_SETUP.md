@@ -94,6 +94,27 @@ PLC Engineering 可执行文件默认路径：
 C:\ctrlXWORKS\ctrlXPLCEngineering\PLE_V_0206\StudioPlc\Common\ctrlX-PLC-Engineering.exe
 ```
 
+### Station010 项目专用 EtherCAT ESI
+
+Kistler maXYmos BL `5867C001` 的 ESI 和 quick-start guide 属于外部技术资料，不进入 Git。它们必须按
+`config/project.yaml` 中的相对路径放在同级 `Technical Docs/`。首次部署或 IOE 设备仓库丢失时，先关闭手动打开的
+ctrlX IO Engineering，然后在 `McpCoding` 根目录运行：
+
+```powershell
+.\scripts\ioe\Install-EtherCatEsi.ps1 `
+  -EsiPath '..\Technical Docs\5867c-maxymos-bl-fieldbus-descr-ec-pn-eip-25.1.0\EtherCAT\Kistler_Type_5867C_V1.xml' `
+  -SearchTerm '5867' `
+  -ExpectedName 'maXYmos BL 5867C' `
+  -ExpectedVendor 'Kistler' `
+  -ExpectedDeviceId '58A_0000E52F00000001' `
+  -ExpectedVersion 'Revision=16#00000001'
+```
+
+脚本只通过 ctrlX IO Engineering 2.6.4 的官方设备仓库接口导入并回读 ESI，不打开或修改 PLC/IO 工程，也不连接
+控制器。PLE 2.6.8 的设备仓库不带 EtherCAT XML 转换插件，不要把同一 ESI 导入 PLE。导入后重启 CpStudio，
+EtherCAT Slave 必须拖到 `Peripherals → EtherCAT master channel`，与 EK1100 同级，而不是拖到 Peripherals 根或
+EK1100 下方。
+
 ## 5. 安装 persistent MCP 和 ctrlX 补丁
 
 以普通用户 PowerShell 安装固定版本：
