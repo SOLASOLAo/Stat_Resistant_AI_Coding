@@ -65,5 +65,6 @@
 - [x] Station010_0708 GitHub 私有备份 Stat_Resistant_Station010(基线+快照,本地已同步 origin/main)(2026-08-18)
 - [x] 🔴 Kistler 5867C EtherCAT ESI 仓库闭环：经 IOE 官方 ScriptEngine 导入新 ESI，精确回读 `58A_0000E52F00000001 / Revision=1`；新增幂等安装脚本、Catalog、规格与同事部署检查(2026-08-19)
 - [x] 🔴 在 IOE 受控工程中添加 Kistler `_100A104`：位于 `_000SA620_X1` 下并与 EK1100 同级，保存后重开精确回读 `58A_0000E52F00000001 / Revision=1`(2026-08-19)
-- [ ] 🔴 在 CpStudio 点击一键读取 ctrlX IDE EtherCAT IO 组态，确认 `_100A104` 自动匹配旧标题 `Kistler MaXYmos BL5867B TL5877B0`；再添加/绑定 `NexeedKistlerForceStroke` Unit 的 `IKistlerForceStroke` Channel 并导出
-- [ ] 🔴 Kistler CpStudio 导出闭环：Git diff → IOE 树/PDO 与映射核对 → PLC 快照 → I/O Mapping/Symbol Configuration 审计 → 离线编译 0 errors；仍不连接真机
+- [x] 🔴 CpStudio 一键读取 ctrlX IDE EtherCAT IO 组态：`_100A104` 已自动匹配旧标题 `Kistler MaXYmos BL5867B TL5877B0`；Peripheral 已成功生成到 PLC/HMI(2026-08-19)
+- [x] 🔴 Kistler Peripheral 导出闭环：修复同批 Burster BMK 改名的 PLC/Symbol 双层旧引用；经 IOE EtherCAT 离线导出 + PLE `keepExisting` 导入同步从站，400 个 PDO byte 全部映射且回读零差异；PLC 快照 234 objects，离线编译 0 errors / 7 warnings(2026-08-19)
+- [ ] 🔴 在 CpStudio 添加 `NexeedKistlerForceStroke` Unit，放到 `Wp100` 下并把 `IKistlerForceStroke` Channel 绑定到 `_100A104` Peripheral；导出后复跑同一审计闭环

@@ -101,9 +101,44 @@ integration flow.
   `_000SA620_X1`, as a sibling of `_000SK010`. A save/close/reopen readback
   returned exactly type `65`, ID `58A_0000E52F00000001`, version
   `Revision=16#00000001`.
-- CpStudio one-click IO import/automatic Peripheral matching, Unit channel
-  binding, CpStudio export and PLC offline compilation remain pending.
+- CpStudio one-click IO import succeeded. `_100A104` was automatically matched
+  to `Kistler MaXYmos BL5867B TL5877B0`; the legacy title is therefore retained
+  exactly as supplied by the standard object package.
+- The same CpStudio batch renamed the Burster object and TCP Peripheral from
+  `Wp100K103...` to `Wp100A103...`. The first export failed because generated
+  declarations already used the new name while `PeripheralRoot`,
+  `OnInitHierarchy`, `OnApplyParameters` and Symbol Configuration still held
+  old references. The references were migrated through the official PLC REST
+  API, the validated `CommonManRelease AND TRUE` implementation was preserved,
+  and the obsolete POU was removed.
+- The unavailable old Symbol Configuration entries were removed with the
+  official `UnSelectAll` followed by `Select` using a snapshot of all current
+  valid selections. `PublishMarkedMethodsJob` and
+  `DeclarationsJob/AddAllInstancePaths` both then completed successfully.
+- IOE 2.6.4 cannot serialize this device's 400-byte PDO mapping as one REST
+  device response. The response is truncated by a critical
+  `The stream is currently in use by a previous operation on the stream`
+  object, which makes CpStudio's "write I/O designators to PLC IDE" action fail
+  near `ioMapping[350].subChannels[2].address`. This is an IOE REST defect for
+  the large PDO, not an invalid BMK or ESI.
+- The verified offline workaround is fully interface-based: IOE
+  `ExportEthercatConfigJob` exports the master, PLE
+  `ImportOfflineFieldbusConfigJob` imports it below `Realtime_Data` with
+  `keepExisting=true`, and the persistent MCP connector mapping API binds the
+  400 parent byte channels. The mapping contract is:
+  - input bytes 0..19 -> `_input.Ctrl[0..19]`;
+  - input bytes 20..199 -> `_input.Data[0..179]`;
+  - output bytes 0..19 -> `_output.Ctrl[0..19]`;
+  - output bytes 20..199 -> `_output.Data[0..179]`.
+- Final readback is 400 bound channels, zero mismatches. The deterministic PLC
+  snapshot contains 234 objects and source-project SHA-256
+  `f1348397a4f29506390b97e1f7185774e3756aa0b2fdc1701889d49b8b123747`.
+  Offline compilation is `0 errors / 7 warnings`.
+- Adding `NexeedKistlerForceStroke` below `Wp100` and binding its
+  `IKistlerForceStroke` Unit channel remains the next CpStudio step.
+- The verified generated batch is pushed as Station010 commit `17c63e5`; the
+  reusable large-PDO/batch-mapping compatibility patch is pushed as
+  `ctrlx-ai-coding` commit `924ca25`.
 
-The IO project was changed only through the official IO Engineering
-ScriptEngine. No PLC project was changed, and no physical controller was
-connected, downloaded, started, stopped or forced.
+All IO and PLC changes used the respective official IDE interfaces. No physical
+controller was connected, downloaded, started, stopped, written or forced.

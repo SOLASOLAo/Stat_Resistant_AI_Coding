@@ -487,3 +487,17 @@ http://localhost:9002/plc/engineering/api/v2/devices/Device/Plc%20Logic/Applicat
 在返回的 SFC XML 中，按 Step `name` 精确定位，并只替换 Comment 属性 `7d894980-aeea-405c-a0f6-e2b26429c58f` 的文本。写入前校验当前 implementation 哈希，写入后再次 GET 回读；把 9 个新 Comment 反向替换为旧值并统一 CRLF/LF 后，可逐字复现写入前 implementation。由此确认 Step 数 9、Transition 数 9、Jump 数 1，以及所有 Action 引用和图形顺序均未改变。
 
 这类图形属性后续统一优先使用官方 REST/扩展接口，不手改 `.project` 二进制，也不依赖逐项 UI 自动化。界面只用于可视确认，F11 用于完整离线编译；本次结果为 **0 errors / 7 warnings**，Station010 提交 `6399377`。
+
+## 样本 13：Kistler Peripheral 导入 + Burster BMK 改名失败闭环
+
+本批 CpStudio 先从同目录 ctrlX IO 工程读取 `_100A104`，自动匹配标准对象 `Kistler MaXYmos BL5867B TL5877B0`；同时把既有 Burster Unit/Peripheral 的 BMK 语义从 `K103` 改成 `A103`。首次导出时，GVL 已生成 `_Wp100A103ResistantInterface`，但 `PeripheralRoot`、`OnInitHierarchy`、`OnApplyParameters` 仍引用旧 `_Wp100K103ResistantInterface`，因此代码生成、OPC UA method publish 和 PersistentVars instance path 刷新连续失败。
+
+修复规则可以跨项目复用：
+
+1. 新旧名字同时搜索声明、Hierarchy、周期调用、参数应用、HMI 和 Symbol Configuration，不能只看 GVL；
+2. 把旧对象中 AI 验证过的 implementation 语义合并到新对象，本例为 Burster 两个 `CommonManRelease AND TRUE`；
+3. 确认旧 POU 外部引用为 0 后再删除；
+4. 对 REST 清单已不可见、但编译仍报警的 Symbol 幽灵项，先快照所有有效选择，执行 `UnSelectAll`，再用快照 `Select` 恢复；
+5. 复测 `PublishMarkedMethodsJob` 与 `AddAllInstancePaths`，最后完整编译。
+
+Kistler 另暴露了一个与代码生成无关的工具缺陷：IOE 2.6.4 对 200-byte input + 200-byte output 的设备生成 REST JSON 时，在大 `subChannels` 数组中插入 `stream is currently in use` Critical 对象，导致 CpStudio 的“写 I/O designator 到 PLC IDE”解析失败。正式替代路线为 IOE EtherCAT 离线导出、PLE `keepExisting` 导入，再经 MCP connector mapping 绑定 400 个父 BYTE；最终读回 400/400、零差异，编译 **0 errors / 7 warnings**。不得为规避该缺陷修改供应商 ESI 或直接编辑 `.project`。
