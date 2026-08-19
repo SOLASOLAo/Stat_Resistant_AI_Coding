@@ -256,3 +256,10 @@
 - 新增 `config/codex-mcp.toml.example`，只含干净的 `codesys-persistent` STDIO 配置，不复制任何个人模型供应商、账号、Token 或 API Key。Codex 官方配置事实核对于 2026-08-19：默认 `~/.codex/config.toml`，同一主机的桌面/CLI/IDE 扩展共享配置。
 - 新增只读 `scripts/setup/Test-TeamWorkstation.ps1`：从 `config/project.yaml` 解析工程相对路径，检查 CpStudio/PLE/IOE、Managed Libraries、Node/npm、固定 MCP 0.6.3、补丁和 Codex 配置；不启动 IDE、不打开或写入工程、不连接 PLC。
 - 同事首次交接验收固定为：环境体检 + 目录静态测试 + 唯一 persistent MCP 会话 + Station010 完整离线编译 0 errors / 7 warnings。闭源 `Std`、安装介质和许可证仍必须由公司授权渠道提供。
+
+## AI Coding 对外展示页(2026-08-19)
+
+- 新增 `docs/ai_coding_showcase.html`：单文件、无 CDN/外部字体/外部图片依赖，可直接离线打开或打印为 PDF；README 已增加固定入口。
+- 展示叙事覆盖 CpStudio/用户、Git/AI、ctrlX IDE 三方职责，标准旁车目录，两类变更闭环，full object / implementation / semantic merge 三种写入模式，以及安全红线和跨项目复用路线。
+- 页面用当前工程事实演示 `SqS_Wp100_Home` 四种初态路径、操作按钮 500 ms 闪烁与取消清理、维修门到主气压的 5 s 联锁，以及 BMK 改名后 BinIo / I/O Mapping / Symbol Configuration 三层审计；未核实的物理映射未包装成已验证结果。
+- 支持流程 Tab、Home 路径切换、滚动进度、键盘演示模式和打印样式。已用 Edge 隔离临时 profile 检查 1440×1000 首页及 Home 章节渲染；临时截图不在仓库。本批只改文档仓库，没有修改 PLC/IO 工程，也没有连接、下载、启停或写入实体 PLC。

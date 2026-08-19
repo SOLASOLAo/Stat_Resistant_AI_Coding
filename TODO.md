@@ -23,6 +23,7 @@
 - [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/plc/export_plc_snapshot.py`,`scripts/plc/verify_plc_snapshot.ps1`)
 - [x] 🔴 建立可跨项目复制的目录标准：`config/specs/ai/src/catalog/scripts/tests/data/docs`，录入 Station010 当前规格、AI 归属、通用 FB 源码和已验证 Unit Catalog；加入结构冒烟测试与自定义 Post-export 信号脚本(2026-08-18)
 - [x] 🟡 建立团队工作站交接：新增 `TEAM_SETUP.md`、无个人账号的 Codex MCP 配置样例和只读环境体检脚本，区分长期部署说明与会话型 HANDOVER(2026-08-19)
+- [x] 🟢 新增离线 AI Coding 展示页：覆盖 CpStudio/AI/ctrlX 分工、标准目录、两类开发闭环、对象归属、Home Chain、主气压联锁、BMK 改名复盘和验收证据；支持交互演示与打印 PDF(2026-08-19)
 - [ ] 🟡 在 CpStudio 工程中配置官方 Post-export hook 指向 `scripts/cpstudio/post_export_signal.bat`，完成一次真实导出信号验证
 - [ ] 🟡 实现 export request 消费器：diff → 快照 → ownership/hooks/graphical 审计 → I/O/Symbol 审计 → 编译 → 报告；保持唯一 persistent MCP 会话
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
