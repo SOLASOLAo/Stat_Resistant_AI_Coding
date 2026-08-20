@@ -318,4 +318,5 @@
 - 输出为 `Wp100.SqS_Run.Result : Wp100RunResultStruct`，内含 `Resistance` 与 `Kistler` 两个嵌套结构。结果在 DONE 后保留，到下一轮 N000 清零；当前 Kistler 保存判定和最终力/位移，不含完整曲线。
 - `OnChainFinish` 对 DONE/ERROR/CANCEL 统一熄灭 `_000P610`、复位按钮/定时器/四个运动或测量 Unit Execute，并令 Kistler `EndMeasurement=TRUE`。单个 `Wp100.SqS_Run` 只允许调用方顺序复用；调用方尚未接线，后续在 READY 时写 `Wp100.MeasurePos`、置 Execute，再以 `CheckSubChainDone` 等待。
 - 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读已验证，F11 完整离线编译 **0 errors / 7 warnings**；PLC project SHA-256=`46ADB0AABC700E17E254C4BE2C5ED6FA45D6EC7592179551F13D55D31AB8910D`。
+- 有效 CpStudio/IO/PLC/HMI 与 Run Chain 已提交并推送为 Station010 `6b692be`（`feat: implement reusable Wp100 measurement sequence`）；可重放源码、规格、Catalog、REST 写入器和文档已提交并推送为 McpCoding `9549e08`（`feat: codify reusable Wp100 run sequence`）。`.Sync.json`、Logbook 日期滚动、`Hmi/obj` 和展示页既有未提交改动均未混入本批。
 - 尚待用户/产品数据确认：Burster 上下限和温度开关、Kistler 程序号如何由 TypeData 提供；是否需要 Kistler `READ_DATA` 完整曲线。未连接、下载、启停、写变量或 FORCE 实体 PLC，也未创建额外二进制备份；`Std` 保持只读。
