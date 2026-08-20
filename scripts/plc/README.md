@@ -21,6 +21,16 @@ null `VariableName`; the graphical editor may still look plausible, but later
 native export/import or code generation can fail. `Test-ProjectFramework.ps1`
 guards both Run-chain writers against unnamed transition tags and calls.
 
+PLE REST has an asymmetric normalization rule: PUT must contain the transition
+`name`, while a later GET omits that attribute even when the native
+`VariableName` is valid. The writers therefore hash both the named desired XML
+and the normalized REST readback XML; this keeps reruns idempotent without
+dropping the name from writes.
+
+OpCon `SetEvent` accepts `AdditionalInfo : STRING(63)`. Canonical PLC sources
+must keep a literal third argument at 63 characters or fewer; the static test
+checks this and prevents compiler warning C0198.
+
 The exporter uses `se.projects.primary`; it never opens a second project,
 saves, compiles or performs online operations.
 

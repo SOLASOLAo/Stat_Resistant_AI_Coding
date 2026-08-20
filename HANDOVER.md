@@ -356,3 +356,10 @@
 - 两份 Run-chain REST 写入器现在为每个 Transition 显式生成 `SourceStep__to__TargetStep` 名称；`tests/static/Test-ProjectFramework.ps1` 新增缺名门禁，防止同类无效图元再次进入工程。正式工程最终 SHA-256=`A8CCD18F1C9CBB7CD6465700C78E20CA1ECFA9B0E77BBB95B7AF7C8586889D4E`。
 - persistent MCP 的另一个独立故障是旧 `ready.signal` 中的 PID 已被 Windows 复用于无关 `python.exe`，原启动器仅做 signal-0 检查而误判会话仍存活。兼容补丁现同时验证目标可执行文件名，并在接管前执行 watcher `SCRIPT_SUCCESS` 握手；健康检查与 shutdown 也使用同一身份判断，防止误接管或误结束无关进程。首次重启还遇到 `configCtrlXPlc.json` 的瞬时文件锁，锁释放后正常启动，与项目/CpStudio 无关。
 - 最终正式工程已完成“保存关闭 → 重新打开 → 等待库加载 → Clean → Build”复验，当前 PLE 无 `Bit type` 弹窗。全程仅离线处理，没有连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改，用户的展示页、Sync、HMI Logbook 与 `Hmi/obj` 工作树改动未回退、未混入本批。
+
+## C0198 SetEvent AdditionalInfo 长度修复（2026-08-20）
+
+- C0198 的完整 PLE 消息为 `String constant ... too long for destination type 'STRING(63)'`，对象是 `SqC_Wp100_Run.CheckPartPresent`。双路产品检测缺失文本原为 79 字符；单路两条均为 58 字符，因此只有 `missingMask=3` 分支触发。
+- 双路文本已缩短为 60 字符：`_100B701=FALSE; _100B702=FALSE: both fixture sensors missing`，两个 BMK、FALSE 状态和故障含义均保留。规格、可重放 ST 源和正式 PLC Method 已同步。
+- `tests/static/Test-ProjectFramework.ps1` 现在解析 AI-owned ST 中 `SetEvent` 的第三个字符串常量，超过 OpCon `STRING(63)` 即失败。两份 SFC REST 写入器同时兼容 PLE 的非对称规则：PUT 保留 Transition `name`，GET 省略该属性；门禁分别校验命名目标哈希与标准化读回哈希，重复运行均为 `verified / No changes; save skipped.`。
+- 最终正式工程 SHA-256=`20D9DD9A44B72A4025F49774E2151D12A119937ED788BE9B1AAABA711899B51E`；真实 Clean Build 为 **0 errors / 6 warnings**，全活动消息类别复查 `C0198_MATCHES=0`。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改，既有 HTML、Sync、HMI Logbook 与 `Hmi/obj` 改动未暂存、未回退。

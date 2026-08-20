@@ -37,7 +37,7 @@ part_detection:
     additional_info:
       only_100B701_missing: '_100B701=FALSE: fixture product-detect sensor 1 is missing'
       only_100B702_missing: '_100B702=FALSE: fixture product-detect sensor 2 is missing'
-      both_missing: '_100B701=FALSE; _100B702=FALSE: both fixture product-detect sensors are missing'
+      both_missing: '_100B701=FALSE; _100B702=FALSE: both fixture sensors missing'
 
 steps:
   - { id: N000, comment: Initialize measurement sequence }

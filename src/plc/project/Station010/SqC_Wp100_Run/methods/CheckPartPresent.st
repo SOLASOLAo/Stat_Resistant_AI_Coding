@@ -84,7 +84,7 @@ ELSE
         _eventIndex := SetEvent(
           OpconEventClass.SOFTERROR,
           Wp100.EVENT_PART_DETECT_SENSOR,
-          '_100B701=FALSE; _100B702=FALSE: both fixture product-detect sensors are missing',
+          '_100B701=FALSE; _100B702=FALSE: both fixture sensors missing',
           Lock := TRUE
         );
     END_CASE

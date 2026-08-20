@@ -88,6 +88,17 @@ $stFiles = Get-ChildItem -LiteralPath $stSourceRoot -Recurse -File -Filter '*.st
 foreach ($file in $stFiles) {
     $relativePath = $file.FullName.Substring($repositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
     $lines = [System.IO.File]::ReadAllLines($file.FullName)
+    $text = [System.IO.File]::ReadAllText($file.FullName)
+
+    # OpCon SetEvent AdditionalInfo is STRING(63). A longer literal is
+    # truncated by the compiler and raises C0198.
+    $setEventPattern = "SetEvent\s*\(\s*[^,]+,\s*[^,]+,\s*'((?:''|[^'])*)'"
+    foreach ($match in [regex]::Matches($text, $setEventPattern, [Text.RegularExpressions.RegexOptions]::Singleline)) {
+        $additionalInfo = $match.Groups[1].Value.Replace("''", "'")
+        if ($additionalInfo.Length -gt 63) {
+            $failures.Add("OpCon SetEvent AdditionalInfo exceeds STRING(63): ${relativePath} ($($additionalInfo.Length) characters)")
+        }
+    }
 
     for ($lineIndex = 0; $lineIndex -lt $lines.Count; $lineIndex++) {
         $line = $lines[$lineIndex]

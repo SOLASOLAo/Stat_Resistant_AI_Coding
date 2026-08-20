@@ -64,6 +64,18 @@ function Get-Sha256 {
   }
 }
 
+function Get-SfcRestReadbackImplementation {
+  param([Parameter(Mandatory)][string]$Implementation)
+
+  # The official PLE REST GET normalizes away the transition name attribute,
+  # even though a PUT must provide it so the native VariableName is not NULL.
+  return [regex]::Replace(
+    $Implementation,
+    '(<transition\s+localId="[^"]+")\s+name="[^"]+"',
+    '$1'
+  )
+}
+
 function Get-SourceText {
   param([Parameter(Mandatory)][string]$RelativePath)
 
@@ -449,15 +461,16 @@ $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
 $targetImplementationSha = Get-Sha256 $targetImplementation
+$targetRestReadbackImplementationSha = Get-Sha256 (Get-SfcRestReadbackImplementation $targetImplementation)
 $previousDeclarationSha = 'ddee296f091090f744b8879b6f53a69112c91b83f65c4ee4b4d44122cfc3ab0e'
 if ($currentDeclarationSha -notin @($baselineDeclarationSha, $previousDeclarationSha, $targetDeclarationSha)) {
   throw 'SqS_Wp100_Run declaration changed after audit; refusing overwrite.'
 }
-if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentDeclarationSha -ne $targetDeclarationSha) -or
-                  ($currentImplementationSha -ne $targetImplementationSha)
+                  ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
@@ -576,7 +589,7 @@ $readback = Get-Node $runPath
 if ((Get-Sha256 $readback.declaration) -ne $targetDeclarationSha) {
   throw 'SqS_Wp100_Run declaration readback differs after PUT.'
 }
-if ((Get-Sha256 $readback.implementation) -ne $targetImplementationSha) {
+if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run graph readback differs after PUT.'
 }
 $expectedChildren = @($allowedChildren | Sort-Object)
@@ -601,5 +614,6 @@ else {
   stepCount = $steps.Count
   declarationSha256 = $targetDeclarationSha
   implementationSha256 = $targetImplementationSha
+  restReadbackImplementationSha256 = $targetRestReadbackImplementationSha
   saveResult = $saveResult
 } | ConvertTo-Json -Depth 8

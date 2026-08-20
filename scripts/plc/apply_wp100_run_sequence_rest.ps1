@@ -66,6 +66,18 @@ function Get-Sha256 {
   }
 }
 
+function Get-SfcRestReadbackImplementation {
+  param([Parameter(Mandatory)][string]$Implementation)
+
+  # The official PLE REST GET normalizes away the transition name attribute,
+  # even though a PUT must provide it so the native VariableName is not NULL.
+  return [regex]::Replace(
+    $Implementation,
+    '(<transition\s+localId="[^"]+")\s+name="[^"]+"',
+    '$1'
+  )
+}
+
 function Get-SourceText {
   param([Parameter(Mandatory)][string]$RelativePath)
 
@@ -364,6 +376,7 @@ $targetDeclaration = Get-SourceText 'SqC_Wp100_Run\declaration.st'
 $targetImplementation = New-LinearSfcImplementation $steps
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
 $targetImplementationSha = Get-Sha256 $targetImplementation
+$targetRestReadbackImplementationSha = Get-Sha256 (Get-SfcRestReadbackImplementation $targetImplementation)
 $sequenceNode = Get-Node $sequencePath
 
 $generatedDeclarationSha = 'dfb93c51ea220816248fad97c9b736c509b55f2861669fb5dfb5182ad538fefa'
@@ -373,7 +386,7 @@ $currentImplementationSha = Get-Sha256 $sequenceNode.implementation
 if ($currentDeclarationSha -notin @($generatedDeclarationSha, $targetDeclarationSha)) {
   throw 'SqC_Wp100_Run declaration changed after audit; refusing overwrite.'
 }
-if ($currentImplementationSha -notin @($generatedImplementationSha, $targetImplementationSha)) {
+if ($currentImplementationSha -notin @($generatedImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqC_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 
@@ -417,6 +430,10 @@ $preInnerSpaceChildSha256 = @{
   'CheckPartPresent' = 'cd496c2c988cf4198d4130db3175f2c0fa99e0ec55cfb68cac14745a4ae4b232'
   'OnChainFinish' = '08ba3e57bbed8f813919c78d91c3439426968da780858a4ea7ffb2a2b2cceb45'
 }
+$preC0198ChildSha256 = @{
+  # Compiled source before SetEvent AdditionalInfo was limited to STRING(63).
+  'CheckPartPresent' = '208214e0b882d4816bcf6c86ce4fa5b39b50765bdc10e274cdd3dbcf083a6f54'
+}
 $knownChildren = @($targetChildren + $generatedChildSha256.Keys | Sort-Object -Unique)
 $unknownChildren = @($sequenceNode.children | Where-Object { $_ -notin $knownChildren })
 if ($unknownChildren.Count -gt 0) {
@@ -441,10 +458,13 @@ foreach ($childName in $sequenceNode.children) {
                        ($childSha256 -eq $preStyleChildSha256[$childName])
     $matchesPreInnerSpace = $preInnerSpaceChildSha256.ContainsKey($childName) -and
                             ($childSha256 -eq $preInnerSpaceChildSha256[$childName])
+    $matchesPreC0198 = $preC0198ChildSha256.ContainsKey($childName) -and
+                       ($childSha256 -eq $preC0198ChildSha256[$childName])
     if (($childSha256 -ne $targetChildSha256) -and
         (-not $matchesGenerated) -and
         (-not $matchesPreStyle) -and
-        (-not $matchesPreInnerSpace)) {
+        (-not $matchesPreInnerSpace) -and
+        (-not $matchesPreC0198)) {
       throw "SqC_Wp100_Run child changed after audit: $childName"
     }
   }
@@ -469,11 +489,11 @@ foreach ($step in $steps) {
   }
   $childStatus[$step.Name] = Set-CodeChild -Name $name -ElementType Action -SourceFile "SqC_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $baseline
 }
-$childStatus.CheckPartPresent = Set-CodeChild -Name 'CheckPartPresent' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\methods\CheckPartPresent.st' -AllowedBaselineSha256 @($preStyleChildSha256.CheckPartPresent, $preInnerSpaceChildSha256.CheckPartPresent)
+$childStatus.CheckPartPresent = Set-CodeChild -Name 'CheckPartPresent' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\methods\CheckPartPresent.st' -AllowedBaselineSha256 @($preStyleChildSha256.CheckPartPresent, $preInnerSpaceChildSha256.CheckPartPresent, $preC0198ChildSha256.CheckPartPresent)
 $childStatus.OnChainFinish = Set-CodeChild -Name 'OnChainFinish' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @($generatedChildSha256.OnChainFinish, $preStyleChildSha256.OnChainFinish, $preInnerSpaceChildSha256.OnChainFinish)
 
 $parentChanged = ($currentDeclarationSha -ne $targetDeclarationSha) -or
-                 ($currentImplementationSha -ne $targetImplementationSha)
+                 ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 if ($parentChanged) {
   $sequenceNode = Get-Node $sequencePath
   $sequenceNode.declaration = $targetDeclaration
@@ -491,7 +511,7 @@ $readback = Get-Node $sequencePath
 if ((Get-Sha256 $readback.declaration) -ne $targetDeclarationSha) {
   throw 'SqC_Wp100_Run declaration readback differs after PUT.'
 }
-if ((Get-Sha256 $readback.implementation) -ne $targetImplementationSha) {
+if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqC_Wp100_Run graph readback differs after PUT.'
 }
 $expectedChildren = @($targetChildren | Sort-Object)
@@ -534,5 +554,6 @@ else {
   stepCount = $steps.Count
   declarationSha256 = $targetDeclarationSha
   implementationSha256 = $targetImplementationSha
+  restReadbackImplementationSha256 = $targetRestReadbackImplementationSha
   saveResult = $saveResult
 } | ConvertTo-Json -Depth 8
