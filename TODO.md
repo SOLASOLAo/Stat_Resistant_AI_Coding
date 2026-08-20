@@ -51,7 +51,7 @@
 - [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：锁存 `Wp100.MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈，下压时同步启动 Kistler，延时后 Burster 测量，抬压时同步结束 Kistler，结构化保存结果并开门；DONE/ERROR/CANCEL 统一清理，离线编译 0 errors / 7 warnings(2026-08-20)
 - [ ] 🔴 在首个自动主 Chain 调用 `Wp100.SqS_Run`：仅在 READY 写 `Wp100.MeasurePos` 并置 Execute，随后用 `CheckSubChainDone` 等待；单实例只允许多个调用方顺序复用，不并发启动
 - [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
-- [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 只保存 OK/NOK、NoPass、程序号及最终力/位移
+- [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [ ] 🟡 补充 `SqS_Run` 当前为空的中英文显示文本
 - [x] 🟡 StationData 的 `LineNo`、`TestMode`、`NokCounter`、`Wp100.Active` 已经本次 CpStudio 导出从 PLC 主结构与数据检查中正式移除；生成后编译正常(2026-08-18)

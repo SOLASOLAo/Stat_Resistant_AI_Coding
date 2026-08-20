@@ -104,7 +104,7 @@ function Set-Action {
   param(
     [Parameter(Mandatory)][string]$Step,
     [Parameter(Mandatory)][string]$SourceFile,
-    [AllowNull()][string]$AllowedBaseline
+    [AllowNull()][string[]]$AllowedBaselineSha256
   )
 
   $implementation = Get-SourceText $SourceFile
@@ -137,7 +137,8 @@ function Set-Action {
   if ($current -eq $target) {
     return 'verified'
   }
-  if ($null -eq $AllowedBaseline -or $current -ne $AllowedBaseline.Replace("`r`n", "`n")) {
+  $currentSha256 = Get-Sha256 $current
+  if ($null -eq $AllowedBaselineSha256 -or $currentSha256 -notin $AllowedBaselineSha256) {
     throw "Existing object has unrecognized edits: $path"
   }
 
@@ -293,6 +294,8 @@ if ($currentDeclarationSha -notin @($baselineDeclarationSha, $targetDeclarationS
 if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
+$runNeedsUpdate = ($currentDeclarationSha -ne $targetDeclarationSha) -or
+                  ($currentImplementationSha -ne $targetImplementationSha)
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN050_active', '_aN060_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN100_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
@@ -311,18 +314,32 @@ $baselineActions = @{
   N999 = "// Finish step`n// Finish chain, no actions, use OnChainFinish to reset variables`n`n_env.ChainControl := OpconChainControl.DONE;`n"
   OnChainFinish = "/// Method is called for only one cycle if chain stops working by any given reason`nMETHOD PROTECTED OnChainFinish`nVAR_INPUT`n  Reason: OpconChainFinishReason;`nEND_VAR`n`n// Call base method`nSUPER^.OnChainFinish(Reason);`n`nCASE Reason`nOF`n  OpconChainFinishReason.ERROR,`n  OpconChainFinishReason.CANCEL,`n  OpconChainFinishReason.DONE:`n    ;`n  ELSE`n    ; // do nothing`nEND_CASE`n"
 }
+$previousActionSha256 = @{
+  # First compiled Run-chain version. These hashes allow a controlled upgrade
+  # to latching cyclic Kistler values before upward motion unloads the part.
+  N100 = '6e7114f5c10f729ee960a242bc3870a24c5b322f9c1197af375b25c73c383167'
+  N120 = '750efb352fcb56877264c0734f7353b81a3960e7d5c6601418ac10a474a6a82d'
+}
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
-  $allowed = if ($baselineActions.ContainsKey($step.Name)) { $baselineActions[$step.Name] } else { $null }
-  $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaseline $allowed
+  $allowedSha256 = @()
+  if ($baselineActions.ContainsKey($step.Name)) {
+    $allowedSha256 += Get-Sha256 $baselineActions[$step.Name]
+  }
+  if ($previousActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $previousActionSha256[$step.Name]
+  }
+  $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaseline $baselineActions.OnChainFinish
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish))
 
-$runNode = Get-Node $runPath
-$runNode.declaration = $targetDeclaration
-$runNode.implementation = $targetImplementation
-$null = Invoke-JsonRequest -Method Put -Uri $runUri -Body $runNode
+if ($runNeedsUpdate) {
+  $runNode = Get-Node $runPath
+  $runNode.declaration = $targetDeclaration
+  $runNode.implementation = $targetImplementation
+  $null = Invoke-JsonRequest -Method Put -Uri $runUri -Body $runNode
+}
 
 $readback = Get-Node $runPath
 if ((Get-Sha256 $readback.declaration) -ne $targetDeclarationSha) {
@@ -337,7 +354,15 @@ if (($expectedChildren -join "`n") -ne ($actualChildren -join "`n")) {
   throw "SqS_Wp100_Run child list mismatch after update: $($actualChildren -join ', ')"
 }
 
-$saveJob = Save-CurrentProject
+$hasChanges = $runNeedsUpdate -or
+              (@($dutStatus.Values | Where-Object { $_ -ne 'verified' }).Count -gt 0) -or
+              (@($actionStatus.Values | Where-Object { $_ -ne 'verified' }).Count -gt 0)
+$saveResult = if ($hasChanges) {
+  (Save-CurrentProject).jobResultInfo
+}
+else {
+  'No changes; save skipped.'
+}
 [pscustomobject]@{
   project = $currentProject.path
   duts = $dutStatus
@@ -345,5 +370,5 @@ $saveJob = Save-CurrentProject
   stepCount = $steps.Count
   declarationSha256 = $targetDeclarationSha
   implementationSha256 = $targetImplementationSha
-  saveResult = $saveJob.jobResultInfo
+  saveResult = $saveResult
 } | ConvertTo-Json -Depth 8

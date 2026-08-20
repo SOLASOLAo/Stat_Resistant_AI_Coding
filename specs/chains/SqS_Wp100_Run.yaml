@@ -83,6 +83,11 @@ steps:
     result: Result.Resistance
   - id: N100
     comment: Raise press / stop Kistler
+    capture_before_commands:
+      - Kistler NoPass
+      - Kistler program number
+      - Kistler cyclic actual force
+      - Kistler cyclic actual stroke
     commands_same_plc_cycle:
       - Wp100A104Kistler.ParImm.EndMeasurement := TRUE
       - Wp100K102PressingCylinder.BASPOS
@@ -93,7 +98,7 @@ steps:
   - id: N120
     comment: Read Kistler result
     result: Result.Kistler
-    note: stores verdict and final cyclic values; full READ_DATA curve is not requested
+    note: adds the final verdict; force/stroke were latched at press-up start and full READ_DATA curve is not requested
   - id: N130
     comment: Open safety door
     command: Wp100K101SafetyDoor.BASPOS

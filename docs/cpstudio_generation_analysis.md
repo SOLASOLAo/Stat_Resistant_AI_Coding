@@ -542,9 +542,9 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 新增三个结构体把输出收敛到 `Wp100.SqS_Run.Result`：
 
 - `Wp100ResistanceResultStruct`：有效位、越限、OK、电阻值、温度；
-- `Wp100KistlerResultStruct`：有效位、OK/NOK、NoPass、程序号、最终力和位移；
+- `Wp100KistlerResultStruct`：有效位、OK/NOK、NoPass、程序号，以及压缸上升前锁存的循环力和位移；
 - `Wp100RunResultStruct`：请求位置、位置有效位及上述两个嵌套结果。
 
-结果在 DONE 后保留，到下一次 N000 才清零。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
+结果在 DONE 后保留，到下一次 N000 才清零。Kistler 的 `ForceAct/StrokeAct` 是循环实际值，因此 N100 在发出压缸上升和 `EndMeasurement` 前先锁存，避免 N120 等压缸完全升起后才读到卸载值；N120 只补写最终 OK/NOK。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
 
-可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对原三步 CpStudio 骨架做声明/图形哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；重复执行的回读均为 verified。F11 完整离线编译为 **0 errors / 7 warnings**，最终 PLC project SHA-256=`46ADB0AABC700E17E254C4BE2C5ED6FA45D6EC7592179551F13D55D31AB8910D`。未连接、下载、启停或写入实体 PLC。
+可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对原三步 CpStudio 骨架做声明/图形哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；重复执行的回读均为 verified。F11 完整离线编译为 **0 errors / 7 warnings**，最终 PLC project SHA-256=`AECE8D38679B959BE7D52D25E150C76081880F1FC7E3FC31EB80CE846FC52EE7`。未连接、下载、启停或写入实体 PLC。

@@ -7,7 +7,8 @@
 - `apply_wp100_run_rest.ps1` applies the AI-owned `SqS_Wp100_Run` declaration,
   SFC graph, Action/cleanup implementations and result DUTs through the active
   PLC Engineering official REST extension. It verifies the CpStudio skeleton
-  hashes before first application and performs exact readback on every rerun.
+  hashes before first application and performs exact readback on every rerun;
+  an all-verified rerun skips both PUT and project save.
 
 The exporter uses `se.projects.primary`; it never opens a second project,
 saves, compiles or performs online operations.

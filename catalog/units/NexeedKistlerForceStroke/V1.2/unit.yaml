@@ -36,7 +36,7 @@ measure:
     stroke: OutImm.StrokeAct
 
 data_scope:
-  current_run_chain: verdict plus final cyclic force/stroke values
+  current_run_chain: verdict plus cyclic force/stroke values latched immediately before press-up starts
   full_curve: requires a separate READ_DATA command and is not implemented in SqS_Wp100_Run
 
 verified_in:
