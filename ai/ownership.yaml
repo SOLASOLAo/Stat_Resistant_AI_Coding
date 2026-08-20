@@ -114,13 +114,25 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN045_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N045.st
+    write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN050_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN051_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N051.st
+    write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN060_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN061_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N061.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN070_active
     owner: ai
@@ -134,9 +146,17 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN095_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N095.st
+    write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN100_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN101_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N101.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN110_active
     owner: ai

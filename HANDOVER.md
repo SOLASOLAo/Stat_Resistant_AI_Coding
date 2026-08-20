@@ -314,9 +314,10 @@
 
 - CpStudio 当前正式接口为 `Wp100.MeasurePos : MeasurePsoEnum`；用户已把变量旧拼写 `MeasurePso` 更正为 `MeasurePos`。类型名仍是 CpStudio 生成的 `MeasurePsoEnum`，不要仅在 PLC 内改名。`LEFT/MIDDLE/RIGHT` 分别绑定 `_100B601/_100B602/_100B603`，每个位置都要求目标 DI=TRUE、另外两路=FALSE。
 - CpStudio 同批新增 `StationData.PressDelayTime : DINT`（应用按毫秒解释），刷新三路位置传感器中英文描述，并把上一批 Mode/安全门/压缸安全反馈联锁同步到 HMI 条件树。
-- AI 经 PLE 官方 REST 扩展把 `SqS_Wp100_Run` 从 N000/N100/N999 骨架扩展为 16 步：初始化并锁存位置 → 一取一位置联锁 → 拍按钮 → 关门并确认安全反馈 → Kistler MEASURE 与压缸下降同周期启动 → 压紧延时 → Burster SINGLE_MEAS → 保存电阻 → 压缸上升与 Kistler EndMeasurement 同周期发出 → 保存 Kistler → 开门 → DONE。
-- 输出为 `Wp100.SqS_Run.Result : Wp100RunResultStruct`，内含 `Resistance` 与 `Kistler` 两个嵌套结构。结果在 DONE 后保留，到下一轮 N000 清零；Kistler 循环力/位移在压缸上升前锁存，N120 再补写最终判定，不含完整曲线。
+- AI 经 PLE 官方 REST 扩展把 `SqS_Wp100_Run` 从 N000/N100/N999 骨架扩展为 21 步。压缸下行与 Kistler 启动、压缸上行与 Kistler 结束分别使用一组 `simultaneousDivergence / simultaneousConvergence`；每台设备各有 Start/Wait Step，便于在 SFC 中直接诊断卡点。
+- OpCon 并行支路严格使用基类提供的独立返回值：支路 1=`_retVal`，支路 2=`_retVal2`。N045/N095 是两组并行动作前的公共放行步骤；SFC Step Comment 使用短检索描述，详细联锁与结果处理留在对应 ST Action。
+- 输出为 `Wp100.SqS_Run.Result : Wp100RunResultStruct`，内含 `Resistance` 与 `Kistler` 两个嵌套结构。结果在 DONE 后保留，到下一轮 N000 清零；N101 在压缸释放前一次性锁存 Kistler 循环力/位移，N120 再补写最终判定，不含完整曲线。
 - `OnChainFinish` 对 DONE/ERROR/CANCEL 统一熄灭 `_000P610`、复位按钮/定时器/四个运动或测量 Unit Execute，并令 Kistler `EndMeasurement=TRUE`。单个 `Wp100.SqS_Run` 只允许调用方顺序复用；调用方尚未接线，后续在 READY 时写 `Wp100.MeasurePos`、置 Execute，再以 `CheckSubChainDone` 等待。
-- 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读已验证，F11 完整离线编译 **0 errors / 7 warnings**；PLC project SHA-256=`AECE8D38679B959BE7D52D25E150C76081880F1FC7E3FC31EB80CE846FC52EE7`。
-- 有效 CpStudio/IO/PLC/HMI 与 Run Chain 主批次为 Station010 `6b692be`，Kistler 上升前锁存优化为 `768694a`；可重放源码、规格、Catalog、REST 写入器和文档主批次为 McpCoding `9549e08`，对应锁存优化为 `578df54`。上述提交均已推送；`.Sync.json`、Logbook 日期滚动、`Hmi/obj` 和展示页既有未提交改动均未混入本批。
+- 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读确认 21 Steps、2 个并行分支、2 个并行汇合和 22 个 Action/方法；完整离线编译 **0 errors / 7 warnings**，Additional code checks **0 errors**；PLC project SHA-256=`7C4226DA757773287D56793F88C6723C42CF72BA63C1698691E0C9EEE0F0F6FF`。
+- 有效 CpStudio/IO/PLC/HMI 与 Run Chain 主批次为 Station010 `6b692be`，Kistler 上升前锁存优化为 `768694a`，本次并行 SFC 重构为 `53440a1`；可重放源码、规格、Catalog、REST 写入器和文档主批次为 McpCoding `9549e08`，对应锁存优化为 `578df54`，本次源码随本交接提交。`.Sync.json`、Logbook 日期滚动、`Hmi/obj` 和展示页既有未提交改动均未混入本批。
 - 尚待用户/产品数据确认：Burster 上下限和温度开关、Kistler 程序号如何由 TypeData 提供；是否需要 Kistler `READ_DATA` 完整曲线。未连接、下载、启停、写变量或 FORCE 实体 PLC，也未创建额外二进制备份；`Std` 保持只读。

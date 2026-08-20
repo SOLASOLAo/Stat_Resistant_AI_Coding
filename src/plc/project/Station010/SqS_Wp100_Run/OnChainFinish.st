@@ -28,6 +28,7 @@ _positionValid          := FALSE;
 _safetyDoorCloseStarted := FALSE;
 _pressDownStarted       := FALSE;
 _kistlerStarted         := FALSE;
+_kistlerStopRequested   := FALSE;
 _bursterStarted         := FALSE;
 _pressUpStarted         := FALSE;
 _safetyDoorOpenStarted  := FALSE;

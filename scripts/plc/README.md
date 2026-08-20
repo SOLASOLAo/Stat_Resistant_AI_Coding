@@ -5,7 +5,8 @@
 - `verify_plc_snapshot.ps1` validates the snapshot manifest and optional source
   project hash.
 - `apply_wp100_run_rest.ps1` applies the AI-owned `SqS_Wp100_Run` declaration,
-  SFC graph, Action/cleanup implementations and result DUTs through the active
+  parallel SFC graph, Action/cleanup implementations and result DUTs through
+  the active
   PLC Engineering official REST extension. It verifies the CpStudio skeleton
   hashes before first application and performs exact readback on every rerun;
   an all-verified rerun skips both PUT and project save.

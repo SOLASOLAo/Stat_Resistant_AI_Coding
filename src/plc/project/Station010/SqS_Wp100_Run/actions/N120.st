@@ -1,16 +1,16 @@
-// Wait for Kistler MEASURE and add its final command verdict. The cyclic
-// force/stroke values were already latched at the start of upward motion.
+// Parallel branch 2: wait for Kistler MEASURE and copy the final verdict.
+_retVal2 := RUNNING;
+
 IF NOT _kistlerStarted
 THEN
-  _retVal := OK;
+  _retVal2 := OK;
 ELSE
-  _unitResult := CheckUnitDone(
+  _retVal2 := CheckUnitDone(
     Wp100A104Kistler.Unit,
     RepeatOnError := FALSE
   );
-  _retVal := _unitResult;
 
-  IF _unitResult = OK
+  IF _retVal2 = OK
   THEN
     Result.Kistler.Valid     := TRUE;
     Result.Kistler.Ok        := Wp100A104Kistler.Unit.OutCmd.OK;

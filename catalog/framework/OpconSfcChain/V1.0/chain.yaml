@@ -1,0 +1,36 @@
+schema_version: 1
+kind: framework_chain
+name: OpconSfcChain
+version: NxBase V1.0
+vendor_source: ../Std/Objects/NxBase/V1.0
+manual: ../Std/Objects/NxBase/V1.0/Documentation/Control_plus_Framework_TechnicalManual_EN.chm
+
+sfc_parallel:
+  divergence: simultaneousDivergence
+  convergence: simultaneousConvergence
+  branch_return_values:
+    1: _retVal
+    2: _retVal2
+    3: _retVal3
+  wait_call_index_rule: >-
+    Parallel WaitBool/WaitIo calls use distinct CallIdx values matching the
+    branch number; the same CallIdx must not be used twice in one PLC cycle.
+
+project_style:
+  - put a common release/check step before the simultaneous divergence
+  - give every device a separate Start step and Wait step
+  - use the matching branch return value in Actions and transitions
+  - converge only after every branch return value is OK
+  - keep SFC step comments short and searchable
+  - keep interlock, parameter and result explanations in the ST Action
+  - reset every owned Execute/output in OnChainFinish for DONE, ERROR and CANCEL
+
+verified_example:
+  project: Station010
+  chain: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+  date: 2026-08-20
+  steps: 21
+  simultaneous_divergences: 2
+  simultaneous_convergences: 2
+  offline_build: 0 errors / 7 warnings
+  additional_code_checks: 0 errors

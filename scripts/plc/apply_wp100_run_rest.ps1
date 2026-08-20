@@ -162,72 +162,209 @@ function Escape-XmlText {
   return [Security.SecurityElement]::Escape($Text)
 }
 
-function New-LinearSfcImplementation {
+function New-SfcContext {
+  return @{
+    Builder = New-Object Text.StringBuilder
+    NextId = 0
+    NewLine = "`r`n"
+    NameGuid = '38391c6d-6d4a-42f8-8ee7-9f45e5adafa8'
+    CommentGuid = '7d894980-aeea-405c-a0f6-e2b26429c58f'
+    FalseGuid = '01580b27-6378-448b-8ecb-0e4b795b58d6'
+    NumberGuid = 'bc882c11-1e91-4dd8-a6b8-2075724ed18b'
+    InitialGuid = '6844a48e-46c2-4cc8-a185-a478f3b99cc0'
+    ActionEnabledGuid = '62e1754b-7629-4e63-9cec-10ae0c536f1f'
+    ActionGuid = '700a583f-b4d4-43e4-8c14-629c7cd3bec8'
+    TransitionPriorityGuid = '8294df19-5962-4dee-a874-1051dabb0e3e'
+    BranchGuid = '23bdaa98-72ec-41f7-817b-9dede5697086'
+  }
+}
+
+function Get-NextSfcId {
+  param([Parameter(Mandatory)][hashtable]$Context)
+
+  $id = [int]$Context.NextId
+  $Context.NextId = $id + 1
+  return $id
+}
+
+function Add-SfcStep {
+  param(
+    [Parameter(Mandatory)][hashtable]$Context,
+    [Parameter(Mandatory)]$Step,
+    [AllowNull()]$SourceId,
+    [AllowEmptyString()][string]$SourceFormalParameter = '',
+    [switch]$Initial
+  )
+
+  $id = Get-NextSfcId $Context
+  $nl = $Context.NewLine
+  $sb = $Context.Builder
+  $initialAttribute = if ($Initial) { ' initialStep="true"' } else { '' }
+  [void]$sb.Append("    <step localId=`"$id`"$initialAttribute name=`"$($Step.Name)`">${nl}")
+  [void]$sb.Append("      <position x=`"0`" y=`"0`" />${nl}")
+  if ($null -eq $SourceId) {
+    [void]$sb.Append("      <connectionPointIn />${nl}")
+  }
+  else {
+    $formal = if ([string]::IsNullOrEmpty($SourceFormalParameter)) { '' } else { " formalParameter=`"$SourceFormalParameter`"" }
+    [void]$sb.Append("      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`"$formal />${nl}      </connectionPointIn>${nl}")
+  }
+  [void]$sb.Append("      <connectionPointOut formalParameter=`"sfc`" />${nl}")
+  [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.NameGuid)`">$(Escape-XmlText $Step.Name)</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.CommentGuid)`">$(Escape-XmlText $Step.Comment)</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.NumberGuid)`">0</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.InitialGuid)`">$(if ($Initial) { 'TRUE' } else { 'FALSE' })</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.ActionEnabledGuid)`">TRUE</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.ActionGuid)`">_a$($Step.Name)_active</attribute>${nl}")
+  [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </step>${nl}")
+  return $id
+}
+
+function Add-SfcTransition {
+  param(
+    [Parameter(Mandatory)][hashtable]$Context,
+    [Parameter(Mandatory)][int]$SourceId,
+    [Parameter(Mandatory)][string]$Expression,
+    [AllowEmptyString()][string]$SourceFormalParameter = 'sfc'
+  )
+
+  $nl = $Context.NewLine
+  $sb = $Context.Builder
+  $escapedExpression = Escape-XmlText $Expression
+  $inVariableId = Get-NextSfcId $Context
+  $transitionId = Get-NextSfcId $Context
+  $formal = if ([string]::IsNullOrEmpty($SourceFormalParameter)) { '' } else { " formalParameter=`"$SourceFormalParameter`"" }
+  [void]$sb.Append("    <inVariable localId=`"$inVariableId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointOut />${nl}      <expression>$escapedExpression</expression>${nl}    </inVariable>${nl}")
+  [void]$sb.Append("    <transition localId=`"$transitionId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`"$formal />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
+  [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.NameGuid)`">$escapedExpression</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.NumberGuid)`">0</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.ActionEnabledGuid)`">FALSE</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.TransitionPriorityGuid)`">0</attribute>${nl}")
+  [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </transition>${nl}")
+  return $transitionId
+}
+
+function Add-SfcSimultaneousDivergence {
+  param(
+    [Parameter(Mandatory)][hashtable]$Context,
+    [Parameter(Mandatory)][int]$SourceId,
+    [Parameter(Mandatory)][string]$Name
+  )
+
+  $id = Get-NextSfcId $Context
+  $nl = $Context.NewLine
+  $sb = $Context.Builder
+  [void]$sb.Append("    <simultaneousDivergence name=`"`" localId=`"$id`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`" />${nl}      </connectionPointIn>${nl}")
+  [void]$sb.Append("      <connectionPointOut formalParameter=`"sfc`" />${nl}      <connectionPointOut formalParameter=`"sfc`" />${nl}")
+  [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.BranchGuid)`">TRUE</attribute>${nl}")
+  [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </simultaneousDivergence>${nl}")
+  return $id
+}
+
+function Add-SfcSimultaneousConvergence {
+  param(
+    [Parameter(Mandatory)][hashtable]$Context,
+    [Parameter(Mandatory)][int[]]$SourceIds
+  )
+
+  $id = Get-NextSfcId $Context
+  $nl = $Context.NewLine
+  $sb = $Context.Builder
+  [void]$sb.Append("    <simultaneousConvergence localId=`"$id`">${nl}      <position x=`"0`" y=`"0`" />${nl}")
+  foreach ($sourceId in $SourceIds) {
+    [void]$sb.Append("      <connectionPointIn>${nl}        <connection refLocalId=`"$sourceId`" formalParameter=`"sfc`" />${nl}      </connectionPointIn>${nl}")
+  }
+  [void]$sb.Append("      <connectionPointOut />${nl}    </simultaneousConvergence>${nl}")
+  return $id
+}
+
+function Add-SfcJumpStep {
+  param(
+    [Parameter(Mandatory)][hashtable]$Context,
+    [Parameter(Mandatory)][int]$SourceId,
+    [Parameter(Mandatory)][string]$TargetName
+  )
+
+  $id = Get-NextSfcId $Context
+  $nl = $Context.NewLine
+  $sb = $Context.Builder
+  [void]$sb.Append("    <jumpStep localId=`"$id`" targetName=`"$TargetName`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`" />${nl}      </connectionPointIn>${nl}")
+  [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.NameGuid)`">$(Escape-XmlText $TargetName)</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.CommentGuid)`">Not used</attribute>${nl}")
+  [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
+  [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </jumpStep>${nl}")
+  return $id
+}
+
+function New-Wp100RunSfcImplementation {
   param([Parameter(Mandatory)][object[]]$Steps)
 
-  $nameGuid = '38391c6d-6d4a-42f8-8ee7-9f45e5adafa8'
-  $commentGuid = '7d894980-aeea-405c-a0f6-e2b26429c58f'
-  $falseGuid = '01580b27-6378-448b-8ecb-0e4b795b58d6'
-  $numberGuid = 'bc882c11-1e91-4dd8-a6b8-2075724ed18b'
-  $initialGuid = '6844a48e-46c2-4cc8-a185-a478f3b99cc0'
-  $actionEnabledGuid = '62e1754b-7629-4e63-9cec-10ae0c536f1f'
-  $actionGuid = '700a583f-b4d4-43e4-8c14-629c7cd3bec8'
-  $transitionPriorityGuid = '8294df19-5962-4dee-a874-1051dabb0e3e'
-  $nl = "`r`n"
-  $sb = New-Object Text.StringBuilder
-  [void]$sb.Append("<body>${nl}  <SFC>${nl}")
-
-  $previousTransitionId = $null
-  $nextId = 0
-  for ($index = 0; $index -lt $Steps.Count; $index++) {
-    $step = $Steps[$index]
-    $stepId = $nextId
-    $nextId++
-    $initialAttribute = if ($index -eq 0) { ' initialStep="true"' } else { '' }
-    [void]$sb.Append("    <step localId=`"$stepId`"$initialAttribute name=`"$($step.Name)`">${nl}")
-    [void]$sb.Append("      <position x=`"0`" y=`"0`" />${nl}")
-    if ($null -eq $previousTransitionId) {
-      [void]$sb.Append("      <connectionPointIn />${nl}")
-    }
-    else {
-      [void]$sb.Append("      <connectionPointIn>${nl}        <connection refLocalId=`"$previousTransitionId`" />${nl}      </connectionPointIn>${nl}")
-    }
-    [void]$sb.Append("      <connectionPointOut formalParameter=`"sfc`" />${nl}")
-    [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$nameGuid`">$(Escape-XmlText $step.Name)</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$commentGuid`">$(Escape-XmlText $step.Comment)</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$falseGuid`">FALSE</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$numberGuid`">0</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$initialGuid`">$(if ($index -eq 0) { 'TRUE' } else { 'FALSE' })</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$actionEnabledGuid`">TRUE</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$actionGuid`">_a$($step.Name)_active</attribute>${nl}")
-    [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </step>${nl}")
-
-    $expression = if ($index -eq ($Steps.Count - 1)) { '_retVal = JUMP9' } else { '_retVal = OK' }
-    $inVariableId = $nextId
-    $nextId++
-    $transitionId = $nextId
-    $nextId++
-    [void]$sb.Append("    <inVariable localId=`"$inVariableId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointOut />${nl}      <expression>$expression</expression>${nl}    </inVariable>${nl}")
-    [void]$sb.Append("    <transition localId=`"$transitionId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$stepId`" formalParameter=`"sfc`" />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
-    [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$nameGuid`">$expression</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$falseGuid`">FALSE</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$numberGuid`">0</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$actionEnabledGuid`">FALSE</attribute>${nl}")
-    [void]$sb.Append("            <attribute guid=`"$transitionPriorityGuid`">0</attribute>${nl}")
-    [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </transition>${nl}")
-    $previousTransitionId = $transitionId
+  $stepByName = @{}
+  foreach ($step in $Steps) {
+    $stepByName[$step.Name] = $step
   }
 
-  $jumpId = $nextId
-  [void]$sb.Append("    <jumpStep localId=`"$jumpId`" targetName=`"N999`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$previousTransitionId`" />${nl}      </connectionPointIn>${nl}")
-  [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
-  [void]$sb.Append("            <attribute guid=`"$nameGuid`">N999</attribute>${nl}")
-  [void]$sb.Append("            <attribute guid=`"$commentGuid`">Not used</attribute>${nl}")
-  [void]$sb.Append("            <attribute guid=`"$falseGuid`">FALSE</attribute>${nl}")
-  [void]$sb.Append("          </attributes>${nl}        </data>${nl}      </addData>${nl}    </jumpStep>${nl}  </SFC>${nl}</body>")
-  return $sb.ToString()
+  $ctx = New-SfcContext
+  $nl = $ctx.NewLine
+  [void]$ctx.Builder.Append("<body>${nl}  <SFC>${nl}")
+
+  $stepId = Add-SfcStep -Context $ctx -Step $stepByName.N000 -SourceId $null -Initial
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+
+  foreach ($name in @('N010', 'N020', 'N030', 'N040', 'N045')) {
+    $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+  }
+
+  $startSplitId = Add-SfcSimultaneousDivergence -Context $ctx -SourceId $sourceId -Name 'ParallelStart'
+
+  $pressStartId = Add-SfcStep -Context $ctx -Step $stepByName.N050 -SourceId $startSplitId
+  $pressStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressStartId -Expression '_retVal = OK'
+  $pressDownWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N060 -SourceId $pressStartTransitionId
+
+  $kistlerStartId = Add-SfcStep -Context $ctx -Step $stepByName.N051 -SourceId $startSplitId
+  $kistlerStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStartId -Expression '_retVal2 = OK'
+  $kistlerRunningWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N061 -SourceId $kistlerStartTransitionId
+
+  $startJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressDownWaitId, $kistlerRunningWaitId)
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $startJoinId -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+
+  foreach ($name in @('N070', 'N080', 'N090', 'N095')) {
+    $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+  }
+
+  $finishSplitId = Add-SfcSimultaneousDivergence -Context $ctx -SourceId $sourceId -Name 'ParallelFinish'
+
+  $pressUpStartId = Add-SfcStep -Context $ctx -Step $stepByName.N100 -SourceId $finishSplitId
+  $pressUpStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressUpStartId -Expression '_retVal = OK'
+  $pressUpWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N110 -SourceId $pressUpStartTransitionId
+
+  $kistlerStopId = Add-SfcStep -Context $ctx -Step $stepByName.N101 -SourceId $finishSplitId
+  $kistlerStopTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStopId -Expression '_retVal2 = OK'
+  $kistlerResultWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N120 -SourceId $kistlerStopTransitionId
+
+  $finishJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressUpWaitId, $kistlerResultWaitId)
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $finishJoinId -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+
+  foreach ($name in @('N130', 'N140')) {
+    $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+  }
+
+  $finishStepId = Add-SfcStep -Context $ctx -Step $stepByName.N999 -SourceId $sourceId
+  $finishTransitionId = Add-SfcTransition -Context $ctx -SourceId $finishStepId -Expression '_retVal = JUMP9'
+  $null = Add-SfcJumpStep -Context $ctx -SourceId $finishTransitionId -TargetName 'N999'
+
+  [void]$ctx.Builder.Append("  </SFC>${nl}</body>")
+  return $ctx.Builder.ToString()
 }
 
 function Save-CurrentProject {
@@ -265,25 +402,30 @@ $steps = @(
   [pscustomobject]@{ Name = 'N010'; Comment = 'Check fixture position' },
   [pscustomobject]@{ Name = 'N020'; Comment = 'Wait start button' },
   [pscustomobject]@{ Name = 'N030'; Comment = 'Close safety door' },
-  [pscustomobject]@{ Name = 'N040'; Comment = 'Wait door closed' },
-  [pscustomobject]@{ Name = 'N050'; Comment = 'Start Kistler / lower press' },
-  [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press lowered' },
+  [pscustomobject]@{ Name = 'N040'; Comment = 'Wait safety feedback' },
+  [pscustomobject]@{ Name = 'N045'; Comment = 'Check measure release' },
+  [pscustomobject]@{ Name = 'N050'; Comment = 'Start press WRKPOS' },
+  [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press WRKPOS' },
+  [pscustomobject]@{ Name = 'N051'; Comment = 'Start Kistler MEASURE' },
+  [pscustomobject]@{ Name = 'N061'; Comment = 'Wait Kistler running' },
   [pscustomobject]@{ Name = 'N070'; Comment = 'Wait press delay' },
   [pscustomobject]@{ Name = 'N080'; Comment = 'Start resistance test' },
-  [pscustomobject]@{ Name = 'N090'; Comment = 'Read resistance result' },
-  [pscustomobject]@{ Name = 'N100'; Comment = 'Raise press / stop Kistler' },
-  [pscustomobject]@{ Name = 'N110'; Comment = 'Wait press raised' },
-  [pscustomobject]@{ Name = 'N120'; Comment = 'Read Kistler result' },
+  [pscustomobject]@{ Name = 'N090'; Comment = 'Wait resistance result' },
+  [pscustomobject]@{ Name = 'N095'; Comment = 'Check release ready' },
+  [pscustomobject]@{ Name = 'N100'; Comment = 'Start press BASPOS' },
+  [pscustomobject]@{ Name = 'N110'; Comment = 'Wait press BASPOS' },
+  [pscustomobject]@{ Name = 'N101'; Comment = 'Stop Kistler MEASURE' },
+  [pscustomobject]@{ Name = 'N120'; Comment = 'Wait Kistler result' },
   [pscustomobject]@{ Name = 'N130'; Comment = 'Open safety door' },
   [pscustomobject]@{ Name = 'N140'; Comment = 'Wait door open' },
   [pscustomobject]@{ Name = 'N999'; Comment = 'Finish run' }
 )
 
 $targetDeclaration = Get-SourceText 'SqS_Wp100_Run\declaration.st'
-$targetImplementation = New-LinearSfcImplementation $steps
+$targetImplementation = New-Wp100RunSfcImplementation $steps
 $runNode = Get-Node $runPath
-$baselineDeclarationSha = 'e941ad68be1da946dd0c0851a4e883f715fb8dd3df1fb76ead9aa29624f74866'
-$baselineImplementationSha = 'd5103f78bef8b7d93d20ac8ec9508899d23db63f578ac40df88b4bae4dce808d'
+$baselineDeclarationSha = '269963a32c3e5decf6d1cfedfbe8d88b5575254c880461d947feabfec45b0a92'
+$baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b9294834132e2d7cfd'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -297,7 +439,7 @@ if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplem
 $runNeedsUpdate = ($currentDeclarationSha -ne $targetDeclarationSha) -or
                   ($currentImplementationSha -ne $targetImplementationSha)
 
-$allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN050_active', '_aN060_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN100_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
+$allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
 if ($unknownChildren.Count -gt 0) {
   throw "SqS_Wp100_Run contains unrecognized child objects: $($unknownChildren -join ', ')"
@@ -316,10 +458,23 @@ $baselineActions = @{
 }
 $previousActionSha256 = @{
   # First compiled Run-chain version. These hashes allow a controlled upgrade
-  # to latching cyclic Kistler values before upward motion unloads the part.
-  N100 = '6e7114f5c10f729ee960a242bc3870a24c5b322f9c1197af375b25c73c383167'
-  N120 = '750efb352fcb56877264c0734f7353b81a3960e7d5c6601418ac10a474a6a82d'
+  # from the linear command pairs to explicit OpCon SFC parallel branches.
+  N000 = 'b12c8bd9dbf23705cb671cc30fb285419d4a9df51b39c7bb31368084dcd267c8'
+  N050 = @(
+    '34c8f8ec24fff9711210bf7abfa80f089eb88e7b56d0f2128df91e5414735351',
+    'fb9f8c9c60384a14ae3d75675adfdea8b08872517fc07962315d24a234b7aa61'
+  )
+  N051 = '264a3b87c12ba92ea7fde0f0852613df42854e76953550d0502cd2d7c6d7ade6'
+  N060 = '8d9d82ed762360320b292aab0bef59b9118f12cafec66892e6ad4810e18782fd'
+  N095 = 'ffdcd4639873d195b3408da069dd75942ae937468616636f5c1987ca29db0966'
+  N100 = @(
+    'cf66beec948b4918578d4d4e97d0ad819259ad41cdfcedbc8da7706064c9c4b9',
+    'ea353652ad73156b0d4e9c7990ec4845f693192e4bf350890e5e8288ce3adff2'
+  )
+  N110 = '0df9515af6c65ddea589d839c400bb6e9a95f40acb94741f1bc8b2561ba9c813'
+  N120 = '7dbaf6138936f5933e13c420b784736d5bce02292b742cd5b49bb00fce561e51'
 }
+$previousOnChainFinishSha256 = '638fa350677e14d0d0ce4706ff6bdcb2f8df50aea2ae21a6bd31119d7aaa60dc'
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -328,11 +483,11 @@ foreach ($step in $steps) {
     $allowedSha256 += Get-Sha256 $baselineActions[$step.Name]
   }
   if ($previousActionSha256.ContainsKey($step.Name)) {
-    $allowedSha256 += $previousActionSha256[$step.Name]
+    $allowedSha256 += @($previousActionSha256[$step.Name])
   }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish))
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256)
 
 if ($runNeedsUpdate) {
   $runNode = Get-Node $runPath

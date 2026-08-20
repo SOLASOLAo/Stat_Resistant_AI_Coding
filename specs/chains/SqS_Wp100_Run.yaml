@@ -9,6 +9,13 @@ chain:
   status: implemented_offline_verified
   reuse: sequential callers only
 
+sfc_conventions:
+  parallel_element: simultaneousDivergence / simultaneousConvergence
+  branch_1_return: _retVal
+  branch_2_return: _retVal2
+  source: OpconSfcChain and NxBase framework technical manual
+  diagnostic_rule: each device owns separate Start and Wait steps
+
 input:
   source: Wp100.MeasurePos
   type: MeasurePsoEnum
@@ -53,24 +60,46 @@ steps:
       - pressing cylinder in base position
       - Peripherals.BinIo._000K981_Y32
   - id: N040
-    comment: Wait door closed
+    comment: Wait safety feedback
     completion_requires:
       - safety door in work position
       - Peripherals.BinIo._000K913_Y32
       - Peripherals.BinIo._000K912_Y32
-  - id: N050
-    comment: Start Kistler / lower press
-    commands_same_plc_cycle:
-      - Wp100A104Kistler.MEASURE
-      - Wp100K102PressingCylinder.WRKPOS
+  - id: N045
+    comment: Check measure release
+    purpose: release both parallel start branches from one common machine state
     start_requires:
       - safety door in work position
       - Peripherals.BinIo._000K913_Y32
       - Peripherals.BinIo._000K912_Y32
-      - Kistler ready
+      - pressing cylinder in base position and READY
+      - Kistler READY and device ready
+  - id: N050
+    comment: Start press WRKPOS
+    parallel_group: measurement_start
+    branch: 1
+    return_value: _retVal
+    command: Wp100K102PressingCylinder.WRKPOS
   - id: N060
-    comment: Wait press lowered
+    comment: Wait press WRKPOS
+    parallel_group: measurement_start
+    branch: 1
+    return_value: _retVal
     wait_for: Wp100K102PressingCylinder command started by N050
+  - id: N051
+    comment: Start Kistler MEASURE
+    parallel_group: measurement_start
+    branch: 2
+    return_value: _retVal2
+    command: Wp100A104Kistler.MEASURE
+  - id: N061
+    comment: Wait Kistler running
+    parallel_group: measurement_start
+    branch: 2
+    return_value: _retVal2
+    wait_for: Wp100A104Kistler.Unit.OutImm.MeasRunning
+  - parallel_convergence: measurement_start
+    completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N070
     comment: Wait press delay
     duration: Station.StationData.PressDelayTime milliseconds
@@ -79,26 +108,47 @@ steps:
     command: Wp100A103ResistantDetector.SINGLE_MEAS
     note: lower/upper limits and temperature selection remain the Unit's current parameters
   - id: N090
-    comment: Read resistance result
+    comment: Wait resistance result
     result: Result.Resistance
+  - id: N095
+    comment: Check release ready
+    purpose: release both parallel finish branches after resistance measurement
+    start_requires:
+      - pressing cylinder in work position and READY
+      - Kistler MEASURE still running
   - id: N100
-    comment: Raise press / stop Kistler
-    capture_before_commands:
+    comment: Start press BASPOS
+    parallel_group: measurement_finish
+    branch: 1
+    return_value: _retVal
+    command: Wp100K102PressingCylinder.BASPOS
+  - id: N110
+    comment: Wait press BASPOS
+    parallel_group: measurement_finish
+    branch: 1
+    return_value: _retVal
+    wait_for: Wp100K102PressingCylinder command started by N100
+  - id: N101
+    comment: Stop Kistler MEASURE
+    parallel_group: measurement_finish
+    branch: 2
+    return_value: _retVal2
+    capture_before_command:
       - Kistler NoPass
       - Kistler program number
       - Kistler cyclic actual force
       - Kistler cyclic actual stroke
-    commands_same_plc_cycle:
-      - Wp100A104Kistler.ParImm.EndMeasurement := TRUE
-      - Wp100K102PressingCylinder.BASPOS
-    timing: Kistler stop is requested at press-up start, within the required 1 second
-  - id: N110
-    comment: Wait press raised
-    wait_for: Wp100K102PressingCylinder command started by N100
+    command: Wp100A104Kistler.ParImm.EndMeasurement := TRUE
+    timing: activated by the same simultaneous divergence as N100
   - id: N120
-    comment: Read Kistler result
+    comment: Wait Kistler result
+    parallel_group: measurement_finish
+    branch: 2
+    return_value: _retVal2
     result: Result.Kistler
     note: adds the final verdict; force/stroke were latched at press-up start and full READ_DATA curve is not requested
+  - parallel_convergence: measurement_finish
+    completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N130
     comment: Open safety door
     command: Wp100K101SafetyDoor.BASPOS
@@ -152,4 +202,9 @@ caller_contract:
 verification:
   date: 2026-08-20
   offline_build: 0 errors / 7 warnings
+  additional_code_checks: 0 errors
+  graph_readback:
+    steps: 21
+    simultaneous_divergences: 2
+    simultaneous_convergences: 2
   online_test: not performed

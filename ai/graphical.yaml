@@ -28,7 +28,7 @@ objects:
     write_strategy:
       - GET complete object
       - verify the CpStudio skeleton declaration and implementation hashes
-      - PUT the complete declaration and linear SFC graph through official REST
+      - PUT the complete declaration and SFC graph through official REST
       - create or update action objects and result DUTs through official REST
       - save through ProjectJob
       - GET and compare every declaration, implementation and graph readback
@@ -38,15 +38,30 @@ objects:
       N010: Check fixture position
       N020: Wait start button
       N030: Close safety door
-      N040: Wait door closed
-      N050: Start Kistler / lower press
-      N060: Wait press lowered
+      N040: Wait safety feedback
+      N045: Check measure release
+      N050: Start press WRKPOS
+      N051: Start Kistler MEASURE
+      N060: Wait press WRKPOS
+      N061: Wait Kistler running
       N070: Wait press delay
       N080: Start resistance test
-      N090: Read resistance result
-      N100: Raise press / stop Kistler
-      N110: Wait press raised
-      N120: Read Kistler result
+      N090: Wait resistance result
+      N095: Check release ready
+      N100: Start press BASPOS
+      N101: Stop Kistler MEASURE
+      N110: Wait press BASPOS
+      N120: Wait Kistler result
       N130: Open safety door
       N140: Wait door open
       N999: Finish run
+    parallel_groups:
+      measurement_start:
+        branches:
+          - [N050, N060]
+          - [N051, N061]
+      measurement_finish:
+        branches:
+          - [N100, N110]
+          - [N101, N120]
+    branch_return_values: [_retVal, _retVal2]

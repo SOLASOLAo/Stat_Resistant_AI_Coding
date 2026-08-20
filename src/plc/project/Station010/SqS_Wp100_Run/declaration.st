@@ -19,6 +19,7 @@ VAR
   _safetyDoorCloseStarted : BOOL;
   _pressDownStarted      : BOOL;
   _kistlerStarted        : BOOL;
+  _kistlerStopRequested  : BOOL;
   _bursterStarted        : BOOL;
   _pressUpStarted        : BOOL;
   _safetyDoorOpenStarted : BOOL;

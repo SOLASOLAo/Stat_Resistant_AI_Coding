@@ -537,7 +537,9 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 
 ### AI-owned 原子操作
 
-`SqS_Wp100_Run` 经 PLC Engineering 官方 REST 扩展从三步骨架扩展为 16 步 SFC。`Wp100.MeasurePos` 在 N000 锁存；N010 对三路位置 DI 做一取一判定，并要求压缸处于原位。随后依次执行：拍按钮、关安全门、确认两路安全反馈、Kistler 与压缸下行同周期启动、等待 `PressDelayTime`、执行 Burster `SINGLE_MEAS`、保存电阻结果、压缸上行与 Kistler `EndMeasurement` 同周期发出、保存 Kistler 结果、开安全门。
+`SqS_Wp100_Run` 经 PLC Engineering 官方 REST 扩展从三步骨架扩展为 21 步 SFC。`Wp100.MeasurePos` 在 N000 锁存；N010 对三路位置 DI 做一取一判定，并要求压缸处于原位。拍按钮、关安全门并确认两路安全反馈后，N045 从一个公共状态放行第一组同步分支：支路 1 的 N050/N060 启动并等待压缸 WRKPOS，支路 2 的 N051/N061 启动 Kistler MEASURE 并等待 `MeasRunning`。两支汇合后才执行 `PressDelayTime` 和 Burster `SINGLE_MEAS`。电阻结果完成后，N095 放行第二组同步分支：支路 1 的 N100/N110 启动并等待压缸 BASPOS，支路 2 的 N101/N120 锁存 Kistler 循环值、发出 `EndMeasurement` 并等待最终结果。两支再次汇合后才开安全门。
+
+并行图形使用 PLCopen/CODESYS 的 `simultaneousDivergence` / `simultaneousConvergence`，不是选择分支，也不是在一个 Action 中顺序写两台设备。按 `OpconSfcChain` 官方约定，支路 1 使用 `_retVal`，支路 2 使用 `_retVal2`；每台设备都有独立的 Start/Wait Step，因此在线诊断能直接定位为“压缸未到位”“Kistler 未进入测量”或“Kistler 结果未结束”。SFC Step Comment 保持短检索词，详细互锁、参数和结果锁存说明写在对应 ST Action 内。
 
 新增三个结构体把输出收敛到 `Wp100.SqS_Run.Result`：
 
@@ -545,6 +547,6 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 - `Wp100KistlerResultStruct`：有效位、OK/NOK、NoPass、程序号，以及压缸上升前锁存的循环力和位移；
 - `Wp100RunResultStruct`：请求位置、位置有效位及上述两个嵌套结果。
 
-结果在 DONE 后保留，到下一次 N000 才清零。Kistler 的 `ForceAct/StrokeAct` 是循环实际值，因此 N100 在发出压缸上升和 `EndMeasurement` 前先锁存，避免 N120 等压缸完全升起后才读到卸载值；N120 只补写最终 OK/NOK。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
+结果在 DONE 后保留，到下一次 N000 才清零。Kistler 的 `ForceAct/StrokeAct` 是循环实际值，因此 N101 在第二组同步分支开始时、压缸释放压力前只锁存一次；N120 只补写最终 OK/NOK。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
 
-可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对原三步 CpStudio 骨架做声明/图形哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；重复执行的回读均为 verified。F11 完整离线编译为 **0 errors / 7 warnings**，最终 PLC project SHA-256=`AECE8D38679B959BE7D52D25E150C76081880F1FC7E3FC31EB80CE846FC52EE7`。未连接、下载、启停或写入实体 PLC。
+可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对声明/图形做哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；最终回读为 21 Steps、2 个并行分支、2 个并行汇合和 22 个 Action/方法，重复执行全部为 verified。完整离线编译为 **0 errors / 7 warnings**，Additional code checks 为 **0 errors**，PLC project SHA-256=`7C4226DA757773287D56793F88C6723C42CF72BA63C1698691E0C9EEE0F0F6FF`。未连接、下载、启停或写入实体 PLC。

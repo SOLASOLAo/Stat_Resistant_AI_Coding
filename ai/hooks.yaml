@@ -114,9 +114,11 @@ hooks:
       - Wp100A103ResistantDetector
       - Wp100K102PressingCylinder
     invariants:
-      - Kistler MEASURE and pressing-cylinder WRKPOS start in the same PLC cycle
+      - Kistler MEASURE and pressing-cylinder WRKPOS use one simultaneous SFC divergence
+      - branch 1 uses _retVal and branch 2 uses _retVal2
+      - each device has a separate Start step and Wait step for diagnostics
       - resistance measurement starts after StationData.PressDelayTime milliseconds
-      - Kistler EndMeasurement and pressing-cylinder BASPOS start in the same PLC cycle
+      - Kistler EndMeasurement and pressing-cylinder BASPOS use one simultaneous SFC divergence
       - Kistler stop therefore occurs no later than one second after press-up start
       - Result remains available after DONE and is cleared only by the next N000
   - id: wp100_run_cleanup
