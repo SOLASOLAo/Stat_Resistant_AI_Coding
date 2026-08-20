@@ -1,8 +1,14 @@
 [CmdletBinding()]
-param()
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$RepositoryRoot
+)
 
 $ErrorActionPreference = 'Stop'
-$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+    $RepositoryRoot = Join-Path $PSScriptRoot '..\..'
+}
+$repositoryRoot = [System.IO.Path]::GetFullPath($RepositoryRoot)
 
 $requiredFiles = @(
     'TEAM_SETUP.md',
@@ -13,48 +19,128 @@ $requiredFiles = @(
     'specs/io.yaml',
     'specs/events.yaml',
     'specs/units/Wp100.yaml',
-    'specs/chains/SqS_Wp100_Home.yaml',
-    'specs/chains/SqS_Wp100_Run.yaml',
     'ai/ownership.yaml',
     'ai/hooks.yaml',
     'ai/graphical.yaml',
-    'src/plc/common/FB_OperatorButton.st',
-    'src/plc/common/FB_MainPressureControl.st',
-    'src/plc/common/FB_MaintenanceDoorControl.st',
-    'src/plc/project/Station010/Wp100ResistanceResultStruct.st',
-    'src/plc/project/Station010/Wp100KistlerResultStruct.st',
-    'src/plc/project/Station010/Wp100RunResultStruct.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/declaration.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N010.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N020.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N030.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N080.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N110.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N120.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N130.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N140.st',
-    'src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st',
-    'catalog/units/NexeedKistlerForceStroke/V1.2/unit.yaml',
     'scripts/cpstudio/post_export_signal.bat',
     'scripts/cpstudio/write_export_request.ps1',
+    'scripts/cpstudio/Invoke-PostExportAudit.ps1',
+    'scripts/git/Get-ReadOnlyGitAudit.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
-    'scripts/plc/apply_wp100_run_rest.ps1',
-    'scripts/plc/apply_wp100_run_sequence_rest.ps1',
     'scripts/ioe/ioe_ipc.ps1',
-    'scripts/ioe/Install-EtherCatEsi.ps1',
-    'scripts/setup/Test-TeamWorkstation.ps1'
+    'scripts/setup/Test-TeamWorkstation.ps1',
+    'tests/cpstudio/Test-PostExportQueue.ps1'
 )
 
 $failures = New-Object System.Collections.Generic.List[string]
+
+function Get-ConfiguredValue {
+    param(
+        [string]$Path,
+        [string]$Key
+    )
+
+    $pattern = '^\s*{0}:\s*(?<value>.+?)\s*$' -f [regex]::Escape($Key)
+    $match = [System.IO.File]::ReadAllLines($Path) |
+        Select-String -Pattern $pattern |
+        Select-Object -First 1
+    if (-not $match) {
+        return $null
+    }
+    return $match.Matches[0].Groups['value'].Value.Trim().Trim('"').Trim("'")
+}
+
+function Resolve-ProjectPath {
+    param([string]$ConfiguredPath)
+
+    if ([System.IO.Path]::IsPathRooted($ConfiguredPath)) {
+        return [System.IO.Path]::GetFullPath($ConfiguredPath)
+    }
+    return [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $ConfiguredPath))
+}
+
+function ConvertTo-RepositoryRelativePath {
+    param([string]$FullPath)
+
+    return $FullPath.Substring($repositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+}
+
+function Get-OwnershipRecords {
+    param([string]$Path)
+
+    $records = New-Object System.Collections.Generic.List[hashtable]
+    $current = $null
+    foreach ($line in [System.IO.File]::ReadAllLines($Path)) {
+        if ($line -match '^\s*-\s+path:\s*(?<value>.+?)\s*$') {
+            if ($null -ne $current) {
+                $records.Add($current)
+            }
+            $current = @{ path = $Matches['value'].Trim().Trim('"').Trim("'") }
+            continue
+        }
+        if (($null -ne $current) -and
+            ($line -match '^\s+(?<key>source|specification|apply_script|write_mode):\s*(?<value>.+?)\s*$')) {
+            $current[$Matches['key']] = $Matches['value'].Trim().Trim('"').Trim("'")
+        }
+    }
+    if ($null -ne $current) {
+        $records.Add($current)
+    }
+    return $records
+}
+
+function Get-ChainSteps {
+    param([string]$Path)
+
+    $steps = [ordered]@{}
+    $currentId = $null
+    foreach ($line in [System.IO.File]::ReadAllLines($Path)) {
+        if ($line -match '^\s*-\s*\{\s*id:\s*(?<id>[^,}\s]+),\s*comment:\s*(?<comment>[^,}]+)') {
+            $steps[$Matches['id'].Trim()] = $Matches['comment'].Trim()
+            $currentId = $null
+            continue
+        }
+        if ($line -match '^\s*-\s+id:\s*(?<id>\S+)\s*$') {
+            $currentId = $Matches['id'].Trim()
+            continue
+        }
+        if (($null -ne $currentId) -and ($line -match '^\s+comment:\s*(?<comment>.+?)\s*$')) {
+            $steps[$currentId] = $Matches['comment'].Trim().Trim('"').Trim("'")
+            $currentId = $null
+        }
+    }
+    return $steps
+}
+
+function Get-GraphicalObjects {
+    param([string]$Path)
+
+    $objects = @{}
+    $currentPath = $null
+    $inStepComments = $false
+    foreach ($line in [System.IO.File]::ReadAllLines($Path)) {
+        if ($line -match '^\s*-\s+path:\s*(?<value>.+?)\s*$') {
+            $currentPath = $Matches['value'].Trim().Trim('"').Trim("'")
+            $objects[$currentPath] = [ordered]@{}
+            $inStepComments = $false
+            continue
+        }
+        if (($null -ne $currentPath) -and ($line -match '^\s{4}step_comments:\s*$')) {
+            $inStepComments = $true
+            continue
+        }
+        if ($inStepComments -and ($line -match '^\s{6}(?<id>[A-Za-z_][A-Za-z0-9_]*):\s*(?<comment>.+?)\s*$')) {
+            $objects[$currentPath][$Matches['id']] = $Matches['comment'].Trim().Trim('"').Trim("'")
+            continue
+        }
+        if ($inStepComments -and ($line -match '^\s{0,4}\S')) {
+            $inStepComments = $false
+        }
+    }
+    return $objects
+}
+
 foreach ($relativePath in $requiredFiles) {
     $absolutePath = Join-Path $repositoryRoot ($relativePath -replace '/', [System.IO.Path]::DirectorySeparatorChar)
     if (-not [System.IO.File]::Exists($absolutePath)) {
@@ -62,19 +148,143 @@ foreach ($relativePath in $requiredFiles) {
     }
 }
 
-foreach ($relativePath in @('../Station010_0708', '../Std')) {
-    $absolutePath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $relativePath))
-    if (-not [System.IO.Directory]::Exists($absolutePath)) {
-        $failures.Add("Missing sibling workspace directory: $relativePath")
+$projectConfigPath = Join-Path $repositoryRoot 'config\project.yaml'
+if ([System.IO.File]::Exists($projectConfigPath)) {
+    foreach ($configKey in @('station_root', 'standard_library_root')) {
+        $configuredPath = Get-ConfiguredValue $projectConfigPath $configKey
+        if ([string]::IsNullOrWhiteSpace($configuredPath)) {
+            $failures.Add("Missing path '$configKey' in config/project.yaml")
+            continue
+        }
+        $absolutePath = Resolve-ProjectPath $configuredPath
+        if (-not [System.IO.Directory]::Exists($absolutePath)) {
+            $failures.Add("Configured directory does not exist: $configKey -> $configuredPath")
+        }
     }
 }
 
-foreach ($relativePath in @(
-    'src/plc/common/FB_OperatorButton.st',
-    'src/plc/common/FB_MainPressureControl.st',
-    'src/plc/common/FB_MaintenanceDoorControl.st'
-)) {
-    $text = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot $relativePath))
+$ownershipPath = Join-Path $repositoryRoot 'ai\ownership.yaml'
+$ownershipRecords = if ([System.IO.File]::Exists($ownershipPath)) {
+    @(Get-OwnershipRecords $ownershipPath)
+}
+else {
+    @()
+}
+$ownedSources = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($record in $ownershipRecords) {
+    foreach ($key in @('source', 'specification', 'apply_script')) {
+        if (-not $record.ContainsKey($key)) {
+            continue
+        }
+        $relativePath = $record[$key].Replace('\', '/')
+        $absolutePath = Join-Path $repositoryRoot ($relativePath -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+        if (-not [System.IO.File]::Exists($absolutePath)) {
+            $failures.Add("Ownership reference is missing: $($record.path) -> ${key}=$relativePath")
+        }
+        if ($key -eq 'source') {
+            [void]$ownedSources.Add($relativePath)
+        }
+    }
+}
+
+$stSourceRoot = Join-Path $repositoryRoot 'src\plc'
+if ([System.IO.Directory]::Exists($stSourceRoot)) {
+    foreach ($file in Get-ChildItem -LiteralPath $stSourceRoot -Recurse -File -Filter '*.st') {
+        $relativePath = ConvertTo-RepositoryRelativePath $file.FullName
+        if (-not $ownedSources.Contains($relativePath)) {
+            $failures.Add("PLC source is not declared in ai/ownership.yaml: $relativePath")
+        }
+    }
+}
+
+$graphicalPath = Join-Path $repositoryRoot 'ai\graphical.yaml'
+$graphicalObjects = if ([System.IO.File]::Exists($graphicalPath)) {
+    Get-GraphicalObjects $graphicalPath
+}
+else {
+    @{}
+}
+foreach ($record in $ownershipRecords | Where-Object {
+    $_.ContainsKey('specification') -and
+    ($_.write_mode -in @('rest_composite', 'graphical_attributes'))
+}) {
+    $specPath = Join-Path $repositoryRoot ($record.specification -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+    if (-not [System.IO.File]::Exists($specPath)) {
+        continue
+    }
+    $specSteps = Get-ChainSteps $specPath
+    if ($specSteps.Count -eq 0) {
+        $failures.Add("Chain specification contains no identifiable steps: $($record.specification)")
+        continue
+    }
+    if (-not $graphicalObjects.ContainsKey($record.path)) {
+        $failures.Add("Chain has no graphical manifest entry: $($record.path)")
+        continue
+    }
+    $graphicalSteps = $graphicalObjects[$record.path]
+    foreach ($stepId in $specSteps.Keys) {
+        if (-not $graphicalSteps.Contains($stepId)) {
+            $failures.Add("Graphical manifest is missing step $stepId for $($record.path)")
+        }
+        elseif ($graphicalSteps[$stepId] -ne $specSteps[$stepId]) {
+            $failures.Add("Step comment mismatch for $($record.path)/${stepId}: spec='$($specSteps[$stepId])', graphical='$($graphicalSteps[$stepId])'")
+        }
+    }
+    foreach ($stepId in $graphicalSteps.Keys) {
+        if (-not $specSteps.Contains($stepId)) {
+            $failures.Add("Graphical manifest has an undeclared step $stepId for $($record.path)")
+        }
+    }
+
+    if (($record.write_mode -eq 'rest_composite') -and $record.ContainsKey('source')) {
+        $chainSourceRoot = Split-Path -Parent (Join-Path $repositoryRoot ($record.source -replace '/', [System.IO.Path]::DirectorySeparatorChar))
+        foreach ($stepId in $specSteps.Keys) {
+            $actionPath = Join-Path $chainSourceRoot ("actions\{0}.st" -f $stepId)
+            if (-not [System.IO.File]::Exists($actionPath)) {
+                $failures.Add("REST-composite chain step has no Action source: $($record.path)/$stepId")
+                continue
+            }
+            $relativeActionPath = ConvertTo-RepositoryRelativePath $actionPath
+            if (-not $ownedSources.Contains($relativeActionPath)) {
+                $failures.Add("REST-composite Action source is not owned: $relativeActionPath")
+            }
+        }
+    }
+}
+
+$qualityGatesPath = Join-Path $repositoryRoot 'config\quality-gates.yaml'
+$baselineWarningCount = if ([System.IO.File]::Exists($qualityGatesPath)) {
+    Get-ConfiguredValue $qualityGatesPath 'baseline_warning_count'
+}
+else {
+    $null
+}
+if (($null -ne $baselineWarningCount) -and ($baselineWarningCount -notmatch '^\d+$')) {
+    $failures.Add("baseline_warning_count must be a non-negative integer: $baselineWarningCount")
+}
+elseif ($null -ne $baselineWarningCount) {
+    foreach ($specFile in Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'specs\chains') -File -Filter '*.yaml') {
+        $specText = [System.IO.File]::ReadAllText($specFile.FullName)
+        if ($specText -notmatch '(?m)^\s+status:\s*implemented_offline_verified\s*$') {
+            continue
+        }
+        $verificationMatch = [regex]::Match(
+            $specText,
+            '(?m)^\s+offline_(?:build|compile):\s*0 errors\s*/\s*(?<warnings>\d+) warnings\s*$'
+        )
+        if (-not $verificationMatch.Success) {
+            $failures.Add("Verified chain specification has no parseable offline warning baseline: $(ConvertTo-RepositoryRelativePath $specFile.FullName)")
+        }
+        elseif ($verificationMatch.Groups['warnings'].Value -ne $baselineWarningCount) {
+            $failures.Add("Chain warning baseline differs from config/quality-gates.yaml: $(ConvertTo-RepositoryRelativePath $specFile.FullName) has $($verificationMatch.Groups['warnings'].Value), expected $baselineWarningCount")
+        }
+    }
+}
+
+$commonSourceRoot = Join-Path $repositoryRoot 'src\plc\common'
+foreach ($file in Get-ChildItem -LiteralPath $commonSourceRoot -File -Filter '*.st') {
+    $relativePath = ConvertTo-RepositoryRelativePath $file.FullName
+    $text = [System.IO.File]::ReadAllText($file.FullName)
     if (-not $text.Contains('(* ===== DECLARATION ===== *)')) {
         $failures.Add("Missing declaration marker: $relativePath")
     }
@@ -83,7 +293,6 @@ foreach ($relativePath in @(
     }
 }
 
-$stSourceRoot = Join-Path $repositoryRoot 'src/plc'
 $stFiles = Get-ChildItem -LiteralPath $stSourceRoot -Recurse -File -Filter '*.st'
 foreach ($file in $stFiles) {
     $relativePath = $file.FullName.Substring($repositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
@@ -145,7 +354,9 @@ foreach ($file in $stFiles) {
 
 $postExportFiles = @(
     'scripts/cpstudio/post_export_signal.bat',
-    'scripts/cpstudio/write_export_request.ps1'
+    'scripts/cpstudio/write_export_request.ps1',
+    'scripts/cpstudio/Invoke-PostExportAudit.ps1',
+    'scripts/git/Get-ReadOnlyGitAudit.ps1'
 )
 foreach ($relativePath in $postExportFiles) {
     $text = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot $relativePath))
@@ -188,4 +399,4 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 
-Write-Output ("Project framework OK: {0} required files" -f $requiredFiles.Count)
+Write-Output ("Project framework OK: {0} core files, {1} ownership records, {2} PLC sources" -f $requiredFiles.Count, $ownershipRecords.Count, $stFiles.Count)

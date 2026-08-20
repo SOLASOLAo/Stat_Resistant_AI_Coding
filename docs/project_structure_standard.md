@@ -42,8 +42,8 @@ Station 目录继续保留供应商原始结构，例如 `Engineering/`、`Plc/`
 - `project.yaml`：Station、Std、PLC/IO 工程、IDE profile、REST 基地址和仓库地址。
 - `quality-gates.yaml`：编译错误基线、对象归属、安全审批和静态检查策略。
 
-每个新项目首先复制并修改这两个文件。路径优先使用相对于 `McpCoding` 根目录的
-正斜杠路径，避免把开发者用户名写进仓库。
+每个新项目由 `ctrlx-ai-coding/scripts/New-CtrlXOpconProject.ps1` 渲染这两个文件。
+路径统一使用相对于 `McpCoding` 根目录的正斜杠形式，避免把开发者用户名写进仓库。
 
 ### `specs/`
 
@@ -110,8 +110,10 @@ catalog/peripherals/NexeedIpBurster2316/V1.0/peripheral.yaml
 - `git/`：差异、审计、报告和提交辅助。
 - `setup/`：新电脑所需目录、软件、MCP、补丁和配置的只读体检。
 
-Post-export 脚本只允许发布 `data/requests/export_request.json`，禁止启动第二个
-PLC Engineering 或 MCP server。PLC 工作由当前唯一 persistent MCP 会话串行处理。
+Post-export 脚本只允许向 `data/requests/pending/` 原子发布独立请求，禁止启动第二个
+PLC Engineering 或 MCP server。离线消费者以
+`pending → processing → done/failed` 串行处理并把 JSON/Markdown 报告写入
+`data/reports/cpstudio/`；PLC 写入仍由当前唯一 persistent MCP 会话显式执行。
 
 ### `tests/` 与 `data/`
 
@@ -132,7 +134,7 @@ PLC Engineering 或 MCP server。PLC 工作由当前唯一 persistent MCP 会话
 
 1. 用户在 CpStudio 修改并导出；
 2. 官方 Post-export hook 调用项目自定义信号脚本；
-3. 当前 MCP 会话读取请求，执行 Git diff 和 PLC 文本快照；
+3. 运行 `Invoke-PostExportAudit.ps1`，先生成不启动 IDE 的 Git/指纹/ownership 离线报告；
 4. 根据 `ownership/hooks/graphical` 审计或恢复 AI 增量；
 5. 检查 I/O Mapping、BinIo、Symbol Configuration；
 6. 离线编译、生成报告，经确认后提交。
@@ -140,13 +142,13 @@ PLC Engineering 或 MCP server。PLC 工作由当前唯一 persistent MCP 会话
 ### 新项目初始化
 
 1. 保留供应商 Station 与 `Std` 原始布局；
-2. 从本标准复制 `McpCoding` 骨架；
-3. 修改 `config/project.yaml`；
+2. 对共享初始化器执行 `-WhatIf`，核对 Station/Std/输出路径；
+3. 运行 `New-CtrlXOpconProject.ps1` 创建全新的 `McpCoding` 旁车，不覆盖已有目录；
 4. 建立初始 Station/IO/Unit/Event/Chain 规格；
 5. 只登记该项目实际使用且已核对的 Catalog 条目；
 6. 导出 PLC 文本基线并记录编译警告基线；
 7. 配置 CpStudio Post-export hook；
-8. 运行 `tests/static/Test-ProjectFramework.ps1`。
+8. 运行 `tests/static/Test-ProjectFramework.ps1` 与 `tests/cpstudio/Test-PostExportQueue.ps1`。
 
 ## 版本和发布
 

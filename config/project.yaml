@@ -15,7 +15,7 @@ paths:
   bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
   kistler_5867c_esi: ../Technical Docs/5867c-maxymos-bl-fieldbus-descr-ec-pn-eip-25.1.0/EtherCAT/Kistler_Type_5867C_V1.xml
   kistler_5867c_quick_start: ../Technical Docs/maXYmos BL type 5867C quick start guide .pdf
-  export_request: data/requests/export_request.json
+  export_request: data/requests
 
 tools:
   plc_engineering_profile: ctrlX PLC 2.6.8

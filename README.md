@@ -21,8 +21,37 @@ PLC Engineering MCP/REST 维护应用逻辑：
 5. 完整离线编译，以 0 errors 和已记录 warning 基线验收
 ```
 
+CpStudio 导出后先运行纯离线审计，不启动第二个 PLE：
+
+```powershell
+.\scripts\cpstudio\Invoke-PostExportAudit.ps1 -WhatIf
+.\scripts\cpstudio\Invoke-PostExportAudit.ps1
+```
+
 新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
 不要从历史型 `HANDOVER.md` 反推安装步骤。
+
+## 跨项目复用
+
+通用初始化器、项目模板和 Codex Skill 位于 `ctrlx-ai-coding/`。新工站不要复制 Station010 的
+BMK、事件或 Chain；先运行初始化器的 `-WhatIf`，再创建独立 AI 旁车：
+
+```powershell
+.\ctrlx-ai-coding\scripts\New-CtrlXOpconProject.ps1 `
+  -ProjectId 'example-cell' `
+  -DisplayName 'Example Cell' `
+  -StationId 'Station020' `
+  -StationRoot 'C:\Engineering\ExampleCell\Station020' `
+  -OutputPath 'C:\Engineering\ExampleCell\McpCoding' `
+  -WhatIf
+```
+
+Skill 已可版本化安装并校验：
+
+```powershell
+.\ctrlx-ai-coding\scripts\Install-CtrlXOpconSkill.ps1 -Force
+.\ctrlx-ai-coding\scripts\Install-CtrlXOpconSkill.ps1 -Check
+```
 
 ## 仓库结构
 ```
@@ -51,6 +80,7 @@ PLC Engineering MCP/REST 维护应用逻辑：
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 - Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`
 - 跨项目目录标准:`docs/project_structure_standard.md`
+- MCP 产品化路线:`ctrlx-ai-coding/docs/mcp_productization_roadmap.md`
 - 团队工作站部署:`TEAM_SETUP.md`
 
 ## 版权说明

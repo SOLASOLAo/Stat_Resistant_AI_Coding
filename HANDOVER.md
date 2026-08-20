@@ -363,3 +363,12 @@
 - 双路文本已缩短为 60 字符：`_100B701=FALSE; _100B702=FALSE: both fixture sensors missing`，两个 BMK、FALSE 状态和故障含义均保留。规格、可重放 ST 源和正式 PLC Method 已同步。
 - `tests/static/Test-ProjectFramework.ps1` 现在解析 AI-owned ST 中 `SetEvent` 的第三个字符串常量，超过 OpCon `STRING(63)` 即失败。两份 SFC REST 写入器同时兼容 PLE 的非对称规则：PUT 保留 Transition `name`，GET 省略该属性；门禁分别校验命名目标哈希与标准化读回哈希，重复运行均为 `verified / No changes; save skipped.`。
 - 最终正式工程 SHA-256=`20D9DD9A44B72A4025F49774E2151D12A119937ED788BE9B1AAABA711899B51E`；真实 Clean Build 为 **0 errors / 6 warnings**，全活动消息类别复查 `C0198_MATCHES=0`。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改，既有 HTML、Sync、HMI Logbook 与 `Hmi/obj` 改动未暂存、未回退。
+
+## 跨项目工具链第一阶段产品化（2026-08-20）
+
+- 共享 `ctrlx-ai-coding` 新增 `New-CtrlXOpconProject.ps1` 与完整 AI 旁车模板。初始化器先支持 `-WhatIf`，目标存在即拒绝，使用临时目录事务生成；Station/Std/PLC/IO/CpStudio 路径写成相对正斜杠，不复制 `.project`、Std、PDF/CHM/ZIP 或其他闭源资产。Windows PowerShell 5.1 端到端 **50 assertions** 通过，生成项目自带的静态门禁和 Post-export 队列自测均通过。
+- 新增版本化 `ctrlx-opcon-engineering` Codex Skill，并通过安装器同步到 `%USERPROFILE%\.codex\skills\ctrlx-opcon-engineering`。Skill 明确组合初始化、CpStudio 导出、PLC 离线开发和故障诊断模式；工程写入前要求路径/profile/ownership/可恢复基线就绪，按 CpStudio-owned、AI-owned、mixed 分流，真机操作仍需单独授权。安装器支持 `-WhatIf/-Check/-Force`，精确同步测试 **6 assertions** 通过。
+- Post-export 从单一覆盖文件升级为 schema-v2 队列：`pending → processing → done/failed`。`Invoke-PostExportAudit.ps1` 在排他锁后枚举请求，支持 `-WhatIf/-RequestId/-All/-RecoverProcessing`、旧 schema-v1、失败留痕和 JSON/Markdown 报告；请求 Station/PLC 必须与 `config/project.yaml` 强一致。它只执行 `GIT_OPTIONAL_LOCKS=0` 的 Git 审计、关键文件 SHA-256 与 ownership 清单，不启动 PLE/MCP，也不修改 Station。隔离自测覆盖连续请求、锁等待 stale-candidate、错 Station、错 PLC、旧请求重复、坏 JSON 和审计前后 Station 哈希/Git 状态不变。
+- 主项目静态门禁改为从 `config/project.yaml` 与 `ai/ownership.yaml` 发现路径/源码/规格/写入器，检查 orphan ST、Chain spec 与 graphical Step Comment、REST-composite Action 完整性、`SetEvent STRING(63)` 和 SFC Transition 命名；自测会故意制造 Comment 不一致和 Action 缺失并确认失败。当前结果：**20 core files / 58 ownership records / 44 PLC sources**。
+- MCP 下一阶段的确定范围已写入 `ctrlx-ai-coding/docs/mcp_productization_roadmap.md`：先受控 fork、跨进程租约、异步 operation、`project_health`、`compile_project_v2`、FORCE 生命周期和 `apply_change_set`，再做正式 Symbol/I/O/SFC 与 IOE adapter。项目 BMK、事件、工艺、安全决策和 Git/HANDOVER 不进入通用 MCP。
+- 本批没有调用 PLC 写入 MCP、没有修改 Station010/IO/Std，也没有连接、下载、启停、写变量或 FORCE 实体 PLC。`docs/ai_coding_showcase.html` 是用户既有未提交修改，保持未暂存、未回退、不会混入本批提交。

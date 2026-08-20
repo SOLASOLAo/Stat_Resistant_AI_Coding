@@ -19,7 +19,7 @@ reported as a warning instead of a pass.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$RepositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')),
+    [string]$RepositoryRoot,
 
     [Parameter(Mandatory = $false)]
     [string]$CpStudioExe = 'C:\Nexeed\Automation\CSV5_11\Bosch.Nexeed.Automation.CpStudio.exe',
@@ -38,6 +38,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+    $RepositoryRoot = Join-Path $PSScriptRoot '..\..'
+}
 $results = New-Object System.Collections.Generic.List[object]
 
 function Add-CheckResult {

@@ -4,7 +4,7 @@
 
 ## 当前阶段:阶段 0 项目初始化
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
-- [x] 🔴 使用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 使用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 6 warnings（C0198 修复后，2026-08-20）
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
@@ -26,10 +26,14 @@
 - [ ] 🟡 CpStudio 重新生成后 git diff 分析 → docs/cpstudio_generation_analysis.md
 - [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/plc/export_plc_snapshot.py`,`scripts/plc/verify_plc_snapshot.ps1`)
 - [x] 🔴 建立可跨项目复制的目录标准：`config/specs/ai/src/catalog/scripts/tests/data/docs`，录入 Station010 当前规格、AI 归属、通用 FB 源码和已验证 Unit Catalog；加入结构冒烟测试与自定义 Post-export 信号脚本(2026-08-18)
+- [x] 🔴 把目录标准产品化为 `New-CtrlXOpconProject.ps1`：事务化创建新 AI 旁车、统一相对路径、拒绝覆盖且不复制 `.project`/Std/闭源资料；50 项离线断言通过(2026-08-20)
+- [x] 🔴 新增并安装 `$ctrlx-opcon-engineering` Codex Skill：按初始化、CpStudio 导出、PLC 离线开发和故障诊断组合流程；独立前向测试及安装一致性测试通过(2026-08-20)
+- [x] 🟡 建立 MCP 产品化路线：受控 fork → 租约/operation → `project_health`/`compile_project_v2`/`apply_change_set` → 正式 Symbol/I/O/SFC 工具(2026-08-20)
 - [x] 🟡 建立团队工作站交接：新增 `TEAM_SETUP.md`、无个人账号的 Codex MCP 配置样例和只读环境体检脚本，区分长期部署说明与会话型 HANDOVER(2026-08-19)
 - [x] 🟢 新增离线 AI Coding 展示页：覆盖 CpStudio/AI/ctrlX 分工、标准目录、两类开发闭环、对象归属、Home Chain、主气压联锁、BMK 改名复盘和验收证据；支持交互演示与打印 PDF(2026-08-19)
 - [ ] 🟡 在 CpStudio 工程中配置官方 Post-export hook 指向 `scripts/cpstudio/post_export_signal.bat`，完成一次真实导出信号验证
-- [ ] 🟡 实现 export request 消费器：diff → 快照 → ownership/hooks/graphical 审计 → I/O/Symbol 审计 → 编译 → 报告；保持唯一 persistent MCP 会话
+- [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
+- [ ] 🟡 实现受控第二阶段：消费离线报告后，经唯一 persistent MCP 完成对象快照、I/O/Symbol/SFC 审计、必要修复、编译与读回报告
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010_0708` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
 - [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)

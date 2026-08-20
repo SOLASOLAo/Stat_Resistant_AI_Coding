@@ -160,6 +160,17 @@ OpenAI 官方说明：Codex 默认从 `~/.codex/config.toml` 读取 MCP 配置�
 不要覆盖同事已有的模型、账号或其他 MCP 配置，也不要复制项目负责人的整份个人
 `config.toml`。
 
+安装团队版本的 ctrlX/OpCon Skill（只同步该 Skill，不修改 MCP 或个人账号配置）：
+
+```powershell
+Set-Location '<WorkspaceRoot>\McpCoding\ctrlx-ai-coding'
+.\scripts\Install-CtrlXOpconSkill.ps1 -Force
+.\scripts\Install-CtrlXOpconSkill.ps1 -Check
+```
+
+安装或更新后重新加载 Codex。以后可显式使用 `$ctrlx-opcon-engineering` 进入新项目初始化、
+CpStudio 导出审计、PLC 离线开发或故障诊断流程。
+
 ## 7. 一键只读体检
 
 在 `McpCoding` 根目录运行：
@@ -167,6 +178,7 @@ OpenAI 官方说明：Codex 默认从 `~/.codex/config.toml` 读取 MCP 配置�
 ```powershell
 .\scripts\setup\Test-TeamWorkstation.ps1
 .\tests\static\Test-ProjectFramework.ps1
+.\tests\cpstudio\Test-PostExportQueue.ps1
 ```
 
 第一条检查：三仓库布局、`Std`、两个工程文件、三套 IDE、托管库、Node/npm、MCP 版本、
@@ -185,7 +197,7 @@ Get-Help .\scripts\setup\Test-TeamWorkstation.ps1 -Detailed
 1. MCP `get_codesys_status`，等待状态为 ready；
 2. MCP 打开 `config/project.yaml` 指向的 PLC 工程；
 3. 执行一次完整 `compile_project`；
-4. 当前 Station010 验收基线为 **0 errors / 7 warnings**；
+4. 当前 Station010 验收基线为 **0 errors / 6 warnings**；
 5. 回读一个 AI-owned POU，例如 `Application/Fbs/FB_OperatorButton`；
 6. 核对可读源 `src/plc/common/FB_OperatorButton.st`；
 7. 关闭/交接前确认两个 Git 工作树没有未知改动。
@@ -259,6 +271,7 @@ git -C <WorkspaceRoot>\Station010_0708 pull --ff-only
 - [ ] ctrlX 兼容补丁最终 `-Check` 通过；
 - [ ] Codex 能看到 `codesys-persistent` MCP；
 - [ ] 工作站体检和目录静态测试通过；
-- [ ] Station010 离线编译达到 0 errors / 7 warnings；
+- [ ] Station010 离线编译达到 0 errors / 6 warnings；
+- [ ] ctrlX/OpCon Skill 安装后的 `-Check` 与 Post-export 队列自测通过；
 - [ ] 未进行任何未经批准的真机操作；
 - [ ] 新同事知道谁拥有当前 Station 写入权。

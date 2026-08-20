@@ -204,7 +204,7 @@ caller_contract:
 
 verification:
   date: 2026-08-20
-  offline_build: 0 errors / 7 warnings
+  offline_build: 0 errors / 6 warnings
   additional_code_checks: 0 errors
   graph_readback:
     steps: 21

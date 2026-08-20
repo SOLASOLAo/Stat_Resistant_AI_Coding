@@ -51,6 +51,7 @@
 - [x] 环境体检:ctrlX 兼容补丁已打、Standard.project 与库仓库就位、MCP ready
 - [x] Station010 IO 硬件组态修复 + IOE-IPC 工具链(2026-08-18);踩坑归档 ctrlx-ai-coding/docs/ioe_scripting_playbook.md
 - [x] 采用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程并持续保持离线编译 errors=0
+- [x] 通用新项目初始化器、Post-export 离线审计队列与 `$ctrlx-opcon-engineering` Skill 已落地并通过离线测试(2026-08-20)
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程
 
 ## 7. 踩坑速查(2026-08-18 IO 组态实测;完整版见 ctrlx-ai-coding/docs/ioe_scripting_playbook.md)
@@ -61,3 +62,4 @@
 5. PowerShell:`Remove-Item` 被策略拦截 → `[System.IO.File]::Delete`/`Copy-Item`;控制台 cp1252 回显中文乱码 ≠ 文件坏 → 一律 ReadAllText/WriteAllText UTF8,勿信回显。
 6. IOE ScriptEngine 4.1:`se.projects` 不可迭代;`active_application` 在 IO 工程抛异常;通道符号在 PLC 工程 I/O 映射,IO 侧脚本 API 不可见。
 7. git push 的 stderr 是 PowerShell 表面报错,看 exit code;MCP 超时命令可能稍后迟到执行;eval_python 不传 timeoutMs。
+8. CpStudio Post-export hook 只写 `data/requests/pending/`；先运行离线消费者审阅报告，再由唯一 persistent MCP 会话执行第二阶段，hook 本身不得启动 PLE/MCP。
