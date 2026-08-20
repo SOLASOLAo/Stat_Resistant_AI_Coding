@@ -480,6 +480,52 @@ $previousActionSha256 = @{
   N120 = '7dbaf6138936f5933e13c420b784736d5bce02292b742cd5b49bb00fce561e51'
 }
 $previousOnChainFinishSha256 = '638fa350677e14d0d0ce4706ff6bdcb2f8df50aea2ae21a6bd31119d7aaa60dc'
+$preStyleActionSha256 = @{
+  # Compiled source immediately before the project-wide condition-style rule.
+  # These guards permit formatting-only migration without accepting arbitrary edits.
+  N010 = 'd2dbaf67c3bad03c2ff20f967df7ac07cc4a2876f32526c17f85822e16f1d3a3'
+  N020 = '3e94d7b0d1d50755c251145eaf4d7b7c97c66ea5bdb50d31921f3c6261ea2346'
+  N030 = '3a4941c2dbf595d9a6669bf15207c67ec010b98312554a0fef630de8d95c4f16'
+  N040 = 'fd4b3caa3bbbe8ccfbe73645cddd8987ebebb8a1de609c47ca6e687df57977ad'
+  N045 = '83d03034ba53d1597d252135e0df0d186c6e955642c4d2f743145801b3de7a97'
+  N050 = '09a0a0aacaa97c7dd88c496ccfef820983a4199920627d249e9f334bcccda047'
+  N051 = '67beef5103f5f6a51c5362cb2295cee087a8fda0dc9d4fc2c086bb511b82bcf0'
+  N060 = '8bd2a510f7fe6a907dd9b4b661166eb3d1a008b02fc08ff14b7db2cf2cecccf7'
+  N061 = '5b83dd857c9cfef5337b59d38303bcc4fef74c351a5b206557a550c71a01155b'
+  N070 = '1aaa2c8229bea77f2af6bf088b3f9f255edf538628055ab6d6e2dcf06d0514c0'
+  N080 = 'fb1a7f9095fa44391ac376c0714c22045ccd7462daac63867004b030a86b12b7'
+  N090 = '0c023109ee8068d9cf164517d365e3dea2b56ce2825d5bdb78ae9e66c6ced142'
+  N095 = '9e9b5bb23d606777c3858ada118834734b35b8b18a54e57716673f9186e99786'
+  N100 = 'e2e06f1551a4a23bb488697a658fbe1c07bd34fdce6bd5e54b29c706f66979b5'
+  N101 = 'ec0b28e586f12b07d9dd074c2cbb49df4519a18b013bbb2c44fbcf7c70848db2'
+  N110 = '20d5a86f7b62317d9a554d624ea95d8dea27249d0a3b63179ca77a2488fffd4c'
+  N120 = 'abb94609500f52ab09b747153791a005d5d1742cc5d01abcd8680bf92c0237b6'
+  N130 = '2baf30443cfa039db640bd64b4b7783bcbf49ff6de3b0a269bd26f8ab5b49784'
+  N140 = '6a754980538c2b8de8135bcedccea4155ca92048337a75623368926c53dbe254'
+}
+$preInnerSpaceActionSha256 = @{
+  # Compiled intermediate source before spaces were added inside condition parentheses.
+  # These guards only authorize the final formatting-only migration.
+  N010 = '4c974a77d767471c138b1c93fdb65f9a03e244871fab4748c51831e48c2a507a'
+  N020 = '44c4c386c74421ea53d923e69eb7c8dc01b2274ba5b39532b8350316b17317b9'
+  N030 = '8b7a1958528889b5dde2fc056ec245b7134cd9edc92c50247f4c40a15a07fcd7'
+  N040 = 'c6607bc20f7d96d1a75e232f4359cabd3ac9281254924c8eb6c9f16fd1388a55'
+  N045 = '7d4d019ecb84528844ffa480bacd29a2c79b818ca919415f40d8d1ec92987fa6'
+  N050 = 'b63f0dd9f7b73941c0f7477e5c236e2bedc627b1701e0987fb829b900fa260f6'
+  N051 = '930dfbacac9ad1cbdff9f12345da2ea71f13bf7e9a959a9353f0a6c267f6e88e'
+  N060 = '0997cc80797f3809b0d864a3c983d08b37402bd136a53c929d5b394d2e731e36'
+  N061 = '57d7b73a72e760ef919cb3e365212df7a9564344da6ad9a8fe21e868f2bc6ffa'
+  N070 = '8a9cee12f98a42a8f636c181b92f31d827be0f32c49ddcdca075ac5d88f44667'
+  N080 = '2338169f46784c1e7cb0605b831dc37344ee84eb41e8af8288205dae9c81e013'
+  N090 = '92b90b5df0a19767fc67172fdabd229cd65a101f3fa321cf22a93eb03499c893'
+  N095 = '53cd757062255ee80c289a45db22819666465442b8e4856bd94a220c0c0ea5e1'
+  N100 = 'b6de9d97c366e986b9000503db177190d0c9b5110165a7e75f7e1c6d8bcf6df3'
+  N101 = 'b599d248b22355078aa9fc4c00131514d659d3b1be1e0e0db37b788455172be4'
+  N110 = '6fe5f89720135f725a000cc6396932bf7aff87b856359ec2cea9e2a7720cbbd9'
+  N120 = 'f081b47a64f81329452a5b3ff5aa105f45cbdb00945fa7d540438ef4b6565809'
+  N130 = '263fd88f31eb90dffd4650f759b0088dc72b5e9742e178619c7afc47e622f399'
+  N140 = '9ce219c39be344a1c60078f77781de1ef82fd0effe8e54f23fa776887552074d'
+}
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -489,6 +535,12 @@ foreach ($step in $steps) {
   }
   if ($previousActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += @($previousActionSha256[$step.Name])
+  }
+  if ($preStyleActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preStyleActionSha256[$step.Name]
+  }
+  if ($preInnerSpaceActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preInnerSpaceActionSha256[$step.Name]
   }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }

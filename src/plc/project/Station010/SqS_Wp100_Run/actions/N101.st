@@ -2,11 +2,11 @@
 // then request the end of MEASURE.
 _retVal2 := RUNNING;
 
-IF NOT _kistlerStarted
+IF ( NOT _kistlerStarted )
 THEN
   _retVal2 := OK;
 
-ELSIF NOT _kistlerStopRequested
+ELSIF ( NOT _kistlerStopRequested )
 THEN
   Result.Kistler.NoPass    := Wp100A104Kistler.Unit.OutImm.NoPass;
   Result.Kistler.ProgramNo := Wp100A104Kistler.Unit.OutImm.ProgNo;

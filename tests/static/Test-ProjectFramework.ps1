@@ -82,6 +82,55 @@ foreach ($relativePath in @(
     }
 }
 
+$stSourceRoot = Join-Path $repositoryRoot 'src/plc'
+$stFiles = Get-ChildItem -LiteralPath $stSourceRoot -Recurse -File -Filter '*.st'
+foreach ($file in $stFiles) {
+    $relativePath = $file.FullName.Substring($repositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    $lines = [System.IO.File]::ReadAllLines($file.FullName)
+
+    for ($lineIndex = 0; $lineIndex -lt $lines.Count; $lineIndex++) {
+        $line = $lines[$lineIndex]
+        $lineNumber = $lineIndex + 1
+        $trimmedLine = $line.TrimStart()
+
+        if ($trimmedLine.StartsWith('//') -or
+            $trimmedLine.StartsWith('(*') -or
+            $trimmedLine.StartsWith('*')) {
+            continue
+        }
+
+        if ($line -match '^\s*(AND|OR)\b') {
+            $failures.Add("PLC ST logical operator must end the previous line: ${relativePath}:${lineNumber}")
+        }
+
+        if (($line -match '^\s*(IF|ELSIF)\s+') -and
+            ($line -notmatch '^\s*(IF|ELSIF)\s+\(\s')) {
+            $failures.Add("PLC ST condition must start with a spaced parenthesis: ${relativePath}:${lineNumber}")
+        }
+
+        if ($line -match '\b(AND|OR)\s*$') {
+            $conditionFragment = $line.Trim()
+            $conditionFragment = $conditionFragment -replace '^(IF|ELSIF)\s+', ''
+            if ($conditionFragment.Contains(':=')) {
+                $conditionFragment = $conditionFragment.Substring($conditionFragment.LastIndexOf(':=') + 2).Trim()
+            }
+            if ($conditionFragment -notmatch '^\(\s+.+\s+\)\s+(AND|OR)$') {
+                $failures.Add("PLC ST logical operand must be parenthesized: ${relativePath}:${lineNumber}")
+            }
+
+            $nextCodeLine = $lineIndex + 1
+            while (($nextCodeLine -lt $lines.Count) -and
+                   [string]::IsNullOrWhiteSpace($lines[$nextCodeLine])) {
+                $nextCodeLine++
+            }
+            if (($nextCodeLine -ge $lines.Count) -or
+                ($lines[$nextCodeLine].TrimStart() -notmatch '^\(\s')) {
+                $failures.Add("PLC ST continuation condition must be parenthesized: ${relativePath}:$($nextCodeLine + 1)")
+            }
+        }
+    }
+}
+
 $postExportFiles = @(
     'scripts/cpstudio/post_export_signal.bat',
     'scripts/cpstudio/write_export_request.ps1'

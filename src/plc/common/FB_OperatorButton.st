@@ -23,7 +23,7 @@ END_VAR
 (* ===== IMPLEMENTATION ===== *)
 // Execute follows the same lifecycle used by OpCon commands:
 // FALSE ends the request and restores the initial state.
-IF NOT Execute
+IF ( NOT Execute )
 THEN
   Done   := FALSE;
   LampOn := FALSE;
@@ -32,9 +32,9 @@ END_IF
 
 // While waiting, flash the lamp. A detected button signal completes the
 // request and switches the lamp off in the same PLC cycle.
-IF NOT Done
+IF ( NOT Done )
 THEN
-  IF ButtonPressed
+  IF ( ButtonPressed )
   THEN
     Done   := TRUE;
     LampOn := FALSE;

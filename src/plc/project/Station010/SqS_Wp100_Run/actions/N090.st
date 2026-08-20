@@ -1,5 +1,5 @@
 // Wait for SINGLE_MEAS and copy the command result exactly once on DONE.
-IF NOT _bursterStarted
+IF ( NOT _bursterStarted )
 THEN
   _retVal := OK;
 ELSE
@@ -9,7 +9,7 @@ ELSE
   );
   _retVal := _unitResult;
 
-  IF _unitResult = OK
+  IF ( _unitResult = OK )
   THEN
     Result.Resistance.Valid      := TRUE;
     Result.Resistance.OutOfLimit :=

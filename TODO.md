@@ -50,6 +50,7 @@
 - [x] 🔴 Home Chain 步骤检索注释：经 PLC Engineering 官方 REST 扩展接口为 `SqS_Wp100_Home` 的 9 个 Step 写入简短 Comment；标准化差异确认 Action/Transition/顺序均未改变，编译 0 errors / 7 warnings，Station010 `6399377`(2026-08-18)
 - [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：位置改为正式 `VAR_INPUT MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈；下压+Kistler 启动及抬压+Kistler 结束均为可诊断的 SFC 同步分支，按 OpCon 约定分别使用 `_retVal/_retVal2`，结构化保存结果并统一处理 DONE/ERROR/CANCEL；离线编译 0 errors / 6 warnings，Additional code checks 0 errors(2026-08-20)
 - [x] 🔴 `SqC_Wp100_Run` 顺序调用原子操作：LEFT→MIDDLE→RIGHT，每轮仅在 READY 写 `Wp100.SqS_Run.MeasurePos` 并以 `CheckSubChainDone` 等待；每轮开始前检查 `_100B701 AND _100B702`，缺失时用 `EVENT_PART_DETECT_SENSOR` 和具体 BMK AdditionalInfo 阻塞提示；三位置结果分别保留，编译 0 errors / 6 warnings(2026-08-20)
+- [x] 🟡 统一 AI-owned PLC ST 条件排版：独立条件加括号且括号内侧留空格，换行 `AND`/`OR` 放上一行末尾；静态门禁、REST 哈希迁移、幂等回读及 Application Build 0 errors / 8 warnings 完成(2026-08-20)
 - [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)

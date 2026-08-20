@@ -8,32 +8,32 @@ END_VAR
 CheckPartPresent := RUNNING;
 missingMask      := 0;
 
-IF NOT Peripherals.BinIo._100B701
+IF ( NOT Peripherals.BinIo._100B701 )
 THEN
   missingMask := missingMask + 1;
 END_IF
 
-IF NOT Peripherals.BinIo._100B702
+IF ( NOT Peripherals.BinIo._100B702 )
 THEN
   missingMask := missingMask + 2;
 END_IF
 
-IF missingMask = 0
+IF ( missingMask = 0 )
 THEN
   // Do not release the SFC step until the previous locked event is removed.
-  IF _eventIndex = 0
+  IF ( _eventIndex = 0 )
   THEN
     _partSensorFaultMask := 0;
     CheckPartPresent     := OK;
-  ELSIF UnlockEvent(
+  ELSIF ( UnlockEvent(
           Class := OpconEventClass.SOFTERROR,
           Index := _eventIndex
-        )
+        ) )
   THEN
-    IF ClearEvent(
+    IF ( ClearEvent(
          Class := OpconEventClass.SOFTERROR,
          Index := _eventIndex
-       )
+       ) )
     THEN
       _eventIndex          := 0;
       _partSensorFaultMask := 0;
@@ -43,24 +43,25 @@ THEN
 ELSE
   // If the failed combination changes, replace the event so AdditionalInfo
   // always identifies the signal state currently blocking the measurement.
-  IF (_eventIndex <> 0) AND (_partSensorFaultMask <> missingMask)
+  IF ( _eventIndex <> 0 ) AND
+     ( _partSensorFaultMask <> missingMask )
   THEN
-    IF UnlockEvent(
+    IF ( UnlockEvent(
          Class := OpconEventClass.SOFTERROR,
          Index := _eventIndex
-       )
+       ) )
     THEN
-      IF ClearEvent(
+      IF ( ClearEvent(
            Class := OpconEventClass.SOFTERROR,
            Index := _eventIndex
-         )
+         ) )
       THEN
         _eventIndex := 0;
       END_IF
     END_IF
   END_IF
 
-  IF _eventIndex = 0
+  IF ( _eventIndex = 0 )
   THEN
     CASE missingMask OF
       1:
@@ -88,7 +89,7 @@ ELSE
         );
     END_CASE
 
-    IF _eventIndex <> 0
+    IF ( _eventIndex <> 0 )
     THEN
       _partSensorFaultMask := missingMask;
     END_IF

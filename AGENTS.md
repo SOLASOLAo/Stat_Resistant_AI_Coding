@@ -36,6 +36,15 @@
 - 事实源:README(是什么)/ TEAM_SETUP.md(同事工作站部署)/ `config/`(路径与门禁)/ `specs/`(确认需求)/ `ai/`(对象归属与钩子)/ `src/plc/`(AI-owned 源码)/ `catalog/`(已验证标准对象接口)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md
 - 会话循环:进场读 AGENTS → HANDOVER → TODO;收场更新 HANDOVER + TODO 勾选 + 提交推送
 - 提交前缀:`feat:` `fix:` `docs:` `test:` `tools:` `refactor:`
+- PLC ST 条件格式:每个独立条件都用括号包裹，括号内侧各留一个空格；复合条件换行时 `AND`/`OR` 放在上一行末尾，禁止把逻辑运算符放在续行开头。示例：
+
+  ```st
+  IF ( ConditionA ) AND
+     ( ConditionB )
+  THEN
+  ```
+
+  提交前由 `tests/static/Test-ProjectFramework.ps1` 扫描 `src/plc/**/*.st`。
 
 ## 6. 当前状态快照
 - [x] 克隆 vibe-coding-templates + ctrlx-ai-coding,派生本仓库骨架(2026-08-17)

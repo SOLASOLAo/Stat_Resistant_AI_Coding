@@ -13,17 +13,17 @@ CASE Reason OF
   OpconChainFinishReason.DONE:
     Wp100.SqS_Run.Execute := FALSE;
 
-    IF _eventIndex <> 0
+    IF ( _eventIndex <> 0 )
     THEN
-      IF UnlockEvent(
+      IF ( UnlockEvent(
            Class := OpconEventClass.SOFTERROR,
            Index := _eventIndex
-         )
+         ) )
       THEN
-        IF ClearEvent(
+        IF ( ClearEvent(
              Class := OpconEventClass.SOFTERROR,
              Index := _eventIndex
-           )
+           ) )
         THEN
           _eventIndex := 0;
         END_IF

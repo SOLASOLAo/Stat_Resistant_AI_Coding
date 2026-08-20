@@ -390,6 +390,28 @@ $generatedChildSha256 = @{
   '_aN999_active' = 'fb3d682ce50170e284577e437f284a803aadece69f17de737a40c9529ea303cc'
   'OnChainFinish' = '0448d415d8dd45baab6ad0099d75817b1d2ee1f364cac768a4872469a0ff2318'
 }
+$preStyleChildSha256 = @{
+  # Compiled AI-owned source immediately before the condition-style migration.
+  '_aN020_active' = 'c76fcb5f058b2af5d13c03be50462844f74ab484908af4b7c039e6c45b6bcfeb'
+  '_aN030_active' = '233ffff662c5fcbf4e6143da84fb45ac2109ca003f7a12acef23cce759bbfdeb'
+  '_aN050_active' = '8e110dba0742bef5f308b7c0f1306d49c0d2583fbe4d034c61814cf48f524df9'
+  '_aN060_active' = '88ca6dbb3d18bc144d54394e70926fcff39f35c3e184c8cfa97003d27d0ab565'
+  '_aN080_active' = 'aa67a8349d4c52e4f789fa90342faaff4cbda45991370f3362252c0adccb9651'
+  '_aN090_active' = 'f5e6152c1a62670c8d1e501c2a41a7422fefa8ac0e19677403322578db701187'
+  'CheckPartPresent' = '1af52305662585668f66d4335457e2d0df4cb5d2af9da4a8d9e0e87769572aa1'
+  'OnChainFinish' = '5b5ee831390551b0b6f1d0e16277af5a7470961b825d73adae156ce643925ce8'
+}
+$preInnerSpaceChildSha256 = @{
+  # Compiled intermediate source before spaces were added inside condition parentheses.
+  '_aN020_active' = 'dc12657fcdaa9379dd9f16e721b5c6c8f49f25b2eb49cf3e606a078136c1c922'
+  '_aN030_active' = '7b138ef5a295518d1f4016d59688e62723b24abee99af0947b505775806c392f'
+  '_aN050_active' = 'f01303b6417651ebeaeec6d7d9b04e80fe8917cca03482972183f0f6c813875a'
+  '_aN060_active' = '4913dad12273e38d0e1e101a2c613c3674bc5d004af23ccfa1daa84f654b50d6'
+  '_aN080_active' = 'a715cfb5f5388eb1099e0d75d7fafef556d9d80f4e87a17a7cbd5c2d04116705'
+  '_aN090_active' = 'acb43f7dab9d0bacf2d8bb19b6f7e53b20edc5edb364f7d43e163cbffacd317a'
+  'CheckPartPresent' = 'cd496c2c988cf4198d4130db3175f2c0fa99e0ec55cfb68cac14745a4ae4b232'
+  'OnChainFinish' = '08ba3e57bbed8f813919c78d91c3439426968da780858a4ea7ffb2a2b2cceb45'
+}
 $knownChildren = @($targetChildren + $generatedChildSha256.Keys | Sort-Object -Unique)
 $unknownChildren = @($sequenceNode.children | Where-Object { $_ -notin $knownChildren })
 if ($unknownChildren.Count -gt 0) {
@@ -408,8 +430,16 @@ foreach ($childName in $sequenceNode.children) {
       default { "SqC_Wp100_Run\actions\$($childName.Substring(2, 4)).st" }
     }
     $targetChildSha256 = Get-Sha256 (Get-SourceText $sourceFile)
+    $matchesGenerated = $generatedChildSha256.ContainsKey($childName) -and
+                        ($childSha256 -eq $generatedChildSha256[$childName])
+    $matchesPreStyle = $preStyleChildSha256.ContainsKey($childName) -and
+                       ($childSha256 -eq $preStyleChildSha256[$childName])
+    $matchesPreInnerSpace = $preInnerSpaceChildSha256.ContainsKey($childName) -and
+                            ($childSha256 -eq $preInnerSpaceChildSha256[$childName])
     if (($childSha256 -ne $targetChildSha256) -and
-        (-not $generatedChildSha256.ContainsKey($childName) -or $childSha256 -ne $generatedChildSha256[$childName])) {
+        (-not $matchesGenerated) -and
+        (-not $matchesPreStyle) -and
+        (-not $matchesPreInnerSpace)) {
       throw "SqC_Wp100_Run child changed after audit: $childName"
     }
   }
@@ -422,11 +452,20 @@ $dutStatus = Add-OrVerify-Dut 'Wp100RunSequenceResultStruct' 'Wp100RunSequenceRe
 $childStatus = [ordered]@{}
 foreach ($step in $steps) {
   $name = "_a$($step.Name)_active"
-  $baseline = if ($generatedChildSha256.ContainsKey($name)) { @($generatedChildSha256[$name]) } else { @() }
+  [string[]]$baseline = @()
+  if ($generatedChildSha256.ContainsKey($name)) {
+    $baseline += $generatedChildSha256[$name]
+  }
+  if ($preStyleChildSha256.ContainsKey($name)) {
+    $baseline += $preStyleChildSha256[$name]
+  }
+  if ($preInnerSpaceChildSha256.ContainsKey($name)) {
+    $baseline += $preInnerSpaceChildSha256[$name]
+  }
   $childStatus[$step.Name] = Set-CodeChild -Name $name -ElementType Action -SourceFile "SqC_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $baseline
 }
-$childStatus.CheckPartPresent = Set-CodeChild -Name 'CheckPartPresent' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\methods\CheckPartPresent.st' -AllowedBaselineSha256 @()
-$childStatus.OnChainFinish = Set-CodeChild -Name 'OnChainFinish' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @($generatedChildSha256.OnChainFinish)
+$childStatus.CheckPartPresent = Set-CodeChild -Name 'CheckPartPresent' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\methods\CheckPartPresent.st' -AllowedBaselineSha256 @($preStyleChildSha256.CheckPartPresent, $preInnerSpaceChildSha256.CheckPartPresent)
+$childStatus.OnChainFinish = Set-CodeChild -Name 'OnChainFinish' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @($generatedChildSha256.OnChainFinish, $preStyleChildSha256.OnChainFinish, $preInnerSpaceChildSha256.OnChainFinish)
 
 $parentChanged = ($currentDeclarationSha -ne $targetDeclarationSha) -or
                  ($currentImplementationSha -ne $targetImplementationSha)

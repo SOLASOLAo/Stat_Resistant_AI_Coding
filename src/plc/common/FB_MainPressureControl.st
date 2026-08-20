@@ -41,7 +41,7 @@ END_VAR
 (* ===== IMPLEMENTATION ===== *)
 // Outside the valid application/I/O state, actively close the valve and do not
 // evaluate uninitialized bus inputs.
-IF NOT xMonitoringEnabled
+IF ( NOT xMonitoringEnabled )
 THEN
   _timerPressureHigh(IN := FALSE, PT := tMonitoringTime);
   _timerPressureLow(IN := FALSE, PT := tMonitoringTime);
@@ -56,42 +56,45 @@ THEN
 END_IF
 
 // The two pressure switches describe mutually exclusive pressure ranges.
-xPressureSignalConflict := xPressureLow AND xPressureHigh;
+xPressureSignalConflict := ( xPressureLow ) AND
+                           ( xPressureHigh );
 
 // Monitor the feedback that belongs to the actual valve command.
 // During a normal transition both feedback signals may temporarily be FALSE.
 _timerPressureHigh(
-  IN := xValveOn AND NOT (xPressureHigh AND NOT xPressureLow),
+  IN := ( xValveOn ) AND
+        ( NOT ( ( xPressureHigh ) AND ( NOT xPressureLow ) ) ),
   PT := tMonitoringTime
 );
 
 _timerPressureLow(
-  IN := NOT xValveOn AND NOT (xPressureLow AND NOT xPressureHigh),
+  IN := ( NOT xValveOn ) AND
+        ( NOT ( ( xPressureLow ) AND ( NOT xPressureHigh ) ) ),
   PT := tMonitoringTime
 );
 
 // A contradictory feedback is diagnosed immediately. Transition faults use
 // the configured delay. Faults remain latched until Control On is removed and
 // a plausible depressurized state has been reached.
-IF xPressureSignalConflict
+IF ( xPressureSignalConflict )
 THEN
   xFaultPressureNotHigher := TRUE;
   xFaultPressureNotLower  := TRUE;
 ELSE
-  IF _timerPressureHigh.Q
+  IF ( _timerPressureHigh.Q )
   THEN
     xFaultPressureNotHigher := TRUE;
   END_IF
 
-  IF _timerPressureLow.Q
+  IF ( _timerPressureLow.Q )
   THEN
     xFaultPressureNotLower := TRUE;
   END_IF
 END_IF
 
-IF NOT xControlOnOk
-   AND xPressureLow
-   AND NOT xPressureHigh
+IF ( NOT xControlOnOk ) AND
+   ( xPressureLow ) AND
+   ( NOT xPressureHigh )
 THEN
   xFaultPressureNotHigher := FALSE;
   xFaultPressureNotLower  := FALSE;
@@ -102,25 +105,25 @@ END_IF
 // - missing application release => close the valve
 // - any pressure fault => close the valve
 // - opening is permitted only from a plausible depressurized state
-IF NOT xControlOnOk
-   OR NOT xValveRelease
-   OR xFaultPressureNotHigher
-   OR xFaultPressureNotLower
+IF ( NOT xControlOnOk ) OR
+   ( NOT xValveRelease ) OR
+   ( xFaultPressureNotHigher ) OR
+   ( xFaultPressureNotLower )
 THEN
   xValveOn := FALSE;
-ELSIF NOT xValveOn
-      AND xPressureLow
-      AND NOT xPressureHigh
+ELSIF ( NOT xValveOn ) AND
+      ( xPressureLow ) AND
+      ( NOT xPressureHigh )
 THEN
   xValveOn := TRUE;
 END_IF
 
-xPressureReady := xValveOn
-                  AND xValveRelease
-                  AND xPressureHigh
-                  AND NOT xPressureLow
-                  AND NOT xFaultPressureNotHigher
-                  AND NOT xFaultPressureNotLower;
+xPressureReady := ( xValveOn ) AND
+                  ( xValveRelease ) AND
+                  ( xPressureHigh ) AND
+                  ( NOT xPressureLow ) AND
+                  ( NOT xFaultPressureNotHigher ) AND
+                  ( NOT xFaultPressureNotLower );
 
-xEnableControlOn := NOT xFaultPressureNotHigher
-                    AND NOT xFaultPressureNotLower;
+xEnableControlOn := ( NOT xFaultPressureNotHigher ) AND
+                    ( NOT xFaultPressureNotLower );

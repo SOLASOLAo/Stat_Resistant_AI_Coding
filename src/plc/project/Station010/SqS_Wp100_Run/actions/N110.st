@@ -1,7 +1,7 @@
 // Parallel branch 1: wait for pressing-cylinder BASPOS.
 _retVal := RUNNING;
 
-IF _pressUpStarted
+IF ( _pressUpStarted )
 THEN
   _retVal := CheckUnitDone(
     Wp100K102PressingCylinder.Unit,

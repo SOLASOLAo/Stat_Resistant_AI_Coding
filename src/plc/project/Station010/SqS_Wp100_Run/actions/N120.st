@@ -1,7 +1,7 @@
 // Parallel branch 2: wait for Kistler MEASURE and copy the final verdict.
 _retVal2 := RUNNING;
 
-IF NOT _kistlerStarted
+IF ( NOT _kistlerStarted )
 THEN
   _retVal2 := OK;
 ELSE
@@ -10,7 +10,7 @@ ELSE
     RepeatOnError := FALSE
   );
 
-  IF _retVal2 = OK
+  IF ( _retVal2 = OK )
   THEN
     Result.Kistler.Valid     := TRUE;
     Result.Kistler.Ok        := Wp100A104Kistler.Unit.OutCmd.OK;

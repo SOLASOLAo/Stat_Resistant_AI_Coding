@@ -558,3 +558,19 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 N010/N040/N070 在每次原子操作前都调用 `CheckPartPresent`，要求 `_100B701 AND _100B702`。任一路缺失时使用 CpStudio 新增的 `Wp100.EVENT_PART_DETECT_SENSOR=-4` 建立锁定 `SOFTERROR`；NxBase 手册明确 `ERROR` 会中止 Chain，而 `SOFTERROR` 允许步骤继续运行，因此这里保持在检查步骤等待产品放好。AdditionalInfo 分别写明 `_100B701=FALSE`、`_100B702=FALSE` 或两路同时 FALSE；缺失组合变化时替换事件，两路恢复后按 `UnlockEvent → ClearEvent` 自动清除。`OnChainFinish` 对 DONE/ERROR/CANCEL 撤销 `SqS_Run.Execute` 并清理本链拥有的产品检测事件。
 
 两份写入器均通过官方 REST 精确回读并完成幂等复跑：`SqS_Wp100_Run` 为 21 Steps，`SqC_Wp100_Run` 为 11 Steps、11 Actions、2 Methods，旧扫描枪示例 Action 已从命令链对象删除。Application Compile 为 **0 errors / 6 warnings**，Additional code checks 为 **0 errors**；IDE 总计栏另有 3 个未安装 Atmo 旧库错误，属于 Library Manager，不是 Application Build。PLC project SHA-256=`D3C251242B5647094A255A71C173D589D5B5A863137F94C7038BB91CD4B4CD4C`。未连接、下载、启停、写变量或 FORCE 实体 PLC。
+
+## 样本 18：AI-owned ST 条件排版与可验证迁移
+
+当前项目把条件统一为下列形式：
+
+```st
+IF ( ConditionA ) AND
+   ( ConditionB )
+THEN
+```
+
+括号内侧各留一个空格；每个独立条件都加括号；复合条件换行时，`AND`/`OR` 属于上一行末尾，不放在续行开头。该规则只约束 `src/plc/**/*.st` 中的 AI-owned 规范源，不对 CpStudio-owned 或 mixed 生成区域做全工程空白格式化，避免供应商重新生成后持续制造无语义差异。
+
+本次先把三份通用 FB、`SqS_Wp100_Run` 和 `SqC_Wp100_Run` 的规范源格式化，再由两个写入器通过 PLC Engineering 官方 REST 接口同步。写入器保存迁移前精确 SHA-256，只接受已审计旧格式或当前目标格式；写入后逐对象 GET 回读，第二次执行全部为 `verified`，并明确跳过保存。`tests/static/Test-ProjectFramework.ps1` 同时拒绝未加括号的 `IF`/`ELSIF`、括号内侧无空格的复合条件，以及出现在续行开头的逻辑运算符。
+
+静态门禁结果为 `Project framework OK: 46 required files`。最终 Application Build 为 **0 errors / 8 warnings**；IDE 总计栏仍有 3 个既有 Atmo 库缺失错误，与本次排版及 Application Build 无关。PLC project SHA-256=`48B620837C99B0BA9EBF53449CAB0C75D981B80D629D0111C7A1C201650DEE49`。未执行实体 PLC 在线操作。

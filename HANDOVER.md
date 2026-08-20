@@ -331,3 +331,11 @@
 - `OnChainFinish` 对 DONE/ERROR/CANCEL 撤销 `SqS_Run.Execute` 并清理本链产品检测事件；旧扫描枪模板 Action 已在替换图形后通过 REST 删除。
 - 两份 REST 写入器均完成 exact readback 和全 verified 幂等复跑。Application Compile **0 errors / 6 warnings**，Additional code checks **0 errors**；IDE 总计栏的 3 errors 仍是三个未安装 Atmo 旧库，不属于 Application Build。最终 PLC project SHA-256=`D3C251242B5647094A255A71C173D589D5B5A863137F94C7038BB91CD4B4CD4C`。
 - Station010 有效 CpStudio 事件/PressDelayTime 生成文件和 PLC 逻辑提交为 `6b402c9`（分支 `feat/wp100-run-sequence-20260820`）。两个 `.Sync.json`、HMI Logbook 日期滚动及 `Hmi/obj` 未暂存、未回退。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。
+
+## PLC ST 条件排版统一（2026-08-20）
+
+- 用户确认条件括号内侧保留空格，项目标准写法为 `IF ( ConditionA ) AND` 换行后 `( ConditionB )`，`THEN` 独立一行；每个独立条件均加括号，`AND`/`OR` 留在上一行末尾。
+- 已统一 `src/plc/common` 三个通用 FB，以及 `SqS_Wp100_Run`、`SqC_Wp100_Run` 的 AI-owned Action/Method 源码；没有机械改写 CpStudio-owned 或 mixed 生成区，避免下一次导出产生无意义的空白冲突。
+- 两个 REST 写入器新增精确的格式迁移哈希，只允许把已编译旧排版迁移到当前规范；经 PLC Engineering 官方 REST 写入、逐对象回读后再次执行，全部为 `verified` 且 `No changes; save skipped.`。
+- `tests/static/Test-ProjectFramework.ps1` 现在扫描 `src/plc/**/*.st`，拒绝续行开头的 `AND`/`OR`、未加括号的 `IF`/`ELSIF`，以及括号内侧没有空格的复合条件；当前结果为 `Project framework OK: 46 required files`。
+- 最终 PLC project SHA-256=`48B620837C99B0BA9EBF53449CAB0C75D981B80D629D0111C7A1C201650DEE49`。Application Build 为 **0 errors / 8 warnings**；IDE 总计栏既有 3 个 Atmo 库缺失错误不属于 Application Build。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。

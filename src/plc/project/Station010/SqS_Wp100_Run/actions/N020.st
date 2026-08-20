@@ -5,7 +5,7 @@ _startButton(
   Blink500ms    := FlashBits.Pulse500ms
 );
 
-IF _startButton.Done
+IF ( _startButton.Done )
 THEN
   _retVal := OK;
   _startButton(

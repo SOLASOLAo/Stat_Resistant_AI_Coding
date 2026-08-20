@@ -1,5 +1,5 @@
 // Wait until the safety door reaches base/open position.
-IF NOT _safetyDoorOpenStarted
+IF ( NOT _safetyDoorOpenStarted )
 THEN
   _retVal := OK;
 ELSE
