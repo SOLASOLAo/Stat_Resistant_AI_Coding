@@ -6,20 +6,145 @@ chain:
   instance: Wp100.SqS_Run
   subchain_id: 2
   unit_reference: Wp100Unit
-  status: skeleton
+  status: implemented_offline_verified
+  reuse: sequential callers only
+
+input:
+  source: Wp100.MeasurePos
+  type: MeasurePsoEnum
+  note: >-
+    The CpStudio-owned enum type currently retains the generated spelling
+    MeasurePsoEnum. The value is latched in N000 and must not be changed by the
+    caller while the chain is running.
+  values:
+    LEFT:
+      required_true: [_100B601]
+      required_false: [_100B602, _100B603]
+    MIDDLE:
+      required_true: [_100B602]
+      required_false: [_100B601, _100B603]
+    RIGHT:
+      required_true: [_100B603]
+      required_false: [_100B601, _100B602]
+
+station_data:
+  PressDelayTime:
+    plc_path: Station.StationData.PressDelayTime
+    type: DINT
+    unit: ms
 
 steps:
   - id: N000
-    purpose: initialize
+    comment: Initialize run
+    purpose: clear the previous result and latch Wp100.MeasurePos
+  - id: N010
+    comment: Check fixture position
+    purpose: enforce the selected three-sensor one-hot state and press base position
+  - id: N020
+    comment: Wait start button
+    action: FB_OperatorButton
+    input: _000S610
+    lamp: _000P610
+    blink: Station.FlashBits.Pulse500ms
+  - id: N030
+    comment: Close safety door
+    command: Wp100K101SafetyDoor.WRKPOS
+    start_requires:
+      - pressing cylinder in base position
+      - Peripherals.BinIo._000K981_Y32
+  - id: N040
+    comment: Wait door closed
+    completion_requires:
+      - safety door in work position
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
+  - id: N050
+    comment: Start Kistler / lower press
+    commands_same_plc_cycle:
+      - Wp100A104Kistler.MEASURE
+      - Wp100K102PressingCylinder.WRKPOS
+    start_requires:
+      - safety door in work position
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
+      - Kistler ready
+  - id: N060
+    comment: Wait press lowered
+    wait_for: Wp100K102PressingCylinder command started by N050
+  - id: N070
+    comment: Wait press delay
+    duration: Station.StationData.PressDelayTime milliseconds
+  - id: N080
+    comment: Start resistance test
+    command: Wp100A103ResistantDetector.SINGLE_MEAS
+    note: lower/upper limits and temperature selection remain the Unit's current parameters
+  - id: N090
+    comment: Read resistance result
+    result: Result.Resistance
   - id: N100
-    purpose: reserved atomic process step
-    current_behavior: return OK without process action
+    comment: Raise press / stop Kistler
+    commands_same_plc_cycle:
+      - Wp100A104Kistler.ParImm.EndMeasurement := TRUE
+      - Wp100K102PressingCylinder.BASPOS
+    timing: Kistler stop is requested at press-up start, within the required 1 second
+  - id: N110
+    comment: Wait press raised
+    wait_for: Wp100K102PressingCylinder command started by N100
+  - id: N120
+    comment: Read Kistler result
+    result: Result.Kistler
+    note: stores verdict and final cyclic values; full READ_DATA curve is not requested
+  - id: N130
+    comment: Open safety door
+    command: Wp100K101SafetyDoor.BASPOS
+    start_requires: [pressing cylinder in base position]
+  - id: N140
+    comment: Wait door open
+    wait_for: Wp100K101SafetyDoor command started by N130
   - id: N999
-    purpose: finish
+    comment: Finish run
+    result: DONE
 
-open_requirements:
-  - input parameters
-  - start conditions
-  - completion conditions
-  - cancel cleanup
-  - caller arbitration when reused
+output:
+  path: Wp100.SqS_Run.Result
+  type: Wp100RunResultStruct
+  retention: valid after DONE until the next N000 initialization
+  members:
+    - MeasurePos
+    - FixturePositionValid
+    - Resistance.Valid
+    - Resistance.OutOfLimit
+    - Resistance.Ok
+    - Resistance.Value
+    - Resistance.Temperature
+    - Kistler.Valid
+    - Kistler.Ok
+    - Kistler.Nok
+    - Kistler.NoPass
+    - Kistler.ProgramNo
+    - Kistler.Force
+    - Kistler.Stroke
+
+cleanup:
+  on: [DONE, ERROR, CANCEL]
+  reset:
+    - operator button Execute and _000P610
+    - press-delay timer
+    - safety-door Execute
+    - pressing-cylinder Execute
+    - Burster Execute
+    - Kistler EndMeasurement true and Execute false
+    - per-execution started flags
+  retain:
+    - Result until the next execution
+
+caller_contract:
+  - while Wp100.SqS_Run is READY, write Wp100.MeasurePos
+  - set Wp100.SqS_Run.Execute to TRUE
+  - wait through CheckSubChainDone(Wp100.SqS_Run)
+  - do not start the single instance from two callers concurrently
+
+verification:
+  date: 2026-08-20
+  offline_build: 0 errors / 7 warnings
+  online_test: not performed

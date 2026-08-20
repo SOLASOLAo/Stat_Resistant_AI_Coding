@@ -309,3 +309,13 @@
 - Station `AUTO/MANUAL/HOME/CHANGEOVER` 的 `OnModeRelease` 均要求 `_000K911_Y32`、`_000K981_Y32` 和既有的两门关闭标志；CHANGEOVER 继续额外要求 `Station.Unit.IsEmpty`，没有削弱原条件。
 - AI 前后文本快照均为 237 objects，恰好只改变 8 个计划对象；最终 PLC project SHA-256=`27659F3C3EE4F4D85093B3B9304CCDA2ABDE871183D7412FA4ABACC3EA678436`，完整离线编译 **0 errors / 7 warnings**。DIDO 为 56 channels、38 bound、18 inactive，声明/映射差异为 0；Kistler 为 400/400 bound、0 mismatch。有效 CpStudio/IO/PLC/HMI 批次已提交为 Station010 `71df380`（`feat: enforce safety relay interlocks`）。
 - 本批没有连接、下载、启停、写变量或 FORCE 实体 PLC，没有创建额外 `.project` 二进制备份；`Std` 未修改。真机仍需分别断开 A 门、B 门、维修门继电器和安全门两个继电器反馈，核对时序、报警 AdditionalInfo 与恢复路径。
+
+## Wp100 Run 可复用原子操作（2026-08-20）
+
+- CpStudio 当前正式接口为 `Wp100.MeasurePos : MeasurePsoEnum`；用户已把变量旧拼写 `MeasurePso` 更正为 `MeasurePos`。类型名仍是 CpStudio 生成的 `MeasurePsoEnum`，不要仅在 PLC 内改名。`LEFT/MIDDLE/RIGHT` 分别绑定 `_100B601/_100B602/_100B603`，每个位置都要求目标 DI=TRUE、另外两路=FALSE。
+- CpStudio 同批新增 `StationData.PressDelayTime : DINT`（应用按毫秒解释），刷新三路位置传感器中英文描述，并把上一批 Mode/安全门/压缸安全反馈联锁同步到 HMI 条件树。
+- AI 经 PLE 官方 REST 扩展把 `SqS_Wp100_Run` 从 N000/N100/N999 骨架扩展为 16 步：初始化并锁存位置 → 一取一位置联锁 → 拍按钮 → 关门并确认安全反馈 → Kistler MEASURE 与压缸下降同周期启动 → 压紧延时 → Burster SINGLE_MEAS → 保存电阻 → 压缸上升与 Kistler EndMeasurement 同周期发出 → 保存 Kistler → 开门 → DONE。
+- 输出为 `Wp100.SqS_Run.Result : Wp100RunResultStruct`，内含 `Resistance` 与 `Kistler` 两个嵌套结构。结果在 DONE 后保留，到下一轮 N000 清零；当前 Kistler 保存判定和最终力/位移，不含完整曲线。
+- `OnChainFinish` 对 DONE/ERROR/CANCEL 统一熄灭 `_000P610`、复位按钮/定时器/四个运动或测量 Unit Execute，并令 Kistler `EndMeasurement=TRUE`。单个 `Wp100.SqS_Run` 只允许调用方顺序复用；调用方尚未接线，后续在 READY 时写 `Wp100.MeasurePos`、置 Execute，再以 `CheckSubChainDone` 等待。
+- 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读已验证，F11 完整离线编译 **0 errors / 7 warnings**；PLC project SHA-256=`46ADB0AABC700E17E254C4BE2C5ED6FA45D6EC7592179551F13D55D31AB8910D`。
+- 尚待用户/产品数据确认：Burster 上下限和温度开关、Kistler 程序号如何由 TypeData 提供；是否需要 Kistler `READ_DATA` 完整曲线。未连接、下载、启停、写变量或 FORCE 实体 PLC，也未创建额外二进制备份；`Std` 保持只读。

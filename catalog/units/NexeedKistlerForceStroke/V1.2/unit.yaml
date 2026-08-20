@@ -1,0 +1,45 @@
+schema_version: 1
+kind: unit
+name: NexeedKistlerForceStroke
+version: V1.2
+vendor_source: ../Std/Objects/NexeedKistlerForceStroke/V1.2
+manual: ../Std/Objects/NexeedKistlerForceStroke/V1.2/Documentation/NexeedKistlerForceStroke_TechnicalManual_EN.chm
+
+peripheral_interface: IKistlerForceStroke
+station010_binding:
+  unit: Wp100A104Kistler
+  peripheral: _100A104
+  hardware: Kistler maXYmos BL 5867C001
+  fieldbus: EtherCAT
+  byte_order: Little-Endian
+
+measure:
+  command: KistlerForceStrokeCmd.MEASURE
+  inputs:
+    program_number: ParCmd.Measure.ProgNo
+    timeout: ParCmd.Measure.MeasuringTimeout
+  start:
+    - set ParImm.EndMeasurement false
+    - set Command to MEASURE
+    - set Execute true
+  stop:
+    - set ParImm.EndMeasurement true
+    - keep the command lifecycle under CheckUnitDone
+  command_outputs:
+    ok: OutCmd.OK
+    nok: OutCmd.Nok
+  cyclic_outputs:
+    ready: OutImm.Ready
+    program_number: OutImm.ProgNo
+    no_pass: OutImm.NoPass
+    force: OutImm.ForceAct
+    stroke: OutImm.StrokeAct
+
+data_scope:
+  current_run_chain: verdict plus final cyclic force/stroke values
+  full_curve: requires a separate READ_DATA command and is not implemented in SqS_Wp100_Run
+
+verified_in:
+  project: Station010
+  date: 2026-08-20
+  offline_build: 0 errors / 7 warnings

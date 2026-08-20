@@ -14,16 +14,40 @@ $requiredFiles = @(
     'specs/events.yaml',
     'specs/units/Wp100.yaml',
     'specs/chains/SqS_Wp100_Home.yaml',
+    'specs/chains/SqS_Wp100_Run.yaml',
     'ai/ownership.yaml',
     'ai/hooks.yaml',
     'ai/graphical.yaml',
     'src/plc/common/FB_OperatorButton.st',
     'src/plc/common/FB_MainPressureControl.st',
     'src/plc/common/FB_MaintenanceDoorControl.st',
+    'src/plc/project/Station010/Wp100ResistanceResultStruct.st',
+    'src/plc/project/Station010/Wp100KistlerResultStruct.st',
+    'src/plc/project/Station010/Wp100RunResultStruct.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/declaration.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N010.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N020.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N030.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N080.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N110.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N120.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N130.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N140.st',
+    'src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st',
+    'catalog/units/NexeedKistlerForceStroke/V1.2/unit.yaml',
     'scripts/cpstudio/post_export_signal.bat',
     'scripts/cpstudio/write_export_request.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
+    'scripts/plc/apply_wp100_run_rest.ps1',
     'scripts/ioe/ioe_ipc.ps1',
     'scripts/ioe/Install-EtherCatEsi.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1'
@@ -68,6 +92,14 @@ foreach ($relativePath in $postExportFiles) {
         if ($text.Contains($forbiddenText)) {
             $failures.Add("Post-export hook contains forbidden launcher/online text '$forbiddenText': $relativePath")
         }
+    }
+}
+
+$restApplier = 'scripts/plc/apply_wp100_run_rest.ps1'
+$restApplierText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot $restApplier))
+foreach ($forbiddenText in @('connect_to_device', 'download_to_device', 'start_stop_application', 'write_variable')) {
+    if ($restApplierText.Contains($forbiddenText)) {
+        $failures.Add("PLC REST applier contains forbidden online operation '$forbiddenText': $restApplier")
     }
 }
 

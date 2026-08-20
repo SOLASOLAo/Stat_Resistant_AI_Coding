@@ -5,6 +5,7 @@ write_modes:
   implementation: replace only the implementation through MCP, then read back
   semantic_merge: preserve CpStudio-owned content and restore only declared hooks
   graphical_attributes: use official PLC Engineering REST GET/PUT with hash guard
+  rest_composite: use hash-guarded official REST for declaration, SFC graph, actions and readback
 
 objects:
   - path: Application/Fbs/FB_OperatorButton
@@ -75,3 +76,89 @@ objects:
     owner: ai_implementation
     specification: specs/chains/SqS_Wp100_Home.yaml
     write_mode: implementation
+  - path: Application/Station/Wp100/_this/Structs/Data/Wp100ResistanceResultStruct
+    owner: ai
+    source: src/plc/project/Station010/Wp100ResistanceResultStruct.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Structs/Data/Wp100KistlerResultStruct
+    owner: ai
+    source: src/plc/project/Station010/Wp100KistlerResultStruct.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Structs/Data/Wp100RunResultStruct
+    owner: ai
+    source: src/plc/project/Station010/Wp100RunResultStruct.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/declaration.st
+    specification: specs/chains/SqS_Wp100_Run.yaml
+    apply_script: scripts/plc/apply_wp100_run_rest.ps1
+    write_mode: rest_composite
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN010_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N010.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN020_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N020.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN030_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N030.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN040_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN050_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN060_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN070_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN080_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N080.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN090_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN100_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN110_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N110.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN120_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N120.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN130_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N130.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN140_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N140.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN999_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/OnChainFinish
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st
+    write_mode: full_object

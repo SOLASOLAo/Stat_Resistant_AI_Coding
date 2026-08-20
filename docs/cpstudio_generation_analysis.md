@@ -526,3 +526,25 @@ AI 经 persistent MCP 只替换 `Wp100A104KistlerExtension.OnManRelease` impleme
 6. Station 四种运行模式都要求 `_000K911_Y32` 与 `_000K981_Y32`，并保留原“两门已关”条件；CHANGEOVER 仍保留空站条件。
 
 AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station OnCall、OnModeRelease、两个 OnManRelease、Home Chain 声明及 N120/N130 共 8 个对象。快照校验通过，完整离线编译为 **0 errors / 7 warnings**，project SHA-256=`27659F3C3EE4F4D85093B3B9304CCDA2ABDE871183D7412FA4ABACC3EA678436`。DIDO 56 个通道中 38 个有效映射与 38 个 `BinIo.bus_*` 声明精确一致，Kistler 400/400 PDO 映射零差异。未进行实体 PLC 在线操作；1 s/5 s 现场时序和继电器触点逻辑仍须真机验收。
+
+## 样本 16：位置参数、PressDelayTime 与 Wp100 Run 原子操作
+
+### CpStudio 生成边界
+
+本批 CpStudio 新增 `MeasurePsoEnum`（`LEFT/MIDDLE/RIGHT`）、全局变量 `Wp100.MeasurePos` 和 `StationData.PressDelayTime : DINT`，并把 `_100B601/_100B602/_100B603` 的描述统一为左/中/右位置传感器。用户已把变量从旧拼写 `Wp100.MeasurePso` 更正为 `Wp100.MeasurePos`；当前模型与 PLC 使用新变量名，但 CpStudio-owned 类型名仍为 `MeasurePsoEnum`，本轮不在 PLC 侧私自重命名该类型。
+
+本次完整 CpStudio 导出还把上一批安全要求同步到 HMI 条件树：四种 Mode Release 增加 `_000K981_Y32`，安全门手动动作增加 `_000K981_Y32`，压缸手动动作增加 `_000K913_Y32/_000K912_Y32`。这些是模型层对既有 PLC 联锁的正式追认。HMI 同时清理若干已不存在旧设备类型的空翻译项；`.Sync.json`、Logbook 日期滚动和 `Hmi/obj` 仍按工具噪声处理。
+
+### AI-owned 原子操作
+
+`SqS_Wp100_Run` 经 PLC Engineering 官方 REST 扩展从三步骨架扩展为 16 步 SFC。`Wp100.MeasurePos` 在 N000 锁存；N010 对三路位置 DI 做一取一判定，并要求压缸处于原位。随后依次执行：拍按钮、关安全门、确认两路安全反馈、Kistler 与压缸下行同周期启动、等待 `PressDelayTime`、执行 Burster `SINGLE_MEAS`、保存电阻结果、压缸上行与 Kistler `EndMeasurement` 同周期发出、保存 Kistler 结果、开安全门。
+
+新增三个结构体把输出收敛到 `Wp100.SqS_Run.Result`：
+
+- `Wp100ResistanceResultStruct`：有效位、越限、OK、电阻值、温度；
+- `Wp100KistlerResultStruct`：有效位、OK/NOK、NoPass、程序号、最终力和位移；
+- `Wp100RunResultStruct`：请求位置、位置有效位及上述两个嵌套结果。
+
+结果在 DONE 后保留，到下一次 N000 才清零。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
+
+可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对原三步 CpStudio 骨架做声明/图形哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；重复执行的回读均为 verified。F11 完整离线编译为 **0 errors / 7 warnings**，最终 PLC project SHA-256=`46ADB0AABC700E17E254C4BE2C5ED6FA45D6EC7592179551F13D55D31AB8910D`。未连接、下载、启停或写入实体 PLC。

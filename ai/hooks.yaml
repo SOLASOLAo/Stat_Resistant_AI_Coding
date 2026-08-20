@@ -85,3 +85,47 @@ hooks:
     invariants:
       - a safety-door close command cannot complete the step until both safety feedbacks are true
       - pressing-cylinder start repeats the same interlock for an already-closed door
+  - id: wp100_run_position_interlock
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN010_active
+    input: Wp100.MeasurePos
+    input_type: MeasurePsoEnum
+    required_signals:
+      - Peripherals.BinIo._100B601
+      - Peripherals.BinIo._100B602
+      - Peripherals.BinIo._100B603
+    invariants:
+      - the requested fixture position is latched at N000
+      - exactly the selected position sensor is true and the other two are false
+      - the pressing cylinder is in base position before operator acknowledgement
+  - id: wp100_run_safety_interlock
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+    required_signals:
+      - Peripherals.BinIo._000K981_Y32
+      - Peripherals.BinIo._000K913_Y32
+      - Peripherals.BinIo._000K912_Y32
+    invariants:
+      - maintenance safety relay is required before closing the safety door
+      - safety-door and all-door feedbacks are required before lowering the press
+      - the safety door opens only after the press is confirmed in base position
+  - id: wp100_run_measurement_timing
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+    required_units:
+      - Wp100A104Kistler
+      - Wp100A103ResistantDetector
+      - Wp100K102PressingCylinder
+    invariants:
+      - Kistler MEASURE and pressing-cylinder WRKPOS start in the same PLC cycle
+      - resistance measurement starts after StationData.PressDelayTime milliseconds
+      - Kistler EndMeasurement and pressing-cylinder BASPOS start in the same PLC cycle
+      - Kistler stop therefore occurs no later than one second after press-up start
+      - Result remains available after DONE and is cleared only by the next N000
+  - id: wp100_run_cleanup
+    object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/OnChainFinish
+    required_cleanup:
+      - FB_OperatorButton Execute false and _000P610 false
+      - press-delay timer false
+      - safety-door Execute false
+      - pressing-cylinder Execute false
+      - Burster Execute false
+      - Kistler EndMeasurement true and Execute false
+      - all per-execution flags false

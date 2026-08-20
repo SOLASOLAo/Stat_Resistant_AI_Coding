@@ -48,7 +48,10 @@
 - [x] 🔴 维修门未锁报警：使用 CpStudio 生成的 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2`；门锁请求后 5 s 内 A/B 反馈未同时到位则锁存报警并保持主气压禁止，Control Off 后按 `UnlockEvent + ClearEvent` 清除；编译 0 errors / 7 warnings，Station010 `93379fd`(2026-08-18)
 - [x] 🔴 StationLamp AddOn 受控增量：CpStudio 新增 Station Lamp V2.3.1.0（InstanceId 7），黄/绿/红绑定 `_000P960_1/_000P960_2/_000P960_3`，层级、参数、HMI 和输出映射核对完成(2026-08-18)
 - [x] 🔴 Home Chain 步骤检索注释：经 PLC Engineering 官方 REST 扩展接口为 `SqS_Wp100_Home` 的 9 个 Step 写入简短 Comment；标准化差异确认 Action/Transition/顺序均未改变，编译 0 errors / 7 warnings，Station010 `6399377`(2026-08-18)
-- [ ] 🔴 定义 `SqS_Wp100_Run` 的首个原子工艺：确定输入参数、启动条件、完成条件和取消清理；在调用方 READY 时写参数并置 Execute，使用 `CheckSubChainDone` 等待；确认是否需要允许多个调用方顺序复用
+- [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：锁存 `Wp100.MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈，下压时同步启动 Kistler，延时后 Burster 测量，抬压时同步结束 Kistler，结构化保存结果并开门；DONE/ERROR/CANCEL 统一清理，离线编译 0 errors / 7 warnings(2026-08-20)
+- [ ] 🔴 在首个自动主 Chain 调用 `Wp100.SqS_Run`：仅在 READY 写 `Wp100.MeasurePos` 并置 Execute，随后用 `CheckSubChainDone` 等待；单实例只允许多个调用方顺序复用，不并发启动
+- [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
+- [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 只保存 OK/NOK、NoPass、程序号及最终力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [ ] 🟡 补充 `SqS_Run` 当前为空的中英文显示文本
 - [x] 🟡 StationData 的 `LineNo`、`TestMode`、`NokCounter`、`Wp100.Active` 已经本次 CpStudio 导出从 PLC 主结构与数据检查中正式移除；生成后编译正常(2026-08-18)
@@ -56,6 +59,7 @@
 - [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成
 - [ ] 🔴 真机专项验证主气压时序：确认 `_000B085A_LOW/HIGH` 电气逻辑、5 s 阈值、故障下电及恢复流程；补充两个事件的中文文本，并决定是否新增独立的“高低压信号同时出现”事件
 - [ ] 🔴 真机专项验证 Home 原子操作：覆盖压缸已/未在原位、安全门已/未在原位四种分支，确认 `_000S610/_000P610`、WRKPOS/BASPOS 顺序、Unit 超时/报错和模式切换 CANCEL 后所有输出复位
+- [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressDelayTime、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
 - [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
 - [ ] 🟡 利用 CpStudio 5.11 官方 `Pre-export script` / `Post-export script` 钩子实现导出后自动审计：Git 差异、旧 Symbol 引用、PLC 编译与结果摘要；不直接改写 `Engineering_Data.xml`
 - [ ] 🔴 后续配置并验证 Burster HostName，放行 `SetRange/StartMeas` 手动功能；设备稳定后逐条实现 Homing/Changeover/Auto Chains

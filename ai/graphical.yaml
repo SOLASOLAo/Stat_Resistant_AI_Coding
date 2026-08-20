@@ -21,3 +21,32 @@ objects:
       N150: Open safety door
       N160: Wait door open
       N999: Finish home
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+    api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
+    language: SFC
+    apply_script: scripts/plc/apply_wp100_run_rest.ps1
+    write_strategy:
+      - GET complete object
+      - verify the CpStudio skeleton declaration and implementation hashes
+      - PUT the complete declaration and linear SFC graph through official REST
+      - create or update action objects and result DUTs through official REST
+      - save through ProjectJob
+      - GET and compare every declaration, implementation and graph readback
+    step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
+    step_comments:
+      N000: Initialize run
+      N010: Check fixture position
+      N020: Wait start button
+      N030: Close safety door
+      N040: Wait door closed
+      N050: Start Kistler / lower press
+      N060: Wait press lowered
+      N070: Wait press delay
+      N080: Start resistance test
+      N090: Read resistance result
+      N100: Raise press / stop Kistler
+      N110: Wait press raised
+      N120: Read Kistler result
+      N130: Open safety door
+      N140: Wait door open
+      N999: Finish run
