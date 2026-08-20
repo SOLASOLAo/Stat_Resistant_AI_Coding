@@ -226,18 +226,20 @@ function Add-SfcTransition {
   param(
     [Parameter(Mandatory)][hashtable]$Context,
     [Parameter(Mandatory)][int]$SourceId,
+    [Parameter(Mandatory)][string]$Name,
     [Parameter(Mandatory)][string]$Expression,
     [AllowEmptyString()][string]$SourceFormalParameter = 'sfc'
   )
 
   $nl = $Context.NewLine
   $sb = $Context.Builder
+  $escapedName = Escape-XmlText $Name
   $escapedExpression = Escape-XmlText $Expression
   $inVariableId = Get-NextSfcId $Context
   $transitionId = Get-NextSfcId $Context
   $formal = if ([string]::IsNullOrEmpty($SourceFormalParameter)) { '' } else { " formalParameter=`"$SourceFormalParameter`"" }
   [void]$sb.Append("    <inVariable localId=`"$inVariableId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointOut />${nl}      <expression>$escapedExpression</expression>${nl}    </inVariable>${nl}")
-  [void]$sb.Append("    <transition localId=`"$transitionId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`"$formal />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
+  [void]$sb.Append("    <transition localId=`"$transitionId`" name=`"$escapedName`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`"$formal />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
   [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
   [void]$sb.Append("            <attribute guid=`"$($Context.NameGuid)`">$escapedExpression</attribute>${nl}")
   [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
@@ -316,51 +318,68 @@ function New-Wp100RunSfcImplementation {
   [void]$ctx.Builder.Append("<body>${nl}  <SFC>${nl}")
 
   $stepId = Add-SfcStep -Context $ctx -Step $stepByName.N000 -SourceId $null -Initial
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name 'N000__to__N010' -Expression '_retVal = OK'
+
+  $nextStepByName = @{
+    N010 = 'N020'
+    N020 = 'N030'
+    N030 = 'N040'
+    N040 = 'N045'
+    N045 = 'N050'
+    N070 = 'N080'
+    N080 = 'N090'
+    N090 = 'N095'
+    N095 = 'N100'
+    N130 = 'N140'
+    N140 = 'N999'
+  }
 
   foreach ($name in @('N010', 'N020', 'N030', 'N040', 'N045')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
-    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+    $transitionName = "${name}__to__$($nextStepByName[$name])"
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
   }
 
   $startSplitId = Add-SfcSimultaneousDivergence -Context $ctx -SourceId $sourceId -Name 'ParallelStart'
 
   $pressStartId = Add-SfcStep -Context $ctx -Step $stepByName.N050 -SourceId $startSplitId
-  $pressStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressStartId -Expression '_retVal = OK'
+  $pressStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressStartId -Name 'N050__to__N060' -Expression '_retVal = OK'
   $pressDownWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N060 -SourceId $pressStartTransitionId
 
   $kistlerStartId = Add-SfcStep -Context $ctx -Step $stepByName.N051 -SourceId $startSplitId
-  $kistlerStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStartId -Expression '_retVal2 = OK'
+  $kistlerStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStartId -Name 'N051__to__N061' -Expression '_retVal2 = OK'
   $kistlerRunningWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N061 -SourceId $kistlerStartTransitionId
 
   $startJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressDownWaitId, $kistlerRunningWaitId)
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $startJoinId -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $startJoinId -Name 'N060__to__N070' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
 
   foreach ($name in @('N070', 'N080', 'N090', 'N095')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
-    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+    $transitionName = "${name}__to__$($nextStepByName[$name])"
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
   }
 
   $finishSplitId = Add-SfcSimultaneousDivergence -Context $ctx -SourceId $sourceId -Name 'ParallelFinish'
 
   $pressUpStartId = Add-SfcStep -Context $ctx -Step $stepByName.N100 -SourceId $finishSplitId
-  $pressUpStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressUpStartId -Expression '_retVal = OK'
+  $pressUpStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressUpStartId -Name 'N100__to__N110' -Expression '_retVal = OK'
   $pressUpWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N110 -SourceId $pressUpStartTransitionId
 
   $kistlerStopId = Add-SfcStep -Context $ctx -Step $stepByName.N101 -SourceId $finishSplitId
-  $kistlerStopTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStopId -Expression '_retVal2 = OK'
+  $kistlerStopTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStopId -Name 'N101__to__N120' -Expression '_retVal2 = OK'
   $kistlerResultWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N120 -SourceId $kistlerStopTransitionId
 
   $finishJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressUpWaitId, $kistlerResultWaitId)
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $finishJoinId -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $finishJoinId -Name 'N110__to__N130' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
 
   foreach ($name in @('N130', 'N140')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
-    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+    $transitionName = "${name}__to__$($nextStepByName[$name])"
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
   }
 
   $finishStepId = Add-SfcStep -Context $ctx -Step $stepByName.N999 -SourceId $sourceId
-  $finishTransitionId = Add-SfcTransition -Context $ctx -SourceId $finishStepId -Expression '_retVal = JUMP9'
+  $finishTransitionId = Add-SfcTransition -Context $ctx -SourceId $finishStepId -Name 'N999__to__N999' -Expression '_retVal = JUMP9'
   $null = Add-SfcJumpStep -Context $ctx -SourceId $finishTransitionId -TargetName 'N999'
 
   [void]$ctx.Builder.Append("  </SFC>${nl}</body>")

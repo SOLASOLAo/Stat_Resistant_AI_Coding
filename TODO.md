@@ -17,6 +17,8 @@
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
 - [x] 吸收 ctrlx-ai-coding 方法论;环境体检(CRLF 补丁/模板/库仓库)通过(2026-08-17)
 - [x] 🔴 修复 persistent MCP 编译完成后超时：去除重复 Build 和全类别×严重级别消息扫描，统一使用有界 Build summary 读取；Station010 实测编译约 7.6 s、缓存读取约 0.8 s，0 errors / 7 warnings(2026-08-20)
+- [x] 🔴 修复 PLE `Bit type at the wrong position!` 与 501 条级联错误：补齐 3 个 AI 生成 SFC 的 39 个 Transition 内部名、修复 Home 两个陈旧 Transition 名、恢复 Symbol Configuration，并隔离损坏的 `Stat010_V5.precompilecache`；正式工程关闭重开后 Clean Build 0 errors / 7 warnings(2026-08-20)
+- [x] 🔴 修复 persistent MCP 误接管复用 PID：启动器同时校验 PLE 可执行文件身份和 watcher 握手，避免旧 `ready.signal` 指向无关进程；补丁检查及实际重启通过(2026-08-20)
 ## 补充(2026-08-18 夜 转接)
 - [x] 🔴 清理 3 个非 ST 残留并编译到 0 errors：最终定位为 A1 的旧 I/O 映射，离线重映射后为 0 errors / 7 warnings(2026-08-18)
 - [ ] 🟡 用户决定:是否在 CpStudio 删除 Wp100A740* 站(Engineering_Data.xml 残留,不删则重新生成会带回)

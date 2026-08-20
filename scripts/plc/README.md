@@ -15,6 +15,12 @@
   three-position result DUT. It also hash-checks and removes the obsolete
   CpStudio example actions after replacing the graph.
 
+Every generated PLCopenXML SFC `<transition>` has an explicit internal
+`name="SourceStep__to__TargetStep"`. Omitting this attribute makes PLE persist a
+null `VariableName`; the graphical editor may still look plausible, but later
+native export/import or code generation can fail. `Test-ProjectFramework.ps1`
+guards both Run-chain writers against unnamed transition tags and calls.
+
 The exporter uses `se.projects.primary`; it never opens a second project,
 saves, compiles or performs online operations.
 
@@ -22,3 +28,11 @@ The Run-chain appliers save only through PLC Engineering `ProjectJob`; they do
 not connect to a controller, download, start the application or write runtime
 variables. Run them only while the intended Station010 project is the single
 active PLE project.
+
+If a project suddenly reports hundreds of contradictory missing-member or
+ambiguous-library errors while a native export comparison shows identical
+source, libraries and I/O mappings, close the project normally and move only
+its sibling `<project-name>.precompilecache` out of the project directory.
+Reopen, wait for library loading, then run a true Clean Build. Do not regenerate
+the CpStudio project or rewrite device mappings until this cache isolation has
+been tried.

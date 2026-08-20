@@ -249,16 +249,18 @@ function Add-SfcTransition {
   param(
     [Parameter(Mandatory)][hashtable]$Context,
     [Parameter(Mandatory)][int]$SourceId,
+    [Parameter(Mandatory)][string]$Name,
     [Parameter(Mandatory)][string]$Expression
   )
 
   $nl = $Context.NewLine
   $sb = $Context.Builder
+  $escapedName = Escape-XmlText $Name
   $escapedExpression = Escape-XmlText $Expression
   $inVariableId = Get-NextSfcId $Context
   $transitionId = Get-NextSfcId $Context
   [void]$sb.Append("    <inVariable localId=`"$inVariableId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointOut />${nl}      <expression>$escapedExpression</expression>${nl}    </inVariable>${nl}")
-  [void]$sb.Append("    <transition localId=`"$transitionId`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`" formalParameter=`"sfc`" />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
+  [void]$sb.Append("    <transition localId=`"$transitionId`" name=`"$escapedName`">${nl}      <position x=`"0`" y=`"0`" />${nl}      <connectionPointIn>${nl}        <connection refLocalId=`"$SourceId`" formalParameter=`"sfc`" />${nl}      </connectionPointIn>${nl}      <condition>${nl}        <connectionPointIn>${nl}          <connection refLocalId=`"$inVariableId`" />${nl}        </connectionPointIn>${nl}      </condition>${nl}")
   [void]$sb.Append("      <addData>${nl}        <data name=`"http://www.3s-software.com/plcopenxml/sfc/element`" handleUnknown=`"implementation`">${nl}          <attributes>${nl}")
   [void]$sb.Append("            <attribute guid=`"$($Context.NameGuid)`">$escapedExpression</attribute>${nl}")
   [void]$sb.Append("            <attribute guid=`"$($Context.FalseGuid)`">FALSE</attribute>${nl}")
@@ -296,15 +298,18 @@ function New-LinearSfcImplementation {
   [void]$ctx.Builder.Append("<body>${nl}  <SFC>${nl}")
 
   $stepId = Add-SfcStep -Context $ctx -Step $Steps[0] -SourceId $null -Initial
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+  $transitionName = "$($Steps[0].Name)__to__$($Steps[1].Name)"
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
 
   for ($index = 1; $index -lt ($Steps.Count - 1); $index++) {
     $stepId = Add-SfcStep -Context $ctx -Step $Steps[$index] -SourceId $sourceId
-    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Expression '_retVal = OK'
+    $transitionName = "$($Steps[$index].Name)__to__$($Steps[$index + 1].Name)"
+    $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
   }
 
   $finishStepId = Add-SfcStep -Context $ctx -Step $Steps[$Steps.Count - 1] -SourceId $sourceId
-  $finishTransitionId = Add-SfcTransition -Context $ctx -SourceId $finishStepId -Expression '_retVal = JUMP9'
+  $finishTransitionName = "$($Steps[$Steps.Count - 1].Name)__to__N999"
+  $finishTransitionId = Add-SfcTransition -Context $ctx -SourceId $finishStepId -Name $finishTransitionName -Expression '_retVal = JUMP9'
   $null = Add-SfcJumpStep -Context $ctx -SourceId $finishTransitionId -TargetName 'N999'
 
   [void]$ctx.Builder.Append("  </SFC>${nl}</body>")

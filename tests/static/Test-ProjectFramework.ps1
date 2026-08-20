@@ -48,6 +48,7 @@ $requiredFiles = @(
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
     'scripts/plc/apply_wp100_run_rest.ps1',
+    'scripts/plc/apply_wp100_run_sequence_rest.ps1',
     'scripts/ioe/ioe_ipc.ps1',
     'scripts/ioe/Install-EtherCatEsi.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1'
@@ -144,11 +145,30 @@ foreach ($relativePath in $postExportFiles) {
     }
 }
 
-$restApplier = 'scripts/plc/apply_wp100_run_rest.ps1'
-$restApplierText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot $restApplier))
-foreach ($forbiddenText in @('connect_to_device', 'download_to_device', 'start_stop_application', 'write_variable')) {
-    if ($restApplierText.Contains($forbiddenText)) {
-        $failures.Add("PLC REST applier contains forbidden online operation '$forbiddenText': $restApplier")
+$restAppliers = @(
+    'scripts/plc/apply_wp100_run_rest.ps1',
+    'scripts/plc/apply_wp100_run_sequence_rest.ps1'
+)
+foreach ($restApplier in $restAppliers) {
+    $restApplierPath = Join-Path $repositoryRoot $restApplier
+    $restApplierText = [System.IO.File]::ReadAllText($restApplierPath)
+    foreach ($forbiddenText in @('connect_to_device', 'download_to_device', 'start_stop_application', 'write_variable')) {
+        if ($restApplierText.Contains($forbiddenText)) {
+            $failures.Add("PLC REST applier contains forbidden online operation '$forbiddenText': $restApplier")
+        }
+    }
+
+    $restApplierLines = [System.IO.File]::ReadAllLines($restApplierPath)
+    for ($lineIndex = 0; $lineIndex -lt $restApplierLines.Count; $lineIndex++) {
+        $line = $restApplierLines[$lineIndex]
+        if (($line.Contains('<transition ')) -and
+            (-not $line.Contains(' name='))) {
+            $failures.Add("PLCopenXML SFC transition is missing a name attribute: ${restApplier}:$($lineIndex + 1)")
+        }
+        if (($line.Contains('Add-SfcTransition -Context')) -and
+            (-not $line.Contains(' -Name '))) {
+            $failures.Add("SFC transition call is missing its internal name: ${restApplier}:$($lineIndex + 1)")
+        }
     }
 }
 
