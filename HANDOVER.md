@@ -339,3 +339,11 @@
 - 两个 REST 写入器新增精确的格式迁移哈希，只允许把已编译旧排版迁移到当前规范；经 PLC Engineering 官方 REST 写入、逐对象回读后再次执行，全部为 `verified` 且 `No changes; save skipped.`。
 - `tests/static/Test-ProjectFramework.ps1` 现在扫描 `src/plc/**/*.st`，拒绝续行开头的 `AND`/`OR`、未加括号的 `IF`/`ELSIF`，以及括号内侧没有空格的复合条件；当前结果为 `Project framework OK: 46 required files`。
 - 最终 PLC project SHA-256=`48B620837C99B0BA9EBF53449CAB0C75D981B80D629D0111C7A1C201650DEE49`。Application Build 为 **0 errors / 8 warnings**；IDE 总计栏既有 3 个 Atmo 库缺失错误不属于 Application Build。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。
+
+## persistent MCP 编译完成后超时修复（2026-08-20）
+
+- 现象已复现：Station010 的 Application Build 在 PLE 窗口中已经完成，但旧 `compile_project` 在 300 s 后超时；只审计消息类别 × Fatal/Error/Warning 的只读调用也超过 180 s。根因是 MCP 原脚本叠加 `clean/clean_all/build/generate_code`，并在编译后对全部类别和五种严重级别反复调用 ctrlX 上会阻塞的 `get_message_objects`，不是 PLC Build 本身慢。
+- `ctrlx-ai-coding/patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1` 已扩展为统一修复入口：应用工程只执行一次 `ScriptApplication.build()`；Build 与 Additional code checks 每类只调用一次 `System.get_messages(category)`；以 IDE Build summary 为 error/warning 事实源，摘要不可验证时按错误失败关闭。
+- 补丁同时覆盖 npm 包的 `dist/scripts` 与 `src/scripts` 中 `_message_utils.py`、`compile_project.py`、`get_compile_messages.py`，保留原 CRLF 与 connector I/O Mapping 补丁；新增 `test-fast-compile-message.py`，离线覆盖干净、失败、Application current、未知摘要四类回归，`-Check` 幂等且全部通过。
+- 恢复卡住会话时，先经 PLE REST `ProjectJob` 保存，再正常关闭窗口并由 persistent MCP 重启；未强杀进程，也未手删活锁。真实工程复测：`compile_project` 约 **7.6 s** 返回 **0 errors / 7 warnings**，其中 Build 调用约 6.1 s、消息快照约 0.094 s；`get_compile_messages` 约 **0.8 s** 返回同一缓存。
+- 本次只做离线 Build，未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。PLE 保存离线编译状态后，Station010 加密 `.project` 在工作树显示 modified；它未被手改字节、未纳入本次工具修复提交，也不会随本次推送上传。临时回归工程只是 `Standard.project` 的一次性副本，验证后已精确删除，不可恢复但不包含用户数据。

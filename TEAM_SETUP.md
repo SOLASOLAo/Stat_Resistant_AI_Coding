@@ -128,7 +128,7 @@ npm install -g codesys-mcp-persistent@0.6.3
 codesys-mcp-persistent --version
 ```
 
-然后应用本项目已经验证的 CRLF 和 ctrlX connector I/O Mapping 补丁：
+然后应用本项目已经验证的 ctrlX 兼容补丁：CRLF、connector I/O Mapping，以及有界编译消息读取：
 
 ```powershell
 Set-Location '<WorkspaceRoot>\McpCoding\ctrlx-ai-coding\patches\codesys-mcp-persistent-crlf'
@@ -243,6 +243,7 @@ git -C <WorkspaceRoot>\Station010_0708 pull --ff-only
 | `codesys-mcp-persistent` 找不到 | 核对 `npm root -g` 与 npm 全局 bin 是否在当前用户 `PATH` |
 | MCP 一直不 ready | 核对 PLE exe、精确 profile、是否有第二个 Codex/MCP 实例，以及 `%TEMP%\codesys-mcp-persistent` 日志 |
 | 编译工具报 `unexpected token '\r'` | 重新执行 ctrlX 兼容补丁并运行最终 `-Check` |
+| PLE Build 已完成但 MCP 编译超过 300 s | 重新执行 ctrlX 兼容补丁并重启已卡住的 persistent 会话；补丁后 Station010 实测约 7.6 s |
 | OpCon 库无法解析 | 核对 PLE 版本和 Managed Libraries；不要从其他版本目录随意复制单个库 |
 | IO 工程提示版本转换或 PLE 崩溃 | 立即停止；IO 工程只能用 IOE 2.6.4 打开 |
 | 工程提示 `already being edited` | 先确认是否有活的 PLE/IOE 进程；不得在活进程持锁时删除 `.~u` |

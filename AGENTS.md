@@ -15,7 +15,7 @@
 1. **`.project` 是加密容器**——绝不手改文件字节,只能经 MCP 工具(IDE 脚本引擎)修改;`.project` 二进制不入库。
 2. **真机操作必须先与用户确认**:`connect_to_device` 到实体 PLC、`download_to_device`、`start_stop_application`、`write_variable`(**FORCE 强制,不解除一直生效**);仿真模式(set_simulation_mode)不受限。
 3. `../Station010_0708/` 已由用户批准升级为 **CpStudio + MCP 受控集成工作工程**(2026-08-18):用户经 CpStudio 修改模型/HMI并生成;AI 可在备份 + Git diff/文本快照后经 MCP 修改 PLC ST、经 IOE-IPC 修改 IO 工程。禁止手改 `.project` 字节、禁止无备份覆盖、禁止绕开相应 IDE。`../Std/` 仍为严格只读参考:不修改、不删除、不移动。
-4. **npm 升级 `codesys-mcp-persistent` 会覆盖 CRLF 补丁** → 升级后必重跑 `ctrlx-ai-coding/patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`(先 `-Check`)。
+4. **npm 升级 `codesys-mcp-persistent` 会覆盖 ctrlX 兼容补丁**（CRLF、connector I/O Mapping、有界编译消息读取）→ 升级后必重跑 `ctrlx-ai-coding/patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`(先 `-Check`)。
 5. **同一时间只开一个使用 codesys MCP 的 Codex 窗口**(多实例抢 profile 致 IDE 退出)。
 6. CpStudio 重新生成可能覆盖 AI 代码:生成后先 diff，并按 `ai/ownership.yaml`、`ai/hooks.yaml`、`ai/graphical.yaml` 审计；完整 AI-owned POU 的可读源放 `src/plc/`，混合对象只做语义合并。
 7. 不入库:编译缓存与用户配置(*.precompilecache/*.Sync.json/*.opt/*.Backup/*.~u)、.compiled-library、data/ 日志大文件、*.zip/*.pdf 原始资料。
@@ -25,7 +25,7 @@
 | 项 | 值 |
 |---|---|
 | PLC IDE | ctrlX WORKS / ctrlX PLC Engineering PLE_V_0206;profile 必须精确 `ctrlX PLC 2.6.8` |
-| MCP | codesys-persistent(persistent 唯一可行,ctrlX 品牌 IDE headless 不可用);CRLF 补丁 ✅(2026-08-17 -Check 全 OK) |
+| MCP | codesys-persistent(persistent 唯一可行,ctrlX 品牌 IDE headless 不可用);ctrlX 兼容补丁 ✅(2026-08-20 -Check 全 OK，含编译超时修复) |
 | 库仓库 | `C:\ProgramData\Rexroth\PLE-V-0206\0\Studio\Managed Libraries`(OpCon 全套,占位符编译时自动解析) |
 | 工程模板 | `C:\ctrlXWORKS\ctrlXPLCEngineering\PLE_V_0206\Studio\Templates\Standard.project`(TrainingStation 拷贝,含 OpCon 骨架 + 34 库占位符) |
 | 编译 | `compile_project`(基准 errors=0;`get_compile_messages` 是缓存,改代码后先编译再取) |
@@ -48,7 +48,7 @@
 
 ## 6. 当前状态快照
 - [x] 克隆 vibe-coding-templates + ctrlx-ai-coding,派生本仓库骨架(2026-08-17)
-- [x] 环境体检:CRLF 补丁已打、Standard.project 与库仓库就位、MCP ready
+- [x] 环境体检:ctrlX 兼容补丁已打、Standard.project 与库仓库就位、MCP ready
 - [x] Station010 IO 硬件组态修复 + IOE-IPC 工具链(2026-08-18);踩坑归档 ctrlx-ai-coding/docs/ioe_scripting_playbook.md
 - [x] 采用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程并持续保持离线编译 errors=0
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程
