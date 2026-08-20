@@ -65,3 +65,26 @@ objects:
           - [N100, N110]
           - [N101, N120]
     branch_return_values: [_retVal, _retVal2]
+  - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
+    api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
+    language: SFC
+    apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
+    write_strategy:
+      - GET the complete CpStudio-generated object and all children
+      - verify declaration, graph and generated-child baseline hashes
+      - create or update the canonical actions, methods and result DUT through official REST
+      - replace the SFC graph and remove obsolete generated template actions
+      - save through ProjectJob and compare every REST readback
+    step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
+    step_comments:
+      N000: Initialize measurement sequence
+      N010: Check part before LEFT
+      N020: Start LEFT measurement
+      N030: Wait LEFT measurement
+      N040: Check part before MIDDLE
+      N050: Start MIDDLE measurement
+      N060: Wait MIDDLE measurement
+      N070: Check part before RIGHT
+      N080: Start RIGHT measurement
+      N090: Wait RIGHT measurement
+      N999: Finish measurement sequence

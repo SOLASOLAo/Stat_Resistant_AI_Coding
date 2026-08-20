@@ -17,12 +17,15 @@ sfc_conventions:
   diagnostic_rule: each device owns separate Start and Wait steps
 
 input:
-  source: Wp100.MeasurePos
+  name: MeasurePos
+  plc_path: Wp100.SqS_Run.MeasurePos
+  storage_class: VAR_INPUT
   type: MeasurePsoEnum
   note: >-
     The CpStudio-owned enum type currently retains the generated spelling
-    MeasurePsoEnum. The value is latched in N000 and must not be changed by the
-    caller while the chain is running.
+    MeasurePsoEnum. SqC writes this input only while SqS_Run is READY. The
+    atomic operation records the input in Result.MeasurePos at N000 and the
+    caller must not change it while the chain is running.
   values:
     LEFT:
       required_true: [_100B601]
@@ -43,7 +46,7 @@ station_data:
 steps:
   - id: N000
     comment: Initialize run
-    purpose: clear the previous result and latch Wp100.MeasurePos
+    purpose: clear the previous result and record the MeasurePos input
   - id: N010
     comment: Check fixture position
     purpose: enforce the selected three-sensor one-hot state and press base position
@@ -194,7 +197,7 @@ cleanup:
     - Result until the next execution
 
 caller_contract:
-  - while Wp100.SqS_Run is READY, write Wp100.MeasurePos
+  - while Wp100.SqS_Run is READY, write Wp100.SqS_Run.MeasurePos
   - set Wp100.SqS_Run.Execute to TRUE
   - wait through CheckSubChainDone(Wp100.SqS_Run)
   - do not start the single instance from two callers concurrently

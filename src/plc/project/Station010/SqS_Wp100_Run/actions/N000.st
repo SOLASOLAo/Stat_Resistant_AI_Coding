@@ -1,8 +1,7 @@
 // Initialize one execution and retain no result from the previous part.
 OpconMemSet(ADR(Result), 0, SIZEOF(Result));
 
-_measurePosLatched       := Wp100.MeasurePos;
-Result.MeasurePos        := _measurePosLatched;
+Result.MeasurePos        := MeasurePos;
 _positionValid           := FALSE;
 _safetyDoorCloseStarted  := FALSE;
 _pressDownStarted        := FALSE;

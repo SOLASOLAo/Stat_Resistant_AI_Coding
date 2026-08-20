@@ -430,7 +430,8 @@ $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
 $targetImplementationSha = Get-Sha256 $targetImplementation
-if ($currentDeclarationSha -notin @($baselineDeclarationSha, $targetDeclarationSha)) {
+$previousDeclarationSha = 'ddee296f091090f744b8879b6f53a69112c91b83f65c4ee4b4d44122cfc3ab0e'
+if ($currentDeclarationSha -notin @($baselineDeclarationSha, $previousDeclarationSha, $targetDeclarationSha)) {
   throw 'SqS_Wp100_Run declaration changed after audit; refusing overwrite.'
 }
 if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha)) {
@@ -459,7 +460,11 @@ $baselineActions = @{
 $previousActionSha256 = @{
   # First compiled Run-chain version. These hashes allow a controlled upgrade
   # from the linear command pairs to explicit OpCon SFC parallel branches.
-  N000 = 'b12c8bd9dbf23705cb671cc30fb285419d4a9df51b39c7bb31368084dcd267c8'
+  N000 = @(
+    'b12c8bd9dbf23705cb671cc30fb285419d4a9df51b39c7bb31368084dcd267c8',
+    '5391b820cbeef4a35b031ce5378e422b81c843e6a75b990032be45aab3d17c8a'
+  )
+  N010 = 'bb5431cc40a495342738ad4b952ac7201915b8eb14b1a7a8765df903479ab7fa'
   N050 = @(
     '34c8f8ec24fff9711210bf7abfa80f089eb88e7b56d0f2128df91e5414735351',
     'fb9f8c9c60384a14ae3d75675adfdea8b08872517fc07962315d24a234b7aa61'

@@ -321,3 +321,13 @@
 - 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读确认 21 Steps、2 个并行分支、2 个并行汇合和 22 个 Action/方法；完整离线编译 **0 errors / 7 warnings**，Additional code checks **0 errors**；PLC project SHA-256=`7C4226DA757773287D56793F88C6723C42CF72BA63C1698691E0C9EEE0F0F6FF`。
 - 有效 CpStudio/IO/PLC/HMI 与 Run Chain 主批次为 Station010 `6b692be`，Kistler 上升前锁存优化为 `768694a`，本次并行 SFC 重构为 `53440a1`；可重放源码、规格、Catalog、REST 写入器和文档主批次为 McpCoding `9549e08`，对应锁存优化为 `578df54`，本次源码随本交接提交。`.Sync.json`、Logbook 日期滚动、`Hmi/obj` 和展示页既有未提交改动均未混入本批。
 - 尚待用户/产品数据确认：Burster 上下限和温度开关、Kistler 程序号如何由 TypeData 提供；是否需要 Kistler `READ_DATA` 完整曲线。未连接、下载、启停、写变量或 FORCE 实体 PLC，也未创建额外二进制备份；`Std` 保持只读。
+
+## SqC_Wp100_Run 三位置顺序测量（2026-08-20）
+
+- 用户纠正原子操作接口：`SqS_Wp100_Run.MeasurePos : MeasurePsoEnum` 已改为正式 `VAR_INPUT`，删除内部 `_measurePosLatched` 和对 `Wp100.MeasurePos` 全局字段的读取；N000 只把本次输入记录到 `Result.MeasurePos`。
+- `SqC_Wp100_Run` 已经官方 REST 重建为 11 步：每个位置各有产品检查、Start、Wait，严格 LEFT → MIDDLE → RIGHT 顺序复用同一个 `Wp100.SqS_Run`；Start 仅在 READY 写输入并置 Execute，Wait 使用 `CheckSubChainDone`。
+- 新增 `Wp100RunSequenceResultStruct`，把三轮原子结果分别保留在 `Wp100.SqC_Run.Result.Left/Middle/Right`，避免下一轮 SqS N000 覆盖前一位置的数据。
+- N010/N040/N070 均要求 `_100B701 AND _100B702`。`CheckPartPresent` 使用 CpStudio 生成的 `EVENT_PART_DETECT_SENSOR=-4` 和锁定 `SOFTERROR`；AdditionalInfo 精确区分 `_100B701`、`_100B702` 或两路同时缺失，信号恢复后自动 Unlock/Clear，缺失组合改变时会刷新文本。
+- `OnChainFinish` 对 DONE/ERROR/CANCEL 撤销 `SqS_Run.Execute` 并清理本链产品检测事件；旧扫描枪模板 Action 已在替换图形后通过 REST 删除。
+- 两份 REST 写入器均完成 exact readback 和全 verified 幂等复跑。Application Compile **0 errors / 6 warnings**，Additional code checks **0 errors**；IDE 总计栏的 3 errors 仍是三个未安装 Atmo 旧库，不属于 Application Build。最终 PLC project SHA-256=`D3C251242B5647094A255A71C173D589D5B5A863137F94C7038BB91CD4B4CD4C`。
+- Station010 有效 CpStudio 事件/PressDelayTime 生成文件和 PLC 逻辑提交为 `6b402c9`（分支 `feat/wp100-run-sequence-20260820`）。两个 `.Sync.json`、HMI Logbook 日期滚动及 `Hmi/obj` 未暂存、未回退。未连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。

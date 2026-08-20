@@ -48,8 +48,8 @@
 - [x] 🔴 维修门未锁报警：使用 CpStudio 生成的 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2`；门锁请求后 5 s 内 A/B 反馈未同时到位则锁存报警并保持主气压禁止，Control Off 后按 `UnlockEvent + ClearEvent` 清除；编译 0 errors / 7 warnings，Station010 `93379fd`(2026-08-18)
 - [x] 🔴 StationLamp AddOn 受控增量：CpStudio 新增 Station Lamp V2.3.1.0（InstanceId 7），黄/绿/红绑定 `_000P960_1/_000P960_2/_000P960_3`，层级、参数、HMI 和输出映射核对完成(2026-08-18)
 - [x] 🔴 Home Chain 步骤检索注释：经 PLC Engineering 官方 REST 扩展接口为 `SqS_Wp100_Home` 的 9 个 Step 写入简短 Comment；标准化差异确认 Action/Transition/顺序均未改变，编译 0 errors / 7 warnings，Station010 `6399377`(2026-08-18)
-- [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：锁存 `Wp100.MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈；下压+Kistler 启动及抬压+Kistler 结束均改为可诊断的 SFC 同步分支，按 OpCon 约定分别使用 `_retVal/_retVal2`，结构化保存结果并统一处理 DONE/ERROR/CANCEL；离线编译 0 errors / 7 warnings，Additional code checks 0 errors(2026-08-20)
-- [ ] 🔴 在首个自动主 Chain 调用 `Wp100.SqS_Run`：仅在 READY 写 `Wp100.MeasurePos` 并置 Execute，随后用 `CheckSubChainDone` 等待；单实例只允许多个调用方顺序复用，不并发启动
+- [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：位置改为正式 `VAR_INPUT MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈；下压+Kistler 启动及抬压+Kistler 结束均为可诊断的 SFC 同步分支，按 OpCon 约定分别使用 `_retVal/_retVal2`，结构化保存结果并统一处理 DONE/ERROR/CANCEL；离线编译 0 errors / 6 warnings，Additional code checks 0 errors(2026-08-20)
+- [x] 🔴 `SqC_Wp100_Run` 顺序调用原子操作：LEFT→MIDDLE→RIGHT，每轮仅在 READY 写 `Wp100.SqS_Run.MeasurePos` 并以 `CheckSubChainDone` 等待；每轮开始前检查 `_100B701 AND _100B702`，缺失时用 `EVENT_PART_DETECT_SENSOR` 和具体 BMK AdditionalInfo 阻塞提示；三位置结果分别保留，编译 0 errors / 6 warnings(2026-08-20)
 - [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)

@@ -87,14 +87,15 @@ hooks:
       - pressing-cylinder start repeats the same interlock for an already-closed door
   - id: wp100_run_position_interlock
     object: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN010_active
-    input: Wp100.MeasurePos
+    input: Wp100.SqS_Run.MeasurePos
+    storage_class: VAR_INPUT
     input_type: MeasurePsoEnum
     required_signals:
       - Peripherals.BinIo._100B601
       - Peripherals.BinIo._100B602
       - Peripherals.BinIo._100B603
     invariants:
-      - the requested fixture position is latched at N000
+      - the requested fixture position is supplied by the caller before Execute
       - exactly the selected position sensor is true and the other two are false
       - the pressing cylinder is in base position before operator acknowledgement
   - id: wp100_run_safety_interlock
@@ -131,3 +132,19 @@ hooks:
       - Burster Execute false
       - Kistler EndMeasurement true and Execute false
       - all per-execution flags false
+  - id: wp100_run_command_sequence
+    object: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
+    specification: specs/chains/SqC_Wp100_Run.yaml
+    required_order: [LEFT, MIDDLE, RIGHT]
+    required_subchain: Wp100.SqS_Run
+    required_signals:
+      - Peripherals.BinIo._100B701
+      - Peripherals.BinIo._100B702
+    required_event: Wp100.EVENT_PART_DETECT_SENSOR
+    invariants:
+      - both product-detection signals are checked before every atomic execution
+      - MeasurePos is written only while SqS_Run is READY
+      - the same SqS_Run instance is executed and awaited sequentially
+      - AdditionalInfo identifies _100B701, _100B702 or both missing signals
+      - LEFT, MIDDLE and RIGHT results are retained separately
+      - OnChainFinish resets SqS_Run.Execute and removes this chain's locked soft error

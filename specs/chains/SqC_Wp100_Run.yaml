@@ -1,0 +1,84 @@
+schema_version: 1
+
+chain:
+  name: SqC_Wp100_Run
+  kind: command_chain
+  instance: Wp100.SqC_Run
+  unit_reference: Wp100Unit
+  status: implemented_offline_verified
+
+atomic_operation:
+  instance: Wp100.SqS_Run
+  type: SqS_Wp100_Run
+  reuse: one instance, three sequential executions
+  start_contract:
+    - wait for OpconExecState.READY
+    - write the VAR_INPUT Wp100.SqS_Run.MeasurePos
+    - set Wp100.SqS_Run.Execute to TRUE
+  wait_contract: CheckSubChainDone(Wp100.SqS_Run)
+  order:
+    - MeasurePsoEnum.LEFT
+    - MeasurePsoEnum.MIDDLE
+    - MeasurePsoEnum.RIGHT
+
+part_detection:
+  check_before_each_atomic_operation: true
+  required_true:
+    - Peripherals.BinIo._100B701
+    - Peripherals.BinIo._100B702
+  event:
+    class: OpconEventClass.SOFTERROR
+    number: Wp100.EVENT_PART_DETECT_SENSOR
+    lock: true
+    behavior: >-
+      The active SFC check step remains RUNNING. The event is replaced if the
+      missing-signal combination changes, and is unlocked and cleared only
+      after both product-detection signals are TRUE or the command chain ends.
+    additional_info:
+      only_100B701_missing: '_100B701=FALSE: fixture product-detect sensor 1 is missing'
+      only_100B702_missing: '_100B702=FALSE: fixture product-detect sensor 2 is missing'
+      both_missing: '_100B701=FALSE; _100B702=FALSE: both fixture product-detect sensors are missing'
+
+steps:
+  - { id: N000, comment: Initialize measurement sequence }
+  - { id: N010, comment: Check part before LEFT, method: CheckPartPresent }
+  - { id: N020, comment: Start LEFT measurement, input: MeasurePsoEnum.LEFT }
+  - { id: N030, comment: Wait LEFT measurement, capture: Result.Left }
+  - { id: N040, comment: Check part before MIDDLE, method: CheckPartPresent }
+  - { id: N050, comment: Start MIDDLE measurement, input: MeasurePsoEnum.MIDDLE }
+  - { id: N060, comment: Wait MIDDLE measurement, capture: Result.Middle }
+  - { id: N070, comment: Check part before RIGHT, method: CheckPartPresent }
+  - { id: N080, comment: Start RIGHT measurement, input: MeasurePsoEnum.RIGHT }
+  - { id: N090, comment: Wait RIGHT measurement, capture: Result.Right }
+  - { id: N999, comment: Finish measurement sequence, result: DONE }
+
+output:
+  path: Wp100.SqC_Run.Result
+  type: Wp100RunSequenceResultStruct
+  members:
+    - Left
+    - Middle
+    - Right
+  member_type: Wp100RunResultStruct
+  retention: valid after DONE until the next N000 initialization
+
+cleanup:
+  on: [DONE, ERROR, CANCEL]
+  reset:
+    - Wp100.SqS_Run.Execute
+    - locked EVENT_PART_DETECT_SENSOR owned by this command execution
+    - part-sensor fault mask
+  retain:
+    - Result until the next execution
+
+verification:
+  date: 2026-08-20
+  offline_compile: 0 errors / 6 warnings
+  additional_code_checks: 0 errors
+  rest_readback:
+    steps: 11
+    actions: 11
+    methods: 2
+  apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
+  idempotent_replay: verified
+  online_test: not performed

@@ -1,6 +1,6 @@
 // The requested fixture position is valid only when exactly its own sensor is
 // active. The pressing cylinder must also be in its safe/base position.
-CASE _measurePosLatched OF
+CASE MeasurePos OF
   MeasurePsoEnum.LEFT:
     _positionValid := Peripherals.BinIo._100B601
                       AND NOT Peripherals.BinIo._100B602

@@ -531,13 +531,13 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 
 ### CpStudio 生成边界
 
-本批 CpStudio 新增 `MeasurePsoEnum`（`LEFT/MIDDLE/RIGHT`）、全局变量 `Wp100.MeasurePos` 和 `StationData.PressDelayTime : DINT`，并把 `_100B601/_100B602/_100B603` 的描述统一为左/中/右位置传感器。用户已把变量从旧拼写 `Wp100.MeasurePso` 更正为 `Wp100.MeasurePos`；当前模型与 PLC 使用新变量名，但 CpStudio-owned 类型名仍为 `MeasurePsoEnum`，本轮不在 PLC 侧私自重命名该类型。
+本批 CpStudio 新增 `MeasurePsoEnum`（`LEFT/MIDDLE/RIGHT`）、全局变量 `Wp100.MeasurePos` 和 `StationData.PressDelayTime : DINT`，并把 `_100B601/_100B602/_100B603` 的描述统一为左/中/右位置传感器。用户已把变量从旧拼写 `Wp100.MeasurePso` 更正为 `Wp100.MeasurePos`；CpStudio-owned 类型名仍为 `MeasurePsoEnum`，本轮不在 PLC 侧私自重命名该类型。后续接口复核明确：原子操作的位置应由调用方通过 `SqS_Wp100_Run.VAR_INPUT MeasurePos` 传入，生成的 `Wp100.MeasurePos` 全局字段目前保留，但不再是执行逻辑的数据源。
 
 本次完整 CpStudio 导出还把上一批安全要求同步到 HMI 条件树：四种 Mode Release 增加 `_000K981_Y32`，安全门手动动作增加 `_000K981_Y32`，压缸手动动作增加 `_000K913_Y32/_000K912_Y32`。这些是模型层对既有 PLC 联锁的正式追认。HMI 同时清理若干已不存在旧设备类型的空翻译项；`.Sync.json`、Logbook 日期滚动和 `Hmi/obj` 仍按工具噪声处理。
 
 ### AI-owned 原子操作
 
-`SqS_Wp100_Run` 经 PLC Engineering 官方 REST 扩展从三步骨架扩展为 21 步 SFC。`Wp100.MeasurePos` 在 N000 锁存；N010 对三路位置 DI 做一取一判定，并要求压缸处于原位。拍按钮、关安全门并确认两路安全反馈后，N045 从一个公共状态放行第一组同步分支：支路 1 的 N050/N060 启动并等待压缸 WRKPOS，支路 2 的 N051/N061 启动 Kistler MEASURE 并等待 `MeasRunning`。两支汇合后才执行 `PressDelayTime` 和 Burster `SINGLE_MEAS`。电阻结果完成后，N095 放行第二组同步分支：支路 1 的 N100/N110 启动并等待压缸 BASPOS，支路 2 的 N101/N120 锁存 Kistler 循环值、发出 `EndMeasurement` 并等待最终结果。两支再次汇合后才开安全门。
+`SqS_Wp100_Run` 经 PLC Engineering 官方 REST 扩展从三步骨架扩展为 21 步 SFC。`MeasurePos` 现在是正式 `VAR_INPUT`，N000 把本次输入记录到 `Result.MeasurePos`，N010 直接按该输入对三路位置 DI 做一取一判定，并要求压缸处于原位。拍按钮、关安全门并确认两路安全反馈后，N045 从一个公共状态放行第一组同步分支：支路 1 的 N050/N060 启动并等待压缸 WRKPOS，支路 2 的 N051/N061 启动 Kistler MEASURE 并等待 `MeasRunning`。两支汇合后才执行 `PressDelayTime` 和 Burster `SINGLE_MEAS`。电阻结果完成后，N095 放行第二组同步分支：支路 1 的 N100/N110 启动并等待压缸 BASPOS，支路 2 的 N101/N120 锁存 Kistler 循环值、发出 `EndMeasurement` 并等待最终结果。两支再次汇合后才开安全门。
 
 并行图形使用 PLCopen/CODESYS 的 `simultaneousDivergence` / `simultaneousConvergence`，不是选择分支，也不是在一个 Action 中顺序写两台设备。按 `OpconSfcChain` 官方约定，支路 1 使用 `_retVal`，支路 2 使用 `_retVal2`；每台设备都有独立的 Start/Wait Step，因此在线诊断能直接定位为“压缸未到位”“Kistler 未进入测量”或“Kistler 结果未结束”。SFC Step Comment 保持短检索词，详细互锁、参数和结果锁存说明写在对应 ST Action 内。
 
@@ -550,3 +550,11 @@ AI 写入前后快照均为 237 个对象，变化恰好为通用 FB、Station O
 结果在 DONE 后保留，到下一次 N000 才清零。Kistler 的 `ForceAct/StrokeAct` 是循环实际值，因此 N101 在第二组同步分支开始时、压缸释放压力前只锁存一次；N120 只补写最终 OK/NOK。`OnChainFinish` 对 DONE/ERROR/CANCEL 统一撤销按钮灯、定时器、门/压缸/Burster/Kistler Execute，并保持 Kistler `EndMeasurement=TRUE`。当前 Burster 的上下限/温度开关沿用 Unit 既有参数，Kistler 程序号沿用设备当前程序；完整曲线需要额外 `READ_DATA` 流程，本轮没有伪装为已实现。
 
 可重放源位于 `src/plc/project/Station010`，幂等写入器为 `scripts/plc/apply_wp100_run_rest.ps1`。脚本对声明/图形做哈希门禁，写后逐对象回读，并通过 `ProjectJob` 保存；最终回读为 21 Steps、2 个并行分支、2 个并行汇合和 22 个 Action/方法，重复执行全部为 verified。完整离线编译为 **0 errors / 7 warnings**，Additional code checks 为 **0 errors**，PLC project SHA-256=`7C4226DA757773287D56793F88C6723C42CF72BA63C1698691E0C9EEE0F0F6FF`。未连接、下载、启停或写入实体 PLC。
+
+## 样本 17：SqC 三位置顺序测量与产品在位诊断
+
+用户确认 `SqS_Wp100_Run` 是可重复使用的原子操作，`SqC_Wp100_Run` 必须顺序执行 LEFT → MIDDLE → RIGHT。主链因此重建为 11 个短注释步骤：每个位置分别有产品检查、Start 和 Wait；Start 只在 `Wp100.SqS_Run.ExecState=READY` 时写 `Wp100.SqS_Run.MeasurePos` 并置 `Execute`，Wait 使用框架推荐的 `CheckSubChainDone`。单一 SubChain 实例不并发复用，三个结果分别保存在 `Wp100.SqC_Run.Result.Left/Middle/Right`，不会被下一轮原子操作的 N000 清零覆盖。
+
+N010/N040/N070 在每次原子操作前都调用 `CheckPartPresent`，要求 `_100B701 AND _100B702`。任一路缺失时使用 CpStudio 新增的 `Wp100.EVENT_PART_DETECT_SENSOR=-4` 建立锁定 `SOFTERROR`；NxBase 手册明确 `ERROR` 会中止 Chain，而 `SOFTERROR` 允许步骤继续运行，因此这里保持在检查步骤等待产品放好。AdditionalInfo 分别写明 `_100B701=FALSE`、`_100B702=FALSE` 或两路同时 FALSE；缺失组合变化时替换事件，两路恢复后按 `UnlockEvent → ClearEvent` 自动清除。`OnChainFinish` 对 DONE/ERROR/CANCEL 撤销 `SqS_Run.Execute` 并清理本链拥有的产品检测事件。
+
+两份写入器均通过官方 REST 精确回读并完成幂等复跑：`SqS_Wp100_Run` 为 21 Steps，`SqC_Wp100_Run` 为 11 Steps、11 Actions、2 Methods，旧扫描枪示例 Action 已从命令链对象删除。Application Compile 为 **0 errors / 6 warnings**，Additional code checks 为 **0 errors**；IDE 总计栏另有 3 个未安装 Atmo 旧库错误，属于 Library Manager，不是 Application Build。PLC project SHA-256=`D3C251242B5647094A255A71C173D589D5B5A863137F94C7038BB91CD4B4CD4C`。未连接、下载、启停、写变量或 FORCE 实体 PLC。
