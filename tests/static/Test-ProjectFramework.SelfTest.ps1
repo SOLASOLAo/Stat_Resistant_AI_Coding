@@ -23,7 +23,7 @@ function Invoke-Validator {
 
 try {
     [System.IO.Directory]::CreateDirectory($temporaryRoot) | Out-Null
-    [System.IO.Directory]::CreateDirectory((Join-Path $temporaryBase 'Station010_0708')) | Out-Null
+    [System.IO.Directory]::CreateDirectory((Join-Path $temporaryBase 'Station010')) | Out-Null
     [System.IO.Directory]::CreateDirectory((Join-Path $temporaryBase 'Std')) | Out-Null
 
     foreach ($directory in @('config', 'specs', 'ai', 'src', 'scripts')) {

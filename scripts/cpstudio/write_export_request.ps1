@@ -102,7 +102,7 @@ if (-not $StationRoot) {
     }
     else {
         # Compatibility fallback for repositories created before project.yaml was introduced.
-        $StationRoot = Join-Path (Split-Path -Parent $resolvedEngineeringRoot) 'Station010_0708'
+        $StationRoot = Join-Path (Split-Path -Parent $resolvedEngineeringRoot) 'Station010'
     }
 }
 $resolvedStationRoot = [System.IO.Path]::GetFullPath($StationRoot)

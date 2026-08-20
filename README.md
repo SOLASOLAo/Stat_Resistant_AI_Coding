@@ -10,7 +10,7 @@
 
 ## 快速上手
 
-本仓库是 `../Station010_0708` 的 AI 工程旁车；CpStudio 负责标准模型，AI 经
+本仓库是 `../Station010` 的 AI 工程旁车；CpStudio 负责标准模型，AI 经
 PLC Engineering MCP/REST 维护应用逻辑：
 
 ```text
@@ -71,7 +71,7 @@ Skill 已可版本化安装并校验：
 ```
 
 ## 相关仓库 / 文档
-- 集成工作工程:`../Station010_0708`(OpCon V5.11 ctrlX；CpStudio 生成 + AI 经 MCP 写 PLC ST)
+- 集成工作工程:`../Station010`(OpCon V5.11 ctrlX；CpStudio 生成 + AI 经 MCP 写 PLC ST)
 - 标准库:`../Std`(OpCon/Nexeed 标准组件,只读)
 - 开发模板:`vibe-coding-templates/`(github.com/SOLASOLAo/vibe-coding-templates)
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)

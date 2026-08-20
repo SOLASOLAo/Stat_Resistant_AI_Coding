@@ -7,12 +7,12 @@ project:
   platform: Bosch OpCon V5.11 / ctrlX
 
 paths:
-  station_root: ../Station010_0708
+  station_root: ../Station010
   standard_library_root: ../Std
-  cpstudio_project: ../Station010_0708/Engineering/Stat010_V5.11_CtrlX.cpsp
-  plc_project: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project
-  io_project: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_IO.project
-  bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
+  cpstudio_project: ../Station010/Engineering/Stat010_V5.11_CtrlX.cpsp
+  plc_project: ../Station010/Plc/Stat010_V5.11_CtrlX_PLC.project
+  io_project: ../Station010/Plc/Stat010_V5.11_CtrlX_IO.project
+  bus_config: ../Station010/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
   kistler_5867c_esi: ../Technical Docs/5867c-maxymos-bl-fieldbus-descr-ec-pn-eip-25.1.0/EtherCAT/Kistler_Type_5867C_V1.xml
   kistler_5867c_quick_start: ../Technical Docs/maXYmos BL type 5867C quick start guide .pdf
   export_request: data/requests

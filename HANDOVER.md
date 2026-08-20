@@ -15,14 +15,14 @@
 - 分支 / 最新提交:main,远程 origin = github.com/SOLASOLAo/Stat_Resistant_AI_Coding(public)
 - 能跑吗?如何验证:codesys MCP ready;下一步 create_project(templatePath=Standard.project) 后 compile_project 应 errors=0。
 - 环境前提:ctrlX PLC Engineering PLE_V_0206(profile `ctrlX PLC 2.6.8`)+ codesys-persistent MCP(已打 CRLF 补丁);暂用仿真,不需要实体 PLC。
-- 环境快照:Windows 开发机;参考工程 Station010_0708(OpCon V5.11 ctrlX)。
+- 环境快照:Windows 开发机;参考工程 Station010(OpCon V5.11 ctrlX)。
 
 ## 阻塞项
 - 电阻测试台工艺需求需用户确认:可由 AI 解析 ../电阻测试台.pdf 提取,或用户直接口述。
 
 ## 下次会话建议第一步
 1. 解析 ../电阻测试台.pdf,整理工艺需求清单到 docs/requirements.md 并请用户确认。
-2. 该早期 `src/ResistantStation.project` 建议已废止；当前统一使用旁级 `Station010_0708` 受控集成工程。
+2. 该早期 `src/ResistantStation.project` 建议已废止；当前统一使用旁级 `Station010` 受控集成工程。
 ## 最近会话(2026-08-18)
 - 做了什么:
   1. 解析 ../电阻测试台.pdf:39 页渲染到 data/pdf_pages/;页 4 = EtherCAT 目标树;页 19-25 = K010A1-A4(EL1018)/K010C1-C3(EL2008)通道信号表;页 28 = 电阻测量 -A740(Burster 5877A,USB 接入,不在 EtherCAT 上)。
@@ -44,10 +44,10 @@
 ## 最近会话(2026-08-18 夜)· GitHub 备份 + 设备迁移转接
 
 ### 做了什么
-1. **Station010_0708 主工程 GitHub 备份**:私有仓库 `github.com/SOLASOLAo/Stat_Resistant_Station010`(分支 main):
+1. **Station010 主工程 GitHub 备份**:私有仓库 `github.com/SOLASOLAo/Stat_Resistant_Station010`(分支 main):
    - `6a7b4ea` 基线(259 文件;.gitignore 排除锁/缓存/备份/每用户配置)
    - `b9b1161` IDE/CpStudio 现状快照
-   - 本地仓库已加 origin 并跟踪 origin/main,与远端完全一致。**以后 CpStudio 每次重新生成后先 `git -C ../Station010_0708 diff`**,即可逐文件分析低代码生成机制。
+   - 本地仓库已加 origin 并跟踪 origin/main,与远端完全一致。**以后 CpStudio 每次重新生成后先 `git -C ../Station010 diff`**,即可逐文件分析低代码生成机制。
 2. **3 个编译错误的定性(重要结论)**:
    - 当时现状:编译 3 errors / 16 warnings；三个名称为 `bus_000S900`、`bus_000SK010A1_Channel_6`、`bus_000SK010A1_Channel_7`。当时暂归因为陈旧符号表条目；后续已纠正为 A1 的旧 I/O 映射残留，见文末 0-error 收口记录。
    - 对照 `Engineering/Engineering_Data.xml`(CpStudio 模型)确认:模型里只有 `_000S900A/_000S900B`,**没有**裸 `_000S900`、Channel_6/7、IpKeyenceSr2000 → 这 3 个错误是旧残留,**不是 CpStudio 当前产物**,用户无需在 CpStudio 操作,在 PLE 里删即可。
@@ -59,18 +59,18 @@
 ### 当前状态
 - 当时编译:3 errors / 16 warnings；后续已完成根因纠正和 0-error 收口，见文末。
 - 进程:PLE PID 9048(MCP 附着,session 6c072ed3-349c-45e1-93d9-158ecb1a83e5)、IOE PID 30656(持有 IO 工程)、gateway 正常。
-- 仓库映射:McpCoding → `Stat_Resistant_AI_Coding`(public);`../Station010_0708` → `Stat_Resistant_Station010`(private);`McpCoding/ctrlx-ai-coding` → `SOLASOLAo/ctrlx-ai-coding`(独立子仓库)。
+- 仓库映射:McpCoding → `Stat_Resistant_AI_Coding`(public);`../Station010` → `Stat_Resistant_Station010`(private);`McpCoding/ctrlx-ai-coding` → `SOLASOLAo/ctrlx-ai-coding`(独立子仓库)。
 
 ### 本机网络 / git 推送配方(必读)
 - git 全局 `http.proxy=http://127.0.0.1:7890`(Clash)经常停 → 推送报 Could not connect;直连也不行(DNS 解析被拦)。
 - 可用组合:`git -c http.sslBackend=openssl -c http.proxy=http://127.0.0.1:3128 -c https.proxy=http://127.0.0.1:3128 push https://x-access-token:$(gh auth token)@github.com/...`(schannel 后端在 Codex 沙箱里报 SEC_E_NO_CREDENTIALS;3128 代理常驻可用)。
 - gh CLI 自身一直可用(建仓库/API 无需上述参数)。
-- 若 Codex 沙箱为 workspace-write:写 `../Station010_0708/.git` 被拒 → 用 %TEMP% 中转副本(Copy-Item .git + robocopy 文件 → commit → push)。
+- 若 Codex 沙箱为 workspace-write:写 `../Station010/.git` 被拒 → 用 %TEMP% 中转副本(Copy-Item .git + robocopy 文件 → commit → push)。
 
 ### 下次会话建议第一步
 1. 读 AGENTS.md → 本文件 → TODO.md;确认 MCP 状态(get_codesys_status)。
 2. 符号清理:先问用户是否接受在 PLE Symbols 编辑器手删 3 行;不接受再试 import_xml 整表方案。
-3. 用户若在 CpStudio 做了重新生成:立即 `git -C ../Station010_0708 diff` 归档分析。
+3. 用户若在 CpStudio 做了重新生成:立即 `git -C ../Station010 diff` 归档分析。
 4. 红线:真机操作(下载/启动/write_variable 强制)必须先经用户确认;PLE 绝不打开 IO 工程;.project 只能经 IDE/脚本引擎改。
 
 ## 最近会话(2026-08-18 午)· CpStudio/Git/MCP 闭环 + PLC 文本快照工具
@@ -82,7 +82,7 @@
 4. 新增 `docs/cpstudio_generation_analysis.md`，记录 `b9b1161` 后当前未提交生成批次。
 
 ### 新发现：Station010 当前有外部生成改动，勿覆盖
-- 本会话检查期间发现 `../Station010_0708` 已有 26 个未提交变化；不是本会话工具写入。
+- 本会话检查期间发现 `../Station010` 已有 26 个未提交变化；不是本会话工具写入。
 - `Wp100` 保留，但其下 5 个 Unit 全部从 PublicInterface/HMI 移除：安全门、下压缸、扫码枪、Kistler、Burster 2316；相关对象版本/类型/事件/SmartForms 同步裁剪。
 - PLC `.project` 1,738,192 B → 1,597,120 B；当前 SHA-256 `FB437287F2482A9FA34408DC01F5DBD34F33FB281E6A33B34CBCF5D690E78819`。
 - 用户 PLE PID 3888 以该 PLC project 启动并持有 `.~u` 锁。本会话已关闭自己因全量读取卡住的 MCP PLE PID 4316，没有触碰 PID 3888。
@@ -98,7 +98,7 @@
 - 启动 MCP 前已备份 PLC 工程到 `data/backups/Stat010_V5.11_CtrlX_PLC.pre_snapshot_20260818.project`(被 gitignore 排除)。源文件与备份均为 1,587,104 B，SHA-256=`24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`。
 - 首次 `open_project` 失败时查明：同一 Codex app-server 意外派生了 4 个 `codesys-mcp-persistent` Node 子进程，服务状态错误退化为 headless。已核验这些进程全部属于当前 Codex 后停止；当前 PLE=0、MCP Node=0。
 - 停止 MCP 子进程也关闭了本会话的 stdio transport；后续工具返回 `Transport closed`。需要用户重载当前 Codex/VS Code 会话以恢复 MCP 注册。
-- 整个失败路径没有改写 PLC project；事后源文件哈希仍与备份完全一致。`../Station010_0708` 仍保留 27 个有意的未提交生成变化，未提交、未回滚。
+- 整个失败路径没有改写 PLC project；事后源文件哈希仍与备份完全一致。`../Station010` 仍保留 27 个有意的未提交生成变化，未提交、未回滚。
 
 ### 重载后的唯一第一步
 
@@ -110,7 +110,7 @@
 - MCP 打开 Station010 PLC 工程；两次快照均返回 215 个文本对象和相同 project SHA-256。PowerShell verifier 通过；文本树 SHA-256=`4e556b44bb2212c91d7c86d260a87b325b7dfeba8fe0f2b9622089a1dab63241`。
 - 离线编译基线：66 errors / 40 warnings。3 errors 当时暂归为 SymbolConfig 残留，后续确认是 A1 旧 I/O 映射；其余 63 errors 是删除 Unit 后遗留在 10 个 ST 对象中的安全门/压缸/扫码枪引用，详见 `docs/cpstudio_generation_analysis.md`。
 - 编译没有改写 project：当前哈希仍为 `24A34D3B7A2B6E6E7E9AE57BE9794221716E75BA580A9E5ED20B3F19C9B4EB5C`，与备份一致。
-- 用户已明确选择方案①：授权 AI 经 MCP 修改 `../Station010_0708`，并将其正式定义为 CpStudio + MCP 受控集成工作工程；`../Std` 继续严格只读。后续已完成 10 个旧 ST 对象和三条 A1 I/O 映射的清理。
+- 用户已明确选择方案①：授权 AI 经 MCP 修改 `../Station010`，并将其正式定义为 CpStudio + MCP 受控集成工作工程；`../Std` 继续严格只读。后续已完成 10 个旧 ST 对象和三条 A1 I/O 映射的清理。
 
 ## GitHub 凭据绑定(2026-08-18)
 
@@ -241,7 +241,7 @@
 
 ## 跨项目标准目录 + AI 增量层骨架(2026-08-18)
 
-- `McpCoding` 已按 `config/specs/ai/src/catalog/scripts/tests/data/docs` 标准重组；`../Station010_0708` 供应商生成布局和 `../Std` 只读目录均未移动、未修改。标准全文见 `docs/project_structure_standard.md`，后续项目复制同一旁车骨架后只需修改 `config/project.yaml`。
+- `McpCoding` 已按 `config/specs/ai/src/catalog/scripts/tests/data/docs` 标准重组；`../Station010` 供应商生成布局和 `../Std` 只读目录均未修改。标准全文见 `docs/project_structure_standard.md`，后续项目复制同一旁车骨架后只需修改 `config/project.yaml`。
 - 当前 Station010 已落入结构化事实源：Station/AddOn、IO、Events、Wp100 Units、Home/Run Chains；未核实的物理映射明确标记为 pending，不伪装成已验证数据。
 - `ai/ownership.yaml` 区分完整 AI-owned、implementation、mixed semantic merge 与 SFC graphical attributes；`ai/hooks.yaml` 记录主气压、维修门、Wp100 Home 和 Burster 手动放行的必要接线；`ai/graphical.yaml` 记录 Home 的 9 个 Step Comment 和正式 REST 写入属性。
 - `src/plc/common` 保存 `FB_OperatorButton`、`FB_MainPressureControl`、`FB_MaintenanceDoorControl` 三个当前已编译 POU 的可读规范源；任何同步仍必须通过 MCP 并执行 readback + compile，绝不直接写 `.project`。
@@ -252,7 +252,7 @@
 ## 团队工作站部署交接(2026-08-19)
 
 - 新增根目录 `TEAM_SETUP.md`，作为同事/新电脑的一次性部署权威入口；原 `HANDOVER.md` 继续只保存项目状态和工程历史，不再承担安装手册职责。
-- 文档明确标准四目录布局：`Station010_0708`、只读 `Std`、`McpCoding`、嵌套独立仓库 `McpCoding/ctrlx-ai-coding`；记录三个 GitHub 仓库、私有仓库授权和不能经 GitHub 分发的闭源资产/许可证。
+- 文档明确标准四目录布局：`Station010`、只读 `Std`、`McpCoding`、嵌套独立仓库 `McpCoding/ctrlx-ai-coding`；记录三个 GitHub 仓库、私有仓库授权和不能经 GitHub 分发的闭源资产/许可证。
 - 新增 `config/codex-mcp.toml.example`，只含干净的 `codesys-persistent` STDIO 配置，不复制任何个人模型供应商、账号、Token 或 API Key。Codex 官方配置事实核对于 2026-08-19：默认 `~/.codex/config.toml`，同一主机的桌面/CLI/IDE 扩展共享配置。
 - 新增只读 `scripts/setup/Test-TeamWorkstation.ps1`：从 `config/project.yaml` 解析工程相对路径，检查 CpStudio/PLE/IOE、Managed Libraries、Node/npm、固定 MCP 0.6.3、补丁和 Codex 配置；不启动 IDE、不打开或写入工程、不连接 PLC。
 - 同事首次交接验收固定为：环境体检 + 目录静态测试 + 唯一 persistent MCP 会话 + Station010 完整离线编译 0 errors / 7 warnings。闭源 `Std`、安装介质和许可证仍必须由公司授权渠道提供。
@@ -372,3 +372,11 @@
 - 主项目静态门禁改为从 `config/project.yaml` 与 `ai/ownership.yaml` 发现路径/源码/规格/写入器，检查 orphan ST、Chain spec 与 graphical Step Comment、REST-composite Action 完整性、`SetEvent STRING(63)` 和 SFC Transition 命名；自测会故意制造 Comment 不一致和 Action 缺失并确认失败。当前结果：**20 core files / 58 ownership records / 44 PLC sources**。
 - MCP 下一阶段的确定范围已写入 `ctrlx-ai-coding/docs/mcp_productization_roadmap.md`：先受控 fork、跨进程租约、异步 operation、`project_health`、`compile_project_v2`、FORCE 生命周期和 `apply_change_set`，再做正式 Symbol/I/O/SFC 与 IOE adapter。项目 BMK、事件、工艺、安全决策和 Git/HANDOVER 不进入通用 MCP。
 - 本批没有调用 PLC 写入 MCP、没有修改 Station010/IO/Std，也没有连接、下载、启停、写变量或 FORCE 实体 PLC。`docs/ai_coding_showcase.html` 是用户既有未提交修改，保持未暂存、未回退、不会混入本批提交。
+
+## Station010 工程目录去日期化（2026-08-20）
+
+- 用户将受控集成工程根目录从旧的带日期名称统一为 `Station010`。操作前确认 CpStudio/IOE 已退出；persistent PLE 打开旧 PLC 路径但工程 `dirty=False`，经 `shutdown_codesys` 优雅关闭，未保存或改写工程。
+- Windows PowerShell `Move-Item` 因源 `.git` 的 Hidden 属性在最后清理阶段返回权限错误，但项目与完整 Git 元数据已移动到目标目录；核对目标 HEAD、工作树状态及四个关键文件 SHA-256 后，只精确删除旧路径中空的 `.git` 壳和空目录。后续同类 Git 工作树同盘改名优先使用 `Rename-Item`，并始终在清理残留前核对两端内容。
+- 改名前后 CpStudio 索引、`Engineering_Data.xml`、PLC project、IO project 的长度和 SHA-256 完全一致；PLC project 仍为 `20D9DD9A44B72A4025F49774E2151D12A119937ED788BE9B1AAABA711899B51E`。Station 既有 Sync/HMI/Logbook 工作树状态原样保留。
+- `config/project.yaml`、团队部署说明、脚本默认路径、规格、测试和展示页统一改为 `../Station010`；GitHub 集成仓库原本已叫 `Stat_Resistant_Station010`，无需重命名。目录名与 Git 分支无绑定，现有功能分支继续使用并更新远端。
+- 本次没有修改 `.project` 字节、PLC/ST/IO/HMI 逻辑，也没有连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。

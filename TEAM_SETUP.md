@@ -33,7 +33,7 @@
 | 本地目录 | GitHub 仓库 | 权限 |
 |---|---|---|
 | `McpCoding` | `https://github.com/SOLASOLAo/Stat_Resistant_AI_Coding.git` | AI 框架和可读源码 |
-| `Station010_0708` | `https://github.com/SOLASOLAo/Stat_Resistant_Station010.git` | 私有集成工程，需要仓库授权 |
+| `Station010` | `https://github.com/SOLASOLAo/Stat_Resistant_Station010.git` | 私有集成工程，需要仓库授权 |
 | `McpCoding/ctrlx-ai-coding` | `https://github.com/SOLASOLAo/ctrlx-ai-coding.git` | MCP 方法论和 ctrlX 兼容补丁 |
 
 ### 2.2 不能从本仓库分发的公司资产
@@ -52,7 +52,7 @@
 
 ```text
 <WorkspaceRoot>/
-├── Station010_0708/          CpStudio/PLC/HMI 受控集成工程
+├── Station010/               CpStudio/PLC/HMI 受控集成工程
 ├── Std/                      供应商标准对象，只读
 └── McpCoding/                AI 工程仓库
     └── ctrlx-ai-coding/      独立方法论/补丁仓库
@@ -66,7 +66,7 @@ New-Item -ItemType Directory -Path $projectWorkspace -Force | Out-Null
 Set-Location $projectWorkspace
 
 git clone https://github.com/SOLASOLAo/Stat_Resistant_AI_Coding.git McpCoding
-git clone https://github.com/SOLASOLAo/Stat_Resistant_Station010.git Station010_0708
+git clone https://github.com/SOLASOLAo/Stat_Resistant_Station010.git Station010
 git clone https://github.com/SOLASOLAo/ctrlx-ai-coding.git McpCoding\ctrlx-ai-coding
 ```
 
@@ -229,7 +229,7 @@ Get-Help .\scripts\setup\Test-TeamWorkstation.ps1 -Detailed
 
 ```powershell
 git -C <WorkspaceRoot>\McpCoding pull --ff-only
-git -C <WorkspaceRoot>\Station010_0708 pull --ff-only
+git -C <WorkspaceRoot>\Station010 pull --ff-only
 ```
 
 开始工作前阅读：`AGENTS.md` → `HANDOVER.md` → `TODO.md` → 本次相关 `specs/`。

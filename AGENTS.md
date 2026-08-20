@@ -3,7 +3,7 @@
 > 任何 AI 编码代理在本仓库工作前,先读完本文件。方法论母本见 `ctrlx-ai-coding/`(先读其 AGENTS.md 与 docs/ctrlX_AI_project_baseline.md)。
 
 ## 1. 项目一句话
-基于 Bosch OpCon V5.11 / ctrlX 架构开发"电阻测试台"(Resistance Test Bench)工位软件:CpStudio 维护标准模型/HMI，AI 依据 `specs/` 与 `ai/` 清单，经 codesys-persistent MCP/REST 维护 PLC 应用逻辑；受控集成工程为旁级 `Station010_0708`。
+基于 Bosch OpCon V5.11 / ctrlX 架构开发"电阻测试台"(Resistance Test Bench)工位软件:CpStudio 维护标准模型/HMI，AI 依据 `specs/` 与 `ai/` 清单，经 codesys-persistent MCP/REST 维护 PLC 应用逻辑；受控集成工程为旁级 `Station010`。
 
 ## 2. 分工
 | 角色 | 职责 |
@@ -14,7 +14,7 @@
 ## 3. 红线(违反会出事故)
 1. **`.project` 是加密容器**——绝不手改文件字节,只能经 MCP 工具(IDE 脚本引擎)修改;`.project` 二进制不入库。
 2. **真机操作必须先与用户确认**:`connect_to_device` 到实体 PLC、`download_to_device`、`start_stop_application`、`write_variable`(**FORCE 强制,不解除一直生效**);仿真模式(set_simulation_mode)不受限。
-3. `../Station010_0708/` 已由用户批准升级为 **CpStudio + MCP 受控集成工作工程**(2026-08-18):用户经 CpStudio 修改模型/HMI并生成;AI 可在备份 + Git diff/文本快照后经 MCP 修改 PLC ST、经 IOE-IPC 修改 IO 工程。禁止手改 `.project` 字节、禁止无备份覆盖、禁止绕开相应 IDE。`../Std/` 仍为严格只读参考:不修改、不删除、不移动。
+3. `../Station010/` 已由用户批准升级为 **CpStudio + MCP 受控集成工作工程**(2026-08-18):用户经 CpStudio 修改模型/HMI并生成;AI 可在备份 + Git diff/文本快照后经 MCP 修改 PLC ST、经 IOE-IPC 修改 IO 工程。禁止手改 `.project` 字节、禁止无备份覆盖、禁止绕开相应 IDE。`../Std/` 仍为严格只读参考:不修改、不删除、不移动。
 4. **npm 升级 `codesys-mcp-persistent` 会覆盖 ctrlX 兼容补丁**（CRLF、connector I/O Mapping、有界编译消息读取）→ 升级后必重跑 `ctrlx-ai-coding/patches/codesys-mcp-persistent-crlf/apply-crlf-patch.ps1`(先 `-Check`)。
 5. **同一时间只开一个使用 codesys MCP 的 Codex 窗口**(多实例抢 profile 致 IDE 退出)。
 6. CpStudio 重新生成可能覆盖 AI 代码:生成后先 diff，并按 `ai/ownership.yaml`、`ai/hooks.yaml`、`ai/graphical.yaml` 审计；完整 AI-owned POU 的可读源放 `src/plc/`，混合对象只做语义合并。
@@ -30,7 +30,7 @@
 | 工程模板 | `C:\ctrlXWORKS\ctrlXPLCEngineering\PLE_V_0206\Studio\Templates\Standard.project`(TrainingStation 拷贝,含 OpCon 骨架 + 34 库占位符) |
 | 编译 | `compile_project`(基准 errors=0;`get_compile_messages` 是缓存,改代码后先编译再取) |
 | 测试 | `set_simulation_mode(true)` → `connect_to_device` → `read_variable`/`write_variable`/`monitor_variables` |
-| CpStudio/MCP 集成工作工程 | `../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project`(写入遵守红线 1/2/3/6) |
+| CpStudio/MCP 集成工作工程 | `../Station010/Plc/Stat010_V5.11_CtrlX_PLC.project`(写入遵守红线 1/2/3/6) |
 
 ## 5. 文档与提交约定
 - 事实源:README(是什么)/ TEAM_SETUP.md(同事工作站部署)/ `config/`(路径与门禁)/ `specs/`(确认需求)/ `ai/`(对象归属与钩子)/ `src/plc/`(AI-owned 源码)/ `catalog/`(已验证标准对象接口)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md
@@ -50,7 +50,7 @@
 - [x] 克隆 vibe-coding-templates + ctrlx-ai-coding,派生本仓库骨架(2026-08-17)
 - [x] 环境体检:ctrlX 兼容补丁已打、Standard.project 与库仓库就位、MCP ready
 - [x] Station010 IO 硬件组态修复 + IOE-IPC 工具链(2026-08-18);踩坑归档 ctrlx-ai-coding/docs/ioe_scripting_playbook.md
-- [x] 采用 `../Station010_0708` 作为 CpStudio + MCP 受控集成工程并持续保持离线编译 errors=0
+- [x] 采用 `../Station010` 作为 CpStudio + MCP 受控集成工程并持续保持离线编译 errors=0
 - [x] 通用新项目初始化器、Post-export 离线审计队列与 `$ctrlx-opcon-engineering` Skill 已落地并通过离线测试(2026-08-20)
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程
 

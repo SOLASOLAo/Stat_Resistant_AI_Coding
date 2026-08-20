@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$BaseUri = 'http://localhost:9002/plc/engineering/api/v2',
-  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010_0708\Plc\Stat010_V5.11_CtrlX_PLC.project'
+  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project'
 )
 
 $ErrorActionPreference = 'Stop'

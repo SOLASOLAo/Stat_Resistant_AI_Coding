@@ -1,9 +1,9 @@
 schema_version: 1
 
 source_of_truth:
-  model: ../Station010_0708/Engineering/Engineering_Data.xml
-  bus_config: ../Station010_0708/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
-  plc_mapping: ../Station010_0708/Plc/Stat010_V5.11_CtrlX_PLC.project
+  model: ../Station010/Engineering/Engineering_Data.xml
+  bus_config: ../Station010/PublicConfig/BusConfig_Stat010_V5.11_CtrlX.yaml
+  plc_mapping: ../Station010/Plc/Stat010_V5.11_CtrlX_PLC.project
 
 ethercat_devices:
   - equipment: Kistler maXYmos BL

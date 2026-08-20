@@ -10,7 +10,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 |---|---|---|
 | Station/Module/Command 层级、Handler、HMI、生成符号 | CpStudio | 先在 CpStudio 修改，再生成 |
 | `Engineering_Data.xml`、HMI、公开配置和生成快照 | Git | 用于审计和生成机制分析，不直接代替 CpStudio |
-| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | `specs/` + `ai/` + `src/plc/` → PLE MCP/REST | `../Station010_0708` 已获用户授权作为受控集成工作工程；完整 AI-owned 对象和混合生成钩子分开管理 |
+| AI 自定义 POU、SqM/SqS 工艺细节、ST 修复 | `specs/` + `ai/` + `src/plc/` → PLE MCP/REST | `../Station010` 已获用户授权作为受控集成工作工程；完整 AI-owned 对象和混合生成钩子分开管理 |
 | EtherCAT/IO 工程 | IOE 2.6.4 | PLE 不得打开 IO 工程 |
 | 真机连接、下载、启停、FORCE | 用户批准后执行 | 默认只做离线编译和仿真 |
 
@@ -51,7 +51,7 @@ execfile(r"C:\path\McpCoding\scripts\plc\export_plc_snapshot.py")
 ```powershell
 .\scripts\plc\verify_plc_snapshot.ps1 `
   -SnapshotDirectory .\data\plc_snapshots\station010 `
-  -ProjectPath ..\Station010_0708\Plc\Stat010_V5.11_CtrlX_PLC.project
+  -ProjectPath ..\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project
 ```
 
 连续导出同一工程应保持 `manifest.json` 和所有 `.st` 文件逐字不变。只有 PLC 对象路径、声明或实现发生变化时，Git diff 才应变化。
@@ -69,7 +69,7 @@ execfile(r"C:\path\McpCoding\scripts\plc\export_plc_snapshot.py")
 
 - `Plc/Stat010_V5.11_CtrlX_PLC.Struct.json` 中有 350 个 POU/GVL/DUT/Method/Action 类型对象；实际文本快照只收录声明或实现非空的对象。
 - 当前私有仓库已经跟踪 CpStudio 模型、HMI/config、Symbolconfiguration 和两个 `.project`，但此前没有纯文本 ST 镜像。
-- `../Station010_0708` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入仍必须先备份、导出文本快照，并且只经 MCP 执行。
+- `../Station010` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入仍必须先备份、导出文本快照，并且只经 MCP 执行。
 - `.project` 是否作为 Station010 私有备份仓库的受控例外继续纳管，需要单独形成项目决策；不能依赖二进制 diff 理解 PLC 逻辑。
 
 ### 2026-08-18 当前未提交生成批次

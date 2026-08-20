@@ -52,7 +52,7 @@
 
 当前 PLE 仍持有工程锁。在用户完成目视检查并正常关闭 PLE 前：
 
-- 不提交或回滚 `../Station010_0708` 工作区；
+- 不提交或回滚 `../Station010` 工作区；
 - 不启动第二个 PLE/MCP 实例；
 - 不对 `.project` 做任何写操作。
 
@@ -74,11 +74,11 @@
    - `SqC_Wp100_Run` 的 `_aN050_active`、`_aN055_active`、`_aN060_active`；
    - `SqS_Wp100_Home` 的 `_aN110_active`、`_aN120_active`、`_aN130_active`、`_aN140_active`、`_aN150_active`、`_aN160_active`。
 
-最小清理方案是把空 Wp100 的 `IsInHomePosition` 设为安全的框架默认值，并把上述 9 个旧设备步骤中和为 `_retVal := OK;`。方案形成时 `../Station010_0708` 仍被定义为只读参考，因此先等待用户作所有权决策；后续授权与执行结果见下节。
+最小清理方案是把空 Wp100 的 `IsInHomePosition` 设为安全的框架默认值，并把上述 9 个旧设备步骤中和为 `_retVal := OK;`。方案形成时 `../Station010` 仍被定义为只读参考，因此先等待用户作所有权决策；后续授权与执行结果见下节。
 
 ### 用户授权后的 ST 清理结果
 
-用户已把 `../Station010_0708` 正式授权为 CpStudio + MCP 受控集成工作工程。AI 经 persistent MCP 完成上述 10 个对象的最小清理：
+用户已把 `../Station010` 正式授权为 CpStudio + MCP 受控集成工作工程。AI 经 persistent MCP 完成上述 10 个对象的最小清理：
 
 - `Wp100Unit.OnApplyOutputs`：空 Wp100 的 `IsInHomePosition := TRUE`，保留既有 `IsEmpty` 传感器逻辑；
 - 9 个旧设备步骤：改为带说明的 `_retVal := OK;` pass-through，等待后续逐设备重建 Chains；
