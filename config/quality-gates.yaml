@@ -16,7 +16,7 @@ ownership:
 
 cpstudio:
   require_clean_export: true
-  require_build_then_second_export_for_new_symbols: pending_probe_confirmation
+  require_build_then_second_export_for_new_symbols: conditional_on_missing_symbol_or_postprocessing_failure
 
 security:
   prohibit_bulk_station_staging: true

@@ -32,10 +32,30 @@ CODESYS 官方说明 Build 会编译项目，并且是 Symbol Configuration 编�
 
 实验结束后由用户只在 CpStudio 删除探针，再按同一闭环清理；AI不在 PLE 中单独删除它。
 
-## 临时工作流
+## 实验结果（2026-08-22）
 
-在实验完成前，涉及新增变量/对象时采用：
+在 `Wp100` 新增 `DummySymbolProbe : BOOL`，设置 OPC UA 可见后完成分阶段验证：
 
-`CpStudio Export #1 → PLE Build 0 errors → CpStudio Export #2 → PLE final Build`
+- 保存但未 Export：探针只存在于 CpStudio 模型，PLC 与 Symbol 均未变化。
+- Export #1、尚未 Build：PLE 声明已有探针，Symbol Configuration 已显示 `BOOL / ReadWrite / selected=true`，CpStudio Output 无红字。
+- PLE Build：`0 errors / 6 warnings`，探针状态不变。
+- Export #2：语义状态仍完全相同；加密 `.project` 因再次保存而容器哈希变化，但大小和外部快照未变。最终 Build 仍为 `0 errors / 6 warnings`。
 
-如果实验发现第一次 Export 已经稳定完成 Symbol 更新，则不把二次 Export 设成所有改动的强制门禁，只针对会改变编译符号、OPC UA 方法或 PersistentVars 路径的批次使用。
+结论：普通 OPC UA 可见 BOOL 没有复现双导出故障，因此不能把第二次 Export 设为所有新增变量的强制步骤。用户此前观察仍与 CpStudio 对已编译签名、OPC UA Method 和 PersistentVars 实例路径的依赖一致；更容易在新增对象、可调用接口或持久化路径时出现。
+
+## 正式工作流
+
+默认流程：
+
+`CpStudio Export #1 → 检查 Output/目标 Symbol → PLE Build 0 errors`
+
+只有发生以下任一情况，才执行：
+
+`PLE Build → CpStudio Export #2 → PLE final Build`
+
+- CpStudio 报 OPC UA Method 发布、PersistentVars instance path 或 Symbol Configuration 错误；
+- 新目标在第一次 Export 后未出现在 PLE 声明或可用 Symbol 列表；
+- 目标已存在但未按 CpStudio 请求选中；
+- 新增/改变了可调用对象签名或持久化实例路径，并且第一次后处理没有完成。
+
+以后不必再造复杂 dummy；在下一次真实新增 Unit/Chain/接口时沿用同一取证即可继续缩小触发条件。

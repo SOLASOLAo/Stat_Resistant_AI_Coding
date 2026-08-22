@@ -386,4 +386,5 @@
 - 用户确认 `MeasurePos` 必须在 CpStudio 中配置为 `SqS_Wp100_Run` 的 `VAR_INPUT`。因此生成 POU 的接口、类型、方向和 OES `Declaration` 合并区统一归 CpStudio；AI 只读取并使用。两份旧 REST composite 写入器在完成“声明原样保持”改造前已在清单中标记为 blocked，本轮未运行，也未修改 PLC 程序。
 - 当前 Station010 的 CpStudio/连接生成文件含实体凭据字段，不能原样提交。Station 集成仓库禁止 `git add -A`/`git add .`；本轮只更新旁车规则与记录，不暂存或上传任何 Station010 生成文件，也不在日志中记录凭据值。
 - 本机 CpStudio 5.11 导出链经只读追踪确认：写入 PLC 对象后直接执行 OPC UA 方法发布、PersistentVars 实例路径刷新以及 Symbol Configuration GET/PUT，中间没有 Build。CODESYS 官方文档同时明确 Build 是 Symbol Configuration 当前变量准备的前提。由此得到待实验确认的机制：Export #1 写入声明，但仍可能读取旧编译模型；PLE Build 刷新模型；Export #2 再完成符号选择与后处理。
-- `DummySymbolProbe` 实验基线已建立：PLE 离线 Build **0 errors / 7 warnings**，探针在 CpStudio 模型、PLC 文本快照、Symbol XML 和 Public Interface 中均不存在。下一步由用户只在 CpStudio 的 `Wp100` 已发布变量区创建一个普通 `BOOL` 探针并保存，暂不 Export；AI随后逐阶段采样。完整步骤见 `docs/symbol_configuration_export_cycle.md`。
+- `DummySymbolProbe` 实验基线为 PLE 离线 Build **0 errors / 7 warnings**，探针在 CpStudio 模型、PLC 文本快照、Symbol XML 和 Public Interface 中均不存在；随后由用户在 `Wp100` 已发布变量区创建普通 `BOOL` 探针并分阶段导出。完整过程见 `docs/symbol_configuration_export_cycle.md`。
+- 实验已完成：Export #1 在 Build 前就已将探针写入 `Wp100` 声明并在 Symbol Configuration 中设为 `BOOL / ReadWrite / selected=true`，CpStudio Output 无红字；中间与最终 PLE Build 均为 **0 errors / 6 warnings**。Export #2 没有语义变化，只产生正常的加密容器重保存差异。因此“双导出”不作为所有变量的硬门禁，仅在第一次导出出现 Symbol 缺失、未选中或 OPC UA Method/PersistentVars/Symbol 后处理失败时执行。
