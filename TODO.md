@@ -38,7 +38,8 @@
 - [x] 🟢 新增离线 AI Coding 展示页：覆盖 CpStudio/AI/ctrlX 分工、标准目录、两类开发闭环、对象归属、Home Chain、主气压联锁、BMK 改名复盘和验收证据；支持交互演示与打印 PDF(2026-08-19)
 - [ ] 🟡 在 CpStudio 工程中配置官方 Post-export hook 指向 `scripts/cpstudio/post_export_signal.bat`，完成一次真实导出信号验证
 - [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
-- [ ] 🟡 实现受控第二阶段：消费离线报告后，经唯一 persistent MCP 完成对象快照、I/O/Symbol/SFC 审计、必要修复、编译与读回报告
+- [x] 🟡 实现 Stage 2 PlanOnly operation ledger：消费 Stage 1 报告，生成幂等/哈希绑定 action，持久化 `WAITING_FOR_RUNNER/WAITING_FOR_CPSTUDIO/WAITING_FOR_EXPORT_2/DONE/BLOCKED/FAILED`，并校验 runner evidence；协调器不启动 PLE/MCP/REST(2026-08-22)
+- [ ] 🟡 实现受控 runner：由唯一 persistent Codex 会话消费 Stage 2 action，完成对象快照、I/O/Symbol/SFC 审计、必要修复、编译和读回证据；不得启动第二个 PLE
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
 - [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)
@@ -75,7 +76,7 @@
 - [ ] 🔴 真机专项验证 Home 原子操作：覆盖压缸已/未在原位、安全门已/未在原位四种分支，确认 `_000S610/_000P610`、WRKPOS/BASPOS 顺序、Unit 超时/报错和模式切换 CANCEL 后所有输出复位
 - [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressDelayTime、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
 - [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
-- [ ] 🟡 利用 CpStudio 5.11 官方 `Pre-export script` / `Post-export script` 钩子实现导出后自动审计：Git 差异、旧 Symbol 引用、PLC 编译与结果摘要；不直接改写 `Engineering_Data.xml`
+- [ ] 🟡 把官方 Post-export hook、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成一次操作入口；编译/修复仍由唯一 persistent Codex runner 执行，不直接改写 `Engineering_Data.xml`
 - [ ] 🔴 后续配置并验证 Burster HostName，放行 `SetRange/StartMeas` 手动功能；设备稳定后逐条实现 Homing/Changeover/Auto Chains
 - [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
 

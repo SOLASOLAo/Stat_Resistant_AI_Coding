@@ -28,6 +28,20 @@ CpStudio 导出后先运行纯离线审计，不启动第二个 PLE：
 .\scripts\cpstudio\Invoke-PostExportAudit.ps1
 ```
 
+离线报告随后交给 Stage 2 计划器。它只建立可追踪的 operation ledger 和
+runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
+
+```powershell
+.\scripts\cpstudio\Invoke-PostExportEngineering.ps1 `
+  -AuditReport .\data\reports\cpstudio\<stage1-report>.json
+```
+
+状态会明确停在 `WAITING_FOR_RUNNER`、`WAITING_FOR_CPSTUDIO` 或
+`WAITING_FOR_EXPORT_2`，直到唯一的 persistent Codex 会话提交与 action
+哈希绑定的执行证据，或用户完成明确要求的 CpStudio 操作。只有 Export #1
+发生 Symbol 缺失/未选中、OPC UA/PersistentVars/Symbol 后处理失败，或 BMK
+变更经 Build 后仍需刷新时，才要求 Export #2；它不是每次导出的固定动作。
+
 新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
 不要从历史型 `HANDOVER.md` 反推安装步骤。
 

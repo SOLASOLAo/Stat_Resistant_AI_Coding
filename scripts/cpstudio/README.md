@@ -80,3 +80,64 @@ station. It performs only:
 It does not run the live snapshot, I/O/Symbol repair, compile or code merge.
 Those remain an explicit second stage in the one active engineering session
 after a person or Codex reviews the offline report.
+
+## Stage 2 PlanOnly coordinator
+
+`Invoke-PostExportEngineering.ps1` turns one successful Stage 1 JSON report
+into an idempotent, hash-bound operation ledger. It is a sidecar coordinator
+because CpStudio V5.11 cannot be changed to provide this orchestration itself.
+The coordinator never starts PLE, MCP, or REST, never opens Symbol
+Configuration, and never changes the Station project.
+
+Start an operation (or query the same operation idempotently), inspect it, and
+submit evidence produced by the one active persistent Codex runner:
+
+```powershell
+.\scripts\cpstudio\Invoke-PostExportEngineering.ps1 `
+  -AuditReport .\data\reports\cpstudio\<stage1-report>.json
+
+.\scripts\cpstudio\Invoke-PostExportEngineering.ps1 `
+  -OperationId <operation-id>
+
+.\scripts\cpstudio\Invoke-PostExportEngineering.ps1 `
+  -OperationId <operation-id> `
+  -EvidencePath .\path\to\runner-evidence.json
+```
+
+When the ledger reaches `WAITING_FOR_EXPORT_2`, finish the requested CpStudio
+export, run the Stage 1 offline auditor for that new request, then bind the new
+report:
+
+```powershell
+.\scripts\cpstudio\Invoke-PostExportEngineering.ps1 `
+  -OperationId <operation-id> `
+  -SecondExportAuditReport .\data\reports\cpstudio\<new-stage1-report>.json
+```
+
+The default ledger is
+`data/operations/cpstudio-stage2/<operation-id>/`. `-WhatIf` previews a
+transition without writing it; `-EngineeringRoot` and `-OperationRoot` are
+available for controlled tests or non-default layouts. The state set is:
+
+- `WAITING_FOR_RUNNER`: an immutable action is ready for the unique persistent
+  Codex runner;
+- `WAITING_FOR_CPSTUDIO`: the required correction belongs to the CpStudio model
+  and must be made by the user;
+- `WAITING_FOR_EXPORT_2`: a second export is justified by recorded evidence;
+- `DONE`: final readback and a fresh Build meet the gates;
+- `BLOCKED`: a recoverable ownership, safety, or prerequisite problem needs
+  intervention;
+- `FAILED`: evidence or execution failed and is retained for diagnosis.
+
+Runner evidence must reference the exact operation, action, action SHA-256,
+configured Station/PLC paths, and must confirm that no online operation or
+second PLE was used. The coordinator rejects mismatched or replayed evidence;
+it does not pretend that writing an action file is the same as executing it.
+
+For EtherCAT BMK work, the coordinated order remains:
+
+`Save -> Write designators -> Export #1 -> Link I/O -> audit/merge owned references -> Build -> conditional Export #2 -> final Build`
+
+During any CpStudio export, the runner must release Symbol Configuration and
+perform no concurrent Symbol read/write. `This object is already in use` is a
+serialization failure, not a reason to launch another PLE.

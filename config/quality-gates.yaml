@@ -7,6 +7,7 @@ compile:
   # the warning set is unchanged.
   warning_policy: baseline
   baseline_warning_count: 6
+  require_warning_signature_review: true
 
 ownership:
   fail_if_ai_object_missing: true
@@ -20,6 +21,26 @@ cpstudio:
   require_build_then_second_export_for_new_symbols: conditional_on_missing_symbol_or_postprocessing_failure
   stale_symbol_signature_recovery: save_close_reopen_then_build_before_remove
   prohibit_precise_rest_unselect_for_unavailable_symbols: true
+  prohibit_symbol_access_during_export: true
+
+post_export_stage2:
+  mode: plan_only_operation_ledger
+  operation_root: data/operations/cpstudio-stage2
+  allowed_states:
+    - WAITING_FOR_RUNNER
+    - WAITING_FOR_CPSTUDIO
+    - WAITING_FOR_EXPORT_2
+    - DONE
+    - BLOCKED
+    - FAILED
+  require_successful_stage1_report: true
+  require_action_hash_bound_evidence: true
+  require_configured_station_and_plc_match: true
+  require_unique_persistent_codex_runner: true
+  prohibit_coordinator_starting_ple_mcp_rest: true
+  prohibit_online_operations: true
+  prohibit_second_ple: true
+  second_export_policy: conditional_on_recorded_symbol_or_postprocessing_evidence
 
 security:
   prohibit_bulk_station_staging: true

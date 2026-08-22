@@ -400,3 +400,12 @@
 - 首次 Export #2 的 `Symbol Configuration ... already in use` 是审计与 CpStudio Export 并发访问同一 Symbol 对象造成的，不是 CpStudio 模型故障。停止并发读取，并在同一 PLE 进程内 Save → Close → Open 后恢复；没有启动第二个 PLE。
 - 最终 `BinIo`、A4 Channel 4 mapping 和 mixed hook 均只含 `_100B604`，临时 `_100B606` 为 0；Kistler 400-byte PDO 未变化。本实验没有连接、下载、启停、写变量或 FORCE 实体 PLC。
 - 后续 EtherCAT BMK 改名固定使用“Save → Write designators → Export #1 → Link I/O → mixed refs → Build → 条件 Export #2 → final Build”，并在 CpStudio Export 期间暂停一切 Symbol Configuration 并发审计。
+
+## Post-export Stage 2 PlanOnly 协调层（2026-08-22）
+
+- 新增 `scripts/cpstudio/Invoke-PostExportEngineering.ps1` 作为 Stage 1 离线报告之后的旁车协调层。CpStudio 当前不能承载这套控制逻辑，因此不修改 CpStudio 本体；协调器只建立幂等、内容哈希绑定的 operation/action ledger，默认保存在 `data/operations/cpstudio-stage2/<operation-id>/`。
+- operation 明确使用 `WAITING_FOR_RUNNER`、`WAITING_FOR_CPSTUDIO`、`WAITING_FOR_EXPORT_2`、`DONE`、`BLOCKED` 和 `FAILED`。同一 Stage 1 报告重复提交只查询/复用原 operation；推进证据必须绑定 operation、当前 action 和 action SHA-256，并与 `config/project.yaml` 中的 Station/PLC 路径一致。
+- 该脚本是 **PlanOnly**，不会启动 PLE、MCP 或 REST，不会打开 Symbol Configuration，也不会修改 Station010。action 由当前唯一的 persistent Codex/PLE 会话执行后再提交 evidence；当前批次没有实现自动 live runner 或跨进程 MCP 租约，不能把“action 已生成”当成“工程动作已完成”。
+- Export #2 改为条件状态：只有 Export #1 后记录到 Symbol 缺失/未选中、OPC UA Method/PersistentVars/Symbol 后处理失败，或 BMK 变更经 Build 后仍需刷新，才进入 `WAITING_FOR_EXPORT_2`。若缺陷属于 CpStudio-owned 接口/模型，则进入 `WAITING_FOR_CPSTUDIO`，由用户在 CpStudio 修正并重新导出，AI 不经 PLE 强补接口。
+- BMK 顺序保持 `Save → Write designators → Export #1 → Link I/O → mixed refs → Build → 条件 Export #2 → final Build`。CpStudio Export 期间必须释放/停止一切 Symbol Configuration 并发读写；`This object is already in use` 视为序列化失败，不能通过再开一个 PLE 规避。
+- warning 验收仍以 fresh Build 的 code/object/position 签名审阅为准；`config/quality-gates.yaml` 中历史 `baseline_warning_count: 6` 未改成 9，相同数量不能证明 warning 集合相同。该批只改 AI 旁车工具、模板/Skill 与文档，不修改 PLC 程序、Station010 或 `Std`，也不执行任何实体 PLC 在线动作。
