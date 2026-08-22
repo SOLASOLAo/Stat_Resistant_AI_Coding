@@ -16,7 +16,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 
 ## 一次 CpStudio 生成的标准闭环
 
-1. 确认相关仓库工作区干净，并对 `.project` 做本地备份或工程归档。
+1. 确认相关仓库工作区状态，并验证 Git/工程归档能恢复精确起点；无法恢复时只建立一个内容寻址 checkpoint。
 2. 每次在 CpStudio 中只做一类可描述的改动。
 3. CpStudio 重新生成后，先执行 `git diff`，不要立即修补生成物。
 4. AI 通过 MCP 对 PLC `Application` 生成稳定文本快照。
@@ -24,6 +24,25 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 6. 把变化分成 CpStudio 所有、AI 所有和需要人工决策三类。
 7. AI 只通过 MCP 写回 PLC，随后重新编译，以 `errors=0` 为验收标准。
 8. 提交模型变化、可读生成物、PLC 文本快照、编译基线和分析结论。
+
+### EtherCAT BMK 改名闭环（2026-08-22 实测）
+
+对已映射的 EtherCAT 通道修改 BMK，按以下顺序执行：
+
+`CpStudio Save → Write peripheral and I/O designators to PLC IDE → Export #1 → Link I/O with variables in PLC IDE → 审计/合并 mixed ST 引用 → PLE Build 0 errors → 条件 Export #2 → final Build`
+
+各步骤职责不同：
+
+- Save 只更新 CpStudio 模型和公开 BusConfig。
+- Write designators 更新 IO Engineering 工程，不会同步 PLC connector mapping。
+- Export #1 更新 PLC `BinIo` 声明及 HMI/Event 生成物；旧 connector mapping 可能暂时导致 `bus_<旧名> is no component of BinIo`。
+- Link I/O 才把物理通道映射切换到新的 `BinIo` 成员。
+- CpStudio 不会替换 mixed/AI ST 中对旧 BMK 的直接引用；只能按 ownership/hooks 清单做受保护的语义合并。
+- Build 必须先恢复到 0 errors。若 Export #1 的 OPC UA Method、PersistentVars 或 Symbol 后处理失败，或目标 Symbol 未正确发布，再执行 Export #2 和最终 Build；双 Export 不是所有 CpStudio 改动的固定规则。
+
+CpStudio Export 期间不得并发读取、打开或更新 Symbol Configuration。若出现 `This object is already in use`，先停止并发访问；锁仍存在时，在同一个 PLE 进程内 Save → Close → Open，重新 Build 后再 Export，禁止启动第二个 PLE。
+
+“界面无红字”不足以作为成功标准；必须核对完整 Output、I/O 映射、mixed 引用、Symbol 后处理和最终 Build。普通变量的条件二次 Export 与失效签名处理见 `docs/symbol_configuration_export_cycle.md`。
 
 ## PLC 文本快照
 
@@ -69,7 +88,7 @@ execfile(r"C:\path\McpCoding\scripts\plc\export_plc_snapshot.py")
 
 - `Plc/Stat010_V5.11_CtrlX_PLC.Struct.json` 中有 350 个 POU/GVL/DUT/Method/Action 类型对象；实际文本快照只收录声明或实现非空的对象。
 - 当前私有仓库已经跟踪 CpStudio 模型、HMI/config、Symbolconfiguration 和两个 `.project`，但此前没有纯文本 ST 镜像。
-- `../Station010` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入仍必须先备份、导出文本快照，并且只经 MCP 执行。
+- `../Station010` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入都必须先确认可恢复起点、导出文本快照，并且只经 MCP/正式 PLE REST 执行。
 - `.project` 是否作为 Station010 私有备份仓库的受控例外继续纳管，需要单独形成项目决策；不能依赖二进制 diff 理解 PLC 逻辑。
 
 ### 2026-08-18 当前未提交生成批次

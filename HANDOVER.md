@@ -390,3 +390,13 @@
 - 新增实验已完成：Export #1 在 Build 前就已将探针写入 `Wp100` 声明并在 Symbol Configuration 中设为 `BOOL / ReadWrite / selected=true`，CpStudio Output 无红字；中间与最终 PLE Build 均为 **0 errors / 6 warnings**。因此“双导出”不作为所有新增变量的硬门禁，仅在第一次导出出现 Symbol 缺失、未选中或 OPC UA Method/PersistentVars/Symbol 后处理失败时执行。
 - 删除实验补充了会话边界：CpStudio 删除探针并完成 Export #1、Build、Export #2 后，源码与 REST 当前可用 Symbol 已为 0，但同一 PLE 会话两次 Build 仍报两条旧签名警告。保存关闭并重新打开 Export #2 生成的同一份工程后，Build 恢复 **0 errors / 6 warnings**，Dummy 警告为 0；最终工程 SHA-256=`761ECD38F811C545CBA5791B8E31CA872D44C9688C1A0442BB45EB5B8332CC55`。
 - 失效签名不会出现在 REST GET 的当前可用清单中，不能根据推测 payload 做精确 `UnSelect`。一次隔离尝试将警告扩大到 101 条，已立即关闭 PLE，并用操作前内容寻址检查点逐字节恢复后重开验证；最终工程无残留。以后顺序固定为“条件二次 Export → 保存关闭并重开 PLE → Build → 仍有问题才用 UI `Remove...`”，不裸用 `UnSelectAll`，不修改 CpStudio 模型或 PLC 代码。
+
+## EtherCAT BMK 单通道双向实验（2026-08-22）
+
+- 以 A4 Channel 4 完成 `_100B604 → _100B606 → _100B604` 双向实验，确认 Save、Write designators、Export 和 Link I/O 分别更新不同层，不能互相替代。
+- Export #1 已更新 `BinIo`，但 connector mapping 仍指向旧名；Link I/O 后映射正确。随后 Build 的 4 errors 实际只有一个根因：mixed 对象 `Wp100Unit.OnApplyOutputs` 仍直接引用旧 BMK，其余 3 条为类型推断级联。按声明钩子语义合并后 Build 恢复 0 errors。
+- Build 刷新后执行 Export #2，OPC UA Method、PersistentVars 和 Symbol 后处理完成；反向恢复按完全相同的顺序完成，最终 Build 为 **0 errors / 9 warnings**。
+- CpStudio 自身最终只保留 3 条 Burster 2316 对象“尚未针对当前 PLC 类型测试”的兼容性警告；它们与 PLE 最终 9 条 Build warning 是两个消息源，也不是本次 BMK/Symbol 导出失败。
+- 首次 Export #2 的 `Symbol Configuration ... already in use` 是审计与 CpStudio Export 并发访问同一 Symbol 对象造成的，不是 CpStudio 模型故障。停止并发读取，并在同一 PLE 进程内 Save → Close → Open 后恢复；没有启动第二个 PLE。
+- 最终 `BinIo`、A4 Channel 4 mapping 和 mixed hook 均只含 `_100B604`，临时 `_100B606` 为 0；Kistler 400-byte PDO 未变化。本实验没有连接、下载、启停、写变量或 FORCE 实体 PLC。
+- 后续 EtherCAT BMK 改名固定使用“Save → Write designators → Export #1 → Link I/O → mixed refs → Build → 条件 Export #2 → final Build”，并在 CpStudio Export 期间暂停一切 Symbol Configuration 并发审计。

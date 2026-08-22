@@ -4,7 +4,7 @@
 
 ## 当前阶段:阶段 0 项目初始化
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
-- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 6 warnings（C0198 修复后，2026-08-20）
+- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 9 warnings（EtherCAT BMK 恢复最终 Build，2026-08-22）
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
@@ -17,6 +17,7 @@
 - [x] 🔴 纠正 CpStudio/AI 接口所有权：生成 POU 的接口与 OES Declaration 仅由 CpStudio 配置，AI 只读消费；旧的整声明 REST 写入器在完成接口保持改造前标记为 blocked(2026-08-22)
 - [x] 🔴 增加 Station010 提交安全门：禁止整体暂存，含实体连接凭据的生成配置必须字段级审阅/脱敏，当前脏生成批次不上传(2026-08-22)
 - [x] 🟡 用 `DummySymbolProbe : BOOL` 完成新增与删除双向验证：新增第一遍即 available/selected；删除后同一 PLE 会话虽二次 Export 仍有 2 条旧签名警告，保存关闭并重开后 Build 恢复 0 errors / 6 warnings。门禁改为“条件二次 Export → 必要时重开验证”，禁止对 REST GET 不可见的失效签名构造精确 UnSelect(2026-08-22)
+- [x] 🔴 完成 EtherCAT 单通道 BMK 双向实验：验证 Save → Write designators → Export #1 → Link I/O → mixed 引用语义合并 → Build → 条件 Export #2 → final Build；识别并规避 Symbol Configuration 并发对象锁，恢复原 BMK 后最终 Build 0 errors / 9 warnings(2026-08-22)
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
 - [x] 吸收 ctrlx-ai-coding 方法论;环境体检(CRLF 补丁/模板/库仓库)通过(2026-08-17)
 - [x] 🔴 修复 persistent MCP 编译完成后超时：去除重复 Build 和全类别×严重级别消息扫描，统一使用有界 Build summary 读取；Station010 实测编译约 7.6 s、缓存读取约 0.8 s，0 errors / 7 warnings(2026-08-20)
