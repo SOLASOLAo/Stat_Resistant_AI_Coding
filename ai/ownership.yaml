@@ -5,7 +5,7 @@ write_modes:
   implementation: replace only the implementation through MCP, then read back
   semantic_merge: preserve CpStudio-owned content and restore only declared hooks
   graphical_attributes: use official PLC Engineering REST GET/PUT with hash guard
-  rest_composite: use hash-guarded official REST for declaration, SFC graph, actions and readback
+  rest_composite: preserve CpStudio-owned declaration/interface and use hash-guarded official REST only for explicitly AI-owned graph and children
 
 objects:
   - path: Application/Fbs/FB_OperatorButton
@@ -89,11 +89,15 @@ objects:
     source: src/plc/project/Station010/Wp100RunResultStruct.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
-    owner: ai
+    owner: mixed
     source: src/plc/project/Station010/SqS_Wp100_Run/declaration.st
+    source_role: verification_contract_only
     specification: specs/chains/SqS_Wp100_Run.yaml
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
     write_mode: rest_composite
+    interface_owner: cpstudio
+    interface_write: forbidden
+    apply_status: blocked_until_interface_preserving
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st
@@ -187,11 +191,15 @@ objects:
     source: src/plc/project/Station010/Wp100RunSequenceResultStruct.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
-    owner: ai
+    owner: mixed
     source: src/plc/project/Station010/SqC_Wp100_Run/declaration.st
+    source_role: verification_contract_only
     specification: specs/chains/SqC_Wp100_Run.yaml
     apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
     write_mode: rest_composite
+    interface_owner: cpstudio
+    interface_write: forbidden
+    apply_status: blocked_until_interface_preserving
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N000.st

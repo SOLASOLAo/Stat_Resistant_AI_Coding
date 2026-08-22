@@ -90,11 +90,14 @@ hooks:
     input: Wp100.SqS_Run.MeasurePos
     storage_class: VAR_INPUT
     input_type: MeasurePsoEnum
+    interface_owner: cpstudio
+    ai_access: read_and_consume_only
     required_signals:
       - Peripherals.BinIo._100B601
       - Peripherals.BinIo._100B602
       - Peripherals.BinIo._100B603
     invariants:
+      - MeasurePos name, type, direction and OES declaration are configured only in CpStudio
       - the requested fixture position is supplied by the caller before Execute
       - exactly the selected position sensor is true and the other two are false
       - the pressing cylinder is in base position before operator acknowledgement

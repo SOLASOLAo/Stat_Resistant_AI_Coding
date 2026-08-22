@@ -14,6 +14,9 @@
 - [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
+- [x] 🔴 纠正 CpStudio/AI 接口所有权：生成 POU 的接口与 OES Declaration 仅由 CpStudio 配置，AI 只读消费；旧的整声明 REST 写入器在完成接口保持改造前标记为 blocked(2026-08-22)
+- [x] 🔴 增加 Station010 提交安全门：禁止整体暂存，含实体连接凭据的生成配置必须字段级审阅/脱敏，当前脏生成批次不上传(2026-08-22)
+- [ ] 🟡 用 `DummySymbolProbe : BOOL` 完成 CpStudio Export #1 → PLE Build → Export #2 的 Symbol Configuration 分阶段验证，并据结果确定是否固化为正式门禁
 - [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
 - [x] 吸收 ctrlx-ai-coding 方法论;环境体检(CRLF 补丁/模板/库仓库)通过(2026-08-17)
 - [x] 🔴 修复 persistent MCP 编译完成后超时：去除重复 Build 和全类别×严重级别消息扫描，统一使用有界 Build summary 读取；Station010 实测编译约 7.6 s、缓存读取约 0.8 s，0 errors / 7 warnings(2026-08-20)

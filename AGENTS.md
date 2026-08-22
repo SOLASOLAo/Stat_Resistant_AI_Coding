@@ -20,6 +20,8 @@
 6. CpStudio 重新生成可能覆盖 AI 代码:生成后先 diff，并按 `ai/ownership.yaml`、`ai/hooks.yaml`、`ai/graphical.yaml` 审计；完整 AI-owned POU 的可读源放 `src/plc/`，混合对象只做语义合并。
 7. 不入库:编译缓存与用户配置(*.precompilecache/*.Sync.json/*.opt/*.Backup/*.~u)、.compiled-library、data/ 日志大文件、*.zip/*.pdf 原始资料。
 8. `eval_python` 仅作审计用途;勿对已打开工程裸调 `se.projects.open()`(卡死 IDE UI 线程)。
+9. **CpStudio 生成的 POU 接口归 CpStudio**：包括 `VAR_INPUT`/`VAR_OUTPUT`、类型、方向和 OES `Declaration` 合并区。AI 只能读取并使用；若接口缺失，停止写入并请用户在 CpStudio 配置后重新导出，不得经 PLE/MCP/REST 强行补接口。
+10. **Station010 禁止整体暂存**：不得使用 `git add -A`/`git add .`。`Engineering_Data.xml`、DataSetAccess/HMI/Target 连接配置等可能含实体凭据，只能经过字段级审阅和脱敏后精确暂存；任何真实密码不得进入提交或输出。
 
 ## 4. 环境关键事实(已实测,改前核对)
 | 项 | 值 |

@@ -25,10 +25,11 @@ objects:
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
+    apply_status: blocked_until_interface_preserving
     write_strategy:
       - GET complete object
-      - verify the CpStudio skeleton declaration and implementation hashes
-      - PUT the complete declaration and SFC graph through official REST
+      - verify the CpStudio-generated declaration without changing it
+      - preserve the complete declaration and write only the audited SFC graph
       - create or update action objects and result DUTs through official REST
       - save through ProjectJob
       - GET and compare every declaration, implementation and graph readback
@@ -69,9 +70,11 @@ objects:
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
+    apply_status: blocked_until_interface_preserving
     write_strategy:
       - GET the complete CpStudio-generated object and all children
-      - verify declaration, graph and generated-child baseline hashes
+      - verify and preserve the CpStudio-generated declaration
+      - verify graph and generated-child baseline hashes
       - create or update the canonical actions, methods and result DUT through official REST
       - replace the SFC graph and remove obsolete generated template actions
       - save through ProjectJob and compare every REST readback

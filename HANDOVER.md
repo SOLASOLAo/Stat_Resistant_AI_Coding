@@ -312,12 +312,12 @@
 
 ## Wp100 Run 可复用原子操作（2026-08-20）
 
-- CpStudio 当前正式接口为 `Wp100.MeasurePos : MeasurePsoEnum`；用户已把变量旧拼写 `MeasurePso` 更正为 `MeasurePos`。类型名仍是 CpStudio 生成的 `MeasurePsoEnum`，不要仅在 PLC 内改名。`LEFT/MIDDLE/RIGHT` 分别绑定 `_100B601/_100B602/_100B603`，每个位置都要求目标 DI=TRUE、另外两路=FALSE。
+- 此处曾记录为全局 `Wp100.MeasurePos`，该设计已被后续纠正取代。当前正式接口是 CpStudio 配置并生成的 `SqS_Wp100_Run.MeasurePos : MeasurePsoEnum`（`VAR_INPUT`）；类型名仍保留 CpStudio 生成拼写。`LEFT/MIDDLE/RIGHT` 分别绑定 `_100B601/_100B602/_100B603`，每个位置都要求目标 DI=TRUE、另外两路=FALSE。
 - CpStudio 同批新增 `StationData.PressDelayTime : DINT`（应用按毫秒解释），刷新三路位置传感器中英文描述，并把上一批 Mode/安全门/压缸安全反馈联锁同步到 HMI 条件树。
 - AI 经 PLE 官方 REST 扩展把 `SqS_Wp100_Run` 从 N000/N100/N999 骨架扩展为 21 步。压缸下行与 Kistler 启动、压缸上行与 Kistler 结束分别使用一组 `simultaneousDivergence / simultaneousConvergence`；每台设备各有 Start/Wait Step，便于在 SFC 中直接诊断卡点。
 - OpCon 并行支路严格使用基类提供的独立返回值：支路 1=`_retVal`，支路 2=`_retVal2`。N045/N095 是两组并行动作前的公共放行步骤；SFC Step Comment 使用短检索描述，详细联锁与结果处理留在对应 ST Action。
 - 输出为 `Wp100.SqS_Run.Result : Wp100RunResultStruct`，内含 `Resistance` 与 `Kistler` 两个嵌套结构。结果在 DONE 后保留，到下一轮 N000 清零；N101 在压缸释放前一次性锁存 Kistler 循环力/位移，N120 再补写最终判定，不含完整曲线。
-- `OnChainFinish` 对 DONE/ERROR/CANCEL 统一熄灭 `_000P610`、复位按钮/定时器/四个运动或测量 Unit Execute，并令 Kistler `EndMeasurement=TRUE`。单个 `Wp100.SqS_Run` 只允许调用方顺序复用；调用方尚未接线，后续在 READY 时写 `Wp100.MeasurePos`、置 Execute，再以 `CheckSubChainDone` 等待。
+- `OnChainFinish` 对 DONE/ERROR/CANCEL 统一熄灭 `_000P610`、复位按钮/定时器/四个运动或测量 Unit Execute，并令 Kistler `EndMeasurement=TRUE`。单个 `Wp100.SqS_Run` 只允许调用方顺序复用；调用方在 READY 时写 `Wp100.SqS_Run.MeasurePos`、置 Execute，再以 `CheckSubChainDone` 等待。
 - 可重放 ST 源和结构体在 `src/plc/project/Station010`；`scripts/plc/apply_wp100_run_rest.ps1` 负责哈希门禁、官方 REST 写入、逐对象回读和 ProjectJob 保存。幂等回读确认 21 Steps、2 个并行分支、2 个并行汇合和 22 个 Action/方法；完整离线编译 **0 errors / 7 warnings**，Additional code checks **0 errors**；PLC project SHA-256=`7C4226DA757773287D56793F88C6723C42CF72BA63C1698691E0C9EEE0F0F6FF`。
 - 有效 CpStudio/IO/PLC/HMI 与 Run Chain 主批次为 Station010 `6b692be`，Kistler 上升前锁存优化为 `768694a`，本次并行 SFC 重构为 `53440a1`；可重放源码、规格、Catalog、REST 写入器和文档主批次为 McpCoding `9549e08`，对应锁存优化为 `578df54`，本次源码随本交接提交。`.Sync.json`、Logbook 日期滚动、`Hmi/obj` 和展示页既有未提交改动均未混入本批。
 - 尚待用户/产品数据确认：Burster 上下限和温度开关、Kistler 程序号如何由 TypeData 提供；是否需要 Kistler `READ_DATA` 完整曲线。未连接、下载、启停、写变量或 FORCE 实体 PLC，也未创建额外二进制备份；`Std` 保持只读。
@@ -380,3 +380,10 @@
 - 改名前后 CpStudio 索引、`Engineering_Data.xml`、PLC project、IO project 的长度和 SHA-256 完全一致；PLC project 仍为 `20D9DD9A44B72A4025F49774E2151D12A119937ED788BE9B1AAABA711899B51E`。Station 既有 Sync/HMI/Logbook 工作树状态原样保留。
 - `config/project.yaml`、团队部署说明、脚本默认路径、规格、测试和展示页统一改为 `../Station010`；GitHub 集成仓库原本已叫 `Stat_Resistant_Station010`，无需重命名。目录名与 Git 分支无绑定，现有功能分支继续使用并更新远端。
 - 本次没有修改 `.project` 字节、PLC/ST/IO/HMI 逻辑，也没有连接、下载、启停、写变量或 FORCE 实体 PLC；`Std` 未修改。
+
+## CpStudio 接口所有权与 Symbol 导出周期（2026-08-22）
+
+- 用户确认 `MeasurePos` 必须在 CpStudio 中配置为 `SqS_Wp100_Run` 的 `VAR_INPUT`。因此生成 POU 的接口、类型、方向和 OES `Declaration` 合并区统一归 CpStudio；AI 只读取并使用。两份旧 REST composite 写入器在完成“声明原样保持”改造前已在清单中标记为 blocked，本轮未运行，也未修改 PLC 程序。
+- 当前 Station010 的 CpStudio/连接生成文件含实体凭据字段，不能原样提交。Station 集成仓库禁止 `git add -A`/`git add .`；本轮只更新旁车规则与记录，不暂存或上传任何 Station010 生成文件，也不在日志中记录凭据值。
+- 本机 CpStudio 5.11 导出链经只读追踪确认：写入 PLC 对象后直接执行 OPC UA 方法发布、PersistentVars 实例路径刷新以及 Symbol Configuration GET/PUT，中间没有 Build。CODESYS 官方文档同时明确 Build 是 Symbol Configuration 当前变量准备的前提。由此得到待实验确认的机制：Export #1 写入声明，但仍可能读取旧编译模型；PLE Build 刷新模型；Export #2 再完成符号选择与后处理。
+- `DummySymbolProbe` 实验基线已建立：PLE 离线 Build **0 errors / 7 warnings**，探针在 CpStudio 模型、PLC 文本快照、Symbol XML 和 Public Interface 中均不存在。下一步由用户只在 CpStudio 的 `Wp100` 已发布变量区创建一个普通 `BOOL` 探针并保存，暂不 Export；AI随后逐阶段采样。完整步骤见 `docs/symbol_configuration_export_cycle.md`。

@@ -21,6 +21,10 @@ input:
   plc_path: Wp100.SqS_Run.MeasurePos
   storage_class: VAR_INPUT
   type: MeasurePsoEnum
+  authority: cpstudio
+  configured_by: user
+  mutation_entrypoint: CpStudio
+  ai_access: read_and_consume_only
   note: >-
     The CpStudio-owned enum type currently retains the generated spelling
     MeasurePsoEnum. SqC writes this input only while SqS_Run is READY. The

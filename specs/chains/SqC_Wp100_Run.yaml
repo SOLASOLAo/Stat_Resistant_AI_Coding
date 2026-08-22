@@ -12,6 +12,7 @@ atomic_operation:
   type: SqS_Wp100_Run
   reuse: one instance, three sequential executions
   start_contract:
+    - require the MeasurePos VAR_INPUT to exist from a clean CpStudio export
     - wait for OpconExecState.READY
     - write the VAR_INPUT Wp100.SqS_Run.MeasurePos
     - set Wp100.SqS_Run.Execute to TRUE

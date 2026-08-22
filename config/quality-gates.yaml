@@ -12,6 +12,21 @@ ownership:
   fail_if_ai_object_missing: true
   fail_if_required_hook_missing: true
   require_readback_after_write: true
+  require_cpstudio_generated_interfaces_from_model: true
+
+cpstudio:
+  require_clean_export: true
+  require_build_then_second_export_for_new_symbols: pending_probe_confirmation
+
+security:
+  prohibit_bulk_station_staging: true
+  require_review_for_credential_bearing_generated_files: true
+  prohibit_real_credentials_in_commits: true
+
+acceptance:
+  required:
+    - cpstudio_export_clean
+    - plc_compile_clean
 
 plc:
   prohibit_direct_project_byte_edits: true
