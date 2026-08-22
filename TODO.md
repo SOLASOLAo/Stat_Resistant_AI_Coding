@@ -14,6 +14,7 @@
 - [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
+- [x] 🔴 完成真实 CpStudio Post-export Stage2 闭环：唯一 persistent PLE 会话执行只读审计与 fresh Build（0 errors / 6 warnings），哈希绑定 evidence 经 producer/consumer 验证后 operation 到 `DONE`；确认本批无需 Export #2，并补齐 `open_project` 离线能力白名单(2026-08-23)
 - [x] 🔴 纠正 CpStudio/AI 接口所有权：生成 POU 的接口与 OES Declaration 仅由 CpStudio 配置，AI 只读消费；旧的整声明 REST 写入器在完成接口保持改造前标记为 blocked(2026-08-22)
 - [x] 🔴 增加 Station010 提交安全门：禁止整体暂存，含实体连接凭据的生成配置必须字段级审阅/脱敏，当前脏生成批次不上传(2026-08-22)
 - [x] 🟡 用 `DummySymbolProbe : BOOL` 完成新增与删除双向验证：新增第一遍即 available/selected；删除后同一 PLE 会话虽二次 Export 仍有 2 条旧签名警告，保存关闭并重开后 Build 恢复 0 errors / 6 warnings。门禁改为“条件二次 Export → 必要时重开验证”，禁止对 REST GET 不可见的失效签名构造精确 UnSelect(2026-08-22)
