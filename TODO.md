@@ -36,7 +36,7 @@
 - [x] 🟡 建立团队工作站交接：新增 `TEAM_SETUP.md`、无个人账号的 Codex MCP 配置样例和只读环境体检脚本，区分长期部署说明与会话型 HANDOVER(2026-08-19)
 - [x] 🟡 将受控集成工程目录去日期化为 `Station010`，同步配置、脚本、规格、测试和部署文档；关键工程哈希与既有 Git 状态保持不变(2026-08-20)
 - [x] 🟢 新增离线 AI Coding 展示页：覆盖 CpStudio/AI/ctrlX 分工、标准目录、两类开发闭环、对象归属、Home Chain、主气压联锁、BMK 改名复盘和验收证据；支持交互演示与打印 PDF(2026-08-19)
-- [ ] 🟡 在 CpStudio 工程中配置官方 Post-export hook 指向 `scripts/cpstudio/post_export_signal.bat`，完成一次真实导出信号验证
+- [x] 🟡 在 CpStudio `Engineering settings → Export` 配置官方 Post-export hook 为 `..\McpCoding\scripts\cpstudio\post_export_signal.bat`；真实普通导出已生成 schema-v2 请求，Stage 1 完成只读审计并进入 Stage 2 `WAITING_FOR_RUNNER`（2026-08-22）
 - [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
 - [x] 🟡 实现 Stage 2 PlanOnly operation ledger：消费 Stage 1 报告，生成幂等/哈希绑定 action，持久化 `WAITING_FOR_RUNNER/WAITING_FOR_CPSTUDIO/WAITING_FOR_EXPORT_2/DONE/BLOCKED/FAILED`，并校验 runner evidence；协调器不启动 PLE/MCP/REST(2026-08-22)
 - [ ] 🟡 实现受控 runner：由唯一 persistent Codex 会话消费 Stage 2 action，完成对象快照、I/O/Symbol/SFC 审计、必要修复、编译和读回证据；不得启动第二个 PLE

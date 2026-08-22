@@ -409,3 +409,11 @@
 - Export #2 改为条件状态：只有 Export #1 后记录到 Symbol 缺失/未选中、OPC UA Method/PersistentVars/Symbol 后处理失败，或 BMK 变更经 Build 后仍需刷新，才进入 `WAITING_FOR_EXPORT_2`。若缺陷属于 CpStudio-owned 接口/模型，则进入 `WAITING_FOR_CPSTUDIO`，由用户在 CpStudio 修正并重新导出，AI 不经 PLE 强补接口。
 - BMK 顺序保持 `Save → Write designators → Export #1 → Link I/O → mixed refs → Build → 条件 Export #2 → final Build`。CpStudio Export 期间必须释放/停止一切 Symbol Configuration 并发读写；`This object is already in use` 视为序列化失败，不能通过再开一个 PLE 规避。
 - warning 验收仍以 fresh Build 的 code/object/position 签名审阅为准；`config/quality-gates.yaml` 中历史 `baseline_warning_count: 6` 未改成 9，相同数量不能证明 warning 集合相同。该批只改 AI 旁车工具、模板/Skill 与文档，不修改 PLC 程序、Station010 或 `Std`，也不执行任何实体 PLC 在线动作。
+
+## CpStudio Post-export 真实冒烟（2026-08-22）
+
+- CpStudio 5.11 的准确入口为 `Engineering V5.11.0 → Engineering settings → Export`；`Post-export script` 相对于 Station 路径，因此 Station010 的正确配置是 `..\McpCoding\scripts\cpstudio\post_export_signal.bat`。此前建议的两个 `..` 已纠正，Pre-export 保持空白。
+- 用户保存配置后执行了一次无模型改动的普通 Export。hook 真实生成 schema-v2 请求 `94920f26-6481-4d97-bb8e-f48775c12c95`；Stage 1 `-WhatIf` 精确看到一个 pending 请求，正式消费后状态为 `done/review`，唯一 finding 是 `GENERATED_CHANGES_PRESENT`。22 个 Git changed path、23 个关键指纹和 3 份 ownership manifest 均已记录，guardrail 回读为 0 个工程工具启动、0 个生成文件写入、0 个在线操作。
+- Stage 2 `-WhatIf` 与正式创建使用同一确定性 operation id `cpstudio-stage2-94920f26-6481-4d97-bb8e-f48775c12c95-70171e90`；正式状态为 `WAITING_FOR_RUNNER`，不可变 action 为 `0001-inspect_and_build.json`，ledger/action SHA-256 读回一致。由此证明 `CpStudio hook → request queue → Stage 1 → Stage 2` 真实串通。
+- 冒烟同时发现首次创建 operation 时，内存对象是 `OrderedDictionary`，旧的 `Get-ResultView` 只按 PSObject 属性读取，导致命令返回的 action path/hash/id/kind 为 null；ledger 本体始终正确。`Get-PropertyValue` 已补 `IDictionary` 支持，并新增 6 条回归断言，根项目/模板 Stage 2 测试、静态门禁和初始化器 54 assertions 全部通过。
+- 本轮只写 `McpCoding/data` 队列、报告和 operation ledger；没有启动 PLE/MCP/REST，没有修改 Station010/PLC/IO/Std，也没有连接、下载、启停、写变量或 FORCE 真机。下一步是实现唯一 persistent 会话消费 action 的受控 runner，并提交结构化 evidence；不能把当前 `WAITING_FOR_RUNNER` 当成已完成工程检查。
