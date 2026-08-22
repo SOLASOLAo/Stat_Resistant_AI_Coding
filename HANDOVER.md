@@ -417,3 +417,14 @@
 - Stage 2 `-WhatIf` 与正式创建使用同一确定性 operation id `cpstudio-stage2-94920f26-6481-4d97-bb8e-f48775c12c95-70171e90`；正式状态为 `WAITING_FOR_RUNNER`，不可变 action 为 `0001-inspect_and_build.json`，ledger/action SHA-256 读回一致。由此证明 `CpStudio hook → request queue → Stage 1 → Stage 2` 真实串通。
 - 冒烟同时发现首次创建 operation 时，内存对象是 `OrderedDictionary`，旧的 `Get-ResultView` 只按 PSObject 属性读取，导致命令返回的 action path/hash/id/kind 为 null；ledger 本体始终正确。`Get-PropertyValue` 已补 `IDictionary` 支持，并新增 6 条回归断言，根项目/模板 Stage 2 测试、静态门禁和初始化器 54 assertions 全部通过。
 - 本轮只写 `McpCoding/data` 队列、报告和 operation ledger；没有启动 PLE/MCP/REST，没有修改 Station010/PLC/IO/Std，也没有连接、下载、启停、写变量或 FORCE 真机。下一步是实现唯一 persistent 会话消费 action 的受控 runner，并提交结构化 evidence；不能把当前 `WAITING_FOR_RUNNER` 当成已完成工程检查。
+
+## Post-export runner evidence 边界（2026-08-23）
+
+- 新增 `scripts/cpstudio/New-PostExportRunnerEvidence.ps1`。它只接受 immutable action + ledger SHA + 当前 runner 的显式 observation，重新验证 Stage 1 报告、3 个 ownership 清单、所需关键 Station 指纹、Build 时间与当前 PLC SHA，并把逐条 warning 规范化为 `sha256:v1:normalized-warning-record` 签名多重集后原子写入不可变 evidence。它不启动或调用 PLE、MCP、REST、Symbol Configuration 或 watcher IPC，也不会默认把任何 guardrail/acceptance 设为 `TRUE`。
+- 新增 PS5.1 自测 `tests/cpstudio/Test-PostExportRunnerEvidence.ps1`，覆盖 UTF-8/BOM 与中文/空格路径、成功与无虚假 Build 的 blocked 路径、幂等/WhatIf、action/manifest/fingerprint 漂移、在线能力、第二 PLE、直接 watcher IPC、未显式释放 lease、旧 Build、warning 多重集不完整和敏感字段拒绝。Stage 2 另覆盖 apply 调用前空能力阻塞、顶层 null 拒绝、部分写入失败的已验证子集与严格 evidence 字段集。根项目与模板测试均通过；初始化器现为 **58 assertions**，生成项目会自动携带并执行该测试。
+- Stage 2 consumer 只从 `data/runner-evidence/` 接受 producer-contract evidence，并强制核对 action 身份/SHA、显式 guardrail、existing persistent session、按 action kind 区分的离线 capability 白名单、Build 工程/SHA/来源与 warning 算法。真实生成的测试 action 已完成 `Stage2 → producer → consumer → DONE` 离线回归；这仍是结构化合约校验，不是 producer 的加密签名。
+- 根项目、`ctrlx-ai-coding` 模板、基线 MD/HTML、SESSION_LOG 和已安装的 `$ctrlx-opcon-engineering` reference 已同步。`workflow-local` lease 被明确限定为当前单 Codex 会话协调，并不宣称已经实现跨进程锁。
+- session PID、session reuse、acceptance 与 workflow-local lease 均为当前 runner 的结构化自证；纯离线 producer 只校验必填性和相互一致性，不会独立查询进程表或 MCP，因此这些字段是审计证据，不是加密签名或 OS 强制锁。
+- 真实 operation `cpstudio-stage2-94920f26-6481-4d97-bb8e-f48775c12c95-70171e90` 仍保持 `WAITING_FOR_RUNNER`。执行前复核 action SHA `59422DA644F93CE1EE3181F686C7173976B4B4E81F6F2521F21AE1D9B90F8116`、3 个 manifest、23 个 Station fingerprint 与 PLC SHA 均匹配。
+- 当前没有提交虚假 Build/evidence：先前 `get_codesys_status` 返回 persistent session `error / PID N/A`；本次只读进程审计又看到 1 个已打开 Station010 的 PLE 和 2 个 watcher PLE。无论这些 watcher 由哪个扩展实例拉起，当前都违反单实例门禁，因此没有执行 action/Build。下一步先由用户保存并关闭所有 PLE，再重启 Codex 扩展以恢复唯一 healthy persistent session，才执行 fresh offline Build 和 live evidence 闭环。
+- 本轮没有连接、下载、启停、读写变量、FORCE 或其他在线操作，也没有修改 Station010/PLC/IO/Std。根仓库用户自有的 `docs/ai_coding_showcase.html` 修改继续保持未暂存、未覆盖。

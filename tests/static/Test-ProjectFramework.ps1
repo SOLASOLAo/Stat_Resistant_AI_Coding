@@ -26,13 +26,15 @@ $requiredFiles = @(
     'scripts/cpstudio/write_export_request.ps1',
     'scripts/cpstudio/Invoke-PostExportAudit.ps1',
     'scripts/cpstudio/Invoke-PostExportEngineering.ps1',
+    'scripts/cpstudio/New-PostExportRunnerEvidence.ps1',
     'scripts/git/Get-ReadOnlyGitAudit.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
     'scripts/ioe/ioe_ipc.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1',
     'tests/cpstudio/Test-PostExportQueue.ps1',
-    'tests/cpstudio/Test-PostExportEngineering.ps1'
+    'tests/cpstudio/Test-PostExportEngineering.ps1',
+    'tests/cpstudio/Test-PostExportRunnerEvidence.ps1'
 )
 
 $failures = New-Object System.Collections.Generic.List[string]
@@ -359,6 +361,7 @@ $postExportFiles = @(
     'scripts/cpstudio/write_export_request.ps1',
     'scripts/cpstudio/Invoke-PostExportAudit.ps1',
     'scripts/cpstudio/Invoke-PostExportEngineering.ps1',
+    'scripts/cpstudio/New-PostExportRunnerEvidence.ps1',
     'scripts/git/Get-ReadOnlyGitAudit.ps1'
 )
 foreach ($relativePath in $postExportFiles) {

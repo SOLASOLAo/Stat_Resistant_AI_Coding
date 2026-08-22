@@ -134,6 +134,47 @@ configured Station/PLC paths, and must confirm that no online operation or
 second PLE was used. The coordinator rejects mismatched or replayed evidence;
 it does not pretend that writing an action file is the same as executing it.
 
+### Seal runner observations into evidence
+
+`New-PostExportRunnerEvidence.ps1` is the offline evidence boundary for the
+existing unique Codex/persistent session. It does not start or call PLE, MCP,
+REST, Symbol Configuration, or the watcher. After that session has executed
+the immutable action, it validates the action hash, Stage 1 report, ownership
+manifests, the required critical Station fingerprints, timestamps, explicit
+offline guardrails, and the current PLC project hash. It also converts one
+structured record per Build warning into a deterministic SHA-256 signature
+multiset; raw warning text is not copied into the operation ledger.
+
+```powershell
+.\scripts\cpstudio\New-PostExportRunnerEvidence.ps1 `
+  -ActionPath <operation-dir>\actions\0001-inspect_and_build.json `
+  -ExpectedActionSha256 <sha256-from-operation-ledger> `
+  -ObservationPath .\data\runner-observations\<action-id>.json `
+  -OutputPath .\data\runner-evidence\<action-id>.json `
+  -WhatIf
+```
+
+Remove `-WhatIf` only after reviewing the observation, then submit the output
+with `Invoke-PostExportEngineering.ps1 -EvidencePath`. Every success fact is
+required explicitly; the producer supplies no default `TRUE` values. A runner
+that cannot reuse the existing session writes `status: blocked`, omits Build,
+and records a safe reason code instead of fabricating acceptance.
+An apply action that fails after a partial write may report only the verified
+subset already read back; a terminal failure before the first call uses an
+empty `capabilitiesInvoked` array. Successful actions still require complete
+readback and a fresh Build.
+
+`projectLeaseScope: workflow-local` describes the present one-Codex-session
+coordination rule. It is not an OS-level cross-process lock. Record
+`projectLeaseAcquired` and `projectLeaseReleased` explicitly and do not claim
+`cross-process` until that lease implementation exists.
+
+The session PID, session reuse, and workflow-local lease fields are structured
+self-attestations from the active runner. The pure producer validates that they
+are present and internally consistent, but it does not independently query the
+process table or MCP session. They are therefore operational audit evidence,
+not a cryptographic or OS-enforced trust boundary.
+
 For EtherCAT BMK work, the coordinated order remains:
 
 `Save -> Write designators -> Export #1 -> Link I/O -> audit/merge owned references -> Build -> conditional Export #2 -> final Build`

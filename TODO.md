@@ -39,6 +39,7 @@
 - [x] 🟡 在 CpStudio `Engineering settings → Export` 配置官方 Post-export hook 为 `..\McpCoding\scripts\cpstudio\post_export_signal.bat`；真实普通导出已生成 schema-v2 请求，Stage 1 完成只读审计并进入 Stage 2 `WAITING_FOR_RUNNER`（2026-08-22）
 - [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
 - [x] 🟡 实现 Stage 2 PlanOnly operation ledger：消费 Stage 1 报告，生成幂等/哈希绑定 action，持久化 `WAITING_FOR_RUNNER/WAITING_FOR_CPSTUDIO/WAITING_FOR_EXPORT_2/DONE/BLOCKED/FAILED`，并校验 runner evidence；协调器不启动 PLE/MCP/REST(2026-08-22)
+- [x] 🟡 实现 runner evidence 封装边界：复核 action/Stage 1/ownership/所需关键 Station 指纹和当前 PLC SHA，要求显式离线/lease/验收事实，按固定算法生成 warning 签名多重集；封装器不调用 PLE/MCP/REST，PS5.1 根项目/模板自测通过（2026-08-23）
 - [ ] 🟡 实现受控 runner：由唯一 persistent Codex 会话消费 Stage 2 action，完成对象快照、I/O/Symbol/SFC 审计、必要修复、编译和读回证据；不得启动第二个 PLE
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)

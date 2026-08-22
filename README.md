@@ -36,6 +36,23 @@ runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
   -AuditReport .\data\reports\cpstudio\<stage1-report>.json
 ```
 
+唯一 persistent Codex 会话执行 action 后，用纯离线封装器复核 action/清单/
+关键 Station 指纹、Build 新鲜度、工程 SHA 和 warning 签名多重集，再生成不可变
+evidence；封装器本身不调用或启动任何工程工具：
+
+```powershell
+.\scripts\cpstudio\New-PostExportRunnerEvidence.ps1 `
+  -ActionPath <action.json> `
+  -ExpectedActionSha256 <ledger-sha256> `
+  -ObservationPath <runner-observation.json> `
+  -OutputPath .\data\runner-evidence\<action-id>.json `
+  -WhatIf
+```
+
+其中 session/PID/lease/acceptance 是 active runner 的结构化自证，封装器会
+校验必填性和相互一致性，但不会独立查询进程表或 MCP；`workflow-local`
+不是跨进程锁，也不是加密证明。
+
 状态会明确停在 `WAITING_FOR_RUNNER`、`WAITING_FOR_CPSTUDIO` 或
 `WAITING_FOR_EXPORT_2`，直到唯一的 persistent Codex 会话提交与 action
 哈希绑定的执行证据，或用户完成明确要求的 CpStudio 操作。只有 Export #1
