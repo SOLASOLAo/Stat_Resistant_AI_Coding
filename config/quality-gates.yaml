@@ -16,7 +16,10 @@ ownership:
 
 cpstudio:
   require_clean_export: true
+  require_build_after_published_symbol_change: true
   require_build_then_second_export_for_new_symbols: conditional_on_missing_symbol_or_postprocessing_failure
+  stale_symbol_signature_recovery: save_close_reopen_then_build_before_remove
+  prohibit_precise_rest_unselect_for_unavailable_symbols: true
 
 security:
   prohibit_bulk_station_staging: true
