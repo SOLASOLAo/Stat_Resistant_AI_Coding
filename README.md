@@ -121,6 +121,7 @@ Skill 已可版本化安装并校验：
 - 开发模板:`vibe-coding-templates/`(github.com/SOLASOLAo/vibe-coding-templates)
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)
 - CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
+- UserDefined HMI 集成与脱敏规则:`docs/hmi_userdefined_integration.md`
 - AI Coding 展示页（离线 HTML，含演示与打印模式）:`docs/ai_coding_showcase.html`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 - Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`

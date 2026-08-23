@@ -446,3 +446,11 @@
 - 本机独立 VisiWinNET Smart 与当前 OpCon 程序集运行时不兼容，Launcher 也判定所需版本不可用；因此当前受支持的官方可视化验证面是 CpStudio 内嵌 HMI Configurator。AI 仍可在内容寻址检查点和精确 diff 边界下维护用户画面文件，用户不必逐个手工搬控件；CpStudio 的模型树、画面注册和完整 Export 继续由 CpStudio 负责。
 - 本轮未执行完整 CpStudio Export：当时唯一 persistent PLE 会话仍在，直接 Export 可能再次争用 Symbol Configuration。迁移已完成官方加载/保存往返验证；下次正常 Export 应在释放 PLE/Symbol 占用后进行，再由 Post-export 流程审计是否保持。没有调用 PLC MCP、修改 PLC/IO/`Std`，也没有连接、下载、启停、读写变量或 FORCE 真机。
 - Station010 工作树还混有用户既有生成改动，并且 `.vwn`/其他生成配置存在凭据字段，故本轮不整体暂存、不提交或推送 Station010。HMI 最小变更集合仅为 `OverView.sfc`、`UserDefined.sfc`、`OverView.resources` 删除、`UserDefined.resources` 新增及 `OpCon.HMI.Modulo.csproj`；后续上传前仍需字段级审阅和脱敏。
+
+## HMI 用户布局与 Git 脱敏收口（2026-08-23）
+
+- 用户在 CpStudio 官方 HMI Configurator 中继续调整并保存布局：宿主为 `(3,0) / 944×624`；自动信息栏为 `(4,561) / 889×32`；TypeNo 为 `(564,4)`，StationNo 为 `(243,4)`，Home LED 为 `(15,10)`，设备图为 `(38,42)`。官方预览中五项内容完整可见，标签页无未保存标记；变量绑定和图片资源未改变。
+- 完整 HMI 注册链经字段级审计为 10 个路径。9 个运行/注册路径只有 UserDefined 文本 ID、View/SmartForm 注册、项目资源关联和控件迁移；`.vwn` 本轮语义变化只有时间戳与文本 ID，但本机文件含非空现场字段，因此采用“索引仅暂存脱敏版本”：Git 提交中的 HMI 管理密码与项目密钥为空，本机工作文件未改写。
+- Station010 已精确提交 `84d1577`（`feat: move overview content into UserDefined HMI`）。提交只包含 HMI 注册、宿主/内容画面与资源 100% rename；`PlcHandlerL1.ini`、Engineering/DataSetAccess/Targets、PLC/IO、Logbook 和 `Hmi/obj` 均未暂存。当前本机 `.vwn` 相对脱敏 HEAD 保持 modified 是预期状态，后续严禁整体暂存。
+- 结构、当前坐标、5 个绑定、注册文件、官方工具边界、验证证据和后续 HTML 事实已集中记录到 `docs/hmi_userdefined_integration.md`；现有 `docs/ai_coding_showcase.html` 是用户 2026-08-20 的既有未提交改动，本轮未覆盖。
+- 本轮未执行完整 CpStudio Export 或 PLC Build，也未调用 PLC MCP、修改 PLC/IO/`Std` 或执行实体 PLC 在线动作。由于设备网线状态下本机 DNS 不可用，Station010 与 McpCoding 的 GitHub push 暂未完成；本地提交可恢复，联网后只需推送现有分支。
