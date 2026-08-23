@@ -453,4 +453,4 @@
 - 完整 HMI 注册链经字段级审计为 10 个路径。9 个运行/注册路径只有 UserDefined 文本 ID、View/SmartForm 注册、项目资源关联和控件迁移；`.vwn` 本轮语义变化只有时间戳与文本 ID，但本机文件含非空现场字段，因此采用“索引仅暂存脱敏版本”：Git 提交中的 HMI 管理密码与项目密钥为空，本机工作文件未改写。
 - Station010 已精确提交 `84d1577`（`feat: move overview content into UserDefined HMI`）。提交只包含 HMI 注册、宿主/内容画面与资源 100% rename；`PlcHandlerL1.ini`、Engineering/DataSetAccess/Targets、PLC/IO、Logbook 和 `Hmi/obj` 均未暂存。当前本机 `.vwn` 相对脱敏 HEAD 保持 modified 是预期状态，后续严禁整体暂存。
 - 结构、当前坐标、5 个绑定、注册文件、官方工具边界、验证证据和后续 HTML 事实已集中记录到 `docs/hmi_userdefined_integration.md`；现有 `docs/ai_coding_showcase.html` 是用户 2026-08-20 的既有未提交改动，本轮未覆盖。
-- 本轮未执行完整 CpStudio Export 或 PLC Build，也未调用 PLC MCP、修改 PLC/IO/`Std` 或执行实体 PLC 在线动作。由于设备网线状态下本机 DNS 不可用，Station010 与 McpCoding 的 GitHub push 暂未完成；本地提交可恢复，联网后只需推送现有分支。
+- 本轮未执行完整 CpStudio Export 或 PLC Build，也未调用 PLC MCP、修改 PLC/IO/`Std` 或执行实体 PLC 在线动作。浏览器使用企业 PAC，而 Git 全局配置指向未监听的旧本地代理；本次只对 push 进程使用系统已验证的代理路径，没有修改全局 Git、PAC、WinHTTP 或 Windows 网络设置。Station010 `84d1577` 与 McpCoding `8d80fca` 均已推送对应远端分支。
