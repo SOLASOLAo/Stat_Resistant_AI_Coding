@@ -428,3 +428,12 @@
 - 用户关闭 PLE 并重启 Codex 扩展后，persistent 会话恢复为唯一 healthy PLE：session `c107a39e-91d7-47d7-b91d-c2fb7a321aca`、PID `33748`、profile `ctrlX PLC 2.6.8`。runner 复用该会话打开 action 指定的同一 PLC 工程；这暴露出证据白名单遗漏只读 `open_project` 的问题，producer/consumer 与回归 fixture 已补齐该能力，仍禁止 `save_project` 和所有在线能力。
 - 真实 operation `cpstudio-stage2-94920f26-6481-4d97-bb8e-f48775c12c95-70171e90` 已由 immutable action SHA `59422DA644F93CE1EE3181F686C7173976B4B4E81F6F2521F21AE1D9B90F8116` 完成 `Stage2 → live runner → producer → consumer` 闭环，revision `2`、最终状态 `DONE`。fresh offline Build 为 **0 errors / 6 warnings**；warning 多重集为 3 个签名（`application is up to date` 1 次、`CLASS` 兼容提示 4 次、`OPC.UA.DA` 属性提示 1 次），无 I/O、Symbol、旧签名或应用代码错误，因此不要求 Export #2，也不要求 CpStudio/PLC 修复。
 - PLC `.project` 在 Build 前后 SHA-256 均为 `42BB6D9C1BA5E1544DC0751AA7BE9F7A43FD94C9F9875B6C940425ABAE0055C5`，未被写入。按 Skill readiness gate 只建立一份同哈希、Git 忽略的内容寻址检查点；未重复备份。全过程没有连接、下载、启停、读写变量、FORCE、第二 PLE、direct watcher IPC，也没有修改 Station010/PLC/IO/Std；用户自有 `docs/ai_coding_showcase.html` 继续保持未暂存、未覆盖。
+
+## 用户本地离线 Post-export 检查器（2026-08-23）
+
+- 新增 `scripts/cpstudio/Run-OfflinePostExportCheck.cmd`。用户断网时双击运行，按提示选择第 1/2 次 Export、CpStudio Output 类型、普通变量或 EtherCAT BMK，以及是否已完成 Link I/O；PowerShell checker 只在确认没有既有 PLE/MCP 和 `.project.~u` 后启动一组自有 `codesys-mcp-persistent`/PLE。
+- runner 仅调用 `get_codesys_status → open_project → compile_project → get_compile_messages → shutdown_codesys`；没有编辑、保存、在线连接、下载、启停、变量写入或 FORCE。PLC `.project` Build 前后 SHA-256、owned PID/父子关系、进程退出和锁释放全部失败关闭；全局锁覆盖 anchor 读取到不可变报告写入，锁占用、权限或路径异常均不执行 Build、不落报告。正常报告写入 `data/reports/offline-post-export/`，不推进 Stage 2 ledger。
+- 统一补丁新增 `ctrlX strict no-save compile guard v2`：移除 dirty-project 隐式 `save()`，工程 dirty 状态不可确认或为 dirty 时拒绝 Build。检查器只使用本次隔离 TEMP 生成的 fresh Build evidence 作决策，缓存消息仅作附录；`DONE_OFFLINE` 只表示无需继续 Export，不代表 warning/质量门禁通过。
+- Export #2 只能由 fresh、verified、0-error 的 Export #1 Build 建立 anchor，并要求当前及随后导出都有可关联、带时间戳的 CpStudio request；缺少 request 时明确回到 Export #1，不创建不可使用的 anchor。对象占用、次数误选、Output 待确认和 Build 前 Link I/O 会显式携带该 anchor；Export #2 一旦进入 Build 即消费，终态和已尝试 Build 的报告不能复活旧 anchor。
+- 根项目与通用新项目模板的 checker/helper/launcher/test 内容哈希一致，各 **458 assertions** 通过；初始化器端到端 **65 assertions** 通过并会把它们带到以后项目。真实 `-WhatIf` 读回 `1 PLE + 4 MCP + .project.~u`、`wouldStart=false`，前后 5 个 PID 完全不变；因此本轮没有强关会话、没有手删锁，也没有冒充完成真实生命周期 smoke test，待用户正常关闭 owner 后补做一次。
+- 本轮没有修改 Station010、PLC、IO、CpStudio 模型或 `Std`，也没有执行任何实体 PLC 在线动作。用户自有 `docs/ai_coding_showcase.html` 保持未暂存、未覆盖。

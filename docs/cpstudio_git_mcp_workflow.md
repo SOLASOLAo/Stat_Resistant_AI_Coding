@@ -44,6 +44,41 @@ CpStudio Export 期间不得并发读取、打开或更新 Symbol Configuration�
 
 “界面无红字”不足以作为成功标准；必须核对完整 Output、I/O 映射、mixed 引用、Symbol 后处理和最终 Build。普通变量的条件二次 Export 与失效签名处理见 `docs/symbol_configuration_export_cycle.md`。
 
+### 断网时的本地检查
+
+断网但仍需继续 CpStudio 工作时，先完成 Export，再保存并关闭所有 PLE 以及
+占用 `codesys-persistent` 的 Codex/VS Code 窗口，然后双击
+`scripts/cpstudio/Run-OfflinePostExportCheck.cmd`。它不是 Post-export hook，
+不会在导出期间与 Symbol Configuration 抢锁。
+
+检查器只在全机 0 个 PLE、0 个既有 MCP 时启动一个自己拥有的本地会话，依次
+执行 `open_project → compile_project → get_compile_messages → shutdown_codesys`；
+它不调用修改或保存工具；已验证的 MCP no-save 补丁会在工程为 dirty 时拒绝
+Build，并在 Build 前后核对 `.project` SHA-256。它不调用任何真机在线能力。
+结果写入 `data/reports/offline-post-export/`，联网后可直接作为 AI 诊断输入。
+
+离线判断规则保持简单：
+
+- Build 有 errors：先修 Build，不做 Export #2；`bus_* ... BinIo` 且尚未 Link I/O
+  时先做 Link I/O；若已经做过仍报错，不重复 Link，等待 AI 检查 mixed/旧映射。
+- Build 为 0 且 Export #1 明确出现 OPC UA/PersistentVars/Symbol 后处理失败：做 Export #2。
+- Build 为 0 且 CpStudio Output 无红字：完成，不固定要求 Export #2。
+- `This object is already in use`：关闭并发占用后重试当前 Export，不把它误算成新一轮 Export。
+- fresh Build 仍报告旧 Symbol 签名：停止猜测，等待 AI/工程师审查清理。
+- Export #2 必须能关联到上一份 `NEEDS_EXPORT_2` 报告和随后产生的新 request；
+  对象占用、导出次数误选、Output 待确认或 Link I/O 中断会携带同一个 Export #2
+  anchor，重试不增加次数。Export #2 一旦真正进入 Build，anchor 即被消费，不会被后续
+  新流程误复活。
+- Export #1 没有带时间戳的 Post-export request 时，不创建 Export #2 anchor；先确认
+  signal-only Post-export 脚本并重新执行 Export #1。
+- 全局检查器锁覆盖 anchor 读取到报告写入；锁竞争、权限、文件或目录异常均不执行 Build、
+  不写报告，避免未持锁的运行破坏 anchor 顺序。
+- Export #2 后仍有 Symbol 错误，或 Build 汇总无法验证：停止循环，等待 AI。
+
+报告把 fresh Build 决策证据与缓存诊断分栏；缓存只作附录。该报告是方便离线
+工作的 advisory evidence，不会直接推进 Stage 2 ledger，也不会替代联网后的
+ownership、warning 签名和最终验收；`DONE_OFFLINE` 也只表示无需继续 Export。
+
 ## PLC 文本快照
 
 内置 `get_all_pou_code` 会从项目根递归。在 Station010 上它会进入庞大的设备树并超过 120 秒。因此本仓库提供 `scripts/plc/export_plc_snapshot.py`：

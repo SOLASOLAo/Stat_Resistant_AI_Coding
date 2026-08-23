@@ -14,6 +14,8 @@
 - [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
+- [x] 🟡 实现用户双击运行的本地离线 Post-export 检查器：只启动一组自有 MCP/PLE，执行 strict no-save fresh Build，保存不可变报告并判断 `DONE_OFFLINE/NEEDS_EXPORT_2/NEEDS_LINK_IO/RETRY/WAITING/BLOCKED`；Export #2 anchor 可跨对象占用、次数纠正和 Build 前 Link I/O 恢复，无可关联 request 时不建 anchor，任何全局锁获取失败均不落报告；根项目与通用模板各 458 项自测通过（2026-08-23）
+- [ ] 🔴 用户正常关闭现有 PLE/MCP owner 并释放 `.project.~u` 后，对 Station010 完成一次真实“启动 → fresh Build → 正常退出”离线检查器验收；不得强杀既有会话或手删活动锁
 - [x] 🔴 完成真实 CpStudio Post-export Stage2 闭环：唯一 persistent PLE 会话执行只读审计与 fresh Build（0 errors / 6 warnings），哈希绑定 evidence 经 producer/consumer 验证后 operation 到 `DONE`；确认本批无需 Export #2，并补齐 `open_project` 离线能力白名单(2026-08-23)
 - [x] 🔴 纠正 CpStudio/AI 接口所有权：生成 POU 的接口与 OES Declaration 仅由 CpStudio 配置，AI 只读消费；旧的整声明 REST 写入器在完成接口保持改造前标记为 blocked(2026-08-22)
 - [x] 🔴 增加 Station010 提交安全门：禁止整体暂存，含实体连接凭据的生成配置必须字段级审阅/脱敏，当前脏生成批次不上传(2026-08-22)

@@ -27,6 +27,9 @@ $requiredFiles = @(
     'scripts/cpstudio/Invoke-PostExportAudit.ps1',
     'scripts/cpstudio/Invoke-PostExportEngineering.ps1',
     'scripts/cpstudio/New-PostExportRunnerEvidence.ps1',
+    'scripts/cpstudio/Invoke-OfflinePostExportCheck.ps1',
+    'scripts/cpstudio/offline_mcp_build.cjs',
+    'scripts/cpstudio/Run-OfflinePostExportCheck.cmd',
     'scripts/git/Get-ReadOnlyGitAudit.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
@@ -34,7 +37,8 @@ $requiredFiles = @(
     'scripts/setup/Test-TeamWorkstation.ps1',
     'tests/cpstudio/Test-PostExportQueue.ps1',
     'tests/cpstudio/Test-PostExportEngineering.ps1',
-    'tests/cpstudio/Test-PostExportRunnerEvidence.ps1'
+    'tests/cpstudio/Test-PostExportRunnerEvidence.ps1',
+    'tests/cpstudio/Test-OfflinePostExportCheck.ps1'
 )
 
 $failures = New-Object System.Collections.Generic.List[string]
@@ -370,6 +374,25 @@ foreach ($relativePath in $postExportFiles) {
         if ($text.Contains($forbiddenText)) {
             $failures.Add("Post-export hook contains forbidden launcher/online text '$forbiddenText': $relativePath")
         }
+    }
+}
+
+$postExportHookText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot 'scripts/cpstudio/post_export_signal.bat'))
+if ($postExportHookText.Contains('OfflinePostExportCheck')) {
+    $failures.Add('CpStudio Post-export hook must not start the user-triggered offline Build checker.')
+}
+
+$offlineHelperPath = Join-Path $repositoryRoot 'scripts/cpstudio/offline_mcp_build.cjs'
+$offlineHelperText = [System.IO.File]::ReadAllText($offlineHelperPath)
+foreach ($forbiddenText in @('connect_to_device', 'download_to_device', 'start_stop_application', 'write_variable', 'save_project')) {
+    if ($offlineHelperText.Contains($forbiddenText)) {
+        $failures.Add("Offline Build helper contains forbidden operation '$forbiddenText'.")
+    }
+}
+$offlineCheckerText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot 'scripts/cpstudio/Invoke-OfflinePostExportCheck.ps1'))
+foreach ($forbiddenText in @('Stop-Process', 'taskkill')) {
+    if ($offlineCheckerText.Contains($forbiddenText)) {
+        $failures.Add("Offline Build checker contains destructive process operation '$forbiddenText'.")
     }
 }
 

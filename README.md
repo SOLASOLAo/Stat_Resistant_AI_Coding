@@ -59,6 +59,20 @@ evidence；封装器本身不调用或启动任何工程工具：
 发生 Symbol 缺失/未选中、OPC UA/PersistentVars/Symbol 后处理失败，或 BMK
 变更经 Build 后仍需刷新时，才要求 Export #2；它不是每次导出的固定动作。
 
+断网时不需要手工猜这个判断。先保存并关闭所有 PLE 和占用 MCP 的
+Codex/VS Code 窗口，然后双击：
+
+```text
+scripts\cpstudio\Run-OfflinePostExportCheck.cmd
+```
+
+检查器取得全局锁后会独占启动一个本地 PLE，执行 fresh Build、保存本地报告，并明确给出
+`DONE_OFFLINE`、`NEEDS_EXPORT_2`、`NEEDS_LINK_IO` 或“等待 AI”的下一步。
+若全局锁被占用或无法创建，只在控制台给出原因，不执行 Build、也不写报告。
+它不调用代码修改或工程保存工具；MCP 的 no-save 补丁会在工程为 dirty 时拒绝
+Build，检查器还会复核工程前后哈希。它不执行任何真机在线动作，也没有接入
+CpStudio hook。`DONE_OFFLINE` 只表示无需继续 Export，不代表 warning/质量验收通过。
+
 新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
 不要从历史型 `HANDOVER.md` 反推安装步骤。
 
