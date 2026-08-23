@@ -9,7 +9,7 @@
 
 ## Backlog(以后再说)
 - [ ] 🟢 HMI 界面(OpCon Modulo 或路线②自研)
-- [ ] 🟢 依据 `docs/hmi_userdefined_integration.md` 更新 AI Coding 展示 HTML：增加克制的 HMI 案例，并修正 Post-export runner/checker 的过时状态；不得展示现场配置或宣称存在官方 HMI 写 API
+- [x] 🟢 依据 `docs/hmi_userdefined_integration.md` 更新 AI Coding 展示 HTML：明确 AI-first / 最低人工边界，加入 PLC、CpStudio、EtherCAT/BMK、HMI、断网五条操作流程和 UserDefined 案例；修正 Post-export runner/checker 状态并保留官方工具限制（2026-08-23）
 - [ ] 🟢 测量数据记录(CSV/数据库)与追溯
 - [ ] 🟢 对接 OpCon DataSetAccess / EventRecorder 接口
 - [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)

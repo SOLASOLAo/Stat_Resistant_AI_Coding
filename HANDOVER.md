@@ -454,3 +454,11 @@
 - Station010 已精确提交 `84d1577`（`feat: move overview content into UserDefined HMI`）。提交只包含 HMI 注册、宿主/内容画面与资源 100% rename；`PlcHandlerL1.ini`、Engineering/DataSetAccess/Targets、PLC/IO、Logbook 和 `Hmi/obj` 均未暂存。当前本机 `.vwn` 相对脱敏 HEAD 保持 modified 是预期状态，后续严禁整体暂存。
 - 结构、当前坐标、5 个绑定、注册文件、官方工具边界、验证证据和后续 HTML 事实已集中记录到 `docs/hmi_userdefined_integration.md`；现有 `docs/ai_coding_showcase.html` 是用户 2026-08-20 的既有未提交改动，本轮未覆盖。
 - 本轮未执行完整 CpStudio Export 或 PLC Build，也未调用 PLC MCP、修改 PLC/IO/`Std` 或执行实体 PLC 在线动作。浏览器使用企业 PAC，而 Git 全局配置指向未监听的旧本地代理；本次只对 push 进程使用系统已验证的代理路径，没有修改全局 Git、PAC、WinHTTP 或 Windows 网络设置。Station010 `84d1577` 与 McpCoding `8d80fca` 均已推送对应远端分支。
+
+## AI-first 展示页与操作边界更新（2026-08-23）
+
+- `docs/ai_coding_showcase.html` 已从旧的三方概览更新为 AI-first 工程方案：可经受控接口稳定完成的需求结构化、PLC/SFC 实现、Export/BMK/Symbol 审计、Build 修复、既有 UserDefined 内容维护、证据与 Git 默认由 AI 执行；用户只保留 CpStudio 模型/生成接口/View 注册、当前无稳定接口的官方 GUI 操作，以及所有实体设备安全决定。
+- 页面新增 6 行责任矩阵和 5 个可切换流程：纯 PLC、CpStudio 模型 Export、EtherCAT/BMK、HMI、断网离线。明确 Export #2 只在报告要求时执行；官方 Post-export 槽只调用项目自研请求脚本，Stage 2 仍为 PlanOnly，通用无人值守 live runner 尚未实现。
+- 新增 HMI 章节，记录 `OverView → Mod_SmartControlHost1 → UserDefined` 分层、1 个 Host / 5 个业务控件 / 4 个绑定及资源关系。准确边界为“AI 维护 WFML/resources，CpStudio 内嵌 HMI Configurator 负责官方加载、预览和保存”；没有宣称存在官方 HMI 写 API/headless CLI，也没有把独立 VisiWinNET 当作验证工具。
+- 历史指标已纠正为“最近一次已记录 Clean Build 基线 0 errors / 6 warnings、237-object 确定性快照”，不再冒充当前脏工作树状态；Post-export、离线 checker 和 HMI 的状态更新至 2026-08-23。页面经 Edge 1440×1200 实际渲染检查，责任矩阵、断网流程、HMI 案例和结论章节均无溢出，五个流程页签可切换，`git diff --check` 通过。
+- 本轮仅修改 McpCoding 文档，不调用 PLC MCP，不修改 Station010/PLC/IO/CpStudio/`Std`，不连接、下载、启停、写变量或 FORCE 实体 PLC。提交仍须精确暂存这 3 个文档，禁止整体暂存。

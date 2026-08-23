@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="BPP 电阻测试台 CpStudio + ctrlX MCP AI Coding 工作流、工程框架与真实 PLC 逻辑展示。">
-  <title>AI Coding for ctrlX｜电阻测试台工程实践</title>
+  <meta name="description" content="BPP 电阻测试台 CpStudio、Git 与 AI 协作流程及最近已验证的工程结论。">
+  <title>CpStudio + Git + AI｜电阻测试台工程结论</title>
   <style>
     :root {
       color-scheme: dark;
@@ -40,15 +40,13 @@
       min-width: 320px;
       font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 12% 4%, rgba(50, 223, 207, 0.12), transparent 30rem),
-        radial-gradient(circle at 92% 19%, rgba(101, 168, 255, 0.12), transparent 34rem),
-        linear-gradient(180deg, var(--bg-deep), var(--bg) 30%, #081321 100%);
+      background: var(--bg-deep);
       line-height: 1.65;
       overflow-x: hidden;
     }
 
     body::before {
+      display: none;
       content: "";
       position: fixed;
       inset: 0;
@@ -78,8 +76,8 @@
     .progress-bar {
       width: 0;
       height: 100%;
-      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
-      box-shadow: 0 0 14px rgba(50,223,207,0.7);
+      background: var(--blue);
+      box-shadow: none;
       transition: width 120ms linear;
     }
 
@@ -89,8 +87,8 @@
       top: 0;
       height: 68px;
       border-bottom: 1px solid var(--line);
-      background: rgba(4, 10, 19, 0.82);
-      backdrop-filter: blur(18px);
+      background: rgba(4, 10, 19, 0.96);
+      backdrop-filter: none;
     }
 
     .topbar-inner {
@@ -119,8 +117,8 @@
       place-items: center;
       border: 1px solid rgba(50,223,207,0.48);
       border-radius: 11px;
-      background: linear-gradient(145deg, rgba(50,223,207,0.2), rgba(101,168,255,0.12));
-      box-shadow: inset 0 0 18px rgba(50,223,207,0.08);
+      background: rgba(101,168,255,0.12);
+      box-shadow: none;
     }
 
     .brand-mark svg { width: 21px; height: 21px; }
@@ -169,8 +167,8 @@
     }
 
     .icon-btn:hover, .primary-btn:hover, .ghost-btn:hover, .scenario-btn:hover, .tab-btn:hover {
-      transform: translateY(-1px);
-      border-color: rgba(50,223,207,0.6);
+      transform: none;
+      border-color: rgba(101,168,255,0.55);
     }
 
     .icon-btn {
@@ -228,7 +226,7 @@
       width: 24px;
       height: 2px;
       background: currentColor;
-      box-shadow: 0 0 10px currentColor;
+      box-shadow: none;
     }
 
     h1, h2, h3, p { margin-top: 0; }
@@ -236,17 +234,17 @@
     h1 {
       max-width: 760px;
       margin: 18px 0 22px;
-      font-size: clamp(42px, 6.2vw, 78px);
+      font-size: clamp(40px, 5.2vw, 66px);
       line-height: 1.03;
       letter-spacing: -0.055em;
       overflow-wrap: anywhere;
     }
 
     h1 .gradient {
-      color: transparent;
-      background: linear-gradient(96deg, var(--cyan), #80d7ff 55%, var(--purple));
-      background-clip: text;
-      -webkit-background-clip: text;
+      color: inherit;
+      background: none;
+      background-clip: border-box;
+      -webkit-background-clip: border-box;
     }
 
     .hero-copy > p {
@@ -270,9 +268,9 @@
     }
 
     .primary-btn {
-      border-color: rgba(50,223,207,0.55);
-      background: linear-gradient(135deg, rgba(50,223,207,0.24), rgba(101,168,255,0.18));
-      box-shadow: 0 10px 35px rgba(50,223,207,0.08);
+      border-color: rgba(101,168,255,0.55);
+      background: rgba(101,168,255,0.14);
+      box-shadow: none;
     }
 
     .ghost-btn { color: var(--muted); }
@@ -299,14 +297,14 @@
       position: relative;
       padding: 23px;
       border: 1px solid var(--line-strong);
-      border-radius: 28px;
-      background:
-        linear-gradient(145deg, rgba(22, 42, 66, 0.94), rgba(9, 19, 33, 0.94));
-      box-shadow: var(--shadow);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: none;
       overflow: hidden;
     }
 
     .system-card::before {
+      display: none;
       content: "";
       position: absolute;
       width: 250px;
@@ -345,7 +343,7 @@
       height: 7px;
       border-radius: 50%;
       background: currentColor;
-      box-shadow: 0 0 10px currentColor;
+      box-shadow: none;
     }
 
     .architecture-mini {
@@ -373,7 +371,7 @@
       left: 32px;
       width: 1px;
       height: 11px;
-      background: linear-gradient(var(--cyan), var(--blue));
+      background: var(--line-strong);
     }
 
     .node-icon {
@@ -432,7 +430,7 @@
 
     h2 {
       margin: 13px 0 0;
-      font-size: clamp(32px, 4.2vw, 52px);
+      font-size: clamp(30px, 3.8vw, 46px);
       line-height: 1.1;
       letter-spacing: -0.045em;
     }
@@ -445,7 +443,7 @@
       font-size: 15px;
     }
 
-    .accent { color: var(--cyan); }
+    .accent { color: var(--blue); }
     .orange { color: var(--orange); }
     .green { color: var(--green); }
     .blue { color: var(--blue); }
@@ -455,7 +453,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--panel);
-      box-shadow: 0 16px 50px rgba(0,0,0,.15);
+      box-shadow: none;
     }
 
     .three-lanes {
@@ -472,6 +470,7 @@
     }
 
     .lane::after {
+      display: none;
       content: attr(data-index);
       position: absolute;
       right: 15px;
@@ -565,6 +564,49 @@
     .boundary-banner p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
     .boundary-banner > span:last-child { color: var(--red); font-size: 12px; font-weight: 800; }
 
+    .scope-table-wrap {
+      margin-top: 17px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--panel);
+    }
+
+    .scope-table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .scope-table th,
+    .scope-table td {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .scope-table tr:last-child td { border-bottom: 0; }
+    .scope-table th { color: var(--muted); background: rgba(255,255,255,.025); font-size: 11px; letter-spacing: .04em; }
+    .scope-table td:first-child { width: 135px; color: var(--text); font-weight: 750; }
+    .scope-table td:nth-child(2) { width: 34%; color: #c9d8e6; }
+    .scope-table td:nth-child(3) { width: 34%; color: #c9d8e6; }
+
+    .scope-tag {
+      display: inline-block;
+      margin-bottom: 5px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      color: var(--cyan);
+      background: rgba(50,223,207,.09);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .scope-tag.manual { color: var(--orange); background: rgba(255,180,93,.09); }
+    .scope-tag.approval { color: var(--red); background: rgba(255,111,117,.09); }
+
     .structure-grid {
       display: grid;
       grid-template-columns: minmax(350px, .85fr) minmax(0, 1.15fr);
@@ -635,6 +677,7 @@
 
     .flow-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 18px;
     }
@@ -644,7 +687,7 @@
 
     .flow-stage { padding: 25px; }
     .flow-panel { display: none; }
-    .flow-panel.active { display: block; animation: fadeUp 240ms ease both; }
+    .flow-panel.active { display: block; animation: none; }
 
     .flow-track {
       display: grid;
@@ -714,7 +757,7 @@
 
     .ownership-card { padding: 23px; }
     .ownership-card h3 { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; font-size: 18px; }
-    .ownership-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px currentColor; }
+    .ownership-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); box-shadow: none; }
     .ownership-card:nth-child(2) .ownership-dot { background: var(--blue); }
     .ownership-card:nth-child(3) .ownership-dot { background: var(--purple); }
     .ownership-card > p { min-height: 63px; color: var(--muted); font-size: 13px; }
@@ -822,7 +865,7 @@
     }
 
     .sfc-node:last-child::after { display: none; }
-    .sfc-node.active { opacity: 1; border-color: rgba(50,223,207,.5); box-shadow: inset 0 0 23px rgba(50,223,207,.055), 0 0 22px rgba(0,0,0,.12); }
+    .sfc-node.active { opacity: 1; border-color: rgba(101,168,255,.5); box-shadow: none; }
     .sfc-node.active::after { color: var(--cyan); }
     .sfc-node code { display: block; margin-bottom: 6px; color: var(--cyan); font-size: 10px; }
     .sfc-node b { display: block; font-size: 11px; line-height: 1.35; }
@@ -963,7 +1006,7 @@
     .roadmap-card .stage { color: var(--cyan); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
     .roadmap-card h3 { margin: 6px 0 7px; font-size: 17px; }
     .roadmap-card p { margin: 0; color: var(--muted); font-size: 12px; }
-    .roadmap-card.current { border-color: rgba(50,223,207,.45); box-shadow: inset 0 0 35px rgba(50,223,207,.045); }
+    .roadmap-card.current { border-color: rgba(101,168,255,.45); box-shadow: none; }
     .roadmap-card.next .stage { color: var(--orange); }
 
     .closing {
@@ -972,7 +1015,7 @@
       padding: 36px;
       border: 1px solid rgba(50,223,207,.3);
       border-radius: 24px;
-      background: linear-gradient(135deg, rgba(50,223,207,.1), rgba(101,168,255,.07), rgba(189,140,255,.06));
+      background: rgba(101,168,255,.07);
       overflow: hidden;
     }
     .closing::after { content: "AI × PLC"; position: absolute; right: 25px; bottom: -18px; color: rgba(255,255,255,.04); font-size: clamp(60px, 10vw, 126px); font-weight: 900; line-height: 1; }
@@ -1006,8 +1049,8 @@
       border: 1px solid var(--line-strong);
       border-radius: 13px;
       background: rgba(4,10,19,.88);
-      backdrop-filter: blur(15px);
-      box-shadow: var(--shadow);
+      backdrop-filter: none;
+      box-shadow: none;
     }
     .presentation-controls button { width: 38px; height: 34px; border: 0; border-radius: 8px; color: var(--muted); background: rgba(255,255,255,.05); cursor: pointer; }
     .presentation-controls button:hover { color: var(--text); background: rgba(50,223,207,.12); }
@@ -1090,6 +1133,10 @@
       h1 { font-size: 34pt; }
       h2 { font-size: 25pt; }
       .nav { display: none; }
+      .flow-tabs { display: none; }
+      .flow-panel { display: block !important; break-before: page; }
+      .flow-panel:first-child { break-before: auto; }
+      .flow-panel + .flow-panel { margin-top: 8mm; }
       footer { width: 100%; padding: 8mm; color: #53677a; }
     }
   </style>
@@ -1116,15 +1163,16 @@
         <a href="#framework">框架</a>
         <a href="#workflow">步骤</a>
         <a href="#ownership">归属</a>
+        <a href="#hmi">HMI</a>
         <a href="#home-chain">Home Chain</a>
         <a href="#interlock">联锁</a>
         <a href="#rename">复盘</a>
-        <a href="#proof">验收</a>
+        <a href="#proof">结论</a>
       </nav>
 
       <div class="toolbar">
         <button class="icon-btn" id="printBtn" type="button" title="打印或导出 PDF" aria-label="打印或导出 PDF">⌁<span>导出</span></button>
-        <button class="icon-btn" id="presentBtn" type="button" title="进入演示模式" aria-label="进入演示模式">▶<span>演示</span></button>
+        <button class="icon-btn" id="presentBtn" type="button" title="逐页浏览" aria-label="逐页浏览">▶<span>逐页</span></button>
       </div>
     </div>
   </header>
@@ -1133,54 +1181,54 @@
     <section class="chapter hero" id="overview" data-title="总览">
       <div class="hero-grid">
         <div class="hero-copy">
-          <span class="eyebrow">BPP Resistant Station · Engineering Practice</span>
-          <h1>让闭源低代码平台，进入<span class="gradient">可审计的 AI 开发闭环</span></h1>
-          <p>CpStudio 继续负责公司的 OpCon Plus 标准模型与 HMI；Git 固化事实和差异；AI 通过 ctrlX MCP / 官方扩展接口维护 PLC 应用逻辑，并用离线编译完成验证。</p>
+          <span class="eyebrow">BPP Resistant Station · Engineering Summary</span>
+          <h1>CpStudio + Git + AI 的<span class="gradient">AI-first 受控流程</span></h1>
+          <p>CpStudio 继续作为 OpCon Plus 模型、生成接口和 HMI 注册的事实源；AI 默认承担其余可重复工作：需求结构化、PLC/HMI 内容实现、导出审计、编译修复、证据留存与 Git 交接。只有必须在 CpStudio 界面完成的模型配置和现场安全决策留给工程师。</p>
           <div class="hero-actions">
-            <a class="primary-btn" href="#workflow">查看完整步骤 ↓</a>
-            <button class="ghost-btn" type="button" data-start-presentation>从头演示</button>
+            <a class="primary-btn" href="#workflow">查看开发流程 ↓</a>
+            <button class="ghost-btn" type="button" data-start-presentation>逐页浏览</button>
           </div>
           <div class="hero-note">
-            <strong>核心观点</strong>
-            <span>不是让 AI 绕过 CpStudio，而是把“手工生成后再修补”升级为有规格、有归属、有读回、有编译门禁的工程流程。</span>
+            <strong>默认原则</strong>
+            <span>能通过受控接口稳定完成的工作全部交给 AI；你只维护 CpStudio 事实源、确认工艺与安全，并在真机动作前作当次授权。</span>
           </div>
         </div>
 
         <div class="system-card" aria-label="系统架构摘要">
           <div class="system-head">
-            <span>Controlled engineering loop</span>
-            <span class="live-pill">已落地</span>
+            <span>Recorded PLC baseline · 2026-08-19</span>
+            <span class="live-pill">0 errors / 6 warnings</span>
           </div>
           <div class="architecture-mini">
             <div class="mini-node">
               <span class="node-icon">CP</span>
-              <span><b>CpStudio</b><small>模型 · Unit · HMI · BMK</small></span>
+               <span><b>CpStudio</b><small>模型 · 生成接口 · View 注册 · Export</small></span>
               <em>公司标准</em>
             </div>
             <div class="mini-node">
               <span class="node-icon">GIT</span>
-              <span><b>Specs + Ownership</b><small>需求 · 归属 · Hooks · 快照</small></span>
+               <span><b>Git Sidecar</b><small>Specs · 归属 · Hooks · 快照 · 证据</small></span>
               <em>事实层</em>
             </div>
             <div class="mini-node">
               <span class="node-icon">AI</span>
-              <span><b>AI + MCP / REST</b><small>ST 编码 · 语义合并 · 图形属性</small></span>
-              <em>应用层</em>
+               <span><b>AI + 官方工程接口</b><small>ST/SFC · IO 审计 · HMI 内容 · 修复</small></span>
+               <em>自动执行</em>
             </div>
             <div class="mini-node">
               <span class="node-icon">PLC</span>
-              <span><b>ctrlX PLC Engineering</b><small>读回 · 全量编译 · 结构化错误</small></span>
+               <span><b>ctrlX / CpStudio</b><small>读回 · Build · HMI 预览 · 现场批准</small></span>
               <em>验证层</em>
             </div>
           </div>
         </div>
 
         <div class="metrics" aria-label="当前工程快照">
-          <div class="metric"><strong>0</strong><span>当前离线编译 errors</span></div>
-          <div class="metric"><strong>7</strong><span>warning 基线</span></div>
-          <div class="metric"><strong>232</strong><span>PLC 对象快照</span></div>
-          <div class="metric"><strong>3</strong><span>可复用 AI-owned FB</span></div>
-          <div class="metric"><strong>6</strong><span>已验证对象目录</span></div>
+          <div class="metric"><strong>0</strong><span>最近已记录 Clean Build errors</span></div>
+          <div class="metric"><strong>6</strong><span>同一基线 warnings</span></div>
+          <div class="metric"><strong>237</strong><span>最近确定性 PLC 对象快照</span></div>
+          <div class="metric"><strong>400/400</strong><span>Kistler PDO 映射</span></div>
+          <div class="metric"><strong>5</strong><span>UserDefined 已迁移控件</span></div>
         </div>
       </div>
     </section>
@@ -1189,52 +1237,66 @@
       <div class="section-head">
         <div>
           <span class="section-kicker">01 · Responsibility</span>
-          <h2>各自做最擅长的事，<span class="accent">边界写进仓库</span></h2>
+          <h2>AI 默认执行，<span class="accent">人工只保留必要环节</span></h2>
         </div>
-        <p class="section-intro">闭源平台不可替代并不等于开发只能全手工。把模型生成、业务逻辑、验证发布拆成三条责任清晰的泳道，AI 才能稳定复用。</p>
+        <p class="section-intro">这里的边界按“有没有稳定、可验证的官方入口”划分，而不是把工作平均分配。可自动化的重复劳动由 AI 完成；CpStudio 模型事实和现场安全仍由你决定。</p>
       </div>
 
       <div class="three-lanes">
         <article class="lane panel" data-index="1">
-          <div class="lane-label"><span>CpStudio / 用户</span><span>定义“是什么”</span></div>
-          <h3>标准骨架与工艺输入</h3>
-          <p>保留供应商工具作为 OpCon Plus 模型和 HMI 的权威入口。</p>
+          <div class="lane-label"><span>AI 默认执行</span><span>重复工作全部接管</span></div>
+          <h3>实现、审计、验证、交接</h3>
+          <p>需求确认后，除模型专属配置和真机审批外，优先由 AI 完成闭环。</p>
           <ul class="clean-list">
-            <li>Station / Command Handler / Unit 层级</li>
-            <li>标准 Unit、AddOn、Peripheral 绑定</li>
-            <li>BMK、描述、Event、StationData、HMI</li>
-            <li>硬件接线、真机安全确认、下载批准</li>
+            <li>把聊天需求转成 specs、I/O、Event、Chain 验收条件</li>
+            <li>经唯一 PLE MCP / REST 编写、读回和修复 PLC 逻辑</li>
+            <li>审计 Export、BMK、I/O Mapping、Symbol 与 ownership</li>
+            <li>受控维护既有 UserDefined 内容、证据、文档和 Git</li>
           </ul>
         </article>
 
         <article class="lane panel" data-index="2">
-          <div class="lane-label"><span>Git / AI</span><span>定义“如何实现”</span></div>
-          <h3>规格驱动的应用逻辑</h3>
-          <p>对完整 POU、混合对象和图形属性采用不同的受控写入方式。</p>
+          <div class="lane-label"><span>你必须手动</span><span>CpStudio 事实源</span></div>
+          <h3>模型配置与官方 GUI 操作</h3>
+          <p>这些内容由 CpStudio 拥有，AI 强行写入会在下次 Export 时被覆盖或令生成失败。</p>
           <ul class="clean-list">
-            <li>把聊天需求沉淀到 specs/</li>
-            <li>通过 MCP 写 ST，通过 REST 写 SFC 属性</li>
-            <li>生成后按 ownership / hooks 做语义恢复</li>
-            <li>维护可读源码、对象知识库和变更记录</li>
+            <li>创建、删除、改名 Unit / AddOn / Peripheral / Chain</li>
+            <li>配置生成 POU 的 VAR_INPUT / VAR_OUTPUT、类型和方向</li>
+            <li>创建与注册 HMI View，执行 Save / Export</li>
+            <li>必要时点击 Read fieldbus、Write designators、Link I/O</li>
           </ul>
         </article>
 
         <article class="lane panel" data-index="3">
-          <div class="lane-label"><span>ctrlX IDE</span><span>证明“确实可用”</span></div>
-          <h3>官方工程内验证</h3>
-          <p>真正的验收不是文本看起来正确，而是目标 IDE 接受并完整编译。</p>
+          <div class="lane-label"><span>你当次批准</span><span>现场与安全</span></div>
+          <h3>会影响实体设备的动作</h3>
+          <p>AI 可以准备步骤和检查表，但不能把离线结果当作真机授权。</p>
           <ul class="clean-list">
-            <li>写入后立即读回和哈希比对</li>
-            <li>结构化获取编译错误并闭环修复</li>
-            <li>审计 I/O Mapping 与 Symbol Configuration</li>
-            <li>生成快照、测试报告并 Git 提交</li>
+            <li>确认接线、拓扑、气源、输出隔离和设备身份</li>
+            <li>批准连接实体 PLC、下载 EtherCAT / PLC 配置</li>
+            <li>批准启停 runtime、在线写变量、动作测试</li>
+            <li>FORCE 及解除、故障注入、FAT 与安全验收</li>
           </ul>
         </article>
       </div>
 
+      <div class="scope-table-wrap" aria-label="AI 与人工责任矩阵">
+        <table class="scope-table">
+          <thead><tr><th>工作范围</th><th>AI 负责</th><th>你需要做</th><th>完成标准</th></tr></thead>
+          <tbody>
+            <tr><td>工艺需求</td><td><span class="scope-tag">AI</span><br>整理状态、输入输出、超时、报警、取消和验收清单。</td><td><span class="scope-tag manual">人工决定</span><br>确认工艺含义、动作顺序和安全意图。</td><td>specs 无歧义并得到确认</td></tr>
+            <tr><td>CpStudio 模型</td><td><span class="scope-tag">AI</span><br>只读审计、指出配置位置、检查 Export 差异。</td><td><span class="scope-tag manual">必须手动</span><br>配置层级、标准对象、Channel、生成接口、Event/数据和 View 注册。</td><td>CpStudio Save / Export 成功</td></tr>
+            <tr><td>PLC / SFC</td><td><span class="scope-tag">AI 主责</span><br>按 ownership 经 MCP/REST 实现、读回、Build、修复和留证。</td><td>确认最终行为；接口缺失时回 CpStudio 补配置。</td><td>fresh Build 0 errors，warning 已审阅</td></tr>
+            <tr><td>EtherCAT / BMK</td><td><span class="scope-tag">AI</span><br>ESI/工程审计、跨层旧引用定位、受控修复和最终 Build。</td><td><span class="scope-tag manual">界面/现场</span><br>确认实物拓扑；在 CpStudio/IOE 完成当前没有稳定接口的读取、写入和 Link I/O。</td><td>拓扑、PDO、BinIo、Mapping、Symbol 一致</td></tr>
+            <tr><td>HMI</td><td><span class="scope-tag">AI</span><br>在已注册的 UserDefined 中受控维护 WFML、绑定与资源。</td><td><span class="scope-tag manual">CpStudio</span><br>创建/注册 View，并用内嵌 HMI Configurator 加载、预览、保存和完整 Export。</td><td>官方 Configurator 验证 + 精确 diff</td></tr>
+            <tr><td>真机</td><td>准备下载步骤、观察量、测试记录和回退方案。</td><td><span class="scope-tag approval">当次明确授权</span><br>连接、下载、启停、在线写值、FORCE、动作测试和最终 FAT。</td><td>现场安全确认和用户签收</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <div class="boundary-banner">
         <div class="boundary-icon">!</div>
-        <div><b>安全红线不会因自动化而放宽</b><p>不手改加密 .project；未经用户确认不连接实体 PLC、不下载、不启停 runtime、不 FORCE 变量；Std 始终严格只读。</p></div>
+        <div><b>安全红线不会因自动化而放宽</b><p>不手改加密 .project；未经当次确认不连接实体 PLC、不下载、不启停 runtime、不写在线变量、不 FORCE；Std 始终严格只读。</p></div>
         <span>Human approval required</span>
       </div>
     </section>
@@ -1243,9 +1305,9 @@
       <div class="section-head">
         <div>
           <span class="section-kicker">02 · Project Framework</span>
-          <h2>供应商工程不搬家，<span class="accent">AI 仓库做旁车</span></h2>
+          <h2>供应商工程保持原样，<span class="accent">开发资产独立管理</span></h2>
         </div>
-        <p class="section-intro">每个项目使用同一目录标准。CpStudio 生成目录保持原样，AI 的规格、可读源码、工具和证据集中在独立仓库，跨项目只换配置与工艺内容。</p>
+        <p class="section-intro">CpStudio 生成目录保持原样；规格、可读源码、对象接口、测试和交接放在独立仓库。这样既不破坏供应商工程，也便于新项目复用相同规则。</p>
       </div>
 
       <div class="structure-grid">
@@ -1275,7 +1337,7 @@
         <article class="facts-card panel">
           <div class="card-head"><h3>三类事实源</h3><small>Single source of truth</small></div>
           <div class="workspace-map">
-            <div class="workspace-box"><b class="blue">Station010</b><p>运行时工程载体。只能通过相应 IDE、MCP 或官方扩展接口修改。</p></div>
+            <div class="workspace-box"><b class="blue">Station010</b><p>运行时工程载体。.project 只能经相应 IDE/MCP；HMI WFML/resources 仅在检查点和精确 diff 下受控维护。</p></div>
             <div class="workspace-box readonly"><b class="orange">Std</b><p>查手册、验证接口、建立 catalog；任何情况下都不修改。</p></div>
             <div class="workspace-box active"><b class="accent">McpCoding</b><p>规格、AI 源码、恢复清单、工具、测试和交接的长期资产。</p></div>
           </div>
@@ -1295,7 +1357,7 @@
       <div class="section-head">
         <div>
           <span class="section-kicker">03 · Development Loop</span>
-          <h2>先判断变更类型，再走<span class="accent">最短闭环</span></h2>
+          <h2>按变更类型选择<span class="accent">对应流程</span></h2>
         </div>
         <p class="section-intro">并非每次写逻辑都重新打开 CpStudio。只有层级、Unit、BMK、HMI 等模型变化才重新生成；纯 PLC 应用逻辑直接从规格进入 MCP。</p>
       </div>
@@ -1303,31 +1365,70 @@
       <div class="flow-tabs" role="tablist" aria-label="开发流程类型">
         <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-flow="plc">PLC 逻辑变更</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" data-flow="model">CpStudio 模型变更</button>
+        <button class="tab-btn" type="button" role="tab" aria-selected="false" data-flow="io">EtherCAT / BMK</button>
+        <button class="tab-btn" type="button" role="tab" aria-selected="false" data-flow="hmi">HMI 画面</button>
+        <button class="tab-btn" type="button" role="tab" aria-selected="false" data-flow="offline">断网离线</button>
       </div>
 
       <div class="flow-stage panel">
         <div class="flow-panel active" data-flow-panel="plc">
           <div class="flow-track">
-            <div class="flow-step"><b>确认需求</b><p>将口头工艺拆成输入、输出、状态、超时、报警和取消行为。</p><span class="who">用户 + AI</span></div>
+            <div class="flow-step"><b>你确认需求</b><p>说明想实现的动作、设备条件和安全意图；AI 主动补齐问题。</p><span class="who">用户 + AI</span></div>
             <div class="flow-step"><b>固化 Specs</b><p>写入对应 Station、IO、Event、Unit 或 Chain 规格，消除歧义。</p><span class="who ai">Git / AI</span></div>
-            <div class="flow-step"><b>生成 ST</b><p>优先复用 catalog 和通用 FB；决定完整对象或混合 Hook 写法。</p><span class="who ai">AI</span></div>
-            <div class="flow-step"><b>MCP 写入</b><p>调用官方 IDE 脚本引擎写对象；SFC 属性使用 REST 扩展接口。</p><span class="who ide">MCP / REST</span></div>
-            <div class="flow-step"><b>读回 + 编译</b><p>读回代码和属性，执行全量离线编译，按结构化错误闭环修复。</p><span class="who ide">ctrlX IDE</span></div>
-            <div class="flow-step"><b>留证提交</b><p>更新快照、测试、HANDOVER / TODO，提交并推送 GitHub。</p><span class="who ai">Git</span></div>
+            <div class="flow-step"><b>AI 生成实现</b><p>优先复用 catalog 和通用 FB；按完整对象、混合 Hook 或图形属性选择写法。</p><span class="who ai">AI</span></div>
+            <div class="flow-step"><b>受控写入</b><p>唯一 PLE 会话经 MCP 写 ST；明确归属的 SFC 属性经官方 REST 扩展。</p><span class="who ide">MCP / REST</span></div>
+            <div class="flow-step"><b>读回 + Build</b><p>AI 读回代码和属性，执行 fresh Build，并按结构化错误自动修复。</p><span class="who ide">AI + ctrlX IDE</span></div>
+            <div class="flow-step"><b>留证 + Git</b><p>AI 更新快照、测试、HANDOVER / TODO，精确暂存并推送。</p><span class="who ai">AI</span></div>
           </div>
-          <div class="flow-foot"><span>典型场景：新建通用 FB、补充 Chain Action、修改应用联锁。</span><strong>不需要重新生成 CpStudio</strong></div>
+          <div class="flow-foot"><span>你的操作通常只有“描述需求、确认结果”；接口已经存在时无需打开 CpStudio。</span><strong>纯应用逻辑由 AI 闭环</strong></div>
         </div>
 
         <div class="flow-panel" data-flow-panel="model">
           <div class="flow-track">
-            <div class="flow-step"><b>CpStudio 修改</b><p>用户添加 Unit / AddOn / Chain，或修改 BMK、Event、HMI、StationData。</p><span class="who">用户</span></div>
-            <div class="flow-step"><b>导出工程</b><p>由 CpStudio 生成标准 OpCon Plus 骨架。导出完成是审计起点。</p><span class="who">CpStudio</span></div>
-            <div class="flow-step"><b>差异快照</b><p>唯一 MCP 会话读取 Git diff 与 PLC 文本快照，识别新增、覆盖、残留。</p><span class="who ai">Git / AI</span></div>
-            <div class="flow-step"><b>按归属恢复</b><p>依据 ownership、hooks、graphical 做完整重放或语义合并。</p><span class="who ide">MCP / REST</span></div>
-            <div class="flow-step"><b>配置层审计</b><p>同时检查 BinIo、EtherCAT I/O Mapping 和 Symbol Configuration。</p><span class="who ide">IDE API</span></div>
-            <div class="flow-step"><b>门禁 + 提交</b><p>读回、离线编译、静态测试、报告、提交；错误不清零不交付。</p><span class="who ai">AI + Git</span></div>
+            <div class="flow-step"><b>你配置模型</b><p>在 CpStudio 添加或修改层级、标准对象、Channel、生成接口、数据、Event 或 View。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>Save + Export #1</b><p>保存模型并执行 Control plus Studio export；官方 Post-export 槽只调用项目请求脚本。</p><span class="who">用户 / CpStudio</span></div>
+            <div class="flow-step"><b>请求 + Stage 1</b><p>项目自研 hook 写 request；AI 只读审计 Git、指纹与 ownership，不并发访问 Symbol。</p><span class="who ai">Sidecar</span></div>
+            <div class="flow-step"><b>计划 + 恢复</b><p>Stage 2 先生成计划；现有唯一 persistent 会话再按归属恢复 AI-owned / mixed 内容。</p><span class="who ide">AI + MCP/REST</span></div>
+            <div class="flow-step"><b>fresh Build</b><p>AI 读回、检查 BinIo/Mapping/Symbol 并修复到 0 errors，单独审阅 warning。</p><span class="who ide">ctrlX IDE</span></div>
+            <div class="flow-step"><b>条件收尾</b><p>只有报告明确要求时你才做 Export #2；AI 随后最终 Build、证据和 Git。</p><span class="who ai">用户 + AI</span></div>
           </div>
-          <div class="flow-foot"><span>下一步自动化：CpStudio 官方 Post-export Hook 只发送请求，现有唯一 MCP 会话负责消费。</span><strong>避免第二个 IDE 抢 profile</strong></div>
+          <div class="flow-foot"><span>Hook、请求队列、Stage 1 审计和 Stage 2 计划已落地；Hook 本身绝不启动第二个 PLE/MCP。通用无人值守 live runner 尚未实现。</span><strong>Export #2 不是固定步骤</strong></div>
+        </div>
+
+        <div class="flow-panel" data-flow-panel="io">
+          <div class="flow-track">
+            <div class="flow-step"><b>确认实物与 ESI</b><p>你确认设备身份、接线与实际拓扑；AI 阅读手册、核对 ESI 和 PDO。</p><span class="who">用户 + AI</span></div>
+            <div class="flow-step"><b>IOE 组态</b><p>关闭手工 IOE 后，AI 可经 IOE 2.6.4 官方脚本面审计/受控修改；也可由你在 GUI 扫描添加。</p><span class="who ide">IOE / AI</span></div>
+            <div class="flow-step"><b>CpStudio 读取</b><p>你读取 PLC IDE fieldbus config，让 Peripheral 匹配，并配置 BMK、描述、Channel 与绑定。</p><span class="who">用户 / CpStudio</span></div>
+            <div class="flow-step"><b>写入 + Export #1</b><p>依次 Save、Write peripheral and I/O designators、Export #1。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>Link I/O</b><p>你在 PLE 执行 Link I/O；这一步才把 connector mapping 切到新变量。</p><span class="who">用户 / PLE</span></div>
+            <div class="flow-step"><b>AI 跨层收口</b><p>AI 修复 mixed 旧 BMK 引用，审计 BinIo/Mapping/Symbol、Build；仅在报告要求时再 Export #2。</p><span class="who ai">AI</span></div>
+          </div>
+          <div class="flow-foot"><span>IO 工程只用 ctrlX I/O Engineering 2.6.4 / IOE-IPC，绝不用 PLE 打开。</span><strong>固定顺序可避免旧映射残留</strong></div>
+        </div>
+
+        <div class="flow-panel" data-flow-panel="hmi">
+          <div class="flow-track">
+            <div class="flow-step"><b>你注册 View</b><p>在 CpStudio 创建/注册 View；已有 UserDefined 时通常无需重复创建。</p><span class="who">用户 / CpStudio</span></div>
+            <div class="flow-step"><b>AI 建检查点</b><p>记录 WFML、resources、csproj 关系与当前绑定，明确只改已授权内容。</p><span class="who ai">AI + Git</span></div>
+            <div class="flow-step"><b>AI 编辑内容</b><p>迁移或生成控件、绑定、资源和布局；不伪造 CpStudio 模型注册。</p><span class="who ai">AI</span></div>
+            <div class="flow-step"><b>你官方预览</b><p>在 CpStudio 内嵌 HMI Configurator 加载 UserDefined 和宿主画面，检查并保存。</p><span class="who">用户 / CpStudio</span></div>
+            <div class="flow-step"><b>你完整 Export</b><p>视觉确认后执行 CpStudio Export，使模型和生成物完成正式往返。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>AI 审计提交</b><p>AI 做精确 diff、绑定/资源静态检查、脱敏暂存和 Git 交接。</p><span class="who ai">AI</span></div>
+          </div>
+          <div class="flow-foot"><span>当前没有已验证的官方 HMI 写 API 或 headless CLI；独立 VisiWinNET 与本项目程序集不兼容。</span><strong>AI 写内容，CpStudio 做官方验证</strong></div>
+        </div>
+
+        <div class="flow-panel" data-flow-panel="offline">
+          <div class="flow-track">
+            <div class="flow-step"><b>Export #1</b><p>断网时你仍按正常方式在 CpStudio 保存并导出。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>关闭占用者</b><p>保存并关闭所有 PLE、MCP 会话与工程锁，避免 profile / Symbol 冲突。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>双击检查器</b><p>运行 <code>scripts\cpstudio\Run-OfflinePostExportCheck.cmd</code>。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>本地 fresh Build</b><p>检查器仅在无既有会话/锁时启动自己的一组 PLE/MCP，执行 no-save Build 后关闭。</p><span class="who ide">Offline checker</span></div>
+            <div class="flow-step"><b>查看结论</b><p>读取 DONE_OFFLINE、NEEDS_EXPORT_2、WAITING 等明确结果，不凭经验固定导出两次。</p><span class="who">用户</span></div>
+            <div class="flow-step"><b>按报告操作</b><p>仅在报告要求时做 Link I/O / Export #2；联网后再交给 AI 完成质量审阅和 Git。</p><span class="who">用户 + AI</span></div>
+          </div>
+          <div class="flow-foot"><span>检查器不编辑、不保存、不在线、不下载、不启停、不写变量；DONE_OFFLINE 也不代表 warning、FAT 或安全验收通过。</span><strong>断网时不再手工猜流程</strong></div>
         </div>
       </div>
     </section>
@@ -1336,7 +1437,7 @@
       <div class="section-head">
         <div>
           <span class="section-kicker">04 · Ownership & Merge</span>
-          <h2>不是“覆盖文件”，而是<span class="accent">按对象语义写入</span></h2>
+          <h2>按对象归属处理<span class="accent">生成覆盖</span></h2>
         </div>
         <p class="section-intro">CpStudio 可能再次生成同一工程。对象归属清单明确哪些由 AI 完整维护、哪些只维护实现体、哪些只能恢复约定 Hook，从机制上降低覆盖风险。</p>
       </div>
@@ -1371,15 +1472,60 @@
         <div class="rule"><b>完整编译</b>修改后先编译再读取消息；缓存消息不作为验收证据。</div>
         <div class="rule"><b>图形用接口</b>SFC Comment 等属性使用官方 REST GET / hash / PUT / readback。</div>
       </div>
+
+      <div class="boundary-banner">
+        <div class="boundary-icon">H</div>
+        <div><b>HMI 也按归属拆分</b><p>CpStudio 拥有 View 创建、注册和生成外壳；AI 可以维护已授权的 UserDefined 内容与资源，但必须先建检查点、做精确 diff，并回到 CpStudio 内嵌 HMI Configurator 加载/保存验证。</p></div>
+        <span>No public write API</span>
+      </div>
+    </section>
+
+    <section class="chapter" id="hmi" data-title="HMI 案例">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">05 · HMI Integration</span>
+          <h2>已验证案例：OverView 内容迁移到 <span class="accent">UserDefined</span></h2>
+        </div>
+        <p class="section-intro">目标不是绕开 CpStudio，而是把已经注册好的业务画面内容交给 AI 维护，再用 CpStudio 官方内嵌 HMI Configurator 做视觉验证与保存。</p>
+      </div>
+
+      <div class="structure-grid">
+        <article class="facts-card panel">
+          <div class="card-head"><h3>稳定的 HMI 分层</h3><small>Model shell → host → content</small></div>
+          <div class="workspace-map">
+            <div class="workspace-box"><b class="blue">OverView</b><p>主界面外壳，只保留一个 SmartControl Host，不再重复放业务控件。</p></div>
+            <div class="workspace-box readonly"><b class="orange">Mod_SmartControlHost1</b><p><code>SmartControlName = UserDefined</code>，负责把业务画面嵌入主界面。</p></div>
+            <div class="workspace-box active"><b class="accent">UserDefined</b><p>AI 受控维护控件、绑定与资源；CpStudio 负责官方加载、预览、保存和 Export。</p></div>
+          </div>
+          <div class="fact-rows">
+            <div class="fact-row"><span>CpStudio / 你</span><b>创建并注册 View、确认显示位置、在 Configurator 中预览保存、执行完整 Export</b></div>
+            <div class="fact-row"><span>AI</span><b>检查点、WFML/resources 修改、绑定与资源静态检查、精确 diff 和 Git 提交</b></div>
+            <div class="fact-row"><span>官方验证入口</span><b>CpStudio 5.11 内嵌 HMI Configurator；独立 VisiWinNET 不作为本项目验证工具</b></div>
+          </div>
+        </article>
+
+        <article class="facts-card panel">
+          <div class="card-head"><h3>Station010 迁移结果</h3><small>已通过官方加载/保存验证</small></div>
+          <div class="fact-rows">
+            <div class="fact-row"><span>OverView</span><b>只保留 1 个 <code>Mod_SmartControlHost1</code></b></div>
+            <div class="fact-row"><span>UserDefined</span><b>包含 5 个原业务控件：自动信息枚举、StationNo、TypeNo、Home LED、PictureBox</b></div>
+            <div class="fact-row"><span>Bindings</span><b>4 个 VWItem 绑定随内容迁移并完成静态复核</b></div>
+            <div class="fact-row"><span>Resources</span><b>图片资源键与 <code>UserDefined.resources</code> 的 DependentUpon 关系已保留</b></div>
+            <div class="fact-row"><span>验证</span><b>UserDefined 直接加载、OverView 宿主显示、保存/关闭后复核均通过</b></div>
+            <div class="fact-row"><span>每次收尾</span><b>布局再调整后仍需由你做一次官方预览/保存和完整 Export，AI 再审计提交</b></div>
+          </div>
+          <div class="hero-note"><strong>能力边界</strong><span>目前没有已验证的 CpStudio HMI 写 API 或 headless CLI。AI 能安全接管已注册画面的内容文件，但不能伪造 View 注册，也不能省略官方视觉验证。</span></div>
+        </article>
+      </div>
     </section>
 
     <section class="chapter" id="home-chain" data-title="Home Chain">
       <div class="section-head">
         <div>
-          <span class="section-kicker">05 · Real Logic / Home</span>
-          <h2>真实案例：Wp100 <span class="accent">回原位原子操作</span></h2>
+          <span class="section-kicker">06 · Real Logic / Home</span>
+          <h2>已实现案例：Wp100 <span class="accent">回原位原子操作</span></h2>
         </div>
-        <p class="section-intro">Home Chain 会先等待工人拍灯闪按钮，再根据压缸与安全门当前状态跳过不必要动作。点击下面四种初始状态，可直接演示实际路径。</p>
+        <p class="section-intro">Home Chain 先等待操作按钮，再根据压缸与安全门当前状态跳过不需要的动作。下面四种初始状态用于说明已实现的分支路径。</p>
       </div>
 
       <div class="logic-grid">
@@ -1409,15 +1555,15 @@
           <div class="sfc-route" id="sfcRoute">
             <div class="sfc-node active" data-node="start"><code>N010</code><b>等待拍按钮</b><small>闪灯 + 上升沿确认</small></div>
             <div class="sfc-node optional active" data-node="close"><code>N110</code><b>安全门关闭</b><small>WRKPOS</small></div>
-            <div class="sfc-node optional active" data-node="wait-close"><code>N120</code><b>等待关闭</b><small>IsInWrkPos</small></div>
-            <div class="sfc-node optional active" data-node="raise"><code>N130</code><b>压缸上升</b><small>BASPOS</small></div>
+            <div class="sfc-node optional active" data-node="wait-close"><code>N120</code><b>等待关闭</b><small>到位 + 安全反馈</small></div>
+            <div class="sfc-node optional active" data-node="raise"><code>N130</code><b>压缸上升</b><small>联锁成立后 BASPOS</small></div>
             <div class="sfc-node optional active" data-node="wait-raise"><code>N140</code><b>等待上升</b><small>IsInBasPos</small></div>
             <div class="sfc-node optional active" data-node="open"><code>N150</code><b>安全门打开</b><small>BASPOS</small></div>
             <div class="sfc-node optional active" data-node="wait-open"><code>N160</code><b>等待打开</b><small>IsInBasPos</small></div>
             <div class="sfc-node finish active" data-node="finish"><code>N999</code><b>完成</b><small>返回上层 Chain</small></div>
           </div>
           <div class="route-result" id="routeResult">路径：拍按钮 → 关闭安全门 → 压缸上升 → 打开安全门 → 完成</div>
-          <div class="cleanup-note"><b>取消也安全：</b><span>OnChainFinish 重置 FB Execute、灯输出、两个 Unit Execute 和本次运行标志。</span></div>
+          <div class="cleanup-note"><b>统一清理：</b><span>DONE、ERROR 或 CANCEL 时，OnChainFinish 重置按钮 FB、灯输出、两个 Unit Execute 和本次运行标志。</span></div>
         </article>
       </div>
     </section>
@@ -1425,20 +1571,20 @@
     <section class="chapter" id="interlock" data-title="联锁逻辑">
       <div class="section-head">
         <div>
-          <span class="section-kicker">06 · Real Logic / Interlock</span>
-          <h2>真实案例：Control On 到<span class="accent">主气压放行</span></h2>
+          <span class="section-kicker">07 · Real Logic / Interlock</span>
+          <h2>已实现案例：Control On 到<span class="accent">主气压放行</span></h2>
         </div>
-        <p class="section-intro">把“维修门供电—反馈确认—主阀供电—压力确认—标准 ControlOn 下电”封装成两个通用 FB，并在 Station 周期内运行。</p>
+        <p class="section-intro">维修门供电、门反馈、安全继电器反馈、主阀输出和压力反馈均纳入周期检查；故障通过标准 Event 与 ControlOn 接口处理。</p>
       </div>
 
       <div class="pressure-layout">
         <article class="pressure-card panel">
           <h3>正常路径</h3>
-          <p>只有 Station 处于 OPERATIONAL、总线正常、ControlOn 标准 AddOn 返回 OK，且两个维修门反馈均到位，主气阀才允许上电。</p>
+          <p>ControlOn 标准 AddOn 返回 OK 后，只有两个门反馈、两路门锁输出和维修门安全继电器 `_000K981_Y32` 都成立，主气阀才允许上电。</p>
           <div class="interlock-flow">
             <div class="interlock-step"><span class="signal">_000S901</span><b>按下 Control On</b><p>电气安全回路正常后，标准 AddOn 给出 OK。</p></div>
             <div class="interlock-step"><span class="signal">_000K980 / 981</span><b>维修门供电</b><p>FB_MaintenanceDoorControl 驱动两路输出。</p></div>
-            <div class="interlock-step warn"><span class="signal">5 s</span><b>确认门反馈</b><p>_000K980_A AND _000K981_B 必须同时成立。</p></div>
+            <div class="interlock-step warn"><span class="signal">5 s + 1 s</span><b>确认安全链</b><p>A/B 门反馈 5 s 内成立；随后 `_000K981_Y32` 需在 1 s 内成立。</p></div>
             <div class="interlock-step"><span class="signal">_000K085A</span><b>主气阀上电</b><p>维修门 Release 成立后才允许主压力输出。</p></div>
             <div class="interlock-step warn"><span class="signal">HIGH XOR LOW</span><b>压力状态确认</b><p>高低压不能同时出现；切换过程最长 5 s。</p></div>
           </div>
@@ -1446,7 +1592,7 @@
 
         <aside class="fault-panel">
           <h3>故障闭环</h3>
-          <div class="fault-row"><code>EVENT_MAINTENANCE_DOOR_NOT_LOAKED</code><span>维修门反馈 5 s 内未全部到位：锁存报警，阻断主气压。</span></div>
+          <div class="fault-row"><code>EVENT_MAINTENANCE_DOOR_NOT_LOAKED</code><span>A/B 门或 `_000K981_Y32` 未按时到位：锁存报警，并在 AdditionalInfo 标明具体信号。</span></div>
           <div class="fault-row"><code>EVENT_PRESSURE_NOT_HIGHER</code><span>要求高压后 5 s 未到：关闭 _000K085A。</span></div>
           <div class="fault-row"><code>EVENT_PRESSURE_NOT_LOWER</code><span>撤压后低压未到，或 HIGH / LOW 同时出现：报警。</span></div>
           <div class="fault-row"><code>ParImm.UserEnableControlOn := FALSE</code><span>通过标准 AddOn 的正式接口撤销 Control On，不抢写内部输出。</span></div>
@@ -1458,8 +1604,8 @@
     <section class="chapter" id="rename" data-title="BMK 改名复盘">
       <div class="section-head">
         <div>
-          <span class="section-kicker">07 · Learning Loop</span>
-          <h2>一次 BMK 改名，为什么<span class="accent">生成后仍报错</span></h2>
+          <span class="section-kicker">08 · Learning Loop</span>
+          <h2>BMK 改名后的<span class="accent">三层残留</span></h2>
         </div>
         <p class="section-intro">CpStudio 更新 BinIo 变量后，旧名字可能仍留在 EtherCAT I/O Mapping 与 Symbol Configuration。AI 处理的不是单个编译错误，而是跨配置层的一致性。</p>
       </div>
@@ -1473,7 +1619,7 @@
             <div class="rename-arrow">→</div>
             <div class="rename-box new"><span>新 BMK</span><code>_000B085A_LOW</code></div>
           </div>
-          <div class="hero-note"><strong>经验沉淀</strong><span>以后任何项目发生 BMK 改名，都固定执行三层审计，不再靠人工在界面里逐项猜测。</span></div>
+          <div class="hero-note"><strong>处理结论</strong><span>BMK 改名后固定核对生成变量、I/O Mapping 与 Symbol Configuration；编译错误只是三层不一致的结果。</span></div>
         </article>
 
         <article class="bmk-card panel">
@@ -1492,43 +1638,43 @@
       </div>
     </section>
 
-    <section class="chapter" id="proof" data-title="验收与下一步">
+    <section class="chapter" id="proof" data-title="结论与下一步">
       <div class="section-head">
         <div>
-          <span class="section-kicker">08 · Evidence & Scale</span>
-          <h2>效率的最终证据是<span class="accent">可重复交付</span></h2>
+          <span class="section-kicker">09 · Current Findings</span>
+          <h2>当前方案状态与<span class="accent">下一步</span></h2>
         </div>
-        <p class="section-intro">每次对话都应该沉淀为下次更快的资产：规格、通用 FB、对象接口、恢复规则、自动化脚本和编译证据，而不是只留在聊天记录里。</p>
+        <p class="section-intro">PLC 数字是 2026-08-19 最近一次已记录的 Clean Build 基线，不代表当前本机未提交工程；HMI 与工作流状态更新至 2026-08-23。</p>
       </div>
 
       <div class="proof-grid">
-        <article class="proof-card"><b>离线质量门禁</b><span class="proof-value">0 / 7</span><p>errors 必须为 0；warnings 与已知基线比较，新增项必须解释。</p></article>
-        <article class="proof-card"><b>通用应用组件</b><span class="proof-value">3 FB</span><p>操作按钮、主气压、维修门控制已形成 AI-owned 可读源码。</p></article>
-        <article class="proof-card"><b>标准对象知识</b><span class="proof-value">6</span><p>BasMove、Burster、ControlOn、EmergencySwitch、StationLamp、IpBurster。</p></article>
-        <article class="proof-card"><b>团队可部署</b><span class="proof-value">20</span><p>工作站健康检查覆盖软件、路径、MCP 补丁、三仓库和首次验收。</p></article>
+        <article class="proof-card"><b>最近 Clean Build</b><span class="proof-value">0 / 6</span><p>已记录基线为 0 errors / 6 warnings，C0198=0；当前工作树需重新 Build 后才能沿用结论。</p></article>
+        <article class="proof-card"><b>确定性 PLC 快照</b><span class="proof-value">237</span><p>最近一次记录为 237 objects，用于按对象确认生成前后的实际边界。</p></article>
+        <article class="proof-card"><b>Kistler EtherCAT</b><span class="proof-value">400/400</span><p>200 byte 输入与 200 byte 输出均已绑定并读回零差异。</p></article>
+        <article class="proof-card"><b>UserDefined HMI</b><span class="proof-value">1 → 5</span><p>OverView 只保留 1 个 Host，5 个业务控件迁入 UserDefined，并通过官方加载/保存验证。</p></article>
       </div>
 
       <div class="roadmap">
-        <article class="roadmap-card panel current"><span class="stage">NOW · 已落地</span><h3>人确认 + AI 闭环</h3><p>CpStudio 生成后，AI 按清单审计、恢复、编译、提交；真实逻辑已经在 Station010 工程验证。</p></article>
-        <article class="roadmap-card panel next"><span class="stage">NEXT · 自动触发</span><h3>Post-export 请求</h3><p>利用 CpStudio 官方 Hook 只产生 export_request；唯一 MCP 会话消费，避免多 IDE 抢占 profile。</p></article>
-        <article class="roadmap-card panel"><span class="stage">SCALE · 跨项目复用</span><h3>工艺规格 + 通用库</h3><p>复制同一旁车骨架，替换 project.yaml 与工艺 specs，复用 FB、catalog、门禁和团队部署脚本。</p></article>
+        <article class="roadmap-card panel current"><span class="stage">AVAILABLE · 日常可用</span><h3>AI 受控开发闭环</h3><p>需求→规格→MCP/REST/IOE→读回/Build→证据/Git 已可使用；纯 PLC 逻辑通常不再需要用户手写。</p></article>
+        <article class="roadmap-card panel current"><span class="stage">AVAILABLE · 已落地</span><h3>Post-export 与离线辅助</h3><p>官方 Hook 槽、项目请求脚本、Stage 1 审计、Stage 2 计划和离线 checker 已落地；已有一次真实受控 operation 完成到 DONE。Hook 不会自行启动第二个 PLE。</p></article>
+        <article class="roadmap-card panel next"><span class="stage">NEXT · 继续优化</span><h3>减少最后几次人工点击</h3><p>通用无人值守 live runner、统一单入口和离线 checker 完整工作站生命周期 smoke 仍待完成；HMI 完整 Export、生产流程、真机 FAT 与安全故障注入按项目推进。</p></article>
       </div>
 
       <div class="closing">
-        <h3>AI 的价值，不是替工程师点完所有按钮；是让每一次工程判断都成为下一次可以自动复用的能力。</h3>
-        <p>CpStudio 保证公司标准，工程师掌握工艺与安全决策，AI 承担高频编码、跨层审计和验证闭环——三者组合，才是当前可落地、可扩展的方案。</p>
+        <h3>结论：让 AI 接管可重复工程工作，让你只处理 CpStudio 事实源与现场决策。</h3>
+        <p>日常目标不是“AI 给建议、工程师照着点完”，而是 AI 直接完成规格、代码、审计、Build、错误闭环、HMI 内容和 Git；你只完成目前没有稳定自动入口的 CpStudio 配置、官方预览/Export，以及所有实体设备安全授权。软件联锁、离线 Build 和 HMI 预览都不能替代 FAT。</p>
       </div>
     </section>
   </main>
 
   <footer>
-    <span>AI Coding for ctrlX · BPP Resistant Station · 展示快照 2026-08-19</span>
+    <span>CpStudio + Git + AI · BPP Resistant Station · PLC 基线 2026-08-19 · 流程/HMI 状态 2026-08-23</span>
     <span>工程仓库：<a href="https://github.com/SOLASOLAo/Stat_Resistant_AI_Coding" target="_blank" rel="noreferrer">Stat_Resistant_AI_Coding</a> · 本页不构成真机下载或安全验收许可</span>
   </footer>
 
   <div class="presentation-controls" aria-label="演示控制">
     <button type="button" id="prevSlide" title="上一页">←</button>
-    <span class="slide-count" id="slideCount">1 / 9</span>
+    <span class="slide-count" id="slideCount">1 / 10</span>
     <button type="button" id="nextSlide" title="下一页">→</button>
     <button type="button" id="exitPresentation" title="退出演示">×</button>
   </div>
@@ -1573,10 +1719,19 @@
       // fragment after the sticky layout has settled, so make it deterministic.
       const requestedSection = new URLSearchParams(window.location.search).get('section') || window.location.hash.slice(1);
       if (requestedSection) {
-        requestAnimationFrame(() => {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        const revealRequestedSection = () => {
           const target = document.getElementById(requestedSection);
-          if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' });
-        });
+          if (!target) return;
+          const topbarOffset = document.querySelector('.topbar')?.offsetHeight || 0;
+          window.scrollTo({ top: target.offsetTop - topbarOffset, behavior: 'auto' });
+          setActiveSection(target.id);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(revealRequestedSection));
+        window.addEventListener('load', () => {
+          setTimeout(revealRequestedSection, 50);
+          setTimeout(revealRequestedSection, 500);
+        }, { once: true });
       }
 
       const goToSlide = (index) => {
