@@ -437,3 +437,12 @@
 - Export #2 只能由 fresh、verified、0-error 的 Export #1 Build 建立 anchor，并要求当前及随后导出都有可关联、带时间戳的 CpStudio request；缺少 request 时明确回到 Export #1，不创建不可使用的 anchor。对象占用、次数误选、Output 待确认和 Build 前 Link I/O 会显式携带该 anchor；Export #2 一旦进入 Build 即消费，终态和已尝试 Build 的报告不能复活旧 anchor。
 - 根项目与通用新项目模板的 checker/helper/launcher/test 内容哈希一致，各 **458 assertions** 通过；初始化器端到端 **65 assertions** 通过并会把它们带到以后项目。真实 `-WhatIf` 读回 `1 PLE + 4 MCP + .project.~u`、`wouldStart=false`，前后 5 个 PID 完全不变；因此本轮没有强关会话、没有手删锁，也没有冒充完成真实生命周期 smoke test，待用户正常关闭 owner 后补做一次。
 - 本轮没有修改 Station010、PLC、IO、CpStudio 模型或 `Std`，也没有执行任何实体 PLC 在线动作。用户自有 `docs/ai_coding_showcase.html` 保持未暂存、未覆盖。
+
+## HMI OverView / UserDefined 迁移（2026-08-23）
+
+- Station010 的 `OverView.sfc` 已收敛为单一 `Mod_SmartControlHost1`，`SmartControlName="UserDefined"`；原来的 `Mod_EnumDisplay1`、`Mod_VarOut2`、`Mod_VarOut3`、`Mod_Led1`、`Mod_PictureBox1` 共 5 个内容控件已迁入 `UserDefined.sfc`。嵌入偏移按宿主 `Y=4` 折算，保持最终画面绝对位置不变，临时 `AI_ProbeLabel` 已移除。
+- 图片资源由 `OverView.resources` 迁到 `UserDefined.resources`，键仍为 `Mod_PictureBox1.Images.0`；资源读回为 `551 × 761 / Format32bppArgb`。`OpCon.HMI.Modulo.csproj` 只保留 `UserDefined.resources → UserDefined.sfc` 关联，旧资源文件和项目引用均已移除。
+- 使用 CpStudio 5.11 内置的官方 HMI Configurator 完成两次加载验证：直接打开 `UserDefined` 可见状态灯、Station/Type 编号、设备图片和自动信息栏；再打开宿主 `OverView`，相同内容经唯一 SmartControlHost 完整显示。保存、正常关闭并重新审计后，CpStudio 未重新生成旧 `OverView.resources`，XML、4 条 VWItem 绑定、5 个控件 ID 和资源引用全部通过静态校验。
+- 本机独立 VisiWinNET Smart 与当前 OpCon 程序集运行时不兼容，Launcher 也判定所需版本不可用；因此当前受支持的官方可视化验证面是 CpStudio 内嵌 HMI Configurator。AI 仍可在内容寻址检查点和精确 diff 边界下维护用户画面文件，用户不必逐个手工搬控件；CpStudio 的模型树、画面注册和完整 Export 继续由 CpStudio 负责。
+- 本轮未执行完整 CpStudio Export：当时唯一 persistent PLE 会话仍在，直接 Export 可能再次争用 Symbol Configuration。迁移已完成官方加载/保存往返验证；下次正常 Export 应在释放 PLE/Symbol 占用后进行，再由 Post-export 流程审计是否保持。没有调用 PLC MCP、修改 PLC/IO/`Std`，也没有连接、下载、启停、读写变量或 FORCE 真机。
+- Station010 工作树还混有用户既有生成改动，并且 `.vwn`/其他生成配置存在凭据字段，故本轮不整体暂存、不提交或推送 Station010。HMI 最小变更集合仅为 `OverView.sfc`、`UserDefined.sfc`、`OverView.resources` 删除、`UserDefined.resources` 新增及 `OpCon.HMI.Modulo.csproj`；后续上传前仍需字段级审阅和脱敏。

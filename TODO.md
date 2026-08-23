@@ -14,6 +14,7 @@
 - [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
 
 ## 已完成(近期)
+- [x] 🟡 完成 HMI `OverView → UserDefined` 受控迁移：`OverView` 仅保留 `Mod_SmartControlHost1`，原状态灯、Station/Type 编号、设备图片和自动信息栏共 5 个控件及图片资源迁入 `UserDefined`；经 CpStudio 5.11 内置 HMI Configurator 分别加载 `UserDefined` 和宿主 `OverView`，显示及绑定正常（2026-08-23）
 - [x] 🟡 实现用户双击运行的本地离线 Post-export 检查器：只启动一组自有 MCP/PLE，执行 strict no-save fresh Build，保存不可变报告并判断 `DONE_OFFLINE/NEEDS_EXPORT_2/NEEDS_LINK_IO/RETRY/WAITING/BLOCKED`；Export #2 anchor 可跨对象占用、次数纠正和 Build 前 Link I/O 恢复，无可关联 request 时不建 anchor，任何全局锁获取失败均不落报告；根项目与通用模板各 458 项自测通过（2026-08-23）
 - [ ] 🔴 用户正常关闭现有 PLE/MCP owner 并释放 `.project.~u` 后，对 Station010 完成一次真实“启动 → fresh Build → 正常退出”离线检查器验收；不得强杀既有会话或手删活动锁
 - [x] 🔴 完成真实 CpStudio Post-export Stage2 闭环：唯一 persistent PLE 会话执行只读审计与 fresh Build（0 errors / 6 warnings），哈希绑定 evidence 经 producer/consumer 验证后 operation 到 `DONE`；确认本批无需 Export #2，并补齐 `open_project` 离线能力白名单(2026-08-23)
