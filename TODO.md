@@ -75,6 +75,8 @@
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)
+- [x] 🔴 定位 Nexeed License Server 61863 故障：确认 App 在 `DENIED net_admin → StatusCode 999 → SIGSEGV` 后循环重启，端口关闭是结果；记录包权限边界并加入只读诊断脚本（2026-08-24）
+- [ ] 🔴 由 Bosch/Nexeed 提供适配 ctrlX CORE X3 / OS 2.6 的修正版或正式处置；安装后验证 Logbook 无 crash-loop、61863 连续 60 s 可达、CpStudio `Read from target` 成功
 - [x] 🟡 StationData 的 `LineNo`、`TestMode`、`NokCounter`、`Wp100.Active` 已经本次 CpStudio 导出从 PLC 主结构与数据检查中正式移除；生成后编译正常(2026-08-18)
 - [ ] 🟡 决定是否删除当前仅剩自声明、无任何业务引用的 `StationSdNokCounter` 与 `Wp100StationDataStruct` DUT；在 CpStudio 不再生成它们前先保留
 - [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成

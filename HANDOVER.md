@@ -471,3 +471,11 @@
 - 剩余 4 条精确签名均为 `C0351 / NexeedStateAddon 1.1.1.0 / OPC.UA.DA unknown`，来自 `C:\ProgramData\Rexroth\PLE-V-0206\0\Studio\Managed Libraries`下的 Bosch 托管库；不修改安装库或 `Std`。该签名已作为当前可接受基线，新的应用层 warning 仍必须失败关闭。
 - 确定性 PLC 文本快照为 **262 objects**，project SHA-256=`B92CD8940EA762056BD820DDE8C8DBCD46ECB057BA3ABE0BE52F5043E447B508`，manifest 校验通过。本轮未连接、下载、启停、写变量或 FORCE 实体 PLC，也未修改 `Std`。
 - 已知的非运行阻塞：CpStudio canonical XML 中 `USER_INFO_MEASUREMENT_COMPLETE` 的 `zh_CN` 节点仍为空，但实际 2052 HMI 资源已是“测量完成”。后续再编辑该枚举时应在 CpStudio 中确认最后一项中文单元格，AI 不直改 `Engineering_Data.xml`。
+
+## Nexeed License Server 61863 崩溃诊断（2026-08-24）
+
+- 实体 ctrlX CORE X3 上 `443=True`，但 Nexeed Licensing 的 `61863` 被目标主动拒绝；这排除电脑到 ctrlX 的基本网络路径，但不能单独给出根因。
+- 用户在 Service 状态重启 Bosch Nexeed Automation Licensing 后切回 Operating。13:28:02 之后约两分半内，新 developer Logbook 完整记录 9 次 `slots/plugs connected → AppArmor DENIED net_admin → StatusCode 999 → status=11/SEGV → restart`，证明 `61863=False` 是 App crash-loop 的结果。
+- 本机只读审计 2.2.0 arm64/core22/strict 包：daemon 只声明 `network/network-bind/active-solution/log-observe`，未声明 `network-control` 或 `network-manager`；包内外部 OPC UA 端点为 61863，六项 Control plus 许可证均为非启动必需。权限声明/运行时兼容是最强线索，但 SIGSEGV 的唯一因果仍需供应商确认。
+- 新增 `docs/nexeed_license_server_diagnosis.md` 与只读 `scripts/diagnostics/Test-CtrlXLicenseServer.ps1`。原始 CSV、端口报告、设备序列号和本机网络清单不入 Git。
+- 当前阻塞是取得 Bosch/Nexeed 提供的兼容修正版或正式处置；不要继续反复 Read/Restart，不手改 AppArmor，不修改供应商签名 App。修复后先验证 Logbook 稳定和 61863 连续 60 s 可达，再执行 CpStudio Read from target。此次只读诊断没有修改工程或设备状态。

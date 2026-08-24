@@ -125,6 +125,7 @@ Skill 已可版本化安装并校验：
 - AI Coding 展示页（离线 HTML，含演示与打印模式）:`docs/ai_coding_showcase.html`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 - Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`
+- Nexeed License Server 61863 故障诊断:`docs/nexeed_license_server_diagnosis.md`
 - 跨项目目录标准:`docs/project_structure_standard.md`
 - MCP 产品化路线:`ctrlx-ai-coding/docs/mcp_productization_roadmap.md`
 - 团队工作站部署:`TEAM_SETUP.md`
