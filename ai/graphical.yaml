@@ -25,14 +25,20 @@ objects:
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
-    apply_status: blocked_until_interface_preserving
+    apply_status: applied_offline_verified
+    source_state: operator_guidance_applied_and_readback_verified
+    last_plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
     write_strategy:
-      - GET complete object
+      - default to PlanOnly and require explicit Apply plus the fresh deterministic plan SHA-256
+      - GET the complete object and every child before any mutation
       - verify the CpStudio-generated declaration without changing it
       - preserve the complete declaration and write only the audited SFC graph
       - create or update action objects and result DUTs through official REST
+      - perform a second complete GET/hash pass immediately before the first write
+      - send only canonical request JSON already bound into the reviewed plan SHA-256
+      - rollback every attempted mutation in reverse order and verify/save the exact preflight snapshots on failure
       - save through ProjectJob
-      - GET and compare every declaration, implementation and graph readback
+      - verify the parent and Method declarations as exact original text/SHA and read back every Action/Method/DUT
     step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
     step_comments:
       N000: Initialize run
@@ -70,24 +76,35 @@ objects:
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
-    apply_status: blocked_until_interface_preserving
+    apply_status: applied_offline_verified
+    source_state: fixture_wait_graph_applied_and_readback_verified
+    last_plan_sha256: b644dc984743937c303ef8607a8be3ac61d8d80402c7b482683740ff10e68c15
     write_strategy:
-      - GET the complete CpStudio-generated object and all children
+      - default to PlanOnly and require explicit Apply plus the fresh deterministic plan SHA-256
+      - GET the complete CpStudio-generated object and all children before any mutation
       - verify and preserve the CpStudio-generated declaration
       - verify graph and generated-child baseline hashes
       - create or update the canonical actions, methods and result DUT through official REST
-      - replace the SFC graph and remove obsolete generated template actions
-      - save through ProjectJob and compare every REST readback
+      - perform a second complete GET/hash pass immediately before the first write
+      - send only canonical request JSON already bound into the reviewed plan SHA-256
+      - rollback every attempted mutation in reverse order and verify/save the exact preflight snapshots on failure
+      - replace the SFC graph while retaining/reporting obsolete template actions; deletion is disabled
+      - save through ProjectJob, verify exact declaration text/SHA and compare every REST readback
     step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
     step_comments:
       N000: Initialize measurement sequence
       N010: Check part before LEFT
+      N015: Wait fixture LEFT
       N020: Start LEFT measurement
       N030: Wait LEFT measurement
       N040: Check part before MIDDLE
+      N045: Wait fixture MIDDLE
       N050: Start MIDDLE measurement
       N060: Wait MIDDLE measurement
       N070: Check part before RIGHT
+      N075: Wait fixture RIGHT
       N080: Start RIGHT measurement
       N090: Wait RIGHT measurement
       N999: Finish measurement sequence
+    step_order: [N000, N010, N015, N020, N030, N040, N045, N050, N060, N070, N075, N080, N090, N999]
+    prerequisite_result: AutoInfoLineEnum items 4 through 16 verified in the PLE declaration before Apply

@@ -9,6 +9,41 @@ chain:
   status: implemented_offline_verified
   reuse: sequential callers only
 
+operator_guidance_plan:
+  status: applied_offline_verified
+  apply_gate: completed
+  plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
+  specification: specs/hmi/auto_info_line.yaml
+  rule: >-
+    The atomic chain owns the yellow information line only while it is active.
+    Parallel branch actions must not write Station._AutoInfoline.
+  phases:
+    - { step: N010, prompt: requested fixture LEFT/MIDDLE/RIGHT }
+    - { step: N020, prompt: position-specific press-start instruction }
+    - { step: N030, prompt: USER_INFO_CLOSING_SAFETY_DOOR }
+    - { step: N045, prompt: position-specific measurement-in-progress text }
+    - { step: N095, prompt: USER_INFO_RETURN_SAFE_POSITION }
+    - { step: N130, prompt: USER_INFO_OPENING_SAFETY_DOOR }
+    - { step: N999, prompt: USER_INFO_TEXT_CLEAR }
+  source_files:
+    state: applied_and_readback_verified
+    root: src/plc/project/Station010/SqS_Wp100_Run
+    note: parallel branch Actions N050/N051/N060/N061/N100/N101/N110/N120 remain display-write free
+  completed_prerequisites:
+    - CpStudio AutoInfoLineEnum items 4 through 16 saved and exported
+    - REST writer transactional safety blockers closed and offline tests passed
+    - fresh PlanOnly output reviewed before explicit Apply
+
+implementation_resolution:
+  - location: N095
+    status: applied_offline_verified
+    prior_issue: >-
+      An unexpected end of Kistler MEASURE was read through CheckUnitDone into
+      _unitResult without propagating the returned ERROR to the SFC return value.
+    resolution: >-
+      N095 now propagates ERROR to _retVal; PLE save/readback and the fresh
+      offline Build both passed.
+
 sfc_conventions:
   parallel_element: simultaneousDivergence / simultaneousConvergence
   branch_1_return: _retVal
@@ -207,11 +242,17 @@ caller_contract:
   - do not start the single instance from two callers concurrently
 
 verification:
-  date: 2026-08-20
-  offline_build: 0 errors / 6 warnings
+  date: 2026-08-24
+  offline_build: 0 errors / 4 warnings
+  warning_scope: four reviewed C0351 messages from NexeedStateAddon 1.1.1.0
   additional_code_checks: 0 errors
   graph_readback:
     steps: 21
     simultaneous_divergences: 2
     simultaneous_convergences: 2
   online_test: not performed
+  applied_change_note: >-
+    Operator guidance and N095 error propagation were applied transactionally.
+    The CpStudio-owned declaration was preserved byte-for-byte, all target
+    Actions and Methods passed post-save readback, and the fresh Build had no
+    application errors or new warning signatures.

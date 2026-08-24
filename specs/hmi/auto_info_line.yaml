@@ -1,0 +1,172 @@
+schema_version: 1
+
+status: exported_and_plc_applied_offline_verified
+
+display:
+  control: Station/UserDefined.Mod_EnumDisplay1
+  enum: AutoInfoLineEnum
+  variable: Station._AutoInfoline
+  variable_type: INT
+  purpose: show the current operator-facing automatic-process instruction
+
+execution_path:
+  - SqM_Station_Auto
+  - SqS_Station_Auto
+  - Wp100.Unit with Wp100Cmd.RUN
+  - SqC_Wp100_Run
+  - SqS_Wp100_Run executed for LEFT, MIDDLE, and RIGHT
+
+ownership:
+  enum_and_translations: cpstudio
+  enum_write_entrypoint: manual entry in CpStudio; no supported Enum write API was found in CpStudio 5.11
+  plc_assignments: ai_owned_action_implementations
+  user_action: completed; items 4 through 16 were appended, saved, and exported from CpStudio
+
+index_policy:
+  mode: append_only
+  immutable_existing_indices: [0, 1, 2, 3]
+  never_reorder_or_reuse: true
+  plc_assignment: use qualified enum symbols; never use raw integer literals
+
+existing_items:
+  - index: 0
+    name: USER_INFO_TEXT_CLEAR
+    english: ''
+    chinese: ''
+    note: empty comments currently fall back to the symbolic name; validate a real blank representation before changing it
+  - index: 1
+    name: USER_INFO_LOAD_PART
+    english: Place the product correctly on the fixture
+    chinese: 请将产品正确放置在夹具上
+  - index: 2
+    name: USER_INFO_START_BUTTON
+    english: Press the start button
+    chinese: 请按启动按钮
+    note: retained as the generic prompt used by other chains
+  - index: 3
+    name: USER_INFO_SCAN_HOUSING
+    english: Scan the housing
+    chinese: 请扫描壳体
+
+implemented_items:
+  - index: 4
+    name: USER_INFO_MOVE_FIXTURE_LEFT
+    english: Move the fixture to the left position
+    chinese: 请将夹具移动到左侧位置
+  - index: 5
+    name: USER_INFO_MOVE_FIXTURE_MIDDLE
+    english: Move the fixture to the middle position
+    chinese: 请将夹具移动到中间位置
+  - index: 6
+    name: USER_INFO_MOVE_FIXTURE_RIGHT
+    english: Move the fixture to the right position
+    chinese: 请将夹具移动到右侧位置
+  - index: 7
+    name: USER_INFO_PRESS_START_LEFT
+    english: Press the start button to measure the left position
+    chinese: 请按启动按钮，开始测量左侧位置
+  - index: 8
+    name: USER_INFO_PRESS_START_MIDDLE
+    english: Press the start button to measure the middle position
+    chinese: 请按启动按钮，开始测量中间位置
+  - index: 9
+    name: USER_INFO_PRESS_START_RIGHT
+    english: Press the start button to measure the right position
+    chinese: 请按启动按钮，开始测量右侧位置
+  - index: 10
+    name: USER_INFO_CLOSING_SAFETY_DOOR
+    english: Closing the safety door
+    chinese: 安全门正在关闭
+  - index: 11
+    name: USER_INFO_MEASURING_LEFT
+    english: Measuring the left position. Please wait
+    chinese: 正在测量左侧位置，请稍候
+  - index: 12
+    name: USER_INFO_MEASURING_MIDDLE
+    english: Measuring the middle position. Please wait
+    chinese: 正在测量中间位置，请稍候
+  - index: 13
+    name: USER_INFO_MEASURING_RIGHT
+    english: Measuring the right position. Please wait
+    chinese: 正在测量右侧位置，请稍候
+  - index: 14
+    name: USER_INFO_RETURN_SAFE_POSITION
+    english: Returning the station to a safe position. Please wait
+    chinese: 设备正在返回安全位置，请稍候
+  - index: 15
+    name: USER_INFO_OPENING_SAFETY_DOOR
+    english: Opening the safety door
+    chinese: 安全门正在打开
+  - index: 16
+    name: USER_INFO_MEASUREMENT_COMPLETE
+    english: Measurement complete
+    chinese: 测量完成
+
+chain_mapping:
+  SqC_Wp100_Run:
+    responsibility: product presence and LEFT-to-MIDDLE-to-RIGHT sequencing
+    steps:
+      N000: USER_INFO_TEXT_CLEAR
+      N010: USER_INFO_LOAD_PART only while product detection blocks LEFT
+      N015: USER_INFO_MOVE_FIXTURE_LEFT
+      N040: USER_INFO_LOAD_PART only while product detection blocks MIDDLE
+      N045: USER_INFO_MOVE_FIXTURE_MIDDLE
+      N070: USER_INFO_LOAD_PART only while product detection blocks RIGHT
+      N075: USER_INFO_MOVE_FIXTURE_RIGHT
+      N999: USER_INFO_MEASUREMENT_COMPLETE
+    implemented_graph_steps:
+      - step: N015
+        comment: Wait fixture LEFT
+        prompt_release: safety door open and pressing cylinder raised
+        completion: safe prompt release plus _100B601 true and _100B602/_100B603 false, followed by a fresh _100B701/_100B702 product check
+      - step: N045
+        comment: Wait fixture MIDDLE
+        prompt_release: safety door open and pressing cylinder raised
+        completion: safe prompt release plus _100B602 true and _100B601/_100B603 false, followed by a fresh _100B701/_100B702 product check
+      - step: N075
+        comment: Wait fixture RIGHT
+        prompt_release: safety door open and pressing cylinder raised
+        completion: safe prompt release plus _100B603 true and _100B601/_100B602 false, followed by a fresh _100B701/_100B702 product check
+
+  SqS_Wp100_Run:
+    responsibility: one-position atomic measurement and detailed active-state prompt
+    steps:
+      N010: select USER_INFO_MOVE_FIXTURE_LEFT/MIDDLE/RIGHT from MeasurePos while validating the one-hot position
+      N020: select USER_INFO_PRESS_START_LEFT/MIDDLE/RIGHT and keep the existing 500 ms start-lamp behavior
+      N030: USER_INFO_CLOSING_SAFETY_DOOR
+      N045: select USER_INFO_MEASURING_LEFT/MIDDLE/RIGHT before the parallel measurement-start group
+      N095: USER_INFO_RETURN_SAFE_POSITION before the parallel press-up/Kistler-finish group
+      N130: USER_INFO_OPENING_SAFETY_DOOR
+      N999: USER_INFO_TEXT_CLEAR
+
+writer_rules:
+  - a move-fixture instruction is displayed only while the safety door is open and the pressing cylinder is raised
+  - SqC wait actions write the requested fixture-position prompt before SqS starts
+  - SqC wait-for-subchain actions never write the display while SqS is active
+  - SqS writes only from sequential/common-gate actions; parallel branch actions never write the display
+  - both OnChainFinish methods clear stale operator requests on ERROR or CANCEL
+  - SqC keeps USER_INFO_MEASUREMENT_COMPLETE after DONE until the next execution clears it in N000
+
+acceptance:
+  cpstudio:
+    - old indices 0 through 3 are unchanged
+    - new items 4 through 16 exist with matching English and Chinese comments
+    - save, reopen, and export complete without error
+  hmi:
+    - 1033 language resources contain the English text
+    - 2052 language resources contain the Chinese text
+  plc:
+    - assignments use AutoInfoLineEnum symbols rather than raw integers
+    - parent and child chains do not compete for the display in the same active phase
+    - ERROR and CANCEL cannot leave a move-fixture or press-button prompt active
+    - offline Build completes with zero errors and no new warning signatures
+
+verification:
+  date: 2026-08-24
+  ple_enum_order: 0 through 16 verified from the generated declaration
+  hmi_english_keys: L1_AutoInfoLineEnum4 through L1_AutoInfoLineEnum16
+  hmi_chinese_keys: L1_AutoInfoLineEnum4 through L1_AutoInfoLineEnum16
+  sqs_plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
+  sqc_plan_sha256: b644dc984743937c303ef8607a8be3ac61d8d80402c7b482683740ff10e68c15
+  offline_build: 0 errors / 4 warnings
+  warning_scope: four reviewed C0351 messages from NexeedStateAddon 1.1.1.0

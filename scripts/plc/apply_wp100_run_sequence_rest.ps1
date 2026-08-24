@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
   [string]$BaseUri = 'http://localhost:9002/plc/engineering/api/v2',
-  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project'
+  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project',
+  [ValidateSet('PlanOnly', 'Apply')][string]$Mode = 'PlanOnly',
+  [AllowEmptyString()][string]$ExpectedPlanSha256 = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -10,7 +12,33 @@ $deviceRoot = "$BaseUri/devices/Device/Plc%20Logic"
 $sequencePath = 'Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run'
 $sequenceUri = "$deviceRoot/$sequencePath"
 $dataStructPath = 'Application/Station/Wp100/_this/Structs/Data'
+$autoInfoLineEnumPaths = @(
+  'Application/Station/_this/Enums/AutoInfoLineEnum',
+  'Application/Station/Enums/AutoInfoLineEnum',
+  'Application/Enums/AutoInfoLineEnum'
+)
+$requiredAutoInfoLineItems = @(
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_LEFT'; Index = 4 },
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_MIDDLE'; Index = 5 },
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_RIGHT'; Index = 6 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_LEFT'; Index = 7 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_MIDDLE'; Index = 8 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_RIGHT'; Index = 9 },
+  [pscustomobject]@{ Name = 'USER_INFO_CLOSING_SAFETY_DOOR'; Index = 10 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_LEFT'; Index = 11 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_MIDDLE'; Index = 12 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_RIGHT'; Index = 13 },
+  [pscustomobject]@{ Name = 'USER_INFO_RETURN_SAFE_POSITION'; Index = 14 },
+  [pscustomobject]@{ Name = 'USER_INFO_OPENING_SAFETY_DOOR'; Index = 15 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASUREMENT_COMPLETE'; Index = 16 }
+)
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\src\plc\project\Station010'))
+$script:CapturePreflight = $true
+$script:PreflightObservations = [ordered]@{}
+$script:WriteRequests = [Collections.Generic.List[object]]::new()
+$script:PreservedDeclarations = [ordered]@{}
+
+. (Join-Path $PSScriptRoot 'SfcRestWriter.Transaction.ps1')
 
 function ConvertTo-ApiUri {
   param([Parameter(Mandatory)][string]$Path)
@@ -24,7 +52,18 @@ function ConvertTo-ApiUri {
 
 function Get-Node {
   param([Parameter(Mandatory)][string]$Path)
-  return Invoke-RestMethod -Method Get -Uri (ConvertTo-ApiUri $Path)
+  $node = Invoke-RestMethod -Method Get -Uri (ConvertTo-ApiUri $Path)
+  Register-PreflightObservation -Path $Path -Node $node
+  return $node
+}
+
+function Test-IsNotFoundError {
+  param([Parameter(Mandatory)]$ErrorRecord)
+
+  if ($ErrorRecord.Exception.Response -and ([int]$ErrorRecord.Exception.Response.StatusCode -eq 404)) {
+    return $true
+  }
+  return ($ErrorRecord.Exception.Data.Contains('StatusCode') -and ([int]$ErrorRecord.Exception.Data['StatusCode'] -eq 404))
 }
 
 function Test-NodeExists {
@@ -35,23 +74,14 @@ function Test-NodeExists {
     return $true
   }
   catch {
-    if ($_.Exception.Response -and ([int]$_.Exception.Response.StatusCode -eq 404)) {
+    if (Test-IsNotFoundError $_) {
+      Register-PreflightObservation -Path $Path -Node $null
       return $false
     }
     throw
   }
 }
 
-function Invoke-JsonRequest {
-  param(
-    [Parameter(Mandatory)][ValidateSet('Post', 'Put')][string]$Method,
-    [Parameter(Mandatory)][string]$Uri,
-    [Parameter(Mandatory)]$Body
-  )
-
-  $json = $Body | ConvertTo-Json -Depth 40
-  return Invoke-RestMethod -Method $Method -Uri $Uri -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($json))
-}
 
 function Get-Sha256 {
   param([AllowEmptyString()][string]$Text)
@@ -126,14 +156,25 @@ function Add-OrVerify-Dut {
     return 'verified'
   }
 
+  # A DUT POST also mutates the Structs/Data parent's child collection.  Keep
+  # that container in the immutable preflight set so the plan, second GET and
+  # rollback verification cover the indirect parent mutation as well.
+  $null = Get-Node $dataStructPath
+
   $body = [ordered]@{
     name = $Name
     elementType = 'DUT'
     declaration = $declaration
     textlistsupport = $false
   }
-  $null = Invoke-JsonRequest -Method Post -Uri (ConvertTo-ApiUri $dataStructPath) -Body $body
-  return 'created'
+  Add-WriteRequest -Method Post `
+    -Uri (ConvertTo-ApiUri $dataStructPath) `
+    -Path $path `
+    -Kind 'create-ai-owned-dut' `
+    -Body $body `
+    -BeforeFingerprint 'missing' `
+    -TargetSha256 (Get-Sha256 $declaration)
+  return 'planned-create'
 }
 
 function Set-CodeChild {
@@ -153,6 +194,14 @@ function Set-CodeChild {
     if ($node.elementType -ne $ElementType) {
       throw "Unexpected child type at ${path}: $($node.elementType)"
     }
+    $parts = if ($ElementType -eq 'POUMethod') { Split-MethodSource $source } else { $null }
+    if (($ElementType -eq 'POUMethod') -and
+        ((Get-Sha256 ([string]$node.declaration)) -ne (Get-Sha256 $parts.Declaration))) {
+      throw "Method declaration differs from its canonical interface; refusing to write: $path"
+    }
+    if ($ElementType -eq 'POUMethod') {
+      $script:PreservedDeclarations[$path] = [string]$node.declaration
+    }
     $currentSha256 = Get-Sha256 (Get-ChildText $node)
     if ($currentSha256 -eq $targetSha256) {
       return 'verified'
@@ -165,12 +214,16 @@ function Set-CodeChild {
       $node.implementation = $source
     }
     else {
-      $parts = Split-MethodSource $source
-      $node.declaration = $parts.Declaration
       $node.implementation = $parts.Implementation
     }
-    $null = Invoke-JsonRequest -Method Put -Uri (ConvertTo-ApiUri $path) -Body $node
-    return 'updated'
+    Add-WriteRequest -Method Put `
+      -Uri (ConvertTo-ApiUri $path) `
+      -Path $path `
+      -Kind $(if ($ElementType -eq 'Action') { 'update-action' } else { 'update-method-implementation' }) `
+      -Body $node `
+      -BeforeFingerprint $script:PreflightObservations[$path].Fingerprint `
+      -TargetSha256 $targetSha256
+    return 'planned-update'
   }
 
   if ($ElementType -eq 'Action') {
@@ -182,6 +235,9 @@ function Set-CodeChild {
     }
   }
   else {
+    if ($Name -eq 'OnChainFinish') {
+      throw 'Generated OnChainFinish method is unexpectedly missing; refusing to invent its method metadata.'
+    }
     $parts = Split-MethodSource $source
     $body = [ordered]@{
       name = $Name
@@ -191,8 +247,14 @@ function Set-CodeChild {
       implementation = $parts.Implementation
     }
   }
-  $null = Invoke-JsonRequest -Method Post -Uri $sequenceUri -Body $body
-  return 'created'
+  Add-WriteRequest -Method Post `
+    -Uri $sequenceUri `
+    -Path $path `
+    -Kind $(if ($ElementType -eq 'Action') { 'create-action' } else { 'create-ai-owned-method' }) `
+    -Body $body `
+    -BeforeFingerprint 'missing' `
+    -TargetSha256 $targetSha256
+  return 'planned-create'
 }
 
 function Escape-XmlText {
@@ -329,11 +391,11 @@ function New-LinearSfcImplementation {
 }
 
 function Save-CurrentProject {
-  $body = [ordered]@{
-    jobType = 'ProjectJob'
-    jobParameters = [ordered]@{ action = 'Save' }
-  }
-  $job = Invoke-JsonRequest -Method Post -Uri "$BaseUri/jobs" -Body $body
+  $saveRequest = Get-SaveRequestDescriptor
+  $job = Invoke-JsonTextRequest `
+    -Method Post `
+    -Uri $saveRequest.uri `
+    -BodyCanonicalJson $saveRequest.bodyCanonicalJson
   $deadline = [DateTime]::UtcNow.AddSeconds(30)
   do {
     $state = Invoke-RestMethod -Method Get -Uri "$BaseUri/jobs/$($job.id)"
@@ -348,6 +410,65 @@ function Save-CurrentProject {
   throw "Timed out waiting for PLC Engineering save job $($job.id)"
 }
 
+function Assert-Wp100RunSequenceTargets {
+  param([Parameter(Mandatory)][string]$Phase)
+
+  $null = Assert-RequiredEnumItems `
+    -CandidatePaths @($autoInfoLineGate.Path) `
+    -ExpectedItems $requiredAutoInfoLineItems `
+    -EnumName 'AutoInfoLineEnum'
+  $readback = Get-Node $sequencePath
+  if (([string]$readback.declaration -cne $preservedSequenceDeclaration) -or
+      ((Get-ExactSha256 ([string]$readback.declaration)) -ne $preservedSequenceDeclarationExactSha)) {
+    throw "SqC_Wp100_Run declaration text/SHA changed during $Phase."
+  }
+  if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
+    throw "SqC_Wp100_Run graph readback differs during $Phase."
+  }
+  $actualChildren = @($readback.children | Sort-Object)
+  $missingTargetChildren = @($targetChildren | Where-Object { $_ -notin $actualChildren })
+  if ($missingTargetChildren.Count -gt 0) {
+    throw "SqC_Wp100_Run required child list is incomplete during $Phase`: $($missingTargetChildren -join ', ')"
+  }
+
+  foreach ($step in $steps) {
+    $name = "_a$($step.Name)_active"
+    $node = Get-Node "$sequencePath/$name"
+    $targetSha256 = Get-Sha256 (Get-SourceText "SqC_Wp100_Run\actions\$($step.Name).st")
+    if ((Get-Sha256 (Get-ChildText $node)) -ne $targetSha256) {
+      throw "SqC_Wp100_Run action readback differs during $Phase`: $name"
+    }
+  }
+  foreach ($method in @('CheckPartPresent', 'OnChainFinish')) {
+    $sourceFile = if ($method -eq 'CheckPartPresent') {
+      'SqC_Wp100_Run\methods\CheckPartPresent.st'
+    }
+    else {
+      'SqC_Wp100_Run\OnChainFinish.st'
+    }
+    $node = Get-Node "$sequencePath/$method"
+    if ((Get-Sha256 (Get-ChildText $node)) -ne (Get-Sha256 (Get-SourceText $sourceFile))) {
+      throw "SqC_Wp100_Run method readback differs during $Phase`: $method"
+    }
+    $methodPath = "$sequencePath/$method"
+    if ($script:PreservedDeclarations.Contains($methodPath)) {
+      $methodDeclarationOriginal = [string]$script:PreservedDeclarations[$methodPath]
+      $methodDeclarationReadback = [string]$node.declaration
+      if (($methodDeclarationReadback -cne $methodDeclarationOriginal) -or
+          ((Get-ExactSha256 $methodDeclarationReadback) -ne (Get-ExactSha256 $methodDeclarationOriginal))) {
+        throw "SqC_Wp100_Run method declaration text/SHA changed during $Phase`: $method"
+      }
+    }
+  }
+
+  $dutReadback = Get-Node "$dataStructPath/Wp100RunSequenceResultStruct"
+  if (($dutReadback.elementType -ne 'DUT') -or
+      ((Get-Sha256 ([string]$dutReadback.declaration)) -ne
+       (Get-Sha256 (Get-SourceText 'Wp100RunSequenceResultStruct.st')))) {
+    throw "AI-owned DUT readback differs during $Phase`: Wp100RunSequenceResultStruct"
+  }
+}
+
 $currentProject = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
 $expectedResolved = [IO.Path]::GetFullPath($ExpectedProject)
 $currentResolved = [IO.Path]::GetFullPath($currentProject.path)
@@ -357,16 +478,23 @@ if (-not $currentResolved.Equals($expectedResolved, [StringComparison]::OrdinalI
 if ($currentProject.profileName -ne 'ctrlX PLC 2.6.8') {
   throw "Unexpected PLC profile '$($currentProject.profileName)'."
 }
+$autoInfoLineGate = Assert-RequiredEnumItems `
+  -CandidatePaths $autoInfoLineEnumPaths `
+  -ExpectedItems $requiredAutoInfoLineItems `
+  -EnumName 'AutoInfoLineEnum'
 
 $steps = @(
   [pscustomobject]@{ Name = 'N000'; Comment = 'Initialize measurement sequence' },
   [pscustomobject]@{ Name = 'N010'; Comment = 'Check part before LEFT' },
+  [pscustomobject]@{ Name = 'N015'; Comment = 'Wait fixture LEFT' },
   [pscustomobject]@{ Name = 'N020'; Comment = 'Start LEFT measurement' },
   [pscustomobject]@{ Name = 'N030'; Comment = 'Wait LEFT measurement' },
   [pscustomobject]@{ Name = 'N040'; Comment = 'Check part before MIDDLE' },
+  [pscustomobject]@{ Name = 'N045'; Comment = 'Wait fixture MIDDLE' },
   [pscustomobject]@{ Name = 'N050'; Comment = 'Start MIDDLE measurement' },
   [pscustomobject]@{ Name = 'N060'; Comment = 'Wait MIDDLE measurement' },
   [pscustomobject]@{ Name = 'N070'; Comment = 'Check part before RIGHT' },
+  [pscustomobject]@{ Name = 'N075'; Comment = 'Wait fixture RIGHT' },
   [pscustomobject]@{ Name = 'N080'; Comment = 'Start RIGHT measurement' },
   [pscustomobject]@{ Name = 'N090'; Comment = 'Wait RIGHT measurement' },
   [pscustomobject]@{ Name = 'N999'; Comment = 'Finish measurement sequence' }
@@ -381,12 +509,23 @@ $sequenceNode = Get-Node $sequencePath
 
 $generatedDeclarationSha = 'dfb93c51ea220816248fad97c9b736c509b55f2861669fb5dfb5182ad538fefa'
 $generatedImplementationSha = '387bcbe666d701dd8288fdada987befe69fc6e9872369af1f2f88750761955a8'
+$preGuidanceImplementationSha = 'da58cd02d154073bcabd6f4e11554635566aa722530c040856864e4b1090cf16'
+$preGuidanceRestReadbackImplementationSha = '32aa736b716e45c0583fb95ed7f447dcaf7e21a95fed5a2477fd6ed21baba5e2'
 $currentDeclarationSha = Get-Sha256 $sequenceNode.declaration
 $currentImplementationSha = Get-Sha256 $sequenceNode.implementation
-if ($currentDeclarationSha -notin @($generatedDeclarationSha, $targetDeclarationSha)) {
-  throw 'SqC_Wp100_Run declaration changed after audit; refusing overwrite.'
+if ($currentDeclarationSha -ne $targetDeclarationSha) {
+  throw "SqC_Wp100_Run declaration differs from the canonical CpStudio interface (current=$currentDeclarationSha expected=$targetDeclarationSha); configure/export it in CpStudio before continuing."
 }
-if ($currentImplementationSha -notin @($generatedImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+$preservedSequenceDeclaration = [string]$sequenceNode.declaration
+$preservedSequenceDeclarationExactSha = Get-ExactSha256 $preservedSequenceDeclaration
+$script:PreservedDeclarations[$sequencePath] = $preservedSequenceDeclaration
+if ($currentImplementationSha -notin @(
+    $generatedImplementationSha,
+    $preGuidanceImplementationSha,
+    $preGuidanceRestReadbackImplementationSha,
+    $targetImplementationSha,
+    $targetRestReadbackImplementationSha
+  )) {
   throw 'SqC_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 
@@ -434,6 +573,15 @@ $preC0198ChildSha256 = @{
   # Compiled source before SetEvent AdditionalInfo was limited to STRING(63).
   'CheckPartPresent' = '208214e0b882d4816bcf6c86ce4fa5b39b50765bdc10e274cdd3dbcf083a6f54'
 }
+$preGuidanceChildSha256 = @{
+  # Current compiled Run sequence before operator guidance is added.
+  '_aN000_active' = '5fb7bad100856aa9d5af35a2d1082cb2be913bd5b55ca20bb4633951111c95ec'
+  '_aN010_active' = '303c4d44cd868150a051cb0ffefb36f487f8dca4d8a049c0161d75e4591acbe1'
+  '_aN040_active' = '479d7c3925848816b654657b7027d78650263f94c61061bddc64ef60a01bc46f'
+  '_aN070_active' = '555e4835c68ebb3f6c83f6ab9be1db4a123b5afe776a06f75f6aa5d5036603ba'
+  '_aN999_active' = '5623553c37c8b509e93ec6e910aa2abde1e8d07c76fe21fb1312f48243b80dd8'
+  'OnChainFinish' = '52599c4bd83965909566669bb79cbc9a29fa17269da17c4416e85c305cb3f8d2'
+}
 $knownChildren = @($targetChildren + $generatedChildSha256.Keys | Sort-Object -Unique)
 $unknownChildren = @($sequenceNode.children | Where-Object { $_ -notin $knownChildren })
 if ($unknownChildren.Count -gt 0) {
@@ -460,11 +608,14 @@ foreach ($childName in $sequenceNode.children) {
                             ($childSha256 -eq $preInnerSpaceChildSha256[$childName])
     $matchesPreC0198 = $preC0198ChildSha256.ContainsKey($childName) -and
                        ($childSha256 -eq $preC0198ChildSha256[$childName])
+    $matchesPreGuidance = $preGuidanceChildSha256.ContainsKey($childName) -and
+                          ($childSha256 -eq $preGuidanceChildSha256[$childName])
     if (($childSha256 -ne $targetChildSha256) -and
         (-not $matchesGenerated) -and
         (-not $matchesPreStyle) -and
         (-not $matchesPreInnerSpace) -and
-        (-not $matchesPreC0198)) {
+        (-not $matchesPreC0198) -and
+        (-not $matchesPreGuidance)) {
       throw "SqC_Wp100_Run child changed after audit: $childName"
     }
   }
@@ -487,64 +638,87 @@ foreach ($step in $steps) {
   if ($preInnerSpaceChildSha256.ContainsKey($name)) {
     $baseline += $preInnerSpaceChildSha256[$name]
   }
+  if ($preGuidanceChildSha256.ContainsKey($name)) {
+    $baseline += $preGuidanceChildSha256[$name]
+  }
   $childStatus[$step.Name] = Set-CodeChild -Name $name -ElementType Action -SourceFile "SqC_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $baseline
 }
 $childStatus.CheckPartPresent = Set-CodeChild -Name 'CheckPartPresent' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\methods\CheckPartPresent.st' -AllowedBaselineSha256 @($preStyleChildSha256.CheckPartPresent, $preInnerSpaceChildSha256.CheckPartPresent, $preC0198ChildSha256.CheckPartPresent)
-$childStatus.OnChainFinish = Set-CodeChild -Name 'OnChainFinish' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @($generatedChildSha256.OnChainFinish, $preStyleChildSha256.OnChainFinish, $preInnerSpaceChildSha256.OnChainFinish)
+$childStatus.OnChainFinish = Set-CodeChild -Name 'OnChainFinish' -ElementType POUMethod -SourceFile 'SqC_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @($generatedChildSha256.OnChainFinish, $preStyleChildSha256.OnChainFinish, $preInnerSpaceChildSha256.OnChainFinish, $preGuidanceChildSha256.OnChainFinish)
 
-$parentChanged = ($currentDeclarationSha -ne $targetDeclarationSha) -or
-                 ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
+$parentChanged = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 if ($parentChanged) {
   $sequenceNode = Get-Node $sequencePath
-  $sequenceNode.declaration = $targetDeclaration
   $sequenceNode.implementation = $targetImplementation
-  $null = Invoke-JsonRequest -Method Put -Uri $sequenceUri -Body $sequenceNode
+  Add-WriteRequest -Method Put `
+    -Uri $sequenceUri `
+    -Path $sequencePath `
+    -Kind 'update-sfc-graph' `
+    -Body $sequenceNode `
+    -BeforeFingerprint $script:PreflightObservations[$sequencePath].Fingerprint `
+    -TargetSha256 $targetImplementationSha
 }
 
 $obsoleteChildren = @($generatedChildSha256.Keys | Where-Object { $_ -notin $targetChildren -and (Test-NodeExists "$sequencePath/$_") })
 foreach ($childName in $obsoleteChildren) {
-  $null = Invoke-RestMethod -Method Delete -Uri (ConvertTo-ApiUri "$sequencePath/$childName")
-  $childStatus["removed:$childName"] = 'removed'
+  $childStatus["retained-obsolete:$childName"] = 'retained-delete-disabled'
 }
 
-$readback = Get-Node $sequencePath
-if ((Get-Sha256 $readback.declaration) -ne $targetDeclarationSha) {
-  throw 'SqC_Wp100_Run declaration readback differs after PUT.'
+$plan = New-WriterPlan `
+  -WriterName 'apply_wp100_run_sequence_rest.ps1' `
+  -ProjectPath $currentProject.path `
+  -ProfileName $currentProject.profileName `
+  -ChainPath $sequencePath `
+  -DeclarationExactSha256 $preservedSequenceDeclarationExactSha `
+  -RetainedObsoleteChildren $obsoleteChildren
+$planSha256 = Get-PlanSha256 $plan
+$planResult = [ordered]@{
+  mode = $Mode
+  planSha256 = $planSha256
+  plan = $plan
 }
-if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
-  throw 'SqC_Wp100_Run graph readback differs after PUT.'
+if ($Mode -eq 'PlanOnly') {
+  $planResult | ConvertTo-Json -Depth 20
+  return
 }
-$expectedChildren = @($targetChildren | Sort-Object)
-$actualChildren = @($readback.children | Sort-Object)
-if (($expectedChildren -join "`n") -ne ($actualChildren -join "`n")) {
-  throw "SqC_Wp100_Run child list mismatch after update: $($actualChildren -join ', ')"
+if ([string]::IsNullOrWhiteSpace($ExpectedPlanSha256)) {
+  throw 'Apply requires -ExpectedPlanSha256 from a fresh PlanOnly run.'
 }
-
-foreach ($step in $steps) {
-  $name = "_a$($step.Name)_active"
-  $node = Get-Node "$sequencePath/$name"
-  $targetSha256 = Get-Sha256 (Get-SourceText "SqC_Wp100_Run\actions\$($step.Name).st")
-  if ((Get-Sha256 (Get-ChildText $node)) -ne $targetSha256) {
-    throw "SqC_Wp100_Run action readback differs: $name"
-  }
-}
-foreach ($method in @('CheckPartPresent', 'OnChainFinish')) {
-  $sourceFile = if ($method -eq 'CheckPartPresent') { 'SqC_Wp100_Run\methods\CheckPartPresent.st' } else { 'SqC_Wp100_Run\OnChainFinish.st' }
-  $node = Get-Node "$sequencePath/$method"
-  if ((Get-Sha256 (Get-ChildText $node)) -ne (Get-Sha256 (Get-SourceText $sourceFile))) {
-    throw "SqC_Wp100_Run method readback differs: $method"
-  }
+if (-not $ExpectedPlanSha256.Equals($planSha256, [StringComparison]::OrdinalIgnoreCase)) {
+  throw "Plan hash mismatch; refusing Apply (expected=$ExpectedPlanSha256 current=$planSha256)."
 }
 
-$hasChanges = ($dutStatus -ne 'verified') -or
-              $parentChanged -or
-              ($obsoleteChildren.Count -gt 0) -or
-              (@($childStatus.Values | Where-Object { $_ -ne 'verified' }).Count -gt 0)
+$script:CapturePreflight = $false
+$projectBeforeWrite = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
+if ((-not ([IO.Path]::GetFullPath($projectBeforeWrite.path)).Equals($expectedResolved, [StringComparison]::OrdinalIgnoreCase)) -or
+    ($projectBeforeWrite.profileName -ne 'ctrlX PLC 2.6.8')) {
+  throw 'Active PLC project/profile changed between PlanOnly preflight and Apply.'
+}
+Assert-PreflightSnapshotCurrent
+
+# Mutation phase begins only after the immutable plan/hash gate and complete
+# second GET/hash pass have succeeded for every observed object.
+try {
+  Invoke-WriteRequests
+  Assert-Wp100RunSequenceTargets -Phase 'pre-save verification'
+
+$hasChanges = ($script:WriteRequests.Count -gt 0)
 $saveResult = if ($hasChanges) {
-  (Save-CurrentProject).jobResultInfo
+  $result = (Save-CurrentProject).jobResultInfo
+  # Saving is part of the transaction: re-read every graph, Action, Method and
+  # DUT after the job completes so a persistence-time rewrite cannot pass as a
+  # successful Apply.
+  Assert-Wp100RunSequenceTargets -Phase 'post-save verification'
+  $result
 }
 else {
   'No changes; save skipped.'
+}
+}
+catch {
+  $transactionError = $_
+  $rollbackResult = Invoke-WriteRollback
+  throw (New-TransactionFailureMessage -OriginalError $transactionError -RollbackResult $rollbackResult)
 }
 
 [pscustomobject]@{
@@ -552,7 +726,10 @@ else {
   dut = $dutStatus
   children = $childStatus
   stepCount = $steps.Count
-  declarationSha256 = $targetDeclarationSha
+  mode = $Mode
+  planSha256 = $planSha256
+  declarationExactSha256 = $preservedSequenceDeclarationExactSha
+  declarationTextUnchanged = $true
   implementationSha256 = $targetImplementationSha
   restReadbackImplementationSha256 = $targetRestReadbackImplementationSha
   saveResult = $saveResult

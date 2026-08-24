@@ -4,7 +4,7 @@
 
 ## 当前阶段:阶段 0 项目初始化
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
-- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 9 warnings（EtherCAT BMK 恢复最终 Build，2026-08-22）
+- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 4 warnings（4 条均为 NexeedStateAddon 托管库 C0351，2026-08-24）
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
@@ -74,7 +74,7 @@
 - [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
-- [ ] 🟡 补充 `SqS_Run` 当前为空的中英文显示文本
+- [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)
 - [x] 🟡 StationData 的 `LineNo`、`TestMode`、`NokCounter`、`Wp100.Active` 已经本次 CpStudio 导出从 PLC 主结构与数据检查中正式移除；生成后编译正常(2026-08-18)
 - [ ] 🟡 决定是否删除当前仅剩自声明、无任何业务引用的 `StationSdNokCounter` 与 `Wp100StationDataStruct` DUT；在 CpStudio 不再生成它们前先保留
 - [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成

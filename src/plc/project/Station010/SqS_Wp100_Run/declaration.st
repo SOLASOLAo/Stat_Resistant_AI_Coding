@@ -2,8 +2,7 @@ FUNCTION_BLOCK SqS_Wp100_Run EXTENDS OpconSfcChain
 ////<OES_INFO Mode="Merge" Areas="1/1" />
 ////<OES_CODE MergeId="Declaration">{{{
 VAR_INPUT
-  rUnit : REFERENCE TO Wp100Unit;
-  /// Fixture position requested by the calling chain for this execution
+  rUnit      : REFERENCE TO Wp100Unit;
   MeasurePos : MeasurePsoEnum;
 END_VAR
 ////<END_OES_CODE>}}}

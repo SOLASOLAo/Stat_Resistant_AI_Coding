@@ -97,7 +97,9 @@ objects:
     write_mode: rest_composite
     interface_owner: cpstudio
     interface_write: forbidden
-    apply_status: blocked_until_interface_preserving
+    apply_status: applied_offline_verified
+    source_state: operator_guidance_applied_and_readback_verified
+    last_plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st
@@ -183,9 +185,11 @@ objects:
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/OnChainFinish
-    owner: ai
+    owner: mixed
     source: src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st
-    write_mode: full_object
+    write_mode: implementation
+    interface_owner: cpstudio
+    interface_write: forbidden
   - path: Application/Station/Wp100/_this/Structs/Data/Wp100RunSequenceResultStruct
     owner: ai
     source: src/plc/project/Station010/Wp100RunSequenceResultStruct.st
@@ -199,7 +203,9 @@ objects:
     write_mode: rest_composite
     interface_owner: cpstudio
     interface_write: forbidden
-    apply_status: blocked_until_interface_preserving
+    apply_status: applied_offline_verified
+    source_state: fixture_wait_graph_applied_and_readback_verified
+    last_plan_sha256: b644dc984743937c303ef8607a8be3ac61d8d80402c7b482683740ff10e68c15
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N000.st
@@ -208,6 +214,11 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N010.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN015_active
+    owner: ai
+    source: src/plc/project/Station010/SqC_Wp100_Run/actions/N015.st
+    write_mode: full_object
+    deployment_status: applied_offline_verified
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN020_active
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N020.st
@@ -220,6 +231,11 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N040.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN045_active
+    owner: ai
+    source: src/plc/project/Station010/SqC_Wp100_Run/actions/N045.st
+    write_mode: full_object
+    deployment_status: applied_offline_verified
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN050_active
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N050.st
@@ -232,6 +248,11 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N070.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN075_active
+    owner: ai
+    source: src/plc/project/Station010/SqC_Wp100_Run/actions/N075.st
+    write_mode: full_object
+    deployment_status: applied_offline_verified
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/_aN080_active
     owner: ai
     source: src/plc/project/Station010/SqC_Wp100_Run/actions/N080.st
@@ -249,6 +270,8 @@ objects:
     source: src/plc/project/Station010/SqC_Wp100_Run/methods/CheckPartPresent.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run/OnChainFinish
-    owner: ai
+    owner: mixed
     source: src/plc/project/Station010/SqC_Wp100_Run/OnChainFinish.st
-    write_mode: full_object
+    write_mode: implementation
+    interface_owner: cpstudio
+    interface_write: forbidden

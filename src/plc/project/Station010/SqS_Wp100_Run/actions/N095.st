@@ -2,6 +2,7 @@
 // Kistler MEASURE is still active.
 _retVal  := RUNNING;
 _retVal2 := RUNNING;
+Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_RETURN_SAFE_POSITION;
 
 IF ( _kistlerStarted ) AND
    ( NOT Wp100A104Kistler.Unit.OutImm.MeasRunning )
@@ -11,6 +12,7 @@ THEN
     Wp100A104Kistler.Unit,
     RepeatOnError := FALSE
   );
+  _retVal := _unitResult;
 END_IF
 
 IF ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos ) AND

@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
   [string]$BaseUri = 'http://localhost:9002/plc/engineering/api/v2',
-  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project'
+  [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project',
+  [ValidateSet('PlanOnly', 'Apply')][string]$Mode = 'PlanOnly',
+  [AllowEmptyString()][string]$ExpectedPlanSha256 = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -10,7 +12,33 @@ $deviceRoot = "$BaseUri/devices/Device/Plc%20Logic"
 $runPath = 'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run'
 $runUri = "$deviceRoot/$runPath"
 $dataStructPath = 'Application/Station/Wp100/_this/Structs/Data'
+$autoInfoLineEnumPaths = @(
+  'Application/Station/_this/Enums/AutoInfoLineEnum',
+  'Application/Station/Enums/AutoInfoLineEnum',
+  'Application/Enums/AutoInfoLineEnum'
+)
+$requiredAutoInfoLineItems = @(
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_LEFT'; Index = 4 },
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_MIDDLE'; Index = 5 },
+  [pscustomobject]@{ Name = 'USER_INFO_MOVE_FIXTURE_RIGHT'; Index = 6 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_LEFT'; Index = 7 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_MIDDLE'; Index = 8 },
+  [pscustomobject]@{ Name = 'USER_INFO_PRESS_START_RIGHT'; Index = 9 },
+  [pscustomobject]@{ Name = 'USER_INFO_CLOSING_SAFETY_DOOR'; Index = 10 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_LEFT'; Index = 11 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_MIDDLE'; Index = 12 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASURING_RIGHT'; Index = 13 },
+  [pscustomobject]@{ Name = 'USER_INFO_RETURN_SAFE_POSITION'; Index = 14 },
+  [pscustomobject]@{ Name = 'USER_INFO_OPENING_SAFETY_DOOR'; Index = 15 },
+  [pscustomobject]@{ Name = 'USER_INFO_MEASUREMENT_COMPLETE'; Index = 16 }
+)
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\src\plc\project\Station010'))
+$script:CapturePreflight = $true
+$script:PreflightObservations = [ordered]@{}
+$script:WriteRequests = [Collections.Generic.List[object]]::new()
+$script:PreservedDeclarations = [ordered]@{}
+
+. (Join-Path $PSScriptRoot 'SfcRestWriter.Transaction.ps1')
 
 function ConvertTo-ApiUri {
   param([Parameter(Mandatory)][string]$Path)
@@ -24,7 +52,18 @@ function ConvertTo-ApiUri {
 
 function Get-Node {
   param([Parameter(Mandatory)][string]$Path)
-  return Invoke-RestMethod -Method Get -Uri (ConvertTo-ApiUri $Path)
+  $node = Invoke-RestMethod -Method Get -Uri (ConvertTo-ApiUri $Path)
+  Register-PreflightObservation -Path $Path -Node $node
+  return $node
+}
+
+function Test-IsNotFoundError {
+  param([Parameter(Mandatory)]$ErrorRecord)
+
+  if ($ErrorRecord.Exception.Response -and ([int]$ErrorRecord.Exception.Response.StatusCode -eq 404)) {
+    return $true
+  }
+  return ($ErrorRecord.Exception.Data.Contains('StatusCode') -and ([int]$ErrorRecord.Exception.Data['StatusCode'] -eq 404))
 }
 
 function Test-NodeExists {
@@ -34,30 +73,22 @@ function Test-NodeExists {
     return $true
   }
   catch {
-    if ($_.Exception.Response -and ([int]$_.Exception.Response.StatusCode -eq 404)) {
+    if (Test-IsNotFoundError $_) {
+      Register-PreflightObservation -Path $Path -Node $null
       return $false
     }
     throw
   }
 }
 
-function Invoke-JsonRequest {
-  param(
-    [Parameter(Mandatory)][ValidateSet('Post', 'Put')][string]$Method,
-    [Parameter(Mandatory)][string]$Uri,
-    [Parameter(Mandatory)]$Body
-  )
-
-  $json = $Body | ConvertTo-Json -Depth 40
-  return Invoke-RestMethod -Method $Method -Uri $Uri -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($json))
-}
 
 function Get-Sha256 {
   param([AllowEmptyString()][string]$Text)
 
   $sha = [Security.Cryptography.SHA256]::Create()
   try {
-    return [BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text))).Replace('-', '').ToLowerInvariant()
+    $normalized = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
+    return [BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($normalized))).Replace('-', '').ToLowerInvariant()
   }
   finally {
     $sha.Dispose()
@@ -102,14 +133,25 @@ function Add-OrVerify-Dut {
     return 'verified'
   }
 
+  # A DUT POST also mutates the Structs/Data parent's child collection.  Keep
+  # that container in the immutable preflight set so the plan, second GET and
+  # rollback verification cover the indirect parent mutation as well.
+  $null = Get-Node $dataStructPath
+
   $body = [ordered]@{
     name = $Name
     elementType = 'DUT'
     declaration = $declaration
     textlistsupport = $false
   }
-  $null = Invoke-JsonRequest -Method Post -Uri (ConvertTo-ApiUri $dataStructPath) -Body $body
-  return 'created'
+  Add-WriteRequest -Method Post `
+    -Uri (ConvertTo-ApiUri $dataStructPath) `
+    -Path $path `
+    -Kind 'create-ai-owned-dut' `
+    -Body $body `
+    -BeforeFingerprint 'missing' `
+    -TargetSha256 (Get-Sha256 $declaration)
+  return 'planned-create'
 }
 
 function Set-Action {
@@ -133,40 +175,57 @@ function Set-Action {
       language = 'ST'
       implementation = $implementation
     }
-    $null = Invoke-JsonRequest -Method Post -Uri $runUri -Body $body
-    return 'created'
+    Add-WriteRequest -Method Post `
+      -Uri $runUri `
+      -Path $path `
+      -Kind 'create-action' `
+      -Body $body `
+      -BeforeFingerprint 'missing' `
+      -TargetSha256 (Get-Sha256 $implementation)
+    return 'planned-create'
   }
 
   $node = Get-Node $path
-  $current = if ($Step -eq 'OnChainFinish') {
-    ($node.declaration.Replace("`r`n", "`n") + "`n" + $node.implementation.Replace("`r`n", "`n"))
-  }
-  else {
-    $node.implementation.Replace("`r`n", "`n")
-  }
-
-  $target = if ($Step -eq 'OnChainFinish') { $implementation } else { $implementation }
-  if ($current -eq $target) {
-    return 'verified'
-  }
-  $currentSha256 = Get-Sha256 $current
-  if ($null -eq $AllowedBaselineSha256 -or $currentSha256 -notin $AllowedBaselineSha256) {
-    throw "Existing object has unrecognized edits: $path"
-  }
-
+  $target = $implementation
   if ($Step -eq 'OnChainFinish') {
     $split = $implementation -split "`n`n", 2
     if ($split.Count -ne 2) {
       throw 'OnChainFinish source must contain declaration and implementation separated by one blank line.'
     }
-    $node.declaration = $split[0] + "`n"
+    $targetDeclaration = $split[0] + "`n"
+    if ((Get-Sha256 ([string]$node.declaration)) -ne (Get-Sha256 $targetDeclaration)) {
+      throw 'OnChainFinish declaration differs from the canonical CpStudio interface; refusing to write.'
+    }
+    $script:PreservedDeclarations[$path] = [string]$node.declaration
+    $current = [string]$node.declaration + "`n" + [string]$node.implementation
+    $target = $targetDeclaration + "`n" + $split[1]
+  }
+  else {
+    $current = [string]$node.implementation
+  }
+  $currentSha256 = Get-Sha256 $current
+  $targetSha256 = Get-Sha256 $target
+  if ($currentSha256 -eq $targetSha256) {
+    return 'verified'
+  }
+  if ($null -eq $AllowedBaselineSha256 -or $currentSha256 -notin $AllowedBaselineSha256) {
+    throw "Existing object has unrecognized edits: $path"
+  }
+
+  if ($Step -eq 'OnChainFinish') {
     $node.implementation = $split[1]
   }
   else {
     $node.implementation = $implementation
   }
-  $null = Invoke-JsonRequest -Method Put -Uri (ConvertTo-ApiUri $path) -Body $node
-  return 'updated'
+  Add-WriteRequest -Method Put `
+    -Uri (ConvertTo-ApiUri $path) `
+    -Path $path `
+    -Kind $(if ($Step -eq 'OnChainFinish') { 'update-method-implementation' } else { 'update-action' }) `
+    -Body $node `
+    -BeforeFingerprint $script:PreflightObservations[$path].Fingerprint `
+    -TargetSha256 $targetSha256
+  return 'planned-update'
 }
 
 function Escape-XmlText {
@@ -399,11 +458,11 @@ function New-Wp100RunSfcImplementation {
 }
 
 function Save-CurrentProject {
-  $body = [ordered]@{
-    jobType = 'ProjectJob'
-    jobParameters = [ordered]@{ action = 'Save' }
-  }
-  $job = Invoke-JsonRequest -Method Post -Uri "$BaseUri/jobs" -Body $body
+  $saveRequest = Get-SaveRequestDescriptor
+  $job = Invoke-JsonTextRequest `
+    -Method Post `
+    -Uri $saveRequest.uri `
+    -BodyCanonicalJson $saveRequest.bodyCanonicalJson
   $deadline = [DateTime]::UtcNow.AddSeconds(30)
   do {
     $state = Invoke-RestMethod -Method Get -Uri "$BaseUri/jobs/$($job.id)"
@@ -418,6 +477,60 @@ function Save-CurrentProject {
   throw "Timed out waiting for PLC Engineering save job $($job.id)"
 }
 
+function Assert-Wp100RunTargets {
+  param([Parameter(Mandatory)][string]$Phase)
+
+  $null = Assert-RequiredEnumItems `
+    -CandidatePaths @($autoInfoLineGate.Path) `
+    -ExpectedItems $requiredAutoInfoLineItems `
+    -EnumName 'AutoInfoLineEnum'
+  $readback = Get-Node $runPath
+  if (([string]$readback.declaration -cne $preservedRunDeclaration) -or
+      ((Get-ExactSha256 ([string]$readback.declaration)) -ne $preservedRunDeclarationExactSha)) {
+    throw "SqS_Wp100_Run declaration text/SHA changed during $Phase."
+  }
+  if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
+    throw "SqS_Wp100_Run graph readback differs during $Phase."
+  }
+  $expectedChildren = @($allowedChildren | Sort-Object)
+  $actualChildren = @($readback.children | Sort-Object)
+  if (($expectedChildren -join "`n") -ne ($actualChildren -join "`n")) {
+    throw "SqS_Wp100_Run child list mismatch during $Phase`: $($actualChildren -join ', ')"
+  }
+
+  foreach ($step in $steps) {
+    $name = "_a$($step.Name)_active"
+    $node = Get-Node "$runPath/$name"
+    $targetSha256 = Get-Sha256 (Get-SourceText "SqS_Wp100_Run\actions\$($step.Name).st")
+    if ((Get-Sha256 ([string]$node.implementation)) -ne $targetSha256) {
+      throw "SqS_Wp100_Run Action readback differs during $Phase`: $name"
+    }
+  }
+
+  $finishPath = "$runPath/OnChainFinish"
+  $finishNode = Get-Node $finishPath
+  $finishSource = Get-SourceText 'SqS_Wp100_Run\OnChainFinish.st'
+  $finishParts = $finishSource -split "`n`n", 2
+  $finishDeclarationOriginal = [string]$script:PreservedDeclarations[$finishPath]
+  $finishDeclarationReadback = [string]$finishNode.declaration
+  if (($finishDeclarationReadback -cne $finishDeclarationOriginal) -or
+      ((Get-ExactSha256 $finishDeclarationReadback) -ne (Get-ExactSha256 $finishDeclarationOriginal))) {
+    throw "SqS_Wp100_Run OnChainFinish declaration text/SHA changed during $Phase."
+  }
+  if ((Get-Sha256 ([string]$finishNode.implementation)) -ne (Get-Sha256 $finishParts[1])) {
+    throw "SqS_Wp100_Run OnChainFinish implementation readback differs during $Phase."
+  }
+
+  foreach ($dutName in @('Wp100ResistanceResultStruct', 'Wp100KistlerResultStruct', 'Wp100RunResultStruct')) {
+    $dutNode = Get-Node "$dataStructPath/$dutName"
+    $dutSource = Get-SourceText "$dutName.st"
+    if (($dutNode.elementType -ne 'DUT') -or
+        ((Get-Sha256 ([string]$dutNode.declaration)) -ne (Get-Sha256 $dutSource))) {
+      throw "AI-owned DUT readback differs during $Phase`: $dutName"
+    }
+  }
+}
+
 $currentProject = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
 $expectedResolved = [IO.Path]::GetFullPath($ExpectedProject)
 $currentResolved = [IO.Path]::GetFullPath($currentProject.path)
@@ -427,6 +540,10 @@ if (-not $currentResolved.Equals($expectedResolved, [StringComparison]::OrdinalI
 if ($currentProject.profileName -ne 'ctrlX PLC 2.6.8') {
   throw "Unexpected PLC profile '$($currentProject.profileName)'."
 }
+$autoInfoLineGate = Assert-RequiredEnumItems `
+  -CandidatePaths $autoInfoLineEnumPaths `
+  -ExpectedItems $requiredAutoInfoLineItems `
+  -EnumName 'AutoInfoLineEnum'
 
 $steps = @(
   [pscustomobject]@{ Name = 'N000'; Comment = 'Initialize run' },
@@ -455,22 +572,22 @@ $steps = @(
 $targetDeclaration = Get-SourceText 'SqS_Wp100_Run\declaration.st'
 $targetImplementation = New-Wp100RunSfcImplementation $steps
 $runNode = Get-Node $runPath
-$baselineDeclarationSha = '269963a32c3e5decf6d1cfedfbe8d88b5575254c880461d947feabfec45b0a92'
 $baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b9294834132e2d7cfd'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
 $targetImplementationSha = Get-Sha256 $targetImplementation
 $targetRestReadbackImplementationSha = Get-Sha256 (Get-SfcRestReadbackImplementation $targetImplementation)
-$previousDeclarationSha = 'ddee296f091090f744b8879b6f53a69112c91b83f65c4ee4b4d44122cfc3ab0e'
-if ($currentDeclarationSha -notin @($baselineDeclarationSha, $previousDeclarationSha, $targetDeclarationSha)) {
-  throw 'SqS_Wp100_Run declaration changed after audit; refusing overwrite.'
+if ($currentDeclarationSha -ne $targetDeclarationSha) {
+  throw "SqS_Wp100_Run declaration differs from the canonical CpStudio interface (current=$currentDeclarationSha expected=$targetDeclarationSha); configure/export it in CpStudio before continuing."
 }
+$preservedRunDeclaration = [string]$runNode.declaration
+$preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
+$script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
 if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
-$runNeedsUpdate = ($currentDeclarationSha -ne $targetDeclarationSha) -or
-                  ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
+$runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
@@ -558,6 +675,17 @@ $preInnerSpaceActionSha256 = @{
   N130 = '263fd88f31eb90dffd4650f759b0088dc72b5e9742e178619c7afc47e622f399'
   N140 = '9ce219c39be344a1c60078f77781de1ef82fd0effe8e54f23fa776887552074d'
 }
+$preGuidanceActionSha256 = @{
+  # Current compiled atomic Run source before operator guidance is added.
+  N010 = '1a4b00af8d5083b8f5eda8f2985e5b83e96bcaa5917a7000bd47f98e7131bc4a'
+  N020 = '2af360b1a30e2d17baa001d863f133fda697a0b820977b4cedd6a0403e954168'
+  N030 = '81d0b592140d0ac93c3fce7dfa08acbb5aa92ecb647c596b86704dae2feaa597'
+  N045 = 'c8b5c17f040c08b385d8275648aa0be10153de116175e154b9cbe1b0c3773328'
+  N095 = '76a4aadebdc41d81f09715c51b971f92d42ceede930f544b5eb67353f132d727'
+  N130 = '6327d79eba78e2f2a428e9e284d7d55d8f4ca8ad334392a10534d5b2b6dfe9e0'
+  N999 = '78d564a56c36840b6b333aafa0024a59121f484d0d79e53216007ab79e00e1b2'
+  OnChainFinish = 'ff4c8309de0e605f8a2b364f062d2a4745bb1800a8c88257ee1775e4a2886426'
+}
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -574,45 +702,89 @@ foreach ($step in $steps) {
   if ($preInnerSpaceActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preInnerSpaceActionSha256[$step.Name]
   }
+  if ($preGuidanceActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preGuidanceActionSha256[$step.Name]
+  }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256)
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish)
 
 if ($runNeedsUpdate) {
   $runNode = Get-Node $runPath
-  $runNode.declaration = $targetDeclaration
   $runNode.implementation = $targetImplementation
-  $null = Invoke-JsonRequest -Method Put -Uri $runUri -Body $runNode
+  Add-WriteRequest -Method Put `
+    -Uri $runUri `
+    -Path $runPath `
+    -Kind 'update-sfc-graph' `
+    -Body $runNode `
+    -BeforeFingerprint $script:PreflightObservations[$runPath].Fingerprint `
+    -TargetSha256 $targetImplementationSha
 }
 
-$readback = Get-Node $runPath
-if ((Get-Sha256 $readback.declaration) -ne $targetDeclarationSha) {
-  throw 'SqS_Wp100_Run declaration readback differs after PUT.'
+$plan = New-WriterPlan `
+  -WriterName 'apply_wp100_run_rest.ps1' `
+  -ProjectPath $currentProject.path `
+  -ProfileName $currentProject.profileName `
+  -ChainPath $runPath `
+  -DeclarationExactSha256 $preservedRunDeclarationExactSha
+$planSha256 = Get-PlanSha256 $plan
+$planResult = [ordered]@{
+  mode = $Mode
+  planSha256 = $planSha256
+  plan = $plan
 }
-if ((Get-Sha256 $readback.implementation) -notin @($targetImplementationSha, $targetRestReadbackImplementationSha)) {
-  throw 'SqS_Wp100_Run graph readback differs after PUT.'
+if ($Mode -eq 'PlanOnly') {
+  $planResult | ConvertTo-Json -Depth 20
+  return
 }
-$expectedChildren = @($allowedChildren | Sort-Object)
-$actualChildren = @($readback.children | Sort-Object)
-if (($expectedChildren -join "`n") -ne ($actualChildren -join "`n")) {
-  throw "SqS_Wp100_Run child list mismatch after update: $($actualChildren -join ', ')"
+if ([string]::IsNullOrWhiteSpace($ExpectedPlanSha256)) {
+  throw 'Apply requires -ExpectedPlanSha256 from a fresh PlanOnly run.'
+}
+if (-not $ExpectedPlanSha256.Equals($planSha256, [StringComparison]::OrdinalIgnoreCase)) {
+  throw "Plan hash mismatch; refusing Apply (expected=$ExpectedPlanSha256 current=$planSha256)."
 }
 
-$hasChanges = $runNeedsUpdate -or
-              (@($dutStatus.Values | Where-Object { $_ -ne 'verified' }).Count -gt 0) -or
-              (@($actionStatus.Values | Where-Object { $_ -ne 'verified' }).Count -gt 0)
+$script:CapturePreflight = $false
+$projectBeforeWrite = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
+if ((-not ([IO.Path]::GetFullPath($projectBeforeWrite.path)).Equals($expectedResolved, [StringComparison]::OrdinalIgnoreCase)) -or
+    ($projectBeforeWrite.profileName -ne 'ctrlX PLC 2.6.8')) {
+  throw 'Active PLC project/profile changed between PlanOnly preflight and Apply.'
+}
+Assert-PreflightSnapshotCurrent
+
+# Mutation phase begins only after the immutable plan/hash gate and complete
+# second GET/hash pass have succeeded for every observed object.
+try {
+  Invoke-WriteRequests
+  Assert-Wp100RunTargets -Phase 'pre-save verification'
+
+$hasChanges = ($script:WriteRequests.Count -gt 0)
 $saveResult = if ($hasChanges) {
-  (Save-CurrentProject).jobResultInfo
+  $result = (Save-CurrentProject).jobResultInfo
+  # Saving is part of the transaction: re-read every graph, Action, Method and
+  # DUT after the job completes so a persistence-time rewrite cannot pass as a
+  # successful Apply.
+  Assert-Wp100RunTargets -Phase 'post-save verification'
+  $result
 }
 else {
   'No changes; save skipped.'
+}
+}
+catch {
+  $transactionError = $_
+  $rollbackResult = Invoke-WriteRollback
+  throw (New-TransactionFailureMessage -OriginalError $transactionError -RollbackResult $rollbackResult)
 }
 [pscustomobject]@{
   project = $currentProject.path
   duts = $dutStatus
   actions = $actionStatus
   stepCount = $steps.Count
-  declarationSha256 = $targetDeclarationSha
+  mode = $Mode
+  planSha256 = $planSha256
+  declarationExactSha256 = $preservedRunDeclarationExactSha
+  declarationTextUnchanged = $true
   implementationSha256 = $targetImplementationSha
   restReadbackImplementationSha256 = $targetRestReadbackImplementationSha
   saveResult = $saveResult

@@ -6,8 +6,10 @@ compile:
   # code/object/location signatures. Do not treat an equal count as proof that
   # the warning set is unchanged.
   warning_policy: baseline
-  baseline_warning_count: 6
+  baseline_warning_count: 4
   require_warning_signature_review: true
+  accepted_warning_source: Bosch managed library NexeedStateAddon 1.1.1.0
+  accepted_warning_signature: C0351 unknown OPC.UA.DA attribute
 
 ownership:
   fail_if_ai_object_missing: true

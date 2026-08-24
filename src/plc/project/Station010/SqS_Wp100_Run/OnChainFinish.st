@@ -36,9 +36,12 @@ _safetyDoorOpenStarted  := FALSE;
 CASE Reason
 OF
   OpconChainFinishReason.ERROR,
-  OpconChainFinishReason.CANCEL,
+  OpconChainFinishReason.CANCEL:
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_TEXT_CLEAR;
+
   OpconChainFinishReason.DONE:
-    ;
+    ; // N999 clears the atomic prompt; the parent chain owns the next prompt.
+
   ELSE
     ; // do nothing
 END_CASE

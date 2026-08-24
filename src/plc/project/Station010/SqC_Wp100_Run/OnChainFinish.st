@@ -32,6 +32,11 @@ CASE Reason OF
 
     _partSensorFaultMask := 0;
 
+    IF ( Reason <> OpconChainFinishReason.DONE )
+    THEN
+      Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_TEXT_CLEAR;
+    END_IF
+
   ELSE
     ; // do nothing
 END_CASE

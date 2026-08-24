@@ -7,6 +7,43 @@ chain:
   unit_reference: Wp100Unit
   status: implemented_offline_verified
 
+operator_guidance_plan:
+  status: applied_offline_verified
+  apply_gate: completed
+  plan_sha256: b644dc984743937c303ef8607a8be3ac61d8d80402c7b482683740ff10e68c15
+  specification: specs/hmi/auto_info_line.yaml
+  current_verified_graph_steps: 14
+  target_graph_steps: 14
+  rule: >-
+    The command chain owns product-presence and requested-position prompts.
+    It releases a move-fixture prompt only after the safety door is open and
+    the pressing cylinder is raised, and it does not write the display while
+    SqS_Wp100_Run is active.
+  product_presence_release: >-
+    CheckPartPresent is called once before each fixture request and again after
+    the requested one-hot fixture position is reached. The second check is the
+    final release immediately before the atomic chain starts, so a product
+    removed while the operator moves the fixture cannot start measurement.
+  implemented_wait_steps:
+    - { step: N015, comment: Wait fixture LEFT, prompt: USER_INFO_MOVE_FIXTURE_LEFT }
+    - { step: N045, comment: Wait fixture MIDDLE, prompt: USER_INFO_MOVE_FIXTURE_MIDDLE }
+    - { step: N075, comment: Wait fixture RIGHT, prompt: USER_INFO_MOVE_FIXTURE_RIGHT }
+  completion_prompt:
+    step: N999
+    prompt: USER_INFO_MEASUREMENT_COMPLETE
+    retention: keep through DONE; clear at the next N000 or immediately on ERROR/CANCEL
+  source_files:
+    state: applied_and_readback_verified
+    root: src/plc/project/Station010/SqC_Wp100_Run
+    includes:
+      - product-missing LOAD_PART assignments at N010/N040/N070
+      - safe-gated one-hot fixture waits at N015/N045/N075
+      - initialization, completion, and finish-reason display cleanup
+  completed_prerequisites:
+    - CpStudio AutoInfoLineEnum items 4 through 16 saved and exported
+    - REST writer transactional safety blockers closed and offline tests passed
+    - fresh PlanOnly output reviewed before explicit Apply
+
 atomic_operation:
   instance: Wp100.SqS_Run
   type: SqS_Wp100_Run
@@ -43,12 +80,15 @@ part_detection:
 steps:
   - { id: N000, comment: Initialize measurement sequence }
   - { id: N010, comment: Check part before LEFT, method: CheckPartPresent }
+  - { id: N015, comment: Wait fixture LEFT, prompt: USER_INFO_MOVE_FIXTURE_LEFT }
   - { id: N020, comment: Start LEFT measurement, input: MeasurePsoEnum.LEFT }
   - { id: N030, comment: Wait LEFT measurement, capture: Result.Left }
   - { id: N040, comment: Check part before MIDDLE, method: CheckPartPresent }
+  - { id: N045, comment: Wait fixture MIDDLE, prompt: USER_INFO_MOVE_FIXTURE_MIDDLE }
   - { id: N050, comment: Start MIDDLE measurement, input: MeasurePsoEnum.MIDDLE }
   - { id: N060, comment: Wait MIDDLE measurement, capture: Result.Middle }
   - { id: N070, comment: Check part before RIGHT, method: CheckPartPresent }
+  - { id: N075, comment: Wait fixture RIGHT, prompt: USER_INFO_MOVE_FIXTURE_RIGHT }
   - { id: N080, comment: Start RIGHT measurement, input: MeasurePsoEnum.RIGHT }
   - { id: N090, comment: Wait RIGHT measurement, capture: Result.Right }
   - { id: N999, comment: Finish measurement sequence, result: DONE }
@@ -73,13 +113,19 @@ cleanup:
     - Result until the next execution
 
 verification:
-  date: 2026-08-20
-  offline_compile: 0 errors / 6 warnings
+  date: 2026-08-24
+  offline_compile: 0 errors / 4 warnings
+  warning_scope: four reviewed C0351 messages from NexeedStateAddon 1.1.1.0
   additional_code_checks: 0 errors
   rest_readback:
-    steps: 11
-    actions: 11
+    steps: 14
+    actions: 14
     methods: 2
   apply_script: scripts/plc/apply_wp100_run_sequence_rest.ps1
   idempotent_replay: verified
   online_test: not performed
+  applied_change_note: >-
+    The 14-step operator-guidance graph was applied transactionally. The
+    CpStudio-owned declaration was preserved byte-for-byte, all target graph,
+    Action and Method objects passed post-save readback, and the fresh Build
+    had no application errors or new warning signatures.

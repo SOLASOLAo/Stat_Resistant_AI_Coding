@@ -1,4 +1,6 @@
 // Open the safety door only after the pressing cylinder is confirmed up.
+Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_OPENING_SAFETY_DOOR;
+
 IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos )
 THEN
   _safetyDoorOpenStarted := FALSE;

@@ -31,6 +31,16 @@ try {
     }
     [System.IO.Directory]::CreateDirectory((Join-Path $temporaryRoot 'tests')) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceRoot 'tests\cpstudio') -Destination (Join-Path $temporaryRoot 'tests') -Recurse
+    [System.IO.Directory]::CreateDirectory((Join-Path $temporaryRoot 'tests\static')) | Out-Null
+    foreach ($staticTest in @(
+        'Test-RunOperatorGuidance.ps1',
+        'Test-SfcRestWriterPlanOnly.ps1',
+        'Test-SfcRestWriterTransaction.ps1'
+    )) {
+        Copy-Item `
+            -LiteralPath (Join-Path $sourceRoot "tests\static\$staticTest") `
+            -Destination (Join-Path $temporaryRoot 'tests\static')
+    }
     Copy-Item -LiteralPath (Join-Path $sourceRoot 'TEAM_SETUP.md') -Destination $temporaryRoot
 
     Invoke-Validator 0

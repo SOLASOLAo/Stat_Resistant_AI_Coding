@@ -1,5 +1,7 @@
 // Close the safety door. A door already in work/closed position is accepted;
 // otherwise the maintenance-door safety relay must be healthy before motion.
+Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_CLOSING_SAFETY_DOOR;
+
 IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos )
 THEN
   _safetyDoorCloseStarted := FALSE;

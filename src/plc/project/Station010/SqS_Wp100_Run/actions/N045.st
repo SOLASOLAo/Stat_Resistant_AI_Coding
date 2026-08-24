@@ -3,6 +3,20 @@
 _retVal  := RUNNING;
 _retVal2 := RUNNING;
 
+CASE MeasurePos OF
+  MeasurePsoEnum.LEFT:
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_MEASURING_LEFT;
+
+  MeasurePsoEnum.MIDDLE:
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_MEASURING_MIDDLE;
+
+  MeasurePsoEnum.RIGHT:
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_MEASURING_RIGHT;
+
+  ELSE
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_TEXT_CLEAR;
+END_CASE
+
 IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
    ( Peripherals.BinIo._000K913_Y32 ) AND
    ( Peripherals.BinIo._000K912_Y32 ) AND

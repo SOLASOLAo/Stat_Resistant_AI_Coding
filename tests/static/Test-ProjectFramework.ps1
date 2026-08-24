@@ -18,6 +18,7 @@ $requiredFiles = @(
     'specs/station.yaml',
     'specs/io.yaml',
     'specs/events.yaml',
+    'specs/hmi/auto_info_line.yaml',
     'specs/units/Wp100.yaml',
     'ai/ownership.yaml',
     'ai/hooks.yaml',
@@ -33,12 +34,16 @@ $requiredFiles = @(
     'scripts/git/Get-ReadOnlyGitAudit.ps1',
     'scripts/plc/export_plc_snapshot.py',
     'scripts/plc/verify_plc_snapshot.ps1',
+    'scripts/plc/SfcRestWriter.Transaction.ps1',
     'scripts/ioe/ioe_ipc.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1',
     'tests/cpstudio/Test-PostExportQueue.ps1',
     'tests/cpstudio/Test-PostExportEngineering.ps1',
     'tests/cpstudio/Test-PostExportRunnerEvidence.ps1',
-    'tests/cpstudio/Test-OfflinePostExportCheck.ps1'
+    'tests/cpstudio/Test-OfflinePostExportCheck.ps1',
+    'tests/static/Test-SfcRestWriterPlanOnly.ps1',
+    'tests/static/Test-SfcRestWriterTransaction.ps1',
+    'tests/static/Test-RunOperatorGuidance.ps1'
 )
 
 $failures = New-Object System.Collections.Generic.List[string]
@@ -400,6 +405,25 @@ $restAppliers = @(
     'scripts/plc/apply_wp100_run_rest.ps1',
     'scripts/plc/apply_wp100_run_sequence_rest.ps1'
 )
+$transactionGuardPath = Join-Path $repositoryRoot 'scripts/plc/SfcRestWriter.Transaction.ps1'
+$transactionGuardText = [System.IO.File]::ReadAllText($transactionGuardPath)
+foreach ($requiredText in @(
+    'schemaVersion = 2',
+    'declarationPolicy = ''read-only-preserve-exactly''',
+    'bodyCanonicalJson = $_.BodyCanonicalJson',
+    'finalSnapshotBodyCanonicalJson',
+    'Assert-PreflightSnapshotCurrent',
+    'Invoke-WriteRollback',
+    'ROLLBACK FAILED',
+    'POST parent does not have an existing immutable preflight snapshot',
+    'function Assert-RequiredEnumItems',
+    'CpStudio prerequisite is incomplete',
+    'obsoleteDeletion = ''disabled'''
+)) {
+    if (-not $transactionGuardText.Contains($requiredText)) {
+        $failures.Add("Shared PLC REST transaction guard is missing '$requiredText'.")
+    }
+}
 foreach ($restApplier in $restAppliers) {
     $restApplierPath = Join-Path $repositoryRoot $restApplier
     $restApplierText = [System.IO.File]::ReadAllText($restApplierPath)
@@ -407,6 +431,49 @@ foreach ($restApplier in $restAppliers) {
         if ($restApplierText.Contains($forbiddenText)) {
             $failures.Add("PLC REST applier contains forbidden online operation '$forbiddenText': $restApplier")
         }
+    }
+    foreach ($requiredText in @(
+        "[ValidateSet('PlanOnly', 'Apply')][string]`$Mode = 'PlanOnly'",
+        'Apply requires -ExpectedPlanSha256 from a fresh PlanOnly run.',
+        'Plan hash mismatch; refusing Apply',
+        'Assert-PreflightSnapshotCurrent',
+        '# Mutation phase begins only after the immutable plan/hash gate',
+        'declarationTextUnchanged = $true',
+        'SfcRestWriter.Transaction.ps1',
+        'Invoke-WriteRollback',
+        '$null = Get-Node $dataStructPath',
+        'USER_INFO_MEASUREMENT_COMPLETE''; Index = 16',
+        "-EnumName 'AutoInfoLineEnum'",
+        "-Phase 'pre-save verification'",
+        "-Phase 'post-save verification'"
+    )) {
+        if (-not $restApplierText.Contains($requiredText)) {
+            $failures.Add("PLC REST applier is missing interface-preserving plan/apply guard '$requiredText': $restApplier")
+        }
+    }
+    if ([regex]::IsMatch($restApplierText, '(?im)\.declaration\s*=')) {
+        $failures.Add("PLC REST applier assigns an existing object's declaration instead of preserving it: $restApplier")
+    }
+    if ([regex]::IsMatch($restApplierText, '(?im)Invoke-RestMethod\s+-Method\s+Delete')) {
+        $failures.Add("PLC REST applier performs obsolete-child deletion; deletion is disabled until a separate reviewed migration exists: $restApplier")
+    }
+
+    $planOnlyGateIndex = $restApplierText.LastIndexOf("if (`$Mode -eq 'PlanOnly')", [System.StringComparison]::Ordinal)
+    $planHashGateIndex = $restApplierText.LastIndexOf('Plan hash mismatch; refusing Apply', [System.StringComparison]::Ordinal)
+    $secondReadIndex = $restApplierText.LastIndexOf('Assert-PreflightSnapshotCurrent', [System.StringComparison]::Ordinal)
+    $mutationIndex = $restApplierText.LastIndexOf('Invoke-WriteRequests', [System.StringComparison]::Ordinal)
+    if (($planOnlyGateIndex -lt 0) -or
+        ($planHashGateIndex -le $planOnlyGateIndex) -or
+        ($secondReadIndex -le $planHashGateIndex) -or
+        ($mutationIndex -le $secondReadIndex)) {
+        $failures.Add("PLC REST applier mutation phase is not ordered after PlanOnly, plan-hash and second-read gates: $restApplier")
+    }
+
+    $tokens = $null
+    $parseErrors = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile($restApplierPath, [ref]$tokens, [ref]$parseErrors)
+    foreach ($parseError in @($parseErrors)) {
+        $failures.Add("PLC REST applier PowerShell parse error at line $($parseError.Extent.StartLineNumber): $($parseError.Message): $restApplier")
     }
 
     $restApplierLines = [System.IO.File]::ReadAllLines($restApplierPath)
@@ -421,6 +488,13 @@ foreach ($restApplier in $restAppliers) {
             $failures.Add("SFC transition call is missing its internal name: ${restApplier}:$($lineIndex + 1)")
         }
     }
+}
+
+$tokens = $null
+$parseErrors = $null
+[void][System.Management.Automation.Language.Parser]::ParseFile($transactionGuardPath, [ref]$tokens, [ref]$parseErrors)
+foreach ($parseError in @($parseErrors)) {
+    $failures.Add("Shared PLC REST transaction guard parse error at line $($parseError.Extent.StartLineNumber): $($parseError.Message)")
 }
 
 if ($failures.Count -gt 0) {

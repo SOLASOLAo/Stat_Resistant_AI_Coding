@@ -1196,8 +1196,8 @@
 
         <div class="system-card" aria-label="系统架构摘要">
           <div class="system-head">
-            <span>Recorded PLC baseline · 2026-08-19</span>
-            <span class="live-pill">0 errors / 6 warnings</span>
+            <span>Recorded PLC baseline · 2026-08-24</span>
+            <span class="live-pill">0 errors / 4 managed-library warnings</span>
           </div>
           <div class="architecture-mini">
             <div class="mini-node">
@@ -1225,8 +1225,8 @@
 
         <div class="metrics" aria-label="当前工程快照">
           <div class="metric"><strong>0</strong><span>最近已记录 Clean Build errors</span></div>
-          <div class="metric"><strong>6</strong><span>同一基线 warnings</span></div>
-          <div class="metric"><strong>237</strong><span>最近确定性 PLC 对象快照</span></div>
+          <div class="metric"><strong>4</strong><span>同一基线 warnings</span></div>
+          <div class="metric"><strong>262</strong><span>最近确定性 PLC 对象快照</span></div>
           <div class="metric"><strong>400/400</strong><span>Kistler PDO 映射</span></div>
           <div class="metric"><strong>5</strong><span>UserDefined 已迁移控件</span></div>
         </div>
@@ -1644,12 +1644,13 @@
           <span class="section-kicker">09 · Current Findings</span>
           <h2>当前方案状态与<span class="accent">下一步</span></h2>
         </div>
-        <p class="section-intro">PLC 数字是 2026-08-19 最近一次已记录的 Clean Build 基线，不代表当前本机未提交工程；HMI 与工作流状态更新至 2026-08-23。</p>
+        <p class="section-intro">PLC 数字来自 2026-08-24 的 fresh offline Build；Run Chain 操作提示、14-step 图和 HMI 枚举已完成离线读回验证，真机 FAT 仍待现场执行。</p>
       </div>
 
       <div class="proof-grid">
-        <article class="proof-card"><b>最近 Clean Build</b><span class="proof-value">0 / 6</span><p>已记录基线为 0 errors / 6 warnings，C0198=0；当前工作树需重新 Build 后才能沿用结论。</p></article>
-        <article class="proof-card"><b>确定性 PLC 快照</b><span class="proof-value">237</span><p>最近一次记录为 237 objects，用于按对象确认生成前后的实际边界。</p></article>
+        <article class="proof-card"><b>最近 Clean Build</b><span class="proof-value">0 / 4</span><p>0 errors；4 条剩余 warning 均来自只读 Bosch NexeedStateAddon 托管库，项目内占位 warning 已清除。</p></article>
+        <article class="proof-card"><b>确定性 PLC 快照</b><span class="proof-value">262</span><p>262 objects 的快照与 project SHA 已校验，用于按对象确认生成前后的实际边界。</p></article>
+        <article class="proof-card"><b>Run 操作提示</b><span class="proof-value">4–16</span><p>AutoInfoLineEnum 新项、中英文 HMI 资源与 SqC 14-step 图已通过 PLE 事务写入和保存后读回。</p></article>
         <article class="proof-card"><b>Kistler EtherCAT</b><span class="proof-value">400/400</span><p>200 byte 输入与 200 byte 输出均已绑定并读回零差异。</p></article>
         <article class="proof-card"><b>UserDefined HMI</b><span class="proof-value">1 → 5</span><p>OverView 只保留 1 个 Host，5 个业务控件迁入 UserDefined，并通过官方加载/保存验证。</p></article>
       </div>
@@ -1668,7 +1669,7 @@
   </main>
 
   <footer>
-    <span>CpStudio + Git + AI · BPP Resistant Station · PLC 基线 2026-08-19 · 流程/HMI 状态 2026-08-23</span>
+    <span>CpStudio + Git + AI · BPP Resistant Station · PLC/流程/HMI 状态 2026-08-24</span>
     <span>工程仓库：<a href="https://github.com/SOLASOLAo/Stat_Resistant_AI_Coding" target="_blank" rel="noreferrer">Stat_Resistant_AI_Coding</a> · 本页不构成真机下载或安全验收许可</span>
   </footer>
 

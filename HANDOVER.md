@@ -462,3 +462,12 @@
 - 新增 HMI 章节，记录 `OverView → Mod_SmartControlHost1 → UserDefined` 分层、1 个 Host / 5 个业务控件 / 4 个绑定及资源关系。准确边界为“AI 维护 WFML/resources，CpStudio 内嵌 HMI Configurator 负责官方加载、预览和保存”；没有宣称存在官方 HMI 写 API/headless CLI，也没有把独立 VisiWinNET 当作验证工具。
 - 历史指标已纠正为“最近一次已记录 Clean Build 基线 0 errors / 6 warnings、237-object 确定性快照”，不再冒充当前脏工作树状态；Post-export、离线 checker 和 HMI 的状态更新至 2026-08-23。页面经 Edge 1440×1200 实际渲染检查，责任矩阵、断网流程、HMI 案例和结论章节均无溢出，五个流程页签可切换，`git diff --check` 通过。
 - 本轮仅修改 McpCoding 文档，不调用 PLC MCP，不修改 Station010/PLC/IO/CpStudio/`Std`，不连接、下载、启停、写变量或 FORCE 实体 PLC。提交仍须精确暂存这 3 个文档，禁止整体暂存。
+
+## AutoInfoLine 与 Run Chain 操作提示收口（2026-08-24）
+
+- 用户已在 CpStudio 末尾追加并导出 `AutoInfoLineEnum` 4–16。PLE 官方 REST 回读的实际 DUT 声明按 0–16 顺序生成；`Engineering_Data.xml` 中新项 `Index=0 / IndexChange=false` 是 CpStudio 的自动顺序语义，不是 PLC 里 13 个重复的枚举值。HMI 1033/2052 资源已实际生成 `L1_AutoInfoLineEnum4..16`。
+- `SqS_Wp100_Run` 以 Plan SHA-256 `0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50` 事务应用；`SqC_Wp100_Run` 以 `b644dc984743937c303ef8607a8be3ac61d8d80402c7b482683740ff10e68c15` 事务应用。两者都完成写前二次快照、保存后回读和原声明逐字保持；SqC 现为 14 Steps，新增 `N015/N045/N075` 等待 LEFT/MIDDLE/RIGHT 夹具位置。
+- fresh offline Build 初次为 **0 errors / 6 warnings**。其中两条项目内 `C0373` 来自 Station/Type Data 两个 `OnCheckData` 的“检查后删除”占位 `{warning}`；保留 CpStudio 生成范围校验并仅删除这两行后，最终 Build 为 **0 errors / 4 warnings**。
+- 剩余 4 条精确签名均为 `C0351 / NexeedStateAddon 1.1.1.0 / OPC.UA.DA unknown`，来自 `C:\ProgramData\Rexroth\PLE-V-0206\0\Studio\Managed Libraries`下的 Bosch 托管库；不修改安装库或 `Std`。该签名已作为当前可接受基线，新的应用层 warning 仍必须失败关闭。
+- 确定性 PLC 文本快照为 **262 objects**，project SHA-256=`B92CD8940EA762056BD820DDE8C8DBCD46ECB057BA3ABE0BE52F5043E447B508`，manifest 校验通过。本轮未连接、下载、启停、写变量或 FORCE 实体 PLC，也未修改 `Std`。
+- 已知的非运行阻塞：CpStudio canonical XML 中 `USER_INFO_MEASUREMENT_COMPLETE` 的 `zh_CN` 节点仍为空，但实际 2052 HMI 资源已是“测量完成”。后续再编辑该枚举时应在 CpStudio 中确认最后一项中文单元格，AI 不直改 `Engineering_Data.xml`。

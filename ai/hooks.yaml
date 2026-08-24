@@ -151,3 +151,12 @@ hooks:
       - AdditionalInfo identifies _100B701, _100B702 or both missing signals
       - LEFT, MIDDLE and RIGHT results are retained separately
       - OnChainFinish resets SqS_Run.Execute and removes this chain's locked soft error
+  - id: dataset_plausibility_warning_cleanup
+    objects:
+      - Application/Station/_this/Addons/StationDataSetManagerAddon/OnCheckData
+      - Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData
+    owner: mixed
+    interface_owner: cpstudio
+    invariants:
+      - generated range checks remain present
+      - the application-specific placeholder warning is absent after review
