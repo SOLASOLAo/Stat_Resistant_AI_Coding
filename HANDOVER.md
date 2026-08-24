@@ -514,3 +514,10 @@
 - The read-only catalog now contains 133 nodes, including Station Start/Stop/Step visibility and all manual `Release*/Running*` outputs. These PLC outputs are authoritative.
 - The verified Nexeed behavior is in `docs/self_hmi_nexeed_control_contract.md`. Real `StationCommands` and `ManualFunctions` remain hard-disabled. Only the existing, explicitly enabled TokenRequest/ModeIdRequest mode adapter can write; DEMO exercises the new controls without PLC access.
 - Before real extended control, separately accept request-bit readback-to-FALSE, PanelActive, Unit hold-to-run Exec, Heartbeat challenge/ack and forced release on mouse-up/focus loss/disconnect/process exit. Never write Chain state or physical I/O directly.
+
+## Independent HMI navigation information architecture (2026-08-25)
+
+- Corrected the navigation hierarchy after operator review: Automatic, Manual, Homing and Change-over are now the vertical left mode selector; Overview, Events, I/O and Data are the horizontal top page selector.
+- `SelectedPageIndex` now represents only the four primary pages (`0..3`). Manual is not a fifth page: while the confirmed PLC `ModeId` is Manual (`3`), Overview renders the Station/Wp100 Unit and manual-function workspace; other modes render the station/Chain overview.
+- Mode requests and page navigation remain independent. This layout work did not change the OPC UA adapter, write allowlist, PLC, CpStudio, Station010, IO project or `Std`.
+- Added stable navigation automation names and a geometry regression check proving that mode buttons remain vertical and primary pages remain horizontal. Release Build is `0 errors / 0 warnings`; the 133-node static contract and offline UI smoke both pass.

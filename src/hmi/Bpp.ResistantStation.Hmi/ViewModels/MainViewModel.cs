@@ -219,10 +219,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public string PageName => SelectedPageIndex switch
     {
-        1 => "Manual",
-        2 => "Events",
-        3 => "I/O",
-        4 => "Data",
+        1 => "Events",
+        2 => "I/O",
+        3 => "Data",
         _ => "Overview"
     };
 
@@ -746,7 +745,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public void SelectPage(int pageIndex)
     {
-        if (pageIndex is < 0 or > 4)
+        if (pageIndex is < 0 or > 3)
         {
             throw new ArgumentOutOfRangeException(nameof(pageIndex));
         }

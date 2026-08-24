@@ -10,6 +10,7 @@
 ## Backlog(以后再说)
 - [x] 🟢 自研 HMI Phase 1/1.1 离线实现：.NET 8 WPF + 官方 OPC UA Client；133 个只读 Symbol 节点，PublicEventList、9-Slave EtherCAT 拓扑、38 个命名 DI/DO、Kistler 语义值、StationData/TypeData 分页、keepalive 自动重连与 3 s 会话健康超时遮罩；Release Build 0 errors / 0 warnings，离线 UI smoke 通过（2026-08-25）
 - [x] 🟢 自研 HMI Phase 1.2 操作界面：增加 Auto/Home/Change-over Chain 启停、Auto 步进/下一步、Station/Wp100 Unit 与 16 个单动功能、真实 Release/Running 状态，以及 Master→EK1100→EL/Kistler 分层 EtherCAT 拓扑；所有新控制仅在 DEMO 可执行，真机写入保持锁定（2026-08-25）
+- [x] 🟢 自研 HMI 导航信息架构纠正：Automatic/Manual/Homing/Change-over 固定在左侧模式栏，Overview/Events/I/O/Data 固定在顶部页面栏；Manual Unit 单动作为 Manual 模式下的 Overview，模式与页面状态彼此独立（2026-08-25）
 - [ ] 🟡 自研 HMI 真机只读验收：关闭 Nexeed HMI 后验证 PublicEventList ExtensionObject 表示、活动/清除事件过滤、EtherCAT 9 元素数组索引、38 个 I/O 与 Kistler 力/位移；本步骤不得写变量
 - [x] 🔴 自研 HMI 最小模式控制协议离线实现：APQ token=1；只允许 TokenRequest 与 ModeIdRequest；模式仅 1/3/4/5，带安全反馈、Changeover IsEmpty、Token/ModeId 回读和超时；不写 Heartbeat/TokenChangeResponse/物理 I/O/Chain（2026-08-25）
 - [ ] 🔴 自研 HMI 模式切换真机验收：只读验收通过后另行明确授权，依次验证 Automatic/Manual/Home/Changeover 请求与拒绝路径；Nexeed HMI 必须关闭，不做多面板 Token 转移

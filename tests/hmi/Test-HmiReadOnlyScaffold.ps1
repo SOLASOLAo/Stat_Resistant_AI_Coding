@@ -214,7 +214,21 @@ Assert-True ($windowText -notmatch '<Setter\s+Property="IsHitTestVisible"\s+Valu
     'Operator mode buttons must remain clickable by mouse and touch.'
 Assert-True ($windowText -notmatch 'READ ONLY /') `
     'The HMI header must not claim read-only operation after mode requests are enabled.'
+Assert-True ($windowText -match 'x:Name="ModeSidebar"') `
+    'Automatic, Manual, Homing and Change-over require a dedicated mode sidebar.'
+Assert-True ($windowText -match 'x:Name="PrimaryTopNavigation"') `
+    'Overview, Events, I/O and Data require a dedicated top navigation bar.'
+Assert-True ($windowText -notmatch 'AutomationProperties\.Name="Navigate Manual"') `
+    'Manual must be the Manual-mode Overview, not a fifth primary page.'
 foreach ($automationName in @(
+        'Navigate Overview',
+        'Navigate Events',
+        'Navigate IO',
+        'Navigate Data',
+        'Switch to Automatic mode',
+        'Switch to Manual mode',
+        'Switch to Homing mode',
+        'Switch to Change-over mode',
         'Start active mode Chain',
         'Stop active mode Chain',
         'Toggle automatic step mode',

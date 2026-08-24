@@ -34,22 +34,27 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ModeButton" TargetType="Button">
+        <Style x:Key="ModeSidebarButton" TargetType="Button">
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="Height" Value="82" />
+            <Setter Property="Margin" Value="8,8,8,0" />
+            <Setter Property="Padding" Value="6" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#193249" />
-            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <Style x:Key="NavButton" TargetType="Button">
+        <Style x:Key="TopNavigationButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#DCE8F0" />
+            <Setter Property="Foreground" Value="#193249" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="72" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Width" Value="132" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
@@ -151,31 +156,39 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="92" />
+                <ColumnDefinition Width="112" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="#173148">
-                <StackPanel>
-                    <Button Style="{StaticResource NavButton}" Tag="0" Click="OnNavigateClick" AutomationProperties.Name="Navigate Overview"
-                            Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=0}">
-                        <StackPanel><TextBlock Text="▦" FontSize="26" HorizontalAlignment="Center" /><TextBlock Text="OVERVIEW" /></StackPanel>
+                <StackPanel x:Name="ModeSidebar" AutomationProperties.Name="Operator mode sidebar">
+                    <Button Style="{StaticResource ModeSidebarButton}"
+                            Tag="1" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                            AutomationProperties.Name="Switch to Automatic mode"
+                            Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=1}"
+                            Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=1}">
+                        <StackPanel><TextBlock Text="▶" FontSize="22" HorizontalAlignment="Center" /><TextBlock Text="AUTOMATIC" /><TextBlock Text="自动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                     </Button>
-                    <Button Style="{StaticResource NavButton}" Tag="1" Click="OnNavigateClick" AutomationProperties.Name="Navigate Manual"
-                            Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=1}">
-                        <StackPanel><TextBlock Text="↔" FontSize="26" HorizontalAlignment="Center" /><TextBlock Text="MANUAL" /></StackPanel>
+                    <Button Style="{StaticResource ModeSidebarButton}"
+                            Tag="3" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                            AutomationProperties.Name="Switch to Manual mode"
+                            Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=3}"
+                            Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=3}">
+                        <StackPanel><TextBlock Text="↔" FontSize="24" HorizontalAlignment="Center" /><TextBlock Text="MANUAL" HorizontalAlignment="Center" /><TextBlock Text="手动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                     </Button>
-                    <Button Style="{StaticResource NavButton}" Tag="2" Click="OnNavigateClick" AutomationProperties.Name="Navigate Events"
-                            Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=2}">
-                        <StackPanel><TextBlock Text="⚠" FontSize="24" HorizontalAlignment="Center" /><TextBlock Text="EVENTS" /></StackPanel>
+                    <Button Style="{StaticResource ModeSidebarButton}"
+                            Tag="4" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                            AutomationProperties.Name="Switch to Homing mode"
+                            Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=4}"
+                            Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=4}">
+                        <StackPanel><TextBlock Text="⌂" FontSize="25" HorizontalAlignment="Center" /><TextBlock Text="HOMING" HorizontalAlignment="Center" /><TextBlock Text="回原位" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                     </Button>
-                    <Button Style="{StaticResource NavButton}" Tag="3" Click="OnNavigateClick" AutomationProperties.Name="Navigate IO"
-                            Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=3}">
-                        <StackPanel><TextBlock Text="⌁" FontSize="26" HorizontalAlignment="Center" /><TextBlock Text="I/O" /></StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource NavButton}" Tag="4" Click="OnNavigateClick" AutomationProperties.Name="Navigate Data"
-                            Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=4}">
-                        <StackPanel><TextBlock Text="⚙" FontSize="25" HorizontalAlignment="Center" /><TextBlock Text="DATA" /></StackPanel>
+                    <Button Style="{StaticResource ModeSidebarButton}"
+                            Tag="5" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                            AutomationProperties.Name="Switch to Change-over mode"
+                            Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=5}"
+                            Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=5}">
+                        <StackPanel><TextBlock Text="⇄" FontSize="24" HorizontalAlignment="Center" /><TextBlock Text="CHANGE-OVER" FontSize="11" HorizontalAlignment="Center" /><TextBlock Text="换型" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                     </Button>
                 </StackPanel>
             </Border>
@@ -193,34 +206,30 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource ModeButton}" Width="150"
-                                Tag="1" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
-                                AutomationProperties.Name="Switch to Automatic mode"
-                                Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=1}"
-                                Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=1}">
-                            <StackPanel><TextBlock Text="AUTOMATIC" HorizontalAlignment="Center" /><TextBlock Text="自动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                    <StackPanel x:Name="PrimaryTopNavigation" Orientation="Horizontal" AutomationProperties.Name="Primary top navigation">
+                        <Button Style="{StaticResource TopNavigationButton}" Tag="0" Click="OnNavigateClick"
+                                AutomationProperties.Name="Navigate Overview"
+                                Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=0}"
+                                Foreground="{Binding SelectedPageIndex, Converter={StaticResource ModeForeground}, ConverterParameter=0}">
+                            <StackPanel><TextBlock Text="OVERVIEW" HorizontalAlignment="Center" /><TextBlock Text="总览" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ModeButton}" Width="150"
-                                Tag="3" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
-                                AutomationProperties.Name="Switch to Manual mode"
-                                Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=3}"
-                                Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=3}">
-                            <StackPanel><TextBlock Text="MANUAL" HorizontalAlignment="Center" /><TextBlock Text="手动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                        <Button Style="{StaticResource TopNavigationButton}" Tag="1" Click="OnNavigateClick"
+                                AutomationProperties.Name="Navigate Events"
+                                Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=1}"
+                                Foreground="{Binding SelectedPageIndex, Converter={StaticResource ModeForeground}, ConverterParameter=1}">
+                            <StackPanel><TextBlock Text="EVENTS" HorizontalAlignment="Center" /><TextBlock Text="事件" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ModeButton}" Width="150"
-                                Tag="4" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
-                                AutomationProperties.Name="Switch to Homing mode"
-                                Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=4}"
-                                Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=4}">
-                            <StackPanel><TextBlock Text="HOMING" HorizontalAlignment="Center" /><TextBlock Text="回原位" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                        <Button Style="{StaticResource TopNavigationButton}" Tag="2" Click="OnNavigateClick"
+                                AutomationProperties.Name="Navigate IO"
+                                Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=2}"
+                                Foreground="{Binding SelectedPageIndex, Converter={StaticResource ModeForeground}, ConverterParameter=2}">
+                            <StackPanel><TextBlock Text="I/O" HorizontalAlignment="Center" /><TextBlock Text="总线与信号" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ModeButton}" Width="150"
-                                Tag="5" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
-                                AutomationProperties.Name="Switch to Change-over mode"
-                                Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=5}"
-                                Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=5}">
-                            <StackPanel><TextBlock Text="CHANGE-OVER" HorizontalAlignment="Center" /><TextBlock Text="换型" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                        <Button Style="{StaticResource TopNavigationButton}" Tag="3" Click="OnNavigateClick"
+                                AutomationProperties.Name="Navigate Data"
+                                Background="{Binding SelectedPageIndex, Converter={StaticResource NavBrush}, ConverterParameter=3}"
+                                Foreground="{Binding SelectedPageIndex, Converter={StaticResource ModeForeground}, ConverterParameter=3}">
+                            <StackPanel><TextBlock Text="DATA" HorizontalAlignment="Center" /><TextBlock Text="数据" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
                     </StackPanel>
 
@@ -278,8 +287,19 @@
                 </Border>
 
                 <Grid Grid.Row="2">
-                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=0}">
+                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=0}"
+                          AutomationProperties.Name="Overview content">
                 <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ModeId}" Value="3">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.35*" />
                         <ColumnDefinition Width="1*" />
@@ -388,7 +408,21 @@
                 </Grid>
                     </Grid>
 
-                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=1}">
+                    <Grid AutomationProperties.Name="Manual mode overview">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding SelectedPageIndex}" Value="0" />
+                                            <Condition Binding="{Binding ModeId}" Value="3" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
                         <Grid Margin="0,0,14,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="290" />
@@ -505,7 +539,8 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=2}">
+                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=1}"
+                          AutomationProperties.Name="Events content">
                         <Grid Margin="0,0,14,14">
                             <Border Style="{StaticResource Card}" BorderBrush="#D88984">
                                 <Grid>
@@ -531,7 +566,8 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=3}">
+                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=2}"
+                          AutomationProperties.Name="IO content">
                         <Grid Margin="0,0,14,14">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="370" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -642,7 +678,8 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=4}">
+                    <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=3}"
+                          AutomationProperties.Name="Data content">
                         <Grid Margin="0,0,14,14">
                             <Border Style="{StaticResource Card}">
                                 <Grid>

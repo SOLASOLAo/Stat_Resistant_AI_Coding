@@ -104,6 +104,48 @@ try {
         $null = Wait-ByName -Name 'Start active mode Chain' -Enabled $true
     }
 
+    function Assert-NavigationLayout {
+        $modeButtons = @(
+            'Switch to Automatic mode',
+            'Switch to Manual mode',
+            'Switch to Homing mode',
+            'Switch to Change-over mode') |
+            ForEach-Object { Wait-ByName -Name $_ }
+        $topButtons = @(
+            'Navigate Overview',
+            'Navigate Events',
+            'Navigate IO',
+            'Navigate Data') |
+            ForEach-Object { Wait-ByName -Name $_ }
+
+        $modeLefts = @($modeButtons | ForEach-Object { $_.Current.BoundingRectangle.Left })
+        $modeTops = @($modeButtons | ForEach-Object { $_.Current.BoundingRectangle.Top })
+        $topLefts = @($topButtons | ForEach-Object { $_.Current.BoundingRectangle.Left })
+        $topTops = @($topButtons | ForEach-Object { $_.Current.BoundingRectangle.Top })
+
+        if ((($modeLefts | Measure-Object -Maximum).Maximum -
+             ($modeLefts | Measure-Object -Minimum).Minimum) -gt 3) {
+            throw 'Automatic/Manual/Homing/Change-over must share one vertical sidebar.'
+        }
+        for ($index = 1; $index -lt $modeTops.Count; $index++) {
+            if ($modeTops[$index] -le $modeTops[$index - 1]) {
+                throw 'Operator mode buttons are not vertically ordered in the sidebar.'
+            }
+        }
+
+        if ((($topTops | Measure-Object -Maximum).Maximum -
+             ($topTops | Measure-Object -Minimum).Minimum) -gt 3) {
+            throw 'Overview/Events/I-O/Data must share one horizontal top navigation bar.'
+        }
+        for ($index = 1; $index -lt $topLefts.Count; $index++) {
+            if ($topLefts[$index] -le $topLefts[$index - 1]) {
+                throw 'Primary page buttons are not horizontally ordered in the top navigation bar.'
+            }
+        }
+    }
+
+    Assert-NavigationLayout
+
     # Automatic Chain supports Start/Stop and the separate step-mode/step-pulse controls.
     Invoke-ByName -Name 'Switch to Automatic mode' -TimeoutSeconds 10
     Invoke-ByName 'Start active mode Chain'
@@ -120,7 +162,7 @@ try {
 
     # Manual mode exposes CpStudio Unit/function structure in DEMO only.
     Invoke-ByName 'Switch to Manual mode'
-    Invoke-ByName 'Navigate Manual'
+    Invoke-ByName 'Navigate Overview'
     $null = Wait-ByName -Name 'Manual Unit tree'
     if ($null -eq (Find-ByNameContains 'Safety door')) {
         throw 'The Manual Unit tree does not expose the safety-door Unit.'

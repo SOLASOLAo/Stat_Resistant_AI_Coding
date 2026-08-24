@@ -57,8 +57,8 @@ The implementation copies the useful information hierarchy, not Nexeed's
 closed-source controls or branded assets:
 
 - persistent station/connection header;
-- clickable Automatic, Manual, Homing and Change-over operator mode strip;
-- left navigation for Overview, Manual, Events, I/O and Data;
+- left operator-mode sidebar for Automatic, Manual, Homing and Change-over;
+- top primary navigation for Overview, Events, I/O and Data;
 - a shared Automatic/Homing/Change-over Start and Cycle Stop command bar;
 - Automatic step-mode and next-step controls;
 - a Station/Wp100 Unit navigator with the configured manual-function list;
@@ -66,7 +66,8 @@ closed-source controls or branded assets:
 - station, safety, fieldbus, Burster and Kistler diagnostic cards;
 - persistent yellow bilingual operator-guidance bar driven by AutoInfoLine.
 
-All five navigation destinations are usable. Manual reads every configured
+All four primary navigation destinations are usable. In Manual mode, Overview
+becomes the Unit/manual-function workspace and reads every configured
 function's authoritative `Release*` and `Running*` output. Its buttons execute
 only in the offline demo; the real OPC UA adapter keeps Unit writes disabled.
 Events subscribes the official 20-row `PublicEventList`. I/O shows the full

@@ -23,8 +23,8 @@ technology:
 visual_contract:
   mimic:
     - top station and connection header
-    - operation-mode strip
-    - left navigation rail
+    - left operation-mode sidebar for Automatic, Manual, Homing and Change-over
+    - top navigation bar for Overview, Events, I/O and Data
     - central station overview
     - persistent operator-guidance banner
     - device and safety diagnostics
@@ -42,7 +42,7 @@ phase_1:
   credentials: runtime_memory_only
   screens:
     - overview
-    - manual_functions_read_only
+    - manual_mode_overview_with_functions_read_only
     - public_event_list
     - io_and_full_ethercat_topology
     - station_data
