@@ -16,6 +16,11 @@ objects:
     owner: ai
     source: src/plc/common/FB_MainPressureControl.st
     write_mode: full_object
+  - path: Application/Fbs/FB_PressureFeedbackSimulation
+    owner: ai
+    source: src/plc/common/FB_PressureFeedbackSimulation.st
+    specification: specs/common/FB_PressureFeedbackSimulation.yaml
+    write_mode: full_object
   - path: Application/Fbs/FB_MaintenanceDoorControl
     owner: ai
     source: src/plc/common/FB_MaintenanceDoorControl.st

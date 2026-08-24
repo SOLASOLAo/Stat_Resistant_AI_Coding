@@ -479,3 +479,8 @@
 - 本机只读审计 2.2.0 arm64/core22/strict 包：daemon 只声明 `network/network-bind/active-solution/log-observe`，未声明 `network-control` 或 `network-manager`；包内外部 OPC UA 端点为 61863，六项 Control plus 许可证均为非启动必需。权限声明/运行时兼容是最强线索，但 SIGSEGV 的唯一因果仍需供应商确认。
 - 新增 `docs/nexeed_license_server_diagnosis.md` 与只读 `scripts/diagnostics/Test-CtrlXLicenseServer.ps1`。原始 CSV、端口报告、设备序列号和本机网络清单不入 Git。
 - 当前阻塞是取得 Bosch/Nexeed 提供的兼容修正版或正式处置；不要继续反复 Read/Restart，不手改 AppArmor，不修改供应商签名 App。修复后先验证 Logbook 稳定和 61863 连续 60 s 可达，再执行 CpStudio Read from target。此次只读诊断没有修改工程或设备状态。
+## 2026-08-24 · 主气压虚拟反馈
+
+- 新增 AI-owned `FB_PressureFeedbackSimulation`：以 `Station.ControlOn.OutImm.IsCtrlOn` 为持续状态，Control On/Off 变化后 1 s 分别切换为 HIGH/LOW，且两路永不同时为 TRUE。
+- `StationUnit.OnCall` 已停止消费未接线的 `_000B085A_LOW/HIGH`，改接虚拟反馈；原 `FB_MainPressureControl`、维修门放行、`_000K085A` 和 5 s 报警逻辑保持不变。
+- 精确读回通过；同时经官方 Symbol Configuration 接口清除实验残留 `Wp100.DummySymbolProbe`，最终离线 Build 为 **0 errors / 4 warnings**。未连接、下载、启停、读写或 FORCE 实体 PLC。

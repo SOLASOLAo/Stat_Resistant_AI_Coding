@@ -41,16 +41,18 @@ signals:
     verification: verified
   - bmk: _000B085A_LOW
     direction: input
-    purpose: Main pressure below lower threshold
+    purpose: Legacy main-pressure input; intentionally not wired in the electrical design
     module: _000SK010A1
     channel: 6
-    verification: verified
+    verification: physical_signal_not_connected
+    application_usage: replaced_by_Station.PressureFeedbackSimulation.xPressureLow
   - bmk: _000B085A_HIGH
     direction: input
-    purpose: Main pressure above upper threshold
+    purpose: Legacy main-pressure input; intentionally not wired in the electrical design
     module: _000SK010A1
     channel: 7
-    verification: verified
+    verification: physical_signal_not_connected
+    application_usage: replaced_by_Station.PressureFeedbackSimulation.xPressureHigh
   - bmk: _000S610
     direction: input
     purpose: Operator acknowledgement button

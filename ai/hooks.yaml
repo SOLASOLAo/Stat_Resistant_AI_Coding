@@ -5,15 +5,19 @@ hooks:
     object: Application/Station/_this/Station
     required_symbols:
       MainPressureControl: FB_MainPressureControl
+      PressureFeedbackSimulation: FB_PressureFeedbackSimulation
       MaintenanceDoorControl: FB_MaintenanceDoorControl
   - id: station_cyclic_controls
     object: Application/Station/_this/StationUnit/OnCall
     required_calls:
       - Station.MaintenanceDoorControl
+      - Station.PressureFeedbackSimulation
       - Station.MainPressureControl
     invariants:
       - Station not OPERATIONAL or bus not OK drives controlled outputs to safe state
       - maintenance-door release gates the main-pressure valve
+      - virtual pressure feedback uses ControlOn.OutImm.IsCtrlOn and a T#1S transition delay
+      - physical _000B085A_LOW and _000B085A_HIGH inputs are not consumed by application logic
       - maintenance relay feedback is required within T#1S after both doors close
       - maintenance-door event AdditionalInfo identifies the failed BMK
       - pressure faults use the generated Station event constants
