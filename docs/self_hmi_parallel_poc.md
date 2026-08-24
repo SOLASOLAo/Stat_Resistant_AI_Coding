@@ -59,14 +59,37 @@ closed-source controls or branded assets:
 - persistent station/connection header;
 - clickable Automatic, Manual, Homing and Change-over operator mode strip;
 - left navigation for Overview, Manual, Events, I/O and Data;
+- a shared Automatic/Homing/Change-over Start and Cycle Stop command bar;
+- Automatic step-mode and next-step controls;
+- a Station/Wp100 Unit navigator with the configured manual-function list;
+- a hierarchical EtherCAT master/coupler/module/device tree with selected-node I/O detail;
 - station, safety, fieldbus, Burster and Kistler diagnostic cards;
 - persistent yellow bilingual operator-guidance bar driven by AutoInfoLine.
 
-All five navigation destinations are usable. Manual remains a read-only Unit
-overview. Events subscribes the official 20-row `PublicEventList`. I/O shows
-the full nine-slave EtherCAT topology and the current values of all 38 named
-DI/DO symbols published by the PLC. Data is split into `StationData` and
-`TypeData`; the DataSetManager staging objects are intentionally excluded.
+All five navigation destinations are usable. Manual reads every configured
+function's authoritative `Release*` and `Running*` output. Its buttons execute
+only in the offline demo; the real OPC UA adapter keeps Unit writes disabled.
+Events subscribes the official 20-row `PublicEventList`. I/O shows the full
+nine-slave EtherCAT topology as `Master -> EK1100 -> EL modules`, with Kistler
+as a direct master child, and filters the 38 named DI/DO values by the selected
+node. Data is split into `StationData` and `TypeData`; the DataSetManager
+staging objects are intentionally excluded.
+
+## Chain and manual-control contract
+
+The generated Chain objects are monitored, never written directly. Automatic,
+Homing and Change-over are operated through the common Station ModeHandler
+interface. The screen now contains Start, Cycle Stop, Step Mode and Next Step
+controls and demonstrates them offline. On a real connection they remain
+disabled until the request-bit reset behavior, panel Token ownership and
+failure cleanup have been accepted on the machine.
+
+Unit selection is local HMI navigation. Each manual action displays its exact
+PLC `Release<Name>` and `Running<Name>` values. Real manual execution remains
+locked until the hold-to-run `Exec<Name>` behavior and the Unit Heartbeat
+challenge/ack can guarantee `Exec=FALSE` on mouse-up, focus loss, disconnect
+and process exit. The verified symbol and behavior contract is recorded in
+[`self_hmi_nexeed_control_contract.md`](self_hmi_nexeed_control_contract.md).
 
 The offline decoder currently proves active/cleared filtering and displays
 event number, class, source and additional information. The real ctrlX complex

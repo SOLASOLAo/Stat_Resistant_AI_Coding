@@ -30,6 +30,7 @@ $interfacePath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\Services\IStationD
 $windowPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\MainWindow.xaml'
 $connectionDialogPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\ConnectionDialog.xaml'
 $viewModelPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\ViewModels\MainViewModel.cs'
+$mockSourcePath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\Services\MockStationDataSource.cs'
 $symbolPath = Join-Path $StationRoot 'Plc\Stat010_V5.11_CtrlX_PLC.Device.Application.xml'
 
 foreach ($path in @(
@@ -39,6 +40,7 @@ foreach ($path in @(
         $windowPath,
         $connectionDialogPath,
         $viewModelPath,
+        $mockSourcePath,
         $symbolPath)) {
     Assert-True (Test-Path -LiteralPath $path -PathType Leaf) "Required HMI file is missing: $path"
 }
@@ -141,9 +143,13 @@ Assert-True ($catalog.modeControl.modeIdRequestIdentifier -eq 'plc/app/Applicati
     'Unexpected ModeIdRequest write target.'
 
 $modeSourceText = [System.IO.File]::ReadAllText($modeControlSource)
+Assert-True ($modeSourceText -match 'public\s+bool\s+SupportsStationCommands\s*=>\s*false\s*;') `
+    'The real OPC UA adapter must keep Station Start/Stop/Step commands disabled.'
+Assert-True ($modeSourceText -match 'public\s+bool\s+SupportsManualFunctions\s*=>\s*false\s*;') `
+    'The real OPC UA adapter must keep Unit manual functions disabled.'
 Assert-True ($modeSourceText -match 'WriteAllowlistedByteAsync') `
     'Semantic mode adapter is missing its private allowlisted write method.'
-Assert-True ($modeSourceText -notmatch '(?i)BinIo|Heartbeat|TokenChangeResponse|/Start|/Stop|/Step') `
+Assert-True ($modeSourceText -notmatch '(?i)BinIo|TokenChangeResponse|plc/app/[^\r\n''"]*/(?:Start|Stop|Step|Heartbeat)') `
     'Semantic mode adapter references a prohibited physical/manual/runtime command target.'
 Assert-True ($modeSourceText -notmatch 'byte\.MaxValue') `
     'Single-panel mode requests must require exact panel-token readback, not token 255.'
@@ -153,17 +159,78 @@ Assert-True ($modeSourceText -match '_modeRequestsEnabled') `
     'Real OPC UA sessions must have a separate mode-request enable gate.'
 Assert-True ($modeSourceText -notmatch '"SafetyDoorCircuitOk"|"AllSafetyCircuitsOk"') `
     'HMI mode selection must not add safety-door/all-circuit prerequisites beyond PLC mode release.'
+$stationCommandMethod = [regex]::Match(
+    $modeSourceText,
+    '(?s)public\s+Task<ControlRequestResult>\s+RequestStationCommandAsync\s*\(.*?\n\s*}\s*\n\s*public\s+Task<ControlRequestResult>\s+SetManualFunctionAsync')
+Assert-True ($stationCommandMethod.Success) `
+    'The real adapter Station command rejection method is missing.'
+Assert-True ($stationCommandMethod.Value -notmatch '(?i)Write|CallAsync|NodeId|_session') `
+    'The real Station command method must reject without touching the OPC UA session.'
+
+$manualFunctionMethod = [regex]::Match(
+    $modeSourceText,
+    '(?s)public\s+Task<ControlRequestResult>\s+SetManualFunctionAsync\s*\(.*?\n\s*}\s*\n\s*public\s+async\s+Task\s+DisconnectAsync')
+Assert-True ($manualFunctionMethod.Success) `
+    'The real adapter manual-function rejection method is missing.'
+Assert-True ($manualFunctionMethod.Value -notmatch '(?i)Write|CallAsync|NodeId|_session') `
+    'The real Unit manual-function method must reject without touching the OPC UA session.'
+
+$allowlistMethod = [regex]::Match(
+    $modeSourceText,
+    '(?s)private\s+async\s+Task\s+WriteAllowlistedByteAsync\s*\(.*?\n\s*}\s*\n\s*private\s+async')
+Assert-True ($allowlistMethod.Success) 'The private OPC UA write allowlist method is missing.'
+Assert-True ($allowlistMethod.Value -match 'TokenRequestIdentifier') `
+    'TokenRequest must remain in the real write allowlist.'
+Assert-True ($allowlistMethod.Value -match 'ModeIdRequestIdentifier') `
+    'ModeIdRequest must remain in the real write allowlist.'
+Assert-True ($allowlistMethod.Value -notmatch '(?i)EtherCAT|fieldbus|BinIo|Heartbeat|Exec[A-Z]|Start|Stop|Step') `
+    'The real write allowlist must not include EtherCAT, Chain, heartbeat or Unit Exec targets.'
+
+$allowlistedWriteReferences = [regex]::Matches(
+    $modeSourceText,
+    '\bWriteAllowlistedByteAsync\s*\(')
+Assert-True ($allowlistedWriteReferences.Count -eq 3) `
+    'The real adapter must have exactly two allowlisted write invocations plus the helper declaration.'
 $semanticWrites = [regex]::Matches(
     $modeSourceText,
     '(?i)\.\s*(Write|WriteAsync|Call|CallAsync)\s*\(')
 Assert-True ($semanticWrites.Count -eq 1) `
     'The semantic OPC UA adapter must contain exactly one guarded protocol write call.'
 
+$mockSourceText = [System.IO.File]::ReadAllText($mockSourcePath)
+Assert-True ($mockSourceText -match 'public\s+bool\s+SupportsStationCommands\s*=>\s*IsConnected\s*;') `
+    'Offline DEMO must expose simulated Station Chain commands.'
+Assert-True ($mockSourceText -match 'public\s+bool\s+SupportsManualFunctions\s*=>\s*IsConnected\s*;') `
+    'Offline DEMO must expose simulated Unit manual functions.'
+foreach ($command in @('Start', 'Stop', 'EnableStepMode', 'DisableStepMode', 'StepPulse')) {
+    Assert-True ($mockSourceText -match "StationCommand\.$command") `
+        "Offline DEMO is missing Station command simulation: $command"
+}
+Assert-True ($mockSourceText -match 'SetManualFunctionAsync') `
+    'Offline DEMO is missing its simulated Unit manual-function handler.'
+
 $windowText = [System.IO.File]::ReadAllText($windowPath)
 Assert-True ($windowText -notmatch '<Setter\s+Property="IsHitTestVisible"\s+Value="False"') `
     'Operator mode buttons must remain clickable by mouse and touch.'
 Assert-True ($windowText -notmatch 'READ ONLY /') `
     'The HMI header must not claim read-only operation after mode requests are enabled.'
+foreach ($automationName in @(
+        'Start active mode Chain',
+        'Stop active mode Chain',
+        'Toggle automatic step mode',
+        'Advance one automatic step',
+        'Manual Unit tree',
+        'EtherCAT hierarchical topology')) {
+    $expectedAutomation = 'AutomationProperties.Name="{0}"' -f $automationName
+    Assert-True ($windowText -match [regex]::Escape($expectedAutomation)) `
+        "The operator UI is missing its automation surface: $automationName"
+}
+Assert-True ($windowText -match 'ItemsSource="{Binding EtherCatTopology}"') `
+    'The I/O page must render the hierarchical EtherCAT topology, not only a flat slave grid.'
+Assert-True ($windowText -match 'ItemsSource="{Binding ManualUnits}"') `
+    'The Manual page must render the CpStudio Unit list.'
+Assert-True ($windowText -match 'Click="OnManualFunctionClick"') `
+    'The Manual page is missing its semantic Unit-function DEMO handler.'
 
 $connectionDialogText = [System.IO.File]::ReadAllText($connectionDialogPath)
 Assert-True ($connectionDialogText -match 'x:Name="EnableModeRequestsInput"') `
@@ -243,8 +310,20 @@ Assert-True ($missing.Count -eq 0) `
     ("Configured OPC UA nodes are missing from the current Symbol export:`n - " + ($missing -join "`n - "))
 
 if (-not $SkipBuild) {
-    & dotnet build $projectPath --no-restore --configuration Release
-    Assert-True ($LASTEXITCODE -eq 0) 'The self-developed HMI did not build successfully.'
+    # Build into an isolated temporary output so the check remains usable while an
+    # operator has the normal Release DEMO executable open for visual comparison.
+    $isolatedBuildOutput = Join-Path (
+        [System.IO.Path]::GetTempPath()) (
+        'Bpp.ResistantStation.Hmi.contract-{0}-{1}' -f $PID, [guid]::NewGuid().ToString('N'))
+    try {
+        & dotnet build $projectPath --no-restore --configuration Release --output $isolatedBuildOutput
+        Assert-True ($LASTEXITCODE -eq 0) 'The self-developed HMI did not build successfully.'
+    }
+    finally {
+        if (Test-Path -LiteralPath $isolatedBuildOutput -PathType Container) {
+            [System.IO.Directory]::Delete($isolatedBuildOutput, $true)
+        }
+    }
 }
 
 Write-Host ("HMI contract OK: {0} read-only nodes; mode writes limited to TokenRequest and ModeIdRequest." -f @($catalog.nodes).Count)

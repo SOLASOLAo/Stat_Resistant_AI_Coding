@@ -1,5 +1,7 @@
 using System.Windows;
+using System.Windows.Controls;
 using Bpp.ResistantStation.Hmi.Configuration;
+using Bpp.ResistantStation.Hmi.Services;
 using Bpp.ResistantStation.Hmi.ViewModels;
 
 namespace Bpp.ResistantStation.Hmi;
@@ -82,6 +84,86 @@ public partial class MainWindow : Window
                     MessageBoxImage.Warning);
             }
         });
+    }
+
+    private async void OnStationCommandClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element)
+        {
+            return;
+        }
+
+        var command = element.Tag?.ToString() switch
+        {
+            "Start" => StationCommand.Start,
+            "Stop" => StationCommand.Stop,
+            "ToggleStep" when _viewModel.IsStepping => StationCommand.DisableStepMode,
+            "ToggleStep" => StationCommand.EnableStepMode,
+            "StepPulse" => StationCommand.StepPulse,
+            _ => (StationCommand?)null
+        };
+        if (command is null)
+        {
+            return;
+        }
+
+        await RunUiActionAsync(async () =>
+        {
+            var result = await _viewModel.RequestStationCommandAsync(
+                command.Value,
+                CancellationToken.None);
+            if (!result.Accepted)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Chain control / Chain 控制",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        });
+    }
+
+    private async void OnManualFunctionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: ManualActionRow action })
+        {
+            return;
+        }
+
+        await RunUiActionAsync(async () =>
+        {
+            var startResult = await _viewModel.SetManualFunctionAsync(
+                action,
+                execute: true,
+                CancellationToken.None);
+            if (!startResult.Accepted)
+            {
+                MessageBox.Show(
+                    startResult.Message,
+                    "Manual function / 手动功能",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            // DEMO emulates a short operator press. The real adapter keeps every
+            // Unit command locked until Nexeed heartbeat and pulse semantics are commissioned.
+            await Task.Delay(TimeSpan.FromMilliseconds(750));
+            await _viewModel.SetManualFunctionAsync(
+                action,
+                execute: false,
+                CancellationToken.None);
+        });
+    }
+
+    private void OnEtherCatSelectionChanged(
+        object sender,
+        RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (e.NewValue is EtherCatTopologyNode node)
+        {
+            _viewModel.SelectedEtherCatNode = node;
+        }
     }
 
     protected override async void OnClosed(EventArgs e)

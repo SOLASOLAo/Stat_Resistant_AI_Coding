@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using Bpp.ResistantStation.Hmi.Configuration;
 
@@ -216,6 +217,196 @@ public sealed class EtherCatSlaveRow(FieldbusSlaveDefinition definition) : Obser
         LinkState = 0;
         WorkingCounterInvalid = true;
         WorkingCounterErrors = 0;
+    }
+}
+
+public sealed class EtherCatTopologyNode : ObservableObject
+{
+    private bool _masterOperational;
+
+    public EtherCatTopologyNode(
+        string designator,
+        string displayName,
+        string deviceType,
+        EtherCatSlaveRow? slave = null)
+    {
+        Designator = designator;
+        DisplayName = displayName;
+        DeviceType = deviceType;
+        Slave = slave;
+        if (slave is not null)
+        {
+            slave.PropertyChanged += (_, _) =>
+            {
+                RaisePropertyChanged(nameof(IsOperational));
+                RaisePropertyChanged(nameof(StateText));
+                RaisePropertyChanged(nameof(AddressText));
+                RaisePropertyChanged(nameof(ProcessDataText));
+                RaisePropertyChanged(nameof(WorkingCounterErrors));
+            };
+        }
+    }
+
+    public string Designator { get; }
+
+    public string DisplayName { get; }
+
+    public string DeviceType { get; }
+
+    public EtherCatSlaveRow? Slave { get; }
+
+    public ObservableCollection<EtherCatTopologyNode> Children { get; } = [];
+
+    public bool IsMaster => Slave is null;
+
+    public bool IsOperational => Slave?.IsOperational ?? _masterOperational;
+
+    public string StateText => Slave?.StateText ?? (_masterOperational ? "OP" : "NOT READY");
+
+    public string AddressText => Slave is null || Slave.Address == 0 ? "—" : Slave.Address.ToString(CultureInfo.InvariantCulture);
+
+    public string ProcessDataText => Slave?.ProcessDataText ?? (_masterOperational ? "VALID" : "INVALID");
+
+    public uint WorkingCounterErrors => Slave?.WorkingCounterErrors ?? 0;
+
+    public void SetMasterOperational(bool value)
+    {
+        if (_masterOperational == value)
+        {
+            return;
+        }
+
+        _masterOperational = value;
+        RaisePropertyChanged(nameof(IsOperational));
+        RaisePropertyChanged(nameof(StateText));
+        RaisePropertyChanged(nameof(ProcessDataText));
+    }
+}
+
+public sealed class ManualUnitRow : ObservableObject
+{
+    private string _stateText = "NO DATA / 无数据";
+    private bool _available;
+
+    public ManualUnitRow(
+        string key,
+        string designator,
+        string displayName,
+        string category,
+        IEnumerable<ManualActionRow> actions)
+    {
+        Key = key;
+        Designator = designator;
+        DisplayName = displayName;
+        Category = category;
+        Actions = new ObservableCollection<ManualActionRow>(actions);
+    }
+
+    public string Key { get; }
+
+    public string Designator { get; }
+
+    public string DisplayName { get; }
+
+    public string Category { get; }
+
+    public ObservableCollection<ManualActionRow> Actions { get; }
+
+    public string StateText
+    {
+        get => _stateText;
+        private set => SetProperty(ref _stateText, value);
+    }
+
+    public bool Available
+    {
+        get => _available;
+        private set => SetProperty(ref _available, value);
+    }
+
+    public void UpdateState(string stateText, bool available)
+    {
+        StateText = stateText;
+        Available = available;
+    }
+}
+
+public sealed class ManualActionRow(
+    string unitKey,
+    string key,
+    string english,
+    string chinese,
+    string description) : ObservableObject
+{
+    private bool _released;
+    private bool _running;
+    private bool _controlAvailable;
+
+    public string UnitKey { get; } = unitKey;
+
+    public string Key { get; } = key;
+
+    public string English { get; } = english;
+
+    public string Chinese { get; } = chinese;
+
+    public string Label => $"{Chinese} / {English}";
+
+    public string Description { get; } = description;
+
+    public bool Released
+    {
+        get => _released;
+        private set
+        {
+            if (SetProperty(ref _released, value))
+            {
+                RaisePropertyChanged(nameof(CanExecute));
+                RaisePropertyChanged(nameof(StatusText));
+            }
+        }
+    }
+
+    public bool Running
+    {
+        get => _running;
+        private set
+        {
+            if (SetProperty(ref _running, value))
+            {
+                RaisePropertyChanged(nameof(StatusText));
+            }
+        }
+    }
+
+    public bool ControlAvailable
+    {
+        get => _controlAvailable;
+        private set
+        {
+            if (SetProperty(ref _controlAvailable, value))
+            {
+                RaisePropertyChanged(nameof(CanExecute));
+                RaisePropertyChanged(nameof(StatusText));
+            }
+        }
+    }
+
+    public bool CanExecute => Released && ControlAvailable;
+
+    public string StatusText => Running
+        ? "RUNNING / 执行中"
+        : !Released
+            ? "INTERLOCKED / 联锁未释放"
+            : ControlAvailable
+                ? "READY / 可执行"
+                : "DISPLAY ONLY / 仅显示";
+
+    public void Update(bool released, bool running, bool controlAvailable)
+    {
+        Released = released;
+        Running = running;
+        ControlAvailable = controlAvailable;
     }
 }
 

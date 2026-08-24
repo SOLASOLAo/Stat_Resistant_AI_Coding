@@ -27,6 +27,12 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
     public bool SupportsModeRequests => _modeRequestsEnabled;
 
+    // The operator UI is already modelled, but real Start/Stop/Step and Unit manual
+    // writes stay locked until their pulse/heartbeat protocol is accepted on a test PLC.
+    public bool SupportsStationCommands => false;
+
+    public bool SupportsManualFunctions => false;
+
     public async Task ConnectAsync(
         ConnectionOptions options,
         CancellationToken cancellationToken)
@@ -200,6 +206,26 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
                 false,
                 modeId,
                 "PLC did not confirm the requested mode before the timeout.");
+    }
+
+    public Task<ControlRequestResult> RequestStationCommandAsync(
+        StationCommand command,
+        CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new ControlRequestResult(
+            false,
+            "Real Chain controls are locked pending pulse/handshake commissioning."));
+    }
+
+    public Task<ControlRequestResult> SetManualFunctionAsync(
+        string unitKey,
+        string functionKey,
+        bool execute,
+        CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new ControlRequestResult(
+            false,
+            "Real Unit manual functions are locked pending heartbeat commissioning."));
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)

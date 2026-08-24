@@ -506,3 +506,11 @@
 - 实体 OPC UA 连接默认创建只读会话，模式按钮保持禁用；只有操作员在连接对话框显式勾选“本次会话允许模式切换”才开放，选项不持久化。离线 demo 单独开启该能力供 UI 自动验收，避免第一次只读真机验收误写模式请求。
 - 验证：`Test-HmiReadOnlyScaffold.ps1` 通过 **94 read-only nodes + 2 allowlisted request inputs**；Release Build **0 errors / 0 warnings**；自动 UI smoke 已点击 Automatic 演示模式、验证字典形态 PublicEventList 的活动/已清除过滤，并访问 Events/I-O/Data，StationData 与 TypeData Tab 可达。全过程未连接实体 PLC，未修改 `../Station010` 或 `../Std`。
 - 下一步严格分两次：① 用户关闭 Nexeed HMI 后授权一次实体 ctrlX **只读**验收 PublicEventList、EtherCAT 数组、I/O 和 Kistler；② 只读通过后，再由用户单独批准四种模式请求测试。不要把两步合并，也不要测试多面板 token 转移。
+
+## Independent Windows HMI Phase 1.2 operator UI (2026-08-25)
+
+- Added the missing Nexeed-like operator functions: common Chain Start/Cycle Stop for Automatic, Homing and Change-over; Automatic Step Mode/Next Step; Station/Wp100 navigation and all 16 configured manual functions.
+- Replaced the flat EtherCAT table with a hierarchical `Master -> EK1100 -> EL modules` tree; Kistler remains a direct master child. Selecting a node filters its named I/O and shows address, OP state and process-data validity.
+- The read-only catalog now contains 133 nodes, including Station Start/Stop/Step visibility and all manual `Release*/Running*` outputs. These PLC outputs are authoritative.
+- The verified Nexeed behavior is in `docs/self_hmi_nexeed_control_contract.md`. Real `StationCommands` and `ManualFunctions` remain hard-disabled. Only the existing, explicitly enabled TokenRequest/ModeIdRequest mode adapter can write; DEMO exercises the new controls without PLC access.
+- Before real extended control, separately accept request-bit readback-to-FALSE, PanelActive, Unit hold-to-run Exec, Heartbeat challenge/ack and forced release on mouse-up/focus loss/disconnect/process exit. Never write Chain state or physical I/O directly.

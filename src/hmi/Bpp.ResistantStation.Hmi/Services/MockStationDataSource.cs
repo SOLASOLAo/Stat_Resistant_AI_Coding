@@ -9,12 +9,18 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
     private int _tick;
     private byte _modeId = 4;
     private bool _modeRequestsEnabled;
+    private bool _stationRunning;
+    private bool _stepMode;
+    private string? _manualUnit;
+    private string? _manualFunction;
 
     public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
     public event EventHandler<NodeValueChangedEventArgs>? NodeValueChanged;
 
     public bool IsConnected { get; private set; }
     public bool SupportsModeRequests => _modeRequestsEnabled;
+    public bool SupportsStationCommands => IsConnected;
+    public bool SupportsManualFunctions => IsConnected;
 
     public Task ConnectAsync(ConnectionOptions options, CancellationToken cancellationToken)
     {
@@ -57,6 +63,10 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
 
         IsConnected = false;
         _modeRequestsEnabled = false;
+        _stationRunning = false;
+        _stepMode = false;
+        _manualUnit = null;
+        _manualFunction = null;
         ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
             false,
             "Demonstration source stopped",
@@ -74,12 +84,87 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         }
 
         _modeId = modeId;
+        _stationRunning = false;
+        _stepMode = false;
+        _manualUnit = null;
+        _manualFunction = null;
         Publish("ModeId", modeId);
         Publish("ModeRelease", true);
         return Task.FromResult(new ModeRequestResult(
             true,
             modeId,
             "Demo mode changed."));
+    }
+
+    public Task<ControlRequestResult> RequestStationCommandAsync(
+        StationCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (!IsConnected || _modeId == 3)
+        {
+            return Task.FromResult(new ControlRequestResult(
+                false,
+                "Chain commands require an active Automatic, Homing or Change-over mode."));
+        }
+
+        switch (command)
+        {
+            case StationCommand.Start:
+                _stationRunning = true;
+                break;
+            case StationCommand.Stop:
+                _stationRunning = false;
+                break;
+            case StationCommand.EnableStepMode when _modeId == 1:
+                _stepMode = true;
+                break;
+            case StationCommand.DisableStepMode when _modeId == 1:
+                _stepMode = false;
+                break;
+            case StationCommand.StepPulse when _modeId == 1 && _stepMode && _stationRunning:
+                _tick += 12;
+                break;
+            default:
+                return Task.FromResult(new ControlRequestResult(
+                    false,
+                    "This command is not released in the current demo state."));
+        }
+
+        PublishSnapshot();
+        return Task.FromResult(new ControlRequestResult(
+            true,
+            $"Demo command accepted: {command}."));
+    }
+
+    public Task<ControlRequestResult> SetManualFunctionAsync(
+        string unitKey,
+        string functionKey,
+        bool execute,
+        CancellationToken cancellationToken)
+    {
+        if (!IsConnected || _modeId != 3)
+        {
+            return Task.FromResult(new ControlRequestResult(
+                false,
+                "Unit manual functions require Manual mode."));
+        }
+
+        if (execute)
+        {
+            _manualUnit = unitKey;
+            _manualFunction = functionKey;
+        }
+        else if (string.Equals(_manualUnit, unitKey, StringComparison.Ordinal) &&
+                 string.Equals(_manualFunction, functionKey, StringComparison.Ordinal))
+        {
+            _manualUnit = null;
+            _manualFunction = null;
+        }
+
+        PublishSnapshot();
+        return Task.FromResult(new ControlRequestResult(
+            true,
+            execute ? "Demo manual function started." : "Demo manual function released."));
     }
 
     public async ValueTask DisposeAsync()
@@ -106,15 +191,27 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         var phase = (_tick / 12) % 4;
         Publish("ModeId", _modeId);
         Publish("ModeRelease", true);
-        Publish("IsRunning", _modeId == 1 && phase is 1 or 2);
+        Publish("IsRunning", _stationRunning);
         Publish("IsStopping", false);
-        Publish("ExecState", _modeId == 1 && phase is 1 or 2 ? 32 : 16);
+        Publish("ExecState", _stationRunning ? 32 : 16);
+        Publish("ModeRunning", _stationRunning);
+        Publish("StartVisible", _modeId != 3 && !_stationRunning);
+        Publish("StopVisible", _modeId != 3 && _stationRunning);
+        Publish("StepVisible", _modeId == 1);
+        Publish("IsStepping", _stepMode);
+        Publish("ManualFunctionsActive", _modeId == 3);
+        Publish("ManualFunctionRunning", _manualFunction is not null);
         Publish("Token", settings.ModeControl.PanelToken);
-        Publish("AutoInfoLine", _modeId == 1 ? phase switch
+        Publish("AutoInfoLine", _stationRunning && _modeId == 1 ? phase switch
         {
             0 => 4,
             1 => 10,
             2 => 12,
+            _ => 16
+        } : _stationRunning && _modeId is 4 or 5 ? phase switch
+        {
+            0 => 2,
+            1 => 14,
             _ => 16
         } : 0);
         Publish("IsInHomePosition", phase is 0 or 3);
@@ -153,6 +250,23 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         Publish("MaintenanceCircuitOk", true);
         Publish("SafetyDoorCircuitOk", true);
         Publish("AllSafetyCircuitsOk", true);
+
+        PublishManualFunction("Wp100", "Home", false);
+        PublishManualFunction("Wp100", "DeleteWpcData", false);
+        PublishManualFunction("Wp100K101SafetyDoor", "MoveBasPos", true);
+        PublishManualFunction("Wp100K101SafetyDoor", "MoveWrkPos", true);
+        PublishManualFunction("Wp100K102PressingCylinder", "MoveBasPos", true);
+        PublishManualFunction("Wp100K102PressingCylinder", "MoveWrkPos", true);
+        PublishManualFunction("Wp100A103ResistantDetector", "SetRange", true);
+        PublishManualFunction("Wp100A103ResistantDetector", "StartMeas", true);
+        foreach (var action in new[]
+                 {
+                     "Measure", "LockKeyboard", "UnlockKeyboard", "SetProgram",
+                     "ZeroX", "TareY", "ReadData", "WriteData"
+                 })
+        {
+            PublishManualFunction("Wp100A104Kistler", action, true);
+        }
 
         Publish("StationNo", 10);
         Publish("ComputerName", "IPC-STATION010");
@@ -223,5 +337,15 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
             true,
             "Good (demo)",
             DateTimeOffset.Now));
+    }
+
+    private void PublishManualFunction(string unitKey, string functionKey, bool released)
+    {
+        var prefix = $"Manual.{unitKey}.{functionKey}";
+        Publish($"{prefix}.Release", released);
+        Publish(
+            $"{prefix}.Running",
+            string.Equals(_manualUnit, unitKey, StringComparison.Ordinal) &&
+            string.Equals(_manualFunction, functionKey, StringComparison.Ordinal));
     }
 }

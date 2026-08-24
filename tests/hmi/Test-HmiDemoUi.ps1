@@ -62,21 +62,82 @@ try {
             Select-Object -First 1
     }
 
-    $modeDeadline = [DateTime]::UtcNow.AddSeconds(10)
-    $automatic = $null
-    do {
-        $automatic = Find-ByName 'Switch to Automatic mode'
-        if (($null -ne $automatic) -and $automatic.Current.IsEnabled) {
-            break
-        }
+    function Wait-ByName {
+        param(
+            [string]$Name,
+            [object]$Enabled = $null,
+            [int]$TimeoutSeconds = 5
+        )
 
-        Start-Sleep -Milliseconds 100
-    } until ([DateTime]::UtcNow -ge $modeDeadline)
+        $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+        do {
+            $element = Find-ByName $Name
+            if (($null -ne $element) -and
+                (($null -eq $Enabled) -or ($element.Current.IsEnabled -eq [bool]$Enabled))) {
+                return $element
+            }
 
-    if (($null -eq $automatic) -or (-not $automatic.Current.IsEnabled)) {
-        throw 'The Automatic operator mode button is missing or disabled in demo mode.'
+            Start-Sleep -Milliseconds 75
+        } until ([DateTime]::UtcNow -ge $deadline)
+
+        $state = if ($null -eq $Enabled) { 'present' } elseif ($Enabled) { 'enabled' } else { 'disabled' }
+        throw "Timed out waiting for '$Name' to become $state."
     }
-    $automatic.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+
+    function Invoke-ByName {
+        param(
+            [string]$Name,
+            [int]$TimeoutSeconds = 5
+        )
+
+        $element = Wait-ByName -Name $Name -Enabled $true -TimeoutSeconds $TimeoutSeconds
+        $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    }
+
+    function Test-ChainStartStop {
+        param([string]$ModeAutomationName)
+
+        Invoke-ByName $ModeAutomationName
+        Invoke-ByName 'Start active mode Chain'
+        $null = Wait-ByName -Name 'Stop active mode Chain' -Enabled $true
+        Invoke-ByName 'Stop active mode Chain'
+        $null = Wait-ByName -Name 'Start active mode Chain' -Enabled $true
+    }
+
+    # Automatic Chain supports Start/Stop and the separate step-mode/step-pulse controls.
+    Invoke-ByName -Name 'Switch to Automatic mode' -TimeoutSeconds 10
+    Invoke-ByName 'Start active mode Chain'
+    $null = Wait-ByName -Name 'Stop active mode Chain' -Enabled $true
+    Invoke-ByName 'Toggle automatic step mode'
+    $null = Wait-ByName -Name 'Advance one automatic step' -Enabled $true
+    Invoke-ByName 'Advance one automatic step'
+    Invoke-ByName 'Stop active mode Chain'
+    $null = Wait-ByName -Name 'Start active mode Chain' -Enabled $true
+
+    # Homing and Change-over use the same semantic active-Chain command surface.
+    Test-ChainStartStop 'Switch to Homing mode'
+    Test-ChainStartStop 'Switch to Change-over mode'
+
+    # Manual mode exposes CpStudio Unit/function structure in DEMO only.
+    Invoke-ByName 'Switch to Manual mode'
+    Invoke-ByName 'Navigate Manual'
+    $null = Wait-ByName -Name 'Manual Unit tree'
+    if ($null -eq (Find-ByNameContains 'Safety door')) {
+        throw 'The Manual Unit tree does not expose the safety-door Unit.'
+    }
+    if ($null -eq (Find-ByNameContains 'Kistler maXYmos 5867C')) {
+        throw 'The Manual Unit tree does not expose the Kistler Unit.'
+    }
+
+    $manualAction = Find-ByNameContains 'Move to base position'
+    if (($null -eq $manualAction) -or (-not $manualAction.Current.IsEnabled)) {
+        throw 'The selected safety-door manual action is missing or not released in DEMO.'
+    }
+    $manualAction.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $manualActionName = $manualAction.Current.Name
+    # WPF UI Automation may return from Invoke only after the short 750 ms DEMO
+    # press has released; verify that the semantic action completes and is usable again.
+    $null = Wait-ByName -Name $manualActionName -Enabled $true -TimeoutSeconds 3
 
     $eventsButton = Find-ByName 'Navigate Events'
     if ($null -eq $eventsButton) {
@@ -99,13 +160,18 @@ try {
         throw 'A cleared demo event was incorrectly displayed as active.'
     }
 
-    foreach ($navigationName in @('Navigate IO', 'Navigate Data')) {
-        $button = Find-ByName $navigationName
-        if ($null -eq $button) {
-            throw "Missing navigation button: $navigationName"
+    Invoke-ByName 'Navigate IO'
+    $null = Wait-ByName -Name 'EtherCAT hierarchical topology'
+    foreach ($topologyName in @(
+            'EtherCAT Master',
+            'EK1100',
+            'Kistler force/displacement monitor')) {
+        if ($null -eq (Find-ByNameContains $topologyName)) {
+            throw "Missing EtherCAT topology node: $topologyName"
         }
-        $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     }
+
+    Invoke-ByName 'Navigate Data'
 
     foreach ($tabPrefix in @('StationData /', 'TypeData /')) {
         if ($null -eq (Find-ByNamePrefix $tabPrefix)) {
@@ -113,7 +179,7 @@ try {
         }
     }
 
-    Write-Host 'HMI demo UI OK: operator mode request and Events/I-O/Data navigation are reachable.'
+    Write-Host 'HMI demo UI OK: Automatic/Homing/Change-over Chain controls, automatic step mode, Unit manual DEMO, hierarchical EtherCAT topology and Events/Data are reachable.'
 }
 finally {
     if (-not $process.HasExited) {

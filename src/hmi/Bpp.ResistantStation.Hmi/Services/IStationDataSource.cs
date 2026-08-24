@@ -10,6 +10,10 @@ public interface IStationDataSource : IAsyncDisposable
 
     bool SupportsModeRequests { get; }
 
+    bool SupportsStationCommands { get; }
+
+    bool SupportsManualFunctions { get; }
+
     Task ConnectAsync(ConnectionOptions options, CancellationToken cancellationToken);
 
     Task DisconnectAsync(CancellationToken cancellationToken);
@@ -17,6 +21,25 @@ public interface IStationDataSource : IAsyncDisposable
     Task<ModeRequestResult> RequestModeAsync(
         byte modeId,
         CancellationToken cancellationToken);
+
+    Task<ControlRequestResult> RequestStationCommandAsync(
+        StationCommand command,
+        CancellationToken cancellationToken);
+
+    Task<ControlRequestResult> SetManualFunctionAsync(
+        string unitKey,
+        string functionKey,
+        bool execute,
+        CancellationToken cancellationToken);
+}
+
+public enum StationCommand
+{
+    Start,
+    Stop,
+    EnableStepMode,
+    DisableStepMode,
+    StepPulse
 }
 
 public sealed record ConnectionOptions(
@@ -28,6 +51,10 @@ public sealed record ConnectionOptions(
 public sealed record ModeRequestResult(
     bool Accepted,
     byte RequestedModeId,
+    string Message);
+
+public sealed record ControlRequestResult(
+    bool Accepted,
     string Message);
 
 public sealed class ConnectionStateChangedEventArgs(

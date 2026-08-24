@@ -13,6 +13,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly HmiSettings _settings;
     private readonly IReadOnlyDictionary<int, LocalizedAutoInfo> _autoInfo;
     private readonly HashSet<string> _badNodes = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, bool> _manualReleaseValues = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, bool> _manualRunningValues = new(StringComparer.Ordinal);
     private readonly IReadOnlyDictionary<string, DataValueRow> _dataRows;
     private readonly IReadOnlyDictionary<string, IoChannelRow> _ioRows;
     private readonly DispatcherTimer _freshnessTimer;
@@ -56,6 +58,16 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private int _configuredSlaves;
     private int _detectedSlaves;
     private uint _lostFrames;
+    private string _stationControlMessage = "Chain controls ready / Chain 操作就绪";
+    private bool _startVisible = true;
+    private bool _stopVisible;
+    private bool _stepVisible;
+    private bool _isStepping;
+    private bool _modeRunning;
+    private bool _manualFunctionsActive;
+    private bool _manualFunctionRunning;
+    private ManualUnitRow? _selectedManualUnit;
+    private EtherCatTopologyNode? _selectedEtherCatNode;
     private string _modeRequestMessage = "Mode control ready / 模式控制就绪";
     private string _eventDecodeMessage = "Waiting for PublicEventList / 等待报警列表";
 
@@ -68,6 +80,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StationName = settings.StationName;
         EtherCatSlaves = new ObservableCollection<EtherCatSlaveRow>(
             settings.Fieldbus.Slaves.OrderBy(slave => slave.Index).Select(slave => new EtherCatSlaveRow(slave)));
+        EtherCatTopology = BuildEtherCatTopology(settings, EtherCatSlaves);
         IoChannels = new ObservableCollection<IoChannelRow>(
             settings.Fieldbus.Channels
                 .OrderBy(channel => channel.SlaveIndex)
@@ -76,6 +89,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StationDataItems = CreateDataRows(settings, "station-data");
         TypeDataItems = CreateDataRows(settings, "type-data");
         DeviceDataItems = CreateDataRows(settings, "device-data");
+        ManualUnits = CreateManualUnits();
+        SelectedSlaveIoChannels = [];
+        SelectedManualUnit = ManualUnits.Skip(1).FirstOrDefault() ?? ManualUnits.FirstOrDefault();
+        SelectedEtherCatNode = EtherCatTopology.FirstOrDefault();
         ActiveEvents = [];
         _dataRows = StationDataItems
             .Concat(TypeDataItems)
@@ -93,7 +110,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public ObservableCollection<EtherCatSlaveRow> EtherCatSlaves { get; }
 
+    public ObservableCollection<EtherCatTopologyNode> EtherCatTopology { get; }
+
     public ObservableCollection<IoChannelRow> IoChannels { get; }
+
+    public ObservableCollection<IoChannelRow> SelectedSlaveIoChannels { get; }
+
+    public ObservableCollection<ManualUnitRow> ManualUnits { get; }
 
     public ObservableCollection<DataValueRow> StationDataItems { get; }
 
@@ -109,6 +132,37 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public string EndpointUrl { get; }
 
+    public ManualUnitRow? SelectedManualUnit
+    {
+        get => _selectedManualUnit;
+        set => SetProperty(ref _selectedManualUnit, value);
+    }
+
+    public EtherCatTopologyNode? SelectedEtherCatNode
+    {
+        get => _selectedEtherCatNode;
+        set
+        {
+            if (SetProperty(ref _selectedEtherCatNode, value))
+            {
+                RefreshSelectedSlaveIo();
+                RaisePropertyChanged(nameof(SelectedNodeIsKistler));
+                RaisePropertyChanged(nameof(SelectedNodeScopeText));
+            }
+        }
+    }
+
+    public bool SelectedNodeIsKistler => SelectedEtherCatNode?.Slave?.Index == 9;
+
+    public string SelectedNodeScopeText => SelectedEtherCatNode switch
+    {
+        null => "No node selected / 未选择节点",
+        { IsMaster: true } => "Entire EtherCAT network / 整条 EtherCAT 总线",
+        { Slave.Index: 1 } => "EK1100 terminal branch / EK1100 端子分支",
+        { Slave.Index: 9 } => "Kistler semantic interface / Kistler 语义接口",
+        _ => "Selected slave channels / 当前从站通道"
+    };
+
     public bool IsConnected
     {
         get => _isConnected;
@@ -118,6 +172,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 RefreshDataQuality();
                 RaisePropertyChanged(nameof(CanRequestMode));
+                RefreshControlAvailability();
             }
         }
     }
@@ -130,6 +185,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _isBusy, value))
             {
                 RaisePropertyChanged(nameof(CanRequestMode));
+                RefreshControlAvailability();
             }
         }
     }
@@ -206,9 +262,143 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         private set => SetProperty(ref _modeRequestMessage, value);
     }
 
+    public string StationControlMessage
+    {
+        get => _stationControlMessage;
+        private set => SetProperty(ref _stationControlMessage, value);
+    }
+
+    public bool StartVisible
+    {
+        get => _startVisible;
+        private set
+        {
+            if (SetProperty(ref _startVisible, value))
+            {
+                RaisePropertyChanged(nameof(CanStartChain));
+            }
+        }
+    }
+
+    public bool StopVisible
+    {
+        get => _stopVisible;
+        private set
+        {
+            if (SetProperty(ref _stopVisible, value))
+            {
+                RaisePropertyChanged(nameof(CanStopChain));
+            }
+        }
+    }
+
+    public bool StepVisible
+    {
+        get => _stepVisible;
+        private set
+        {
+            if (SetProperty(ref _stepVisible, value))
+            {
+                RaisePropertyChanged(nameof(CanToggleStepMode));
+                RaisePropertyChanged(nameof(CanPulseStep));
+            }
+        }
+    }
+
+    public bool IsStepping
+    {
+        get => _isStepping;
+        private set
+        {
+            if (SetProperty(ref _isStepping, value))
+            {
+                RaisePropertyChanged(nameof(StepModeText));
+                RaisePropertyChanged(nameof(CanPulseStep));
+            }
+        }
+    }
+
+    public bool ModeRunning
+    {
+        get => _modeRunning;
+        private set => SetProperty(ref _modeRunning, value);
+    }
+
+    public bool ManualFunctionsActive
+    {
+        get => _manualFunctionsActive;
+        private set
+        {
+            if (SetProperty(ref _manualFunctionsActive, value))
+            {
+                RefreshManualFunctions();
+            }
+        }
+    }
+
+    public bool ManualFunctionRunning
+    {
+        get => _manualFunctionRunning;
+        private set
+        {
+            if (SetProperty(ref _manualFunctionRunning, value))
+            {
+                RefreshManualFunctions();
+            }
+        }
+    }
+
+    public string ActiveChainName => ModeId switch
+    {
+        1 => "SqM_Station_Auto → SqC_Wp100_Run",
+        4 => "SqM_Station_Home → SqC_Wp100_Home",
+        5 => "SqM_Station_Changeover → SqS_Station_ChangeOverFile",
+        3 => "Manual functions / Unit 单动",
+        _ => "No active Chain / 无活动 Chain"
+    };
+
+    public string StepModeText => IsStepping
+        ? "STEP MODE ON / 步进已开启"
+        : "CONTINUOUS / 连续运行";
+
+    public bool CanStartChain =>
+        CanUseStationControls &&
+        ModeId is 1 or 4 or 5 &&
+        StartVisible &&
+        !IsRunning;
+
+    public bool CanStopChain =>
+        CanUseStationControls &&
+        ModeId is 1 or 4 or 5 &&
+        (StopVisible || IsRunning);
+
+    public bool CanToggleStepMode =>
+        CanUseStationControls &&
+        ModeId == 1 &&
+        StepVisible;
+
+    public bool CanPulseStep =>
+        CanToggleStepMode &&
+        IsStepping &&
+        IsRunning;
+
+    public bool HasRealExtendedControl =>
+        IsConnected &&
+        !IsDemo &&
+        ((_dataSource?.SupportsStationCommands == true) ||
+         (_dataSource?.SupportsManualFunctions == true));
+
+    private bool CanUseStationControls =>
+        !IsDataUnavailable &&
+        !IsBusy &&
+        PanelActive &&
+        ModeReleased &&
+        _dataSource?.SupportsStationCommands == true;
+
     public bool CanRequestMode =>
         !IsDataUnavailable &&
         !IsBusy &&
+        PanelActive &&
         ModeRequestSafetyReady &&
         _dataSource?.SupportsModeRequests == true;
 
@@ -228,6 +418,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _modeId, value))
             {
                 RaisePropertyChanged(nameof(ModeName));
+                RaisePropertyChanged(nameof(ActiveChainName));
+                RefreshControlAvailability();
+                RefreshManualFunctions();
             }
         }
     }
@@ -244,7 +437,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool ModeReleased
     {
         get => _modeReleased;
-        private set => SetProperty(ref _modeReleased, value);
+        private set
+        {
+            if (SetProperty(ref _modeReleased, value))
+            {
+                RefreshControlAvailability();
+            }
+        }
     }
 
     public bool IsRunning
@@ -255,6 +454,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _isRunning, value))
             {
                 RaisePropertyChanged(nameof(RunStateText));
+                RefreshControlAvailability();
             }
         }
     }
@@ -304,8 +504,20 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public int Token
     {
         get => _token;
-        private set => SetProperty(ref _token, value);
+        private set
+        {
+            if (SetProperty(ref _token, value))
+            {
+                RaisePropertyChanged(nameof(PanelActive));
+                RaisePropertyChanged(nameof(CanRequestMode));
+                RefreshControlAvailability();
+            }
+        }
     }
+
+    public bool PanelActive =>
+        Token == _settings.ModeControl.PanelToken ||
+        Token == 255;
 
     public int AutoInfoIndex
     {
@@ -337,7 +549,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool BusOk
     {
         get => _busOk;
-        private set => SetProperty(ref _busOk, value);
+        private set
+        {
+            if (SetProperty(ref _busOk, value))
+            {
+                RefreshEtherCatMaster();
+            }
+        }
     }
 
     public bool StationIsEmpty
@@ -349,7 +567,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool MasterOk
     {
         get => _masterOk;
-        private set => SetProperty(ref _masterOk, value);
+        private set
+        {
+            if (SetProperty(ref _masterOk, value))
+            {
+                RefreshEtherCatMaster();
+            }
+        }
     }
 
     public bool SlavesOk
@@ -390,6 +614,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _safetyDoorBase, value))
             {
                 RaisePropertyChanged(nameof(SafetyDoorState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -402,6 +627,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _safetyDoorWork, value))
             {
                 RaisePropertyChanged(nameof(SafetyDoorState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -420,6 +646,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _pressingCylinderBase, value))
             {
                 RaisePropertyChanged(nameof(PressingCylinderState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -432,6 +659,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _pressingCylinderWork, value))
             {
                 RaisePropertyChanged(nameof(PressingCylinderState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -489,6 +717,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 RaisePropertyChanged(nameof(ResistantAvailable));
                 RaisePropertyChanged(nameof(ResistantState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -506,6 +735,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 RaisePropertyChanged(nameof(KistlerAvailable));
                 RaisePropertyChanged(nameof(KistlerState));
+                RefreshManualFunctions();
             }
         }
     }
@@ -552,6 +782,55 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    public async Task<ControlRequestResult> RequestStationCommandAsync(
+        StationCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (_dataSource is null || !CanUseStationControls)
+        {
+            return new ControlRequestResult(
+                false,
+                "Chain control is unavailable. Use DEMO, or complete real pulse/handshake commissioning first.");
+        }
+
+        IsBusy = true;
+        try
+        {
+            StationControlMessage = $"Requesting {command} / 正在请求 {command}";
+            var result = await _dataSource.RequestStationCommandAsync(command, cancellationToken);
+            StationControlMessage = result.Message;
+            return result;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public async Task<ControlRequestResult> SetManualFunctionAsync(
+        ManualActionRow action,
+        bool execute,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        if (_dataSource?.SupportsManualFunctions != true ||
+            ModeId != 3 ||
+            (execute && !action.CanExecute))
+        {
+            return new ControlRequestResult(
+                false,
+                "Manual function is display-only or its CpStudio release condition is not fulfilled.");
+        }
+
+        var result = await _dataSource.SetManualFunctionAsync(
+            action.UnitKey,
+            action.Key,
+            execute,
+            cancellationToken);
+        StationControlMessage = result.Message;
+        return result;
+    }
+
     public async Task ConnectAsync(
         bool useDemo,
         string userName,
@@ -582,6 +861,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             ModeRequestMessage = _dataSource.SupportsModeRequests
                 ? "Mode requests enabled for this session / 本次会话已开放模式切换"
                 : "Read-only session: mode requests disabled / 只读会话：模式切换未开放";
+            StationControlMessage = _dataSource.SupportsStationCommands
+                ? "Chain and manual controls enabled in DEMO / 演示模式已开放 Chain 与手动功能"
+                : "Real Chain/manual writes locked pending commissioning / 真机 Chain 与手动写入尚未验收";
+            RefreshControlAvailability();
+            RefreshManualFunctions();
         }
         catch (Exception exception)
         {
@@ -705,6 +989,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             case "ModeRelease": ModeReleased = ToBoolean(value); break;
             case "IsRunning": IsRunning = ToBoolean(value); break;
             case "IsStopping": IsStopping = ToBoolean(value); break;
+            case "ModeRunning": ModeRunning = ToBoolean(value); break;
+            case "StartVisible": StartVisible = ToBoolean(value); break;
+            case "StopVisible": StopVisible = ToBoolean(value); break;
+            case "StepVisible": StepVisible = ToBoolean(value); break;
+            case "IsStepping": IsStepping = ToBoolean(value); break;
+            case "ManualFunctionsActive": ManualFunctionsActive = ToBoolean(value); break;
+            case "ManualFunctionRunning": ManualFunctionRunning = ToBoolean(value); break;
             case "ExecState": ExecState = ToInt32(value); break;
             case "Token": Token = ToInt32(value); break;
             case "AutoInfoLine": AutoInfoIndex = ToInt32(value); break;
@@ -746,6 +1037,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 break;
             case "PublicEventList":
                 ApplyPublicEvents(value);
+                break;
+            default:
+                ApplyManualFunctionValue(key, value);
                 break;
         }
     }
@@ -791,6 +1085,225 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         RaisePropertyChanged(nameof(HasActiveEvents));
     }
 
+    private void ApplyManualFunctionValue(string key, object? value)
+    {
+        if (!key.StartsWith("Manual.", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var parts = key.Split('.');
+        if (parts.Length != 4)
+        {
+            return;
+        }
+
+        var functionKey = $"{parts[1]}.{parts[2]}";
+        if (string.Equals(parts[3], "Release", StringComparison.Ordinal))
+        {
+            _manualReleaseValues[functionKey] = ToBoolean(value);
+        }
+        else if (string.Equals(parts[3], "Running", StringComparison.Ordinal))
+        {
+            _manualRunningValues[functionKey] = ToBoolean(value);
+        }
+
+        RefreshManualFunctions();
+    }
+
+    private static ObservableCollection<EtherCatTopologyNode> BuildEtherCatTopology(
+        HmiSettings settings,
+        IReadOnlyCollection<EtherCatSlaveRow> slaves)
+    {
+        var root = new EtherCatTopologyNode(
+            settings.Fieldbus.MasterDesignator,
+            "EtherCAT Master / EtherCAT 主站",
+            "ctrlX EtherCAT Master");
+        var nodes = slaves.ToDictionary(
+            slave => slave.Index,
+            slave => new EtherCatTopologyNode(
+                slave.Designator,
+                slave.DisplayName,
+                slave.DeviceType,
+                slave));
+
+        foreach (var slave in slaves.OrderBy(item => item.Index))
+        {
+            var node = nodes[slave.Index];
+            if (slave.ParentIndex is int parentIndex && nodes.TryGetValue(parentIndex, out var parent))
+            {
+                parent.Children.Add(node);
+            }
+            else
+            {
+                root.Children.Add(node);
+            }
+        }
+
+        return [root];
+    }
+
+    private static ObservableCollection<ManualUnitRow> CreateManualUnits()
+    {
+        return
+        [
+            new ManualUnitRow(
+                "Wp100",
+                "Wp100",
+                "Wp100 Command Handler / 工位命令层",
+                "Command Handler",
+                [
+                    new ManualActionRow("Wp100", "Home", "Home", "工位回原位", "Currently locked by the CpStudio CONST FALSE release condition."),
+                    new ManualActionRow("Wp100", "DeleteWpcData", "Delete WPC data", "删除工件数据", "Currently locked by the CpStudio CONST FALSE release condition.")
+                ]),
+            new ManualUnitRow(
+                "Wp100K101SafetyDoor",
+                "_100K101",
+                "Safety door / 安全门",
+                "Basic movement",
+                [
+                    new ManualActionRow("Wp100K101SafetyDoor", "MoveBasPos", "Move to base position", "返回原位（上升）", "Requires the maintenance-door safety relay."),
+                    new ManualActionRow("Wp100K101SafetyDoor", "MoveWrkPos", "Move to work position", "移动到工作位（下降）", "Requires the maintenance-door safety relay.")
+                ]),
+            new ManualUnitRow(
+                "Wp100K102PressingCylinder",
+                "_100K102",
+                "Pressing cylinder / 压缸",
+                "Basic movement",
+                [
+                    new ManualActionRow("Wp100K102PressingCylinder", "MoveBasPos", "Move to base position", "返回原位（上升）", "Safety door and both safety relay feedbacks must be valid."),
+                    new ManualActionRow("Wp100K102PressingCylinder", "MoveWrkPos", "Move to work position", "移动到工作位（下降）", "Safety door and both safety relay feedbacks must be valid.")
+                ]),
+            new ManualUnitRow(
+                "Wp100A103ResistantDetector",
+                "Wp100A103ResistantInterface",
+                "Burster 2316 / 电阻仪",
+                "Measurement",
+                [
+                    new ManualActionRow("Wp100A103ResistantDetector", "SetRange", "Set range", "设置量程", "Uses the CpStudio Unit release output."),
+                    new ManualActionRow("Wp100A103ResistantDetector", "StartMeas", "Start measurement", "启动测量", "Uses the CpStudio Unit release output.")
+                ]),
+            new ManualUnitRow(
+                "Wp100A104Kistler",
+                "_100A104",
+                "Kistler maXYmos 5867C",
+                "Measurement",
+                [
+                    new ManualActionRow("Wp100A104Kistler", "Measure", "Measure", "开始测量", "Start a force/displacement measurement."),
+                    new ManualActionRow("Wp100A104Kistler", "SetProgram", "Set program", "设置程序号", "Apply the configured Kistler program."),
+                    new ManualActionRow("Wp100A104Kistler", "ZeroX", "Zero X", "位移清零", "Zero the displacement channel."),
+                    new ManualActionRow("Wp100A104Kistler", "TareY", "Tare Y", "力清零", "Tare the force channel."),
+                    new ManualActionRow("Wp100A104Kistler", "LockKeyboard", "Lock keyboard", "锁定键盘", "Lock the device keyboard."),
+                    new ManualActionRow("Wp100A104Kistler", "UnlockKeyboard", "Unlock keyboard", "解锁键盘", "Unlock the device keyboard."),
+                    new ManualActionRow("Wp100A104Kistler", "ReadData", "Read data", "读取数据", "Read result data from the device."),
+                    new ManualActionRow("Wp100A104Kistler", "WriteData", "Write data", "写入数据", "Write configured data to the device.")
+                ])
+        ];
+    }
+
+    private void RefreshSelectedSlaveIo()
+    {
+        if (SelectedSlaveIoChannels is null)
+        {
+            return;
+        }
+
+        SelectedSlaveIoChannels.Clear();
+        if (SelectedEtherCatNode is null)
+        {
+            return;
+        }
+
+        IEnumerable<IoChannelRow> selectedChannels = SelectedEtherCatNode switch
+        {
+            { IsMaster: true } => IoChannels,
+            { Slave.Index: 1 } => IoChannels.Where(channel => channel.SlaveIndex is >= 2 and <= 8),
+            { Slave: not null } node => IoChannels.Where(channel => channel.SlaveIndex == node.Slave.Index),
+            _ => []
+        };
+        foreach (var channel in selectedChannels)
+        {
+            SelectedSlaveIoChannels.Add(channel);
+        }
+    }
+
+    private void RefreshEtherCatMaster()
+    {
+        EtherCatTopology.FirstOrDefault()?.SetMasterOperational(BusOk && MasterOk);
+    }
+
+    private void RefreshControlAvailability()
+    {
+        RaisePropertyChanged(nameof(CanStartChain));
+        RaisePropertyChanged(nameof(CanStopChain));
+        RaisePropertyChanged(nameof(CanToggleStepMode));
+        RaisePropertyChanged(nameof(CanPulseStep));
+        RaisePropertyChanged(nameof(HasRealExtendedControl));
+        RefreshManualFunctions();
+    }
+
+    private void RefreshManualFunctions()
+    {
+        if (ManualUnits is null)
+        {
+            return;
+        }
+
+        var controlAvailable =
+            !IsDataUnavailable &&
+            ModeId == 3 &&
+            ManualFunctionsActive &&
+            !ManualFunctionRunning &&
+            PanelActive &&
+            _dataSource?.SupportsManualFunctions == true;
+        foreach (var unit in ManualUnits)
+        {
+            switch (unit.Key)
+            {
+                case "Wp100":
+                    unit.UpdateState("CpStudio release locked / CpStudio 未放行", false);
+                    UpdateManualActions(unit, false, controlAvailable);
+                    break;
+                case "Wp100K101SafetyDoor":
+                    unit.UpdateState(SafetyDoorState, SafetyDoorBase || SafetyDoorWork);
+                    UpdateManualActions(unit, _maintenanceCircuitOk && !ManualFunctionRunning, controlAvailable);
+                    break;
+                case "Wp100K102PressingCylinder":
+                    unit.UpdateState(PressingCylinderState, PressingCylinderBase || PressingCylinderWork);
+                    UpdateManualActions(
+                        unit,
+                        SafetyDoorWork && _safetyDoorCircuitOk && _allSafetyCircuitsOk && !ManualFunctionRunning,
+                        controlAvailable);
+                    break;
+                case "Wp100A103ResistantDetector":
+                    unit.UpdateState(ResistantState, ResistantAvailable);
+                    UpdateManualActions(unit, ResistantAvailable && !ManualFunctionRunning, controlAvailable);
+                    break;
+                case "Wp100A104Kistler":
+                    unit.UpdateState(KistlerState, KistlerAvailable);
+                    UpdateManualActions(unit, KistlerAvailable && !ManualFunctionRunning, controlAvailable);
+                    break;
+            }
+        }
+    }
+
+    private void UpdateManualActions(
+        ManualUnitRow unit,
+        bool fallbackReleased,
+        bool controlAvailable)
+    {
+        foreach (var action in unit.Actions)
+        {
+            var functionKey = $"{unit.Key}.{action.Key}";
+            var released = _manualReleaseValues.TryGetValue(functionKey, out var releaseValue)
+                ? releaseValue
+                : fallbackReleased;
+            var running = _manualRunningValues.TryGetValue(functionKey, out var runningValue) &&
+                          runningValue;
+            action.Update(released, running, controlAvailable);
+        }
+    }
+
     private static ObservableCollection<DataValueRow> CreateDataRows(
         HmiSettings settings,
         string category)
@@ -827,17 +1340,28 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         RaisePropertyChanged(nameof(KistlerAvailable));
         RaisePropertyChanged(nameof(KistlerState));
         RefreshDataQuality();
+        RefreshEtherCatMaster();
+        RefreshControlAvailability();
     }
 
     private void ResetLiveValues()
     {
         _badNodes.Clear();
+        _manualReleaseValues.Clear();
+        _manualRunningValues.Clear();
         _hasReceivedData = false;
         IsStale = false;
         ModeId = 0;
         ModeReleased = false;
         IsRunning = false;
         IsStopping = false;
+        ModeRunning = false;
+        StartVisible = true;
+        StopVisible = false;
+        StepVisible = false;
+        IsStepping = false;
+        ManualFunctionsActive = false;
+        ManualFunctionRunning = false;
         ExecState = 0;
         Token = 0;
         AutoInfoIndex = 0;
@@ -883,6 +1407,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         ActiveEvents.Clear();
         EventDecodeMessage = "Waiting for PublicEventList / 等待报警列表";
         ModeRequestMessage = "Mode control ready / 模式控制就绪";
+        StationControlMessage = "Chain controls ready / Chain 操作就绪";
         RaisePropertyChanged(nameof(HasActiveEvents));
         RefreshDerivedProperties();
     }
@@ -892,6 +1417,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         RaisePropertyChanged(nameof(IsDataUnavailable));
         RaisePropertyChanged(nameof(DataQualityText));
         RaisePropertyChanged(nameof(CanRequestMode));
+        RefreshControlAvailability();
     }
 
     private void RefreshFixture() => RaisePropertyChanged(nameof(FixturePosition));
@@ -907,6 +1433,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         RaisePropertyChanged(nameof(SafetyReady));
         RaisePropertyChanged(nameof(SafetyState));
         RaisePropertyChanged(nameof(CanRequestMode));
+        RefreshManualFunctions();
     }
 
     private static bool ToBoolean(object? value) => value switch

@@ -68,6 +68,33 @@
             <Setter Property="Foreground" Value="#173148" />
         </Style>
 
+        <Style x:Key="OperatorCommandButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Width" Value="115" />
+            <Setter Property="Height" Value="54" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style x:Key="StartButton" TargetType="Button" BasedOn="{StaticResource OperatorCommandButton}">
+            <Setter Property="Background" Value="#23865B" />
+        </Style>
+
+        <Style x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource OperatorCommandButton}">
+            <Setter Property="Background" Value="#B4423D" />
+        </Style>
+
+        <Style x:Key="ManualFunctionButton" TargetType="Button">
+            <Setter Property="Background" Value="#F4F7F9" />
+            <Setter Property="Foreground" Value="#173148" />
+            <Setter Property="BorderBrush" Value="#B9C8D2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="MinHeight" Value="72" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
         <Style x:Key="SectionTitle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#173148" />
             <Setter Property="FontSize" Value="18" />
@@ -156,6 +183,7 @@
             <Grid Grid.Column="1" Margin="16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="64" />
+                    <RowDefinition Height="92" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="78" />
                 </Grid.RowDefinitions>
@@ -204,7 +232,52 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid Grid.Row="1">
+                <Border Grid.Row="1" Background="White" BorderBrush="#CFD9E0" BorderThickness="1"
+                        CornerRadius="3" Padding="14,10" Margin="0,0,14,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="190" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="492" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="CURRENT OPERATION / 当前操作" Style="{StaticResource Muted}" />
+                            <TextBlock Text="{Binding ModeName}" FontSize="17" FontWeight="SemiBold" Foreground="#173148" />
+                            <TextBlock Text="{Binding RunStateText}" Foreground="#5C7282" FontSize="12" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,16,0">
+                            <TextBlock Text="ACTIVE CHAIN / 活动 Chain" Style="{StaticResource Muted}" />
+                            <TextBlock Text="{Binding ActiveChainName}" FontSize="15" FontWeight="SemiBold" Foreground="#173148"
+                                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="38" />
+                            <TextBlock Text="{Binding StepModeText}" Foreground="#6A7E8C" FontSize="12" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource StartButton}"
+                                    IsEnabled="{Binding CanStartChain}" Tag="Start" Click="OnStationCommandClick"
+                                    AutomationProperties.Name="Start active mode Chain">
+                                <StackPanel><TextBlock Text="▶  START" HorizontalAlignment="Center" /><TextBlock Text="启动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource StopButton}"
+                                    IsEnabled="{Binding CanStopChain}" Tag="Stop" Click="OnStationCommandClick"
+                                    ToolTip="Cycle stop only — this is not an emergency stop."
+                                    AutomationProperties.Name="Stop active mode Chain">
+                                <StackPanel><TextBlock Text="■  CYCLE STOP" HorizontalAlignment="Center" /><TextBlock Text="停止" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource OperatorCommandButton}"
+                                    IsEnabled="{Binding CanToggleStepMode}" Tag="ToggleStep" Click="OnStationCommandClick"
+                                    AutomationProperties.Name="Toggle automatic step mode">
+                                <StackPanel><TextBlock Text="STEP MODE" HorizontalAlignment="Center" /><TextBlock Text="步进模式" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource OperatorCommandButton}"
+                                    IsEnabled="{Binding CanPulseStep}" Tag="StepPulse" Click="OnStationCommandClick"
+                                    AutomationProperties.Name="Advance one automatic step">
+                                <StackPanel><TextBlock Text="NEXT STEP" HorizontalAlignment="Center" /><TextBlock Text="下一步" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2">
                     <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=0}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -317,40 +390,118 @@
 
                     <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=1}">
                         <Grid Margin="0,0,14,14">
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="MANUAL FUNCTIONS / 手动功能" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="Nexeed-style unit overview. Unit action buttons are intentionally absent; only the four operator mode requests are enabled. / 仿 Nexeed Unit 总览；不提供 Unit 动作按钮，仅开放四种操作员模式请求。"
-                                           Foreground="#647887" Margin="0,0,0,14" />
-                            </StackPanel>
-                            <UniformGrid Grid.Row="1" Columns="2">
-                                <Border Style="{StaticResource Card}">
-                                    <StackPanel>
-                                        <TextBlock Text="Wp100K101 SAFETY DOOR / 安全门" Style="{StaticResource SectionTitle}" />
-                                        <TextBlock Text="{Binding SafetyDoorState}" FontSize="22" FontWeight="SemiBold" Foreground="#006EA8" />
-                                        <TextBlock Text="BASPOS / WRKPOS monitoring" Style="{StaticResource Muted}" Margin="0,8,0,0" />
-                                    </StackPanel>
-                                </Border>
-                                <Border Style="{StaticResource Card}">
-                                    <StackPanel>
-                                        <TextBlock Text="Wp100K102 PRESSING CYLINDER / 压缸" Style="{StaticResource SectionTitle}" />
-                                        <TextBlock Text="{Binding PressingCylinderState}" FontSize="22" FontWeight="SemiBold" Foreground="#006EA8" />
-                                        <TextBlock Text="BASPOS / WRKPOS monitoring" Style="{StaticResource Muted}" Margin="0,8,0,0" />
-                                    </StackPanel>
-                                </Border>
-                                <Border Style="{StaticResource Card}">
-                                    <StackPanel>
-                                        <TextBlock Text="Wp100A103 BURSTER 2316" Style="{StaticResource SectionTitle}" />
-                                        <StackPanel Orientation="Horizontal"><Ellipse Width="16" Height="16" Margin="0,0,10,0" Fill="{Binding ResistantUnitState, Converter={StaticResource UnitStateBrush}}" /><TextBlock Text="{Binding ResistantState}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
-                                    </StackPanel>
-                                </Border>
-                                <Border Style="{StaticResource Card}">
-                                    <StackPanel>
-                                        <TextBlock Text="Wp100A104 KISTLER maXYmos" Style="{StaticResource SectionTitle}" />
-                                        <StackPanel Orientation="Horizontal"><Ellipse Width="16" Height="16" Margin="0,0,10,0" Fill="{Binding KistlerUnitState, Converter={StaticResource UnitStateBrush}}" /><TextBlock Text="{Binding KistlerState}" FontSize="18" FontWeight="SemiBold" /></StackPanel>
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="290" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="350" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <Border Background="#173148" Padding="18,14">
+                                        <StackPanel>
+                                            <TextBlock Text="STATION / WP100" Foreground="White" FontSize="16" FontWeight="SemiBold" />
+                                            <TextBlock Text="UNIT TREE / Unit 层级" Foreground="#A9C4D5" FontSize="11" />
+                                        </StackPanel>
+                                    </Border>
+                                    <ListBox Grid.Row="1" ItemsSource="{Binding ManualUnits}" SelectedItem="{Binding SelectedManualUnit}"
+                                             BorderThickness="0" Background="White" AutomationProperties.Name="Manual Unit tree">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Padding" Value="16,12" />
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                <Setter Property="BorderBrush" Value="#E0E6EB" />
+                                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="#173148" TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding Designator}" Foreground="#006EA8" FontSize="12" />
+                                                        <TextBlock Text="{Binding Category}" Foreground="#7B8C98" FontSize="11" />
+                                                    </StackPanel>
+                                                    <Ellipse Grid.Column="1" Width="13" Height="13" Margin="8,0,0,0"
+                                                             Fill="{Binding Available, Converter={StaticResource BoolBrush}}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="20">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <Border Background="#EDF3F6" BorderBrush="#D3DEE5" BorderThickness="1" Padding="16" Margin="0,0,0,14">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding SelectedManualUnit.DisplayName}" FontSize="20" FontWeight="SemiBold" Foreground="#173148" />
+                                                <TextBlock Text="{Binding SelectedManualUnit.Designator}" Foreground="#006EA8" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                <TextBlock Text="UNIT STATE / Unit 状态" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                                                <TextBlock Text="{Binding SelectedManualUnit.StateText}" FontWeight="SemiBold" Foreground="#173148" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding SelectedManualUnit.Actions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource ManualFunctionButton}" IsEnabled="{Binding CanExecute}"
+                                                            Click="OnManualFunctionClick" AutomationProperties.Name="{Binding Label}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding Label}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding Description}" Foreground="#6D7F8B" FontSize="11" TextWrapping="Wrap" Margin="0,4,12,0" />
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                <Ellipse Width="14" Height="14" Fill="{Binding Released, Converter={StaticResource BoolBrush}}" HorizontalAlignment="Right" />
+                                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#526B7B" Margin="8,5,0,0" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="2" Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="RELEASE &amp; INTERLOCKS / 释放与联锁" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Text="The PLC Release* outputs remain authoritative. Red means the function must not execute. / 以 PLC 的 Release* 输出为最终执行许可；红色时禁止动作。"
+                                               Foreground="#647887" TextWrapping="Wrap" Margin="0,0,0,16" />
+                                    <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Manual mode / 手动模式" /><TextBlock Grid.Column="1" Text="{Binding ModeName}" FontWeight="SemiBold" /></Grid>
+                                    <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Manual functions active" /><Ellipse Grid.Column="1" Width="14" Height="14" Fill="{Binding ManualFunctionsActive, Converter={StaticResource BoolBrush}}" /></Grid>
+                                    <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="A function is running" /><Ellipse Grid.Column="1" Width="14" Height="14" Fill="{Binding ManualFunctionRunning, Converter={StaticResource BoolBrush}}" /></Grid>
+                                    <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Safety circuits / 安全回路" /><Ellipse Grid.Column="1" Width="14" Height="14" Fill="{Binding SafetyReady, Converter={StaticResource BoolBrush}}" /></Grid>
+                                    <Separator Margin="0,5,0,14" />
+                                    <TextBlock Text="SELECTED FUNCTION STATUS / 当前功能状态" Style="{StaticResource Muted}" Margin="0,0,0,8" />
+                                    <ItemsControl ItemsSource="{Binding SelectedManualUnit.Actions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,9">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Chinese}" TextWrapping="Wrap" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#526B7B" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Border Background="#FFF4D6" BorderBrush="#E7C86C" BorderThickness="1" Padding="12" Margin="0,14,0,0">
+                                        <TextBlock Text="Real manual writes are locked until Exec/Heartbeat release-on-disconnect is accepted. / 真机手动写入将在 Exec/Heartbeat 失联复位机制验收后开放。"
+                                                   Foreground="#6C5617" TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </Grid>
 
@@ -382,67 +533,112 @@
 
                     <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=3}">
                         <Grid Margin="0,0,14,14">
-                            <Border Style="{StaticResource Card}">
-                                <Grid>
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="370" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0">
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="I/O &amp; ETHERCAT / I/O 与 EtherCAT" Style="{StaticResource SectionTitle}" />
-                                            <TextBlock Text="Full 9-slave topology and 38 published named DI/DO values; unpublished empty channels are not listed. / 完整 9 个从站拓扑及 38 个已发布命名 I/O；未发布的空通道不列出。" Foreground="#647887" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                            <TextBlock Text="Configured " Foreground="#647887" /><TextBlock Text="{Binding ConfiguredSlaves}" FontWeight="Bold" />
-                                            <TextBlock Text="  Detected " Foreground="#647887" /><TextBlock Text="{Binding DetectedSlaves}" FontWeight="Bold" />
-                                            <TextBlock Text="  Lost frames " Foreground="#647887" /><TextBlock Text="{Binding LostFrames}" FontWeight="Bold" />
-                                        </StackPanel>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                        <Border Background="#173148" Padding="18,14">
+                                            <StackPanel>
+                                                <TextBlock Text="ETHERCAT TOPOLOGY / EtherCAT 拓扑" Foreground="White" FontSize="17" FontWeight="SemiBold" />
+                                                <TextBlock Text="Master → coupler → modules / 主站 → 耦合器 → 模块" Foreground="#A9C4D5" FontSize="11" />
+                                            </StackPanel>
+                                        </Border>
+                                        <TreeView Grid.Row="1" ItemsSource="{Binding EtherCatTopology}"
+                                                  SelectedItemChanged="OnEtherCatSelectionChanged"
+                                                  BorderThickness="0" Background="White" Padding="8"
+                                                  AutomationProperties.Name="EtherCAT hierarchical topology">
+                                            <TreeView.ItemContainerStyle>
+                                                <Style TargetType="TreeViewItem">
+                                                    <Setter Property="IsExpanded" Value="True" />
+                                                    <Setter Property="Padding" Value="2" />
+                                                </Style>
+                                            </TreeView.ItemContainerStyle>
+                                            <TreeView.ItemTemplate>
+                                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                                    <Grid Margin="2,5">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                        <Ellipse Width="12" Height="12" Fill="{Binding IsOperational, Converter={StaticResource BoolBrush}}" VerticalAlignment="Top" Margin="0,4,0,0" />
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="#173148" TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding Designator}" Foreground="#006EA8" FontSize="11" />
+                                                            <TextBlock Text="{Binding DeviceType}" Foreground="#71838F" FontSize="10" />
+                                                        </StackPanel>
+                                                        <Border Grid.Column="2" Background="#E8EEF2" Padding="7,3" Margin="8,0,0,0" VerticalAlignment="Top">
+                                                            <TextBlock Text="{Binding StateText}" FontSize="10" FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </Grid>
+                                                </HierarchicalDataTemplate>
+                                            </TreeView.ItemTemplate>
+                                        </TreeView>
                                     </Grid>
-                                    <TabControl Grid.Row="1" Margin="0,14,0,0">
-                                        <TabItem Header="EtherCAT topology / 拓扑">
-                                            <DataGrid ItemsSource="{Binding EtherCatSlaves}" AutoGenerateColumns="False" IsReadOnly="True"
+                                </Border>
+
+                                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="18">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="#EDF3F6" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="BUS" Style="{StaticResource Muted}" /><TextBlock Text="{Binding BusOk}" FontWeight="Bold" /></StackPanel></Border>
+                                            <Border Grid.Column="1" Background="#EDF3F6" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="MASTER" Style="{StaticResource Muted}" /><TextBlock Text="{Binding MasterOk}" FontWeight="Bold" /></StackPanel></Border>
+                                            <Border Grid.Column="2" Background="#EDF3F6" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="SLAVES" Style="{StaticResource Muted}" /><TextBlock Text="{Binding DetectedSlaves, StringFormat={}{0} detected}" FontWeight="Bold" /></StackPanel></Border>
+                                            <Border Grid.Column="3" Background="#EDF3F6" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="CONFIGURED" Style="{StaticResource Muted}" /><TextBlock Text="{Binding ConfiguredSlaves}" FontWeight="Bold" /></StackPanel></Border>
+                                            <Border Grid.Column="4" Background="#EDF3F6" Padding="12"><StackPanel><TextBlock Text="LOST FRAMES" Style="{StaticResource Muted}" /><TextBlock Text="{Binding LostFrames}" FontWeight="Bold" /></StackPanel></Border>
+                                        </Grid>
+
+                                        <Border Grid.Row="1" Background="#F8FAFB" BorderBrush="#D4DEE5" BorderThickness="1" Padding="14" Margin="0,12,0,12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding SelectedEtherCatNode.DisplayName}" FontSize="18" FontWeight="SemiBold" Foreground="#173148" />
+                                                    <TextBlock Text="{Binding SelectedEtherCatNode.Designator}" Foreground="#006EA8" />
+                                                    <TextBlock Text="{Binding SelectedNodeScopeText}" Foreground="#71838F" FontSize="11" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1"><TextBlock Text="ADDRESS" Style="{StaticResource Muted}" /><TextBlock Text="{Binding SelectedEtherCatNode.AddressText}" FontWeight="SemiBold" /></StackPanel>
+                                                <StackPanel Grid.Column="2"><TextBlock Text="STATE" Style="{StaticResource Muted}" /><TextBlock Text="{Binding SelectedEtherCatNode.StateText}" FontWeight="SemiBold" /></StackPanel>
+                                                <StackPanel Grid.Column="3"><TextBlock Text="PROCESS DATA" Style="{StaticResource Muted}" /><TextBlock Text="{Binding SelectedEtherCatNode.ProcessDataText}" FontWeight="SemiBold" /></StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Grid Grid.Row="2">
+                                            <DataGrid ItemsSource="{Binding SelectedSlaveIoChannels}" AutoGenerateColumns="False" IsReadOnly="True"
                                                       CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="45" />
-                                                    <DataGridTextColumn Header="Designator / BMK" Binding="{Binding Designator}" Width="170" />
-                                                    <DataGridTextColumn Header="Device" Binding="{Binding DeviceType}" Width="150" />
-                                                    <DataGridTextColumn Header="Description / 描述" Binding="{Binding DisplayName}" Width="*" />
-                                                    <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="85" />
-                                                    <DataGridTextColumn Header="State" Binding="{Binding StateText}" Width="90" />
-                                                    <DataGridTextColumn Header="Link raw" Binding="{Binding LinkText}" Width="85" />
-                                                    <DataGridTextColumn Header="Process data" Binding="{Binding ProcessDataText}" Width="105" />
-                                                    <DataGridTextColumn Header="WC errors" Binding="{Binding WorkingCounterErrors}" Width="85" />
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </TabItem>
-                                        <TabItem Header="Digital I/O / 数字量">
-                                            <DataGrid ItemsSource="{Binding IoChannels}" AutoGenerateColumns="False" IsReadOnly="True"
-                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Slave" Binding="{Binding SlaveIndex}" Width="60" />
-                                                    <DataGridTextColumn Header="Ch." Binding="{Binding Channel}" Width="50" />
-                                                    <DataGridTextColumn Header="I/O" Binding="{Binding Direction}" Width="55" />
-                                                    <DataGridTextColumn Header="BMK" Binding="{Binding Bmk}" Width="155" />
+                                                    <DataGridTextColumn Header="Slave" Binding="{Binding SlaveIndex}" Width="55" />
+                                                    <DataGridTextColumn Header="Ch." Binding="{Binding Channel}" Width="45" />
+                                                    <DataGridTextColumn Header="I/O" Binding="{Binding Direction}" Width="48" />
+                                                    <DataGridTextColumn Header="BMK" Binding="{Binding Bmk}" Width="145" />
                                                     <DataGridTextColumn Header="Description / 描述" Binding="{Binding Description}" Width="*" />
-                                                    <DataGridTextColumn Header="Value / 值" Binding="{Binding ValueText}" Width="95" />
-                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="105" />
-                                                    <DataGridTextColumn Header="Wiring" Binding="{Binding WiringStatus}" Width="110" />
+                                                    <DataGridTextColumn Header="Value / 值" Binding="{Binding ValueText}" Width="90" />
+                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="95" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
-                                        </TabItem>
-                                        <TabItem Header="Kistler semantic data / Kistler 语义数据">
-                                            <DataGrid ItemsSource="{Binding DeviceDataItems}" AutoGenerateColumns="False" IsReadOnly="True"
-                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Signal / 信号" Binding="{Binding Label}" Width="*" />
-                                                    <DataGridTextColumn Header="Value / 值" Binding="{Binding Value}" Width="200" />
-                                                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70" />
-                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="110" />
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </TabItem>
-                                    </TabControl>
-                                </Grid>
-                            </Border>
+                                            <Border Background="White" Visibility="{Binding SelectedNodeIsKistler, Converter={StaticResource BoolVisibility}}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                                    <TextBlock Text="KISTLER SEMANTIC DATA / Kistler 语义数据（raw PDO 未发布）" Style="{StaticResource SectionTitle}" />
+                                                    <DataGrid Grid.Row="1" ItemsSource="{Binding DeviceDataItems}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                              CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Signal / 信号" Binding="{Binding Label}" Width="*" />
+                                                            <DataGridTextColumn Header="Value / 值" Binding="{Binding Value}" Width="180" />
+                                                            <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="65" />
+                                                            <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="95" />
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
                         </Grid>
                     </Grid>
 
@@ -491,7 +687,7 @@
                     </Grid>
                 </Grid>
 
-                <Border Grid.Row="1" Panel.ZIndex="20" Background="#E6EDF1F4" Margin="0,0,14,14"
+                <Border Grid.Row="2" Panel.ZIndex="20" Background="#E6EDF1F4" Margin="0,0,14,14"
                         Visibility="{Binding IsDataUnavailable, Converter={StaticResource BoolVisibility}}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock Text="○" FontSize="48" Foreground="#8195A4" HorizontalAlignment="Center" />
@@ -501,7 +697,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Row="2" Background="#F6CE46" BorderBrush="#D5AD27" BorderThickness="1" Padding="18,10" CornerRadius="2" Margin="0,0,14,0">
+                <Border Grid.Row="3" Background="#F6CE46" BorderBrush="#D5AD27" BorderThickness="1" Padding="18,10" CornerRadius="2" Margin="0,0,14,0">
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="72" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding AutoInfoIndex, StringFormat=STEP {0}}" FontWeight="Bold" Foreground="#594B13" VerticalAlignment="Center" />

@@ -1,6 +1,6 @@
 schema_version: 1
 
-status: phase_1_1_implemented_mode_control_pending_live_acceptance
+status: phase_1_2_operator_ui_implemented_extended_control_locked
 
 purpose: >-
   Run an independent Windows HMI against the existing Station010 OPC UA
@@ -55,6 +55,8 @@ phase_1:
     - fixture and product sensors
     - four safety relay feedbacks
     - Burster and Kistler UnitState
+    - Station Start/Stop/Step visibility and running-state outputs
+    - Release and Running outputs for all 16 configured manual functions
     - nine EtherCAT slave states and 38 published named digital I/O values
     - Kistler semantic result, force and displacement values
     - StationData and TypeData current values, excluding staging structures
@@ -71,6 +73,23 @@ phase_1_1:
     - verify ctrlX runtime representation of PublicEventList once read-only
     - verify active/cleared event filtering with one controlled event cycle
     - verify all nine EtherCAT array indexes against online values
+
+phase_1_2_operator_ui:
+  implemented:
+    - common Start and Cycle Stop controls for Automatic, Homing and Change-over
+    - Automatic step-mode and next-step controls
+    - Station/Wp100 Unit navigator with the configured manual-function list
+    - authoritative PLC Release and Running indication per manual function
+    - hierarchical EtherCAT tree: master, EK1100, EL modules and Kistler
+    - selected EtherCAT node detail and filtered named I/O values
+    - offline demo behavior for all new operator controls
+  real_connection_policy:
+    station_commands: locked
+    manual_functions: locked
+    reason: >-
+      Request-bit reset, Token ownership and Unit Exec/Heartbeat release-on-disconnect
+      must pass a separately approved live acceptance before writes are enabled.
+  verified_contract: docs/self_hmi_nexeed_control_contract.md
 
 phase_2_control:
   status: minimal_mode_switch_implemented_pending_live_acceptance
