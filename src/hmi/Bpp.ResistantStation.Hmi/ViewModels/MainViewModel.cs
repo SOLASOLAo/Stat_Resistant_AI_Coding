@@ -1,5 +1,8 @@
+using System.Collections;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Threading;
 using Bpp.ResistantStation.Hmi.Configuration;
 using Bpp.ResistantStation.Hmi.Services;
 
@@ -10,11 +13,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly HmiSettings _settings;
     private readonly IReadOnlyDictionary<int, LocalizedAutoInfo> _autoInfo;
     private readonly HashSet<string> _badNodes = new(StringComparer.Ordinal);
+    private readonly IReadOnlyDictionary<string, DataValueRow> _dataRows;
+    private readonly IReadOnlyDictionary<string, IoChannelRow> _ioRows;
+    private readonly DispatcherTimer _freshnessTimer;
     private IStationDataSource? _dataSource;
     private bool _isConnected;
     private bool _isBusy;
     private bool _isDemo;
     private bool _hasReceivedData;
+    private bool _isStale;
     private int _selectedPageIndex;
     private string _connectionMessage = "Not connected / 未连接";
     private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
@@ -42,6 +49,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _allSafetyCircuitsOk;
     private int _resistantUnitState;
     private int _kistlerUnitState;
+    private bool _stationIsEmpty;
+    private bool _masterOk;
+    private bool _slavesOk;
+    private bool _topologyNotOk;
+    private int _configuredSlaves;
+    private int _detectedSlaves;
+    private uint _lostFrames;
+    private string _modeRequestMessage = "Mode control ready / 模式控制就绪";
+    private string _eventDecodeMessage = "Waiting for PublicEventList / 等待报警列表";
 
     public MainViewModel(HmiSettings settings)
     {
@@ -50,8 +66,42 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         EndpointUrl = settings.EndpointUrl;
         StationId = settings.StationId;
         StationName = settings.StationName;
+        EtherCatSlaves = new ObservableCollection<EtherCatSlaveRow>(
+            settings.Fieldbus.Slaves.OrderBy(slave => slave.Index).Select(slave => new EtherCatSlaveRow(slave)));
+        IoChannels = new ObservableCollection<IoChannelRow>(
+            settings.Fieldbus.Channels
+                .OrderBy(channel => channel.SlaveIndex)
+                .ThenBy(channel => channel.Channel)
+                .Select(channel => new IoChannelRow(channel)));
+        StationDataItems = CreateDataRows(settings, "station-data");
+        TypeDataItems = CreateDataRows(settings, "type-data");
+        DeviceDataItems = CreateDataRows(settings, "device-data");
+        ActiveEvents = [];
+        _dataRows = StationDataItems
+            .Concat(TypeDataItems)
+            .Concat(DeviceDataItems)
+            .ToDictionary(row => row.Key, StringComparer.Ordinal);
+        _ioRows = IoChannels.ToDictionary(row => row.NodeKey, StringComparer.Ordinal);
+        _freshnessTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _freshnessTimer.Tick += OnFreshnessTick;
+        _freshnessTimer.Start();
         RefreshDerivedProperties();
     }
+
+    public ObservableCollection<EtherCatSlaveRow> EtherCatSlaves { get; }
+
+    public ObservableCollection<IoChannelRow> IoChannels { get; }
+
+    public ObservableCollection<DataValueRow> StationDataItems { get; }
+
+    public ObservableCollection<DataValueRow> TypeDataItems { get; }
+
+    public ObservableCollection<DataValueRow> DeviceDataItems { get; }
+
+    public ObservableCollection<PublicEventRow> ActiveEvents { get; }
 
     public string StationId { get; }
 
@@ -67,6 +117,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _isConnected, value))
             {
                 RefreshDataQuality();
+                RaisePropertyChanged(nameof(CanRequestMode));
             }
         }
     }
@@ -74,7 +125,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool IsBusy
     {
         get => _isBusy;
-        private set => SetProperty(ref _isBusy, value);
+        private set
+        {
+            if (SetProperty(ref _isBusy, value))
+            {
+                RaisePropertyChanged(nameof(CanRequestMode));
+            }
+        }
     }
 
     public bool IsDemo
@@ -115,15 +172,53 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public string WindowTitle => $"BPP Resistance Station HMI — {PageName}";
 
-    public bool IsDataUnavailable => !IsConnected || !_hasReceivedData || _badNodes.Count > 0;
+    public bool IsDataUnavailable =>
+        !IsConnected ||
+        !_hasReceivedData ||
+        IsStale ||
+        _badNodes.Count > 0;
+
+    public bool IsStale
+    {
+        get => _isStale;
+        private set
+        {
+            if (SetProperty(ref _isStale, value))
+            {
+                RefreshDataQuality();
+            }
+        }
+    }
 
     public string DataQualityText => !IsConnected
         ? "PLC DATA OFFLINE / PLC 数据未连接"
         : !_hasReceivedData
             ? "WAITING FOR PLC DATA / 正在等待 PLC 数据"
+            : IsStale
+                ? "STALE PLC DATA / PLC 数据已超时"
             : _badNodes.Count > 0
                 ? $"BAD DATA QUALITY: {string.Join(", ", _badNodes.Order())}"
                 : "DATA CURRENT / 数据有效";
+
+    public string ModeRequestMessage
+    {
+        get => _modeRequestMessage;
+        private set => SetProperty(ref _modeRequestMessage, value);
+    }
+
+    public bool CanRequestMode =>
+        !IsDataUnavailable &&
+        !IsBusy &&
+        ModeRequestSafetyReady &&
+        _dataSource?.SupportsModeRequests == true;
+
+    public string EventDecodeMessage
+    {
+        get => _eventDecodeMessage;
+        private set => SetProperty(ref _eventDecodeMessage, value);
+    }
+
+    public bool HasActiveEvents => ActiveEvents.Count > 0;
 
     public int ModeId
     {
@@ -245,6 +340,48 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         private set => SetProperty(ref _busOk, value);
     }
 
+    public bool StationIsEmpty
+    {
+        get => _stationIsEmpty;
+        private set => SetProperty(ref _stationIsEmpty, value);
+    }
+
+    public bool MasterOk
+    {
+        get => _masterOk;
+        private set => SetProperty(ref _masterOk, value);
+    }
+
+    public bool SlavesOk
+    {
+        get => _slavesOk;
+        private set => SetProperty(ref _slavesOk, value);
+    }
+
+    public bool TopologyNotOk
+    {
+        get => _topologyNotOk;
+        private set => SetProperty(ref _topologyNotOk, value);
+    }
+
+    public int ConfiguredSlaves
+    {
+        get => _configuredSlaves;
+        private set => SetProperty(ref _configuredSlaves, value);
+    }
+
+    public int DetectedSlaves
+    {
+        get => _detectedSlaves;
+        private set => SetProperty(ref _detectedSlaves, value);
+    }
+
+    public uint LostFrames
+    {
+        get => _lostFrames;
+        private set => SetProperty(ref _lostFrames, value);
+    }
+
     public bool SafetyDoorBase
     {
         get => _safetyDoorBase;
@@ -339,6 +476,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         ? "ALL CIRCUITS READY / 安全回路正常"
         : "SAFETY RELEASE MISSING / 安全回路未释放";
 
+    private bool ModeRequestSafetyReady =>
+        _emergencyCircuitOk &&
+        _maintenanceCircuitOk;
+
     public int ResistantUnitState
     {
         get => _resistantUnitState;
@@ -381,6 +522,34 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
 
         SelectedPageIndex = pageIndex;
+    }
+
+    public async Task<ModeRequestResult> RequestModeAsync(
+        byte modeId,
+        CancellationToken cancellationToken)
+    {
+        if (_dataSource is null || !CanRequestMode)
+        {
+            return new ModeRequestResult(
+                false,
+                modeId,
+                "Mode control is unavailable while PLC data is offline or stale.");
+        }
+
+        IsBusy = true;
+        RaisePropertyChanged(nameof(CanRequestMode));
+        try
+        {
+            ModeRequestMessage = $"Requesting mode {modeId} / 正在请求模式 {modeId}";
+            var result = await _dataSource.RequestModeAsync(modeId, cancellationToken);
+            ModeRequestMessage = result.Message;
+            return result;
+        }
+        finally
+        {
+            IsBusy = false;
+            RaisePropertyChanged(nameof(CanRequestMode));
+        }
     }
 
     public async Task ConnectAsync(
@@ -439,6 +608,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _freshnessTimer.Stop();
+        _freshnessTimer.Tick -= OnFreshnessTick;
         await ReleaseDataSourceAsync(CancellationToken.None);
     }
 
@@ -490,7 +661,18 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         Dispatch(() =>
         {
             _lastUpdate = eventArgs.SourceTimestamp;
+            IsStale = false;
             RaisePropertyChanged(nameof(LastUpdateText));
+
+            if (_dataRows.TryGetValue(eventArgs.Key, out var dataRow))
+            {
+                dataRow.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
+            }
+
+            if (_ioRows.TryGetValue(eventArgs.Key, out var ioRow))
+            {
+                ioRow.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
+            }
 
             if (!eventArgs.IsGood)
             {
@@ -519,7 +701,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             case "Token": Token = ToInt32(value); break;
             case "AutoInfoLine": AutoInfoIndex = ToInt32(value); break;
             case "IsInHomePosition": IsInHomePosition = ToBoolean(value); break;
+            case "StationIsEmpty": StationIsEmpty = ToBoolean(value); break;
             case "BusOk": BusOk = ToBoolean(value); break;
+            case "MasterOk": MasterOk = ToBoolean(value); break;
+            case "SlavesOk": SlavesOk = ToBoolean(value); break;
+            case "TopologyNotOk": TopologyNotOk = ToBoolean(value); break;
+            case "ConfiguredSlaves": ConfiguredSlaves = ToInt32(value); break;
+            case "DetectedSlaves": DetectedSlaves = ToInt32(value); break;
+            case "LostFrames": LostFrames = Convert.ToUInt32(value, CultureInfo.InvariantCulture); break;
+            case "SlaveAddress": ApplySlaveArray(value, (row, item) => row.Address = ToInt32(item)); break;
+            case "SlaveDeviceState": ApplySlaveArray(value, (row, item) => row.DeviceState = ToInt32(item)); break;
+            case "SlaveLinkState": ApplySlaveArray(value, (row, item) => row.LinkState = ToInt32(item)); break;
+            case "SlaveWcState": ApplySlaveArray(value, (row, item) => row.WorkingCounterInvalid = ToBoolean(item)); break;
+            case "SlaveWcStateErrorCnt":
+                ApplySlaveArray(value, (row, item) => row.WorkingCounterErrors =
+                    Convert.ToUInt32(item, CultureInfo.InvariantCulture));
+                break;
             case "SafetyDoorBase": SafetyDoorBase = ToBoolean(value); break;
             case "SafetyDoorWork": SafetyDoorWork = ToBoolean(value); break;
             case "PressingCylinderBase": PressingCylinderBase = ToBoolean(value); break;
@@ -539,7 +736,69 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             case "KistlerUnitState":
                 KistlerUnitState = ToInt32(value);
                 break;
+            case "PublicEventList":
+                ApplyPublicEvents(value);
+                break;
         }
+    }
+
+    private void ApplySlaveArray(object? value, Action<EtherCatSlaveRow, object?> apply)
+    {
+        if (value is not IEnumerable values)
+        {
+            return;
+        }
+
+        var items = values.Cast<object?>().ToArray();
+        foreach (var row in EtherCatSlaves)
+        {
+            var arrayIndex = row.Index - 1;
+            if (arrayIndex >= 0 && arrayIndex < items.Length)
+            {
+                apply(row, items[arrayIndex]);
+            }
+        }
+    }
+
+    private void ApplyPublicEvents(object? value)
+    {
+        if (!PublicEventDecoder.TryDecode(value, out var rows))
+        {
+            EventDecodeMessage =
+                "PublicEventList is subscribed, but this server payload needs one read-only browse/decode acceptance. / 已订阅报警列表，需一次只读联机确认结构解码。";
+            return;
+        }
+
+        ActiveEvents.Clear();
+        foreach (var row in rows)
+        {
+            ActiveEvents.Add(row);
+        }
+
+        EventDecodeMessage = rows.Count == 0
+            ? "No active event / 当前无活动报警"
+            : $"{rows.Count} active event(s) / {rows.Count} 条活动报警";
+        RaisePropertyChanged(nameof(HasActiveEvents));
+    }
+
+    private static ObservableCollection<DataValueRow> CreateDataRows(
+        HmiSettings settings,
+        string category)
+    {
+        return new ObservableCollection<DataValueRow>(settings.Nodes
+            .Where(node => string.Equals(node.Category, category, StringComparison.Ordinal))
+            .Select(node => new DataValueRow(node)));
+    }
+
+    private void OnFreshnessTick(object? sender, EventArgs eventArgs)
+    {
+        if (!IsConnected || !_hasReceivedData)
+        {
+            return;
+        }
+
+        IsStale = DateTimeOffset.Now - _lastUpdate >
+            TimeSpan.FromMilliseconds(_settings.StaleTimeoutMs);
     }
 
     private void RefreshDerivedProperties()
@@ -564,6 +823,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _badNodes.Clear();
         _hasReceivedData = false;
+        IsStale = false;
         ModeId = 0;
         ModeReleased = false;
         IsRunning = false;
@@ -572,7 +832,14 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         Token = 0;
         AutoInfoIndex = 0;
         IsInHomePosition = false;
+        StationIsEmpty = false;
         BusOk = false;
+        MasterOk = false;
+        SlavesOk = false;
+        TopologyNotOk = false;
+        ConfiguredSlaves = 0;
+        DetectedSlaves = 0;
+        LostFrames = 0;
         SafetyDoorBase = false;
         SafetyDoorWork = false;
         PressingCylinderBase = false;
@@ -588,6 +855,25 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _allSafetyCircuitsOk = false;
         ResistantUnitState = 0;
         KistlerUnitState = 0;
+        foreach (var row in EtherCatSlaves)
+        {
+            row.Reset();
+        }
+
+        foreach (var row in IoChannels)
+        {
+            row.Reset();
+        }
+
+        foreach (var row in _dataRows.Values)
+        {
+            row.Reset();
+        }
+
+        ActiveEvents.Clear();
+        EventDecodeMessage = "Waiting for PublicEventList / 等待报警列表";
+        ModeRequestMessage = "Mode control ready / 模式控制就绪";
+        RaisePropertyChanged(nameof(HasActiveEvents));
         RefreshDerivedProperties();
     }
 
@@ -595,6 +881,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         RaisePropertyChanged(nameof(IsDataUnavailable));
         RaisePropertyChanged(nameof(DataQualityText));
+        RaisePropertyChanged(nameof(CanRequestMode));
     }
 
     private void RefreshFixture() => RaisePropertyChanged(nameof(FixturePosition));
@@ -609,6 +896,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         RaisePropertyChanged(nameof(SafetyReady));
         RaisePropertyChanged(nameof(SafetyState));
+        RaisePropertyChanged(nameof(CanRequestMode));
     }
 
     private static bool ToBoolean(object? value) => value switch

@@ -8,15 +8,26 @@ public interface IStationDataSource : IAsyncDisposable
 
     bool IsConnected { get; }
 
+    bool SupportsModeRequests { get; }
+
     Task ConnectAsync(ConnectionOptions options, CancellationToken cancellationToken);
 
     Task DisconnectAsync(CancellationToken cancellationToken);
+
+    Task<ModeRequestResult> RequestModeAsync(
+        byte modeId,
+        CancellationToken cancellationToken);
 }
 
 public sealed record ConnectionOptions(
     string UserName,
     string Password,
     bool AutoAcceptUntrustedCertificate);
+
+public sealed record ModeRequestResult(
+    bool Accepted,
+    byte RequestedModeId,
+    string Message);
 
 public sealed class ConnectionStateChangedEventArgs(
     bool isConnected,

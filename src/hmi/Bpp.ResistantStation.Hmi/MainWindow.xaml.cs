@@ -60,6 +60,28 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OnModeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element ||
+            !byte.TryParse(element.Tag?.ToString(), out var modeId))
+        {
+            return;
+        }
+
+        await RunUiActionAsync(async () =>
+        {
+            var result = await _viewModel.RequestModeAsync(modeId, CancellationToken.None);
+            if (!result.Accepted)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Mode request / 模式切换",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        });
+    }
+
     protected override async void OnClosed(EventArgs e)
     {
         await _viewModel.DisposeAsync();

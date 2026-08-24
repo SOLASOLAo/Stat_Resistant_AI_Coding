@@ -42,7 +42,6 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#193249" />
             <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="IsHitTestVisible" Value="False" />
         </Style>
 
         <Style x:Key="NavButton" TargetType="Button">
@@ -113,7 +112,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#F2C94C" Padding="10,4" Margin="0,0,14,0" CornerRadius="2">
-                        <TextBlock Text="READ ONLY / 只读比较" Foreground="#3D350C" FontWeight="Bold" FontSize="11" />
+                        <TextBlock Text="LIMITED CONTROL / 受控操作" Foreground="#3D350C" FontWeight="Bold" FontSize="11" />
                     </Border>
                     <Ellipse Width="12" Height="12" Margin="0,0,8,0"
                              Fill="{Binding IsConnected, Converter={StaticResource BoolBrush}}" />
@@ -168,21 +167,29 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
                         <Button Style="{StaticResource ModeButton}" Width="150"
+                                Tag="1" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                                AutomationProperties.Name="Switch to Automatic mode"
                                 Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=1}"
                                 Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=1}">
                             <StackPanel><TextBlock Text="AUTOMATIC" HorizontalAlignment="Center" /><TextBlock Text="自动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
                         <Button Style="{StaticResource ModeButton}" Width="150"
+                                Tag="3" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                                AutomationProperties.Name="Switch to Manual mode"
                                 Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=3}"
                                 Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=3}">
                             <StackPanel><TextBlock Text="MANUAL" HorizontalAlignment="Center" /><TextBlock Text="手动" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
                         <Button Style="{StaticResource ModeButton}" Width="150"
+                                Tag="4" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                                AutomationProperties.Name="Switch to Homing mode"
                                 Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=4}"
                                 Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=4}">
                             <StackPanel><TextBlock Text="HOMING" HorizontalAlignment="Center" /><TextBlock Text="回原位" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
                         </Button>
                         <Button Style="{StaticResource ModeButton}" Width="150"
+                                Tag="5" Click="OnModeClick" IsEnabled="{Binding CanRequestMode}"
+                                AutomationProperties.Name="Switch to Change-over mode"
                                 Background="{Binding ModeId, Converter={StaticResource ModeBrush}, ConverterParameter=5}"
                                 Foreground="{Binding ModeId, Converter={StaticResource ModeForeground}, ConverterParameter=5}">
                             <StackPanel><TextBlock Text="CHANGE-OVER" HorizontalAlignment="Center" /><TextBlock Text="换型" FontSize="11" HorizontalAlignment="Center" /></StackPanel>
@@ -300,8 +307,8 @@
                         <Border Grid.Row="2" Style="{StaticResource Card}" BorderBrush="#E4B9B7">
                             <StackPanel>
                                 <TextBlock Text="ACTIVE EVENTS / 当前报警" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="PublicEventList adapter is scheduled for phase 1.1." Foreground="#6C7E8C" TextWrapping="Wrap" />
-                                <TextBlock Text="首版先验证实时状态；公共报警结构解码在下一小步接入。" Foreground="#6C7E8C" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding EventDecodeMessage}" Foreground="#6C7E8C" TextWrapping="Wrap" />
+                                <TextBlock Text="Open EVENTS for timestamp, class, source and additional information. / 打开 EVENTS 查看时间、等级、来源与附加信息。" Foreground="#6C7E8C" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -313,7 +320,7 @@
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                             <StackPanel>
                                 <TextBlock Text="MANUAL FUNCTIONS / 手动功能" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="Nexeed-style unit overview. Phase 1 is intentionally read-only; command buttons are not present. / 仿 Nexeed Unit 总览；首版只读，不提供动作按钮。"
+                                <TextBlock Text="Nexeed-style unit overview. Unit action buttons are intentionally absent; only the four operator mode requests are enabled. / 仿 Nexeed Unit 总览；不提供 Unit 动作按钮，仅开放四种操作员模式请求。"
                                            Foreground="#647887" Margin="0,0,0,14" />
                             </StackPanel>
                             <UniformGrid Grid.Row="1" Columns="2">
@@ -350,40 +357,91 @@
                     <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=2}">
                         <Grid Margin="0,0,14,14">
                             <Border Style="{StaticResource Card}" BorderBrush="#D88984">
-                                <StackPanel>
-                                    <TextBlock Text="EVENTS / 事件与报警" Style="{StaticResource SectionTitle}" />
-                                    <Border Background="#FFF3D8" BorderBrush="#E3BB55" BorderThickness="1" Padding="16" Margin="0,0,0,16">
-                                        <TextBlock Text="PublicEventList is the next read-only adapter. No event is being hidden; this screen is marked incomplete until its structured members are mapped. / 下一步接入 PublicEventList。当前明确标记为未完成，不会把空列表误表示为无报警。"
-                                                   TextWrapping="Wrap" Foreground="#5B4B1C" />
-                                    </Border>
-                                    <TextBlock Text="Planned Nexeed-compatible fields / 计划字段" FontWeight="SemiBold" FontSize="16" />
-                                    <TextBlock Text="Event number · class/severity · source · timestamp · bilingual text · additional information · acknowledgement state"
-                                               Margin="0,8,0,0" Foreground="#647887" TextWrapping="Wrap" />
-                                </StackPanel>
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="EVENTS / 事件与报警" Style="{StaticResource SectionTitle}" />
+                                        <TextBlock Text="{Binding EventDecodeMessage}" Foreground="#647887" Margin="0,0,0,12" />
+                                    </StackPanel>
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding ActiveEvents}" AutoGenerateColumns="False"
+                                              IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal" RowHeaderWidth="0" Background="White">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Time / 时间" Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss}" Width="150" />
+                                            <DataGridTextColumn Header="Class / 等级" Binding="{Binding ClassText}" Width="105" />
+                                            <DataGridTextColumn Header="No." Binding="{Binding Number}" Width="70" />
+                                            <DataGridTextColumn Header="Source / 来源" Binding="{Binding Source}" Width="150" />
+                                            <DataGridTextColumn Header="Event / 报警" Binding="{Binding Text}" Width="*" />
+                                            <DataGridTextColumn Header="Additional information / 附加信息" Binding="{Binding AdditionalInfo}" Width="1.5*" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
                             </Border>
                         </Grid>
                     </Grid>
 
                     <Grid Visibility="{Binding SelectedPageIndex, Converter={StaticResource PageVisibility}, ConverterParameter=3}">
                         <Grid Margin="0,0,14,14">
-                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource Card}">
-                                <StackPanel>
-                                    <TextBlock Text="I/O &amp; FIELDBUS / I/O 与总线" Style="{StaticResource SectionTitle}" />
-                                    <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="EtherCAT bus / EtherCAT 总线" /><Ellipse Grid.Column="1" Width="16" Height="16" Fill="{Binding BusOk, Converter={StaticResource BoolBrush}}" /></Grid>
-                                    <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="All safety circuits / 全部安全回路" /><Ellipse Grid.Column="1" Width="16" Height="16" Fill="{Binding SafetyReady, Converter={StaticResource BoolBrush}}" /></Grid>
-                                    <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Mode release / 模式释放" /><Ellipse Grid.Column="1" Width="16" Height="16" Fill="{Binding ModeReleased, Converter={StaticResource BoolBrush}}" /></Grid>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Home position / 原位" /><Ellipse Grid.Column="1" Width="16" Height="16" Fill="{Binding IsInHomePosition, Converter={StaticResource BoolBrush}}" /></Grid>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="1" Style="{StaticResource Card}">
-                                <StackPanel>
-                                    <TextBlock Text="FIXTURE &amp; PART / 夹具与产品" Style="{StaticResource SectionTitle}" />
-                                    <TextBlock Text="Fixture position / 夹具位置" Style="{StaticResource Muted}" />
-                                    <TextBlock Text="{Binding FixturePosition}" FontSize="24" FontWeight="SemiBold" Foreground="#173148" Margin="0,4,0,22" />
-                                    <TextBlock Text="Product sensors / 产品传感器" Style="{StaticResource Muted}" />
-                                    <TextBlock Text="{Binding ProductState}" FontSize="24" FontWeight="SemiBold" Foreground="#173148" Margin="0,4,0,0" />
-                                </StackPanel>
+                            <Border Style="{StaticResource Card}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="I/O &amp; ETHERCAT / I/O 与 EtherCAT" Style="{StaticResource SectionTitle}" />
+                                            <TextBlock Text="Full 9-slave topology and 38 published named DI/DO values; unpublished empty channels are not listed. / 完整 9 个从站拓扑及 38 个已发布命名 I/O；未发布的空通道不列出。" Foreground="#647887" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <TextBlock Text="Configured " Foreground="#647887" /><TextBlock Text="{Binding ConfiguredSlaves}" FontWeight="Bold" />
+                                            <TextBlock Text="  Detected " Foreground="#647887" /><TextBlock Text="{Binding DetectedSlaves}" FontWeight="Bold" />
+                                            <TextBlock Text="  Lost frames " Foreground="#647887" /><TextBlock Text="{Binding LostFrames}" FontWeight="Bold" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TabControl Grid.Row="1" Margin="0,14,0,0">
+                                        <TabItem Header="EtherCAT topology / 拓扑">
+                                            <DataGrid ItemsSource="{Binding EtherCatSlaves}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="45" />
+                                                    <DataGridTextColumn Header="Designator / BMK" Binding="{Binding Designator}" Width="170" />
+                                                    <DataGridTextColumn Header="Device" Binding="{Binding DeviceType}" Width="150" />
+                                                    <DataGridTextColumn Header="Description / 描述" Binding="{Binding DisplayName}" Width="*" />
+                                                    <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="85" />
+                                                    <DataGridTextColumn Header="State" Binding="{Binding StateText}" Width="90" />
+                                                    <DataGridTextColumn Header="Link raw" Binding="{Binding LinkText}" Width="85" />
+                                                    <DataGridTextColumn Header="Process data" Binding="{Binding ProcessDataText}" Width="105" />
+                                                    <DataGridTextColumn Header="WC errors" Binding="{Binding WorkingCounterErrors}" Width="85" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </TabItem>
+                                        <TabItem Header="Digital I/O / 数字量">
+                                            <DataGrid ItemsSource="{Binding IoChannels}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Slave" Binding="{Binding SlaveIndex}" Width="60" />
+                                                    <DataGridTextColumn Header="Ch." Binding="{Binding Channel}" Width="50" />
+                                                    <DataGridTextColumn Header="I/O" Binding="{Binding Direction}" Width="55" />
+                                                    <DataGridTextColumn Header="BMK" Binding="{Binding Bmk}" Width="155" />
+                                                    <DataGridTextColumn Header="Description / 描述" Binding="{Binding Description}" Width="*" />
+                                                    <DataGridTextColumn Header="Value / 值" Binding="{Binding ValueText}" Width="95" />
+                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="105" />
+                                                    <DataGridTextColumn Header="Wiring" Binding="{Binding WiringStatus}" Width="110" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </TabItem>
+                                        <TabItem Header="Kistler semantic data / Kistler 语义数据">
+                                            <DataGrid ItemsSource="{Binding DeviceDataItems}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Signal / 信号" Binding="{Binding Label}" Width="*" />
+                                                    <DataGridTextColumn Header="Value / 值" Binding="{Binding Value}" Width="200" />
+                                                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70" />
+                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="110" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </TabItem>
+                                    </TabControl>
+                                </Grid>
                             </Border>
                         </Grid>
                     </Grid>
@@ -392,21 +450,41 @@
                         <Grid Margin="0,0,14,14">
                             <Border Style="{StaticResource Card}">
                                 <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="220" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="DATA / 数据" Style="{StaticResource SectionTitle}" />
-                                        <TextBlock Text="Read-only live contract" Foreground="#647887" />
-                                        <TextBlock Text="只读实时数据契约" Foreground="#647887" />
+                                        <TextBlock Text="Current StationData and TypeData values; DataSetManager staging values are intentionally excluded. / 当前 StationData 与 TypeData；不显示 DataSetManager 暂存区。" Foreground="#647887" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1">
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Endpoint" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding EndpointUrl}" FontWeight="SemiBold" /></Grid>
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Data quality / 数据质量" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding DataQualityText}" FontWeight="SemiBold" /></Grid>
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Mode ID" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding ModeId}" FontWeight="SemiBold" /></Grid>
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Execution state" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding ExecState}" FontWeight="SemiBold" /></Grid>
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="HMI token (monitor only)" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding Token}" FontWeight="SemiBold" /></Grid>
-                                        <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Auto info index" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding AutoInfoIndex}" FontWeight="SemiBold" /></Grid>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition /></Grid.ColumnDefinitions><TextBlock Text="Last update" Foreground="#647887" /><TextBlock Grid.Column="1" Text="{Binding LastUpdateText}" FontWeight="SemiBold" /></Grid>
-                                    </StackPanel>
+                                    <TabControl Grid.Row="1" Margin="0,14,0,0">
+                                        <TabItem Header="StationData / 工位数据">
+                                            <DataGrid ItemsSource="{Binding StationDataItems}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                      CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Group / 分组" Binding="{Binding Group}" Width="140" />
+                                                    <DataGridTextColumn Header="Parameter / 参数" Binding="{Binding Label}" Width="*" />
+                                                    <DataGridTextColumn Header="Value / 当前值" Binding="{Binding Value}" Width="260" />
+                                                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70" />
+                                                    <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="110" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </TabItem>
+                                        <TabItem Header="TypeData / 产品型号数据">
+                                            <Grid>
+                                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                                <TextBlock Text="A740–A743 are retained CpStudio template fields and are marked legacy; they are shown for transparency. / A740–A743 是 CpStudio 保留模板字段，标记为 legacy。" Foreground="#8A681B" Margin="8" />
+                                                <DataGrid Grid.Row="1" ItemsSource="{Binding TypeDataItems}" AutoGenerateColumns="False" IsReadOnly="True"
+                                                          CanUserAddRows="False" RowHeaderWidth="0" GridLinesVisibility="Horizontal">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="Group / 分组" Binding="{Binding Group}" Width="150" />
+                                                        <DataGridTextColumn Header="Parameter / 参数" Binding="{Binding Label}" Width="*" />
+                                                        <DataGridTextColumn Header="Value / 当前值" Binding="{Binding Value}" Width="300" />
+                                                        <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70" />
+                                                        <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="110" />
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                            </Grid>
+                                        </TabItem>
+                                    </TabControl>
                                 </Grid>
                             </Border>
                         </Grid>
@@ -441,7 +519,7 @@
             <Grid Margin="16,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <TextBlock Text="Independent Windows HMI · same PLC symbols · no PLC changes" Foreground="#536A7A" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="One active HMI at a time / 同一时间只运行一个控制端" Foreground="#536A7A" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding ModeRequestMessage}" Foreground="#536A7A" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="{Binding LastUpdateText, StringFormat=Last update  {0}}" Foreground="#536A7A" VerticalAlignment="Center" />
             </Grid>
         </Border>

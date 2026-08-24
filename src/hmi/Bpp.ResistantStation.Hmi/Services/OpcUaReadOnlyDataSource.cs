@@ -11,14 +11,20 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 {
     private const string ApplicationName = "BPP Resistance Station HMI";
     private readonly ITelemetryContext _telemetry = DefaultTelemetry.Create(_ => { });
+    private readonly IReadOnlyDictionary<string, HmiNodeDefinition> _nodesByKey =
+        settings.Nodes.ToDictionary(node => node.Key, StringComparer.Ordinal);
     private ISession? _session;
     private Subscription? _subscription;
+    private SessionReconnectHandler? _reconnectHandler;
+    private ushort _namespaceIndex;
 
     public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
 
     public event EventHandler<NodeValueChangedEventArgs>? NodeValueChanged;
 
     public bool IsConnected => _session?.Connected == true;
+
+    public bool SupportsModeRequests => settings.ModeControl.Enabled;
 
     public async Task ConnectAsync(
         ConnectionOptions options,
@@ -65,6 +71,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             sessionTimeout: 60_000,
             identity,
             preferredLocales: ["zh-CN", "en-US"]);
+        _session.KeepAliveInterval = Math.Max(500, settings.StaleTimeoutMs / 2);
         _session.KeepAlive += OnKeepAlive;
 
         var namespaceIndex = _session.NamespaceUris.GetIndex(settings.NamespaceUri);
@@ -74,6 +81,8 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
                 StatusCodes.BadNodeIdUnknown,
                 $"Data Layer namespace was not advertised: {settings.NamespaceUri}");
         }
+
+        _namespaceIndex = (ushort)namespaceIndex;
 
         _subscription = new Subscription(_session.DefaultSubscription)
         {
@@ -89,7 +98,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             var item = new MonitoredItem(_subscription.DefaultItem)
             {
                 DisplayName = definition.Key,
-                StartNodeId = new NodeId(definition.Identifier, (ushort)namespaceIndex),
+                StartNodeId = new NodeId(definition.Identifier, _namespaceIndex),
                 AttributeId = Attributes.Value,
                 SamplingInterval = settings.PublishingIntervalMs,
                 QueueSize = 1,
@@ -108,6 +117,85 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             DateTimeOffset.Now));
     }
 
+    public async Task<ModeRequestResult> RequestModeAsync(
+        byte modeId,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.ModeControl.Enabled ||
+            !settings.ModeControl.AllowedModeIds.Contains(modeId))
+        {
+            return new ModeRequestResult(false, modeId, "Mode ID is not in the allowlist.");
+        }
+
+        if (!IsConnected)
+        {
+            return new ModeRequestResult(false, modeId, "OPC UA is not connected.");
+        }
+
+        var safetyKeys = new[]
+        {
+            "EmergencyCircuitOk",
+            "MaintenanceCircuitOk"
+        };
+        var prerequisiteKeys = modeId == 5
+            ? safetyKeys.Append("StationIsEmpty").ToArray()
+            : safetyKeys;
+        var prerequisiteValues = await ReadCurrentValuesAsync(
+            prerequisiteKeys,
+            cancellationToken);
+        var missingSafety = safetyKeys
+            .Where(key => !IsGoodTrue(prerequisiteValues[key]))
+            .ToArray();
+        if (missingSafety.Length > 0)
+        {
+            return new ModeRequestResult(
+                false,
+                modeId,
+                $"Mode request safety feedback is not Good/TRUE: {string.Join(", ", missingSafety)}");
+        }
+
+        if (modeId == 5 && !IsGoodTrue(prerequisiteValues["StationIsEmpty"]))
+        {
+            return new ModeRequestResult(
+                false,
+                modeId,
+                "Change-over requires Station.Unit.IsEmpty = TRUE.");
+        }
+
+        await WriteAllowlistedByteAsync(
+            settings.ModeControl.TokenRequestIdentifier,
+            settings.ModeControl.PanelToken,
+            cancellationToken);
+
+        if (!await WaitForValueAsync(
+                "Token",
+                value => value is byte token &&
+                    token == settings.ModeControl.PanelToken,
+                cancellationToken))
+        {
+            return new ModeRequestResult(
+                false,
+                modeId,
+                "The HMI token was not granted before the timeout.");
+        }
+
+        await WriteAllowlistedByteAsync(
+            settings.ModeControl.ModeIdRequestIdentifier,
+            modeId,
+            cancellationToken);
+
+        var accepted = await WaitForValueAsync(
+            "ModeId",
+            value => Convert.ToByte(value) == modeId,
+            cancellationToken);
+        return accepted
+            ? new ModeRequestResult(true, modeId, "PLC confirmed the requested mode.")
+            : new ModeRequestResult(
+                false,
+                modeId,
+                "PLC did not confirm the requested mode before the timeout.");
+    }
+
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
         var session = _session;
@@ -115,6 +203,10 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
         {
             return;
         }
+
+        _reconnectHandler?.CancelReconnect();
+        _reconnectHandler?.Dispose();
+        _reconnectHandler = null;
 
         if (_subscription is not null)
         {
@@ -214,12 +306,44 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
     {
         if (ServiceResult.IsGood(eventArgs.Status))
         {
+            ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
+                true,
+                "OPC UA session healthy",
+                DateTimeOffset.Now));
             return;
         }
 
         ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
             false,
             $"OPC UA keep-alive: {eventArgs.Status}",
+            DateTimeOffset.Now));
+
+        if (_reconnectHandler is null)
+        {
+            _reconnectHandler = new SessionReconnectHandler(
+                _telemetry,
+                reconnectAbort: true,
+                settings.ReconnectDelayMs);
+            _reconnectHandler.BeginReconnect(
+                session,
+                settings.ReconnectDelayMs,
+                OnReconnectComplete);
+        }
+    }
+
+    private void OnReconnectComplete(object? sender, EventArgs eventArgs)
+    {
+        if (!ReferenceEquals(sender, _reconnectHandler) || _reconnectHandler?.Session is null)
+        {
+            return;
+        }
+
+        _session = _reconnectHandler.Session;
+        _reconnectHandler.Dispose();
+        _reconnectHandler = null;
+        ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
+            true,
+            "OPC UA session reconnected",
             DateTimeOffset.Now));
     }
 
@@ -232,12 +356,126 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
         foreach (var value in item.DequeueValues())
         {
+            var isGood = StatusCode.IsGood(value.StatusCode);
             NodeValueChanged?.Invoke(this, new NodeValueChangedEventArgs(
                 definition.Key,
                 value.Value,
-                StatusCode.IsGood(value.StatusCode),
+                isGood,
                 value.StatusCode.ToString(),
                 new DateTimeOffset(value.SourceTimestamp.ToLocalTime())));
         }
     }
+
+    private async Task WriteAllowlistedByteAsync(
+        string identifier,
+        byte value,
+        CancellationToken cancellationToken)
+    {
+        var allowed = identifier == settings.ModeControl.TokenRequestIdentifier ||
+            identifier == settings.ModeControl.ModeIdRequestIdentifier;
+        if (!allowed)
+        {
+            throw new InvalidOperationException("Rejected OPC UA write outside the mode allowlist.");
+        }
+
+        var session = _session ?? throw new InvalidOperationException("OPC UA is not connected.");
+        var response = await session.WriteAsync(
+            null,
+            new WriteValueCollection
+            {
+                new()
+                {
+                    NodeId = new NodeId(identifier, _namespaceIndex),
+                    AttributeId = Attributes.Value,
+                    Value = new DataValue { Value = value }
+                }
+            },
+            cancellationToken);
+        if (response.Results.Count != 1 || StatusCode.IsBad(response.Results[0]))
+        {
+            var status = response.Results.Count == 0
+                ? "no status returned"
+                : response.Results[0].ToString();
+            throw new ServiceResultException($"Mode request write failed: {status}");
+        }
+    }
+
+    private async Task<bool> WaitForValueAsync(
+        string key,
+        Func<object?, bool> predicate,
+        CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(settings.ModeControl.RequestTimeoutMs);
+        try
+        {
+            while (!timeout.IsCancellationRequested)
+            {
+                var values = await ReadCurrentValuesAsync([key], timeout.Token);
+                var current = values[key];
+                if (StatusCode.IsGood(current.StatusCode) &&
+                    predicate(current.Value))
+                {
+                    return true;
+                }
+
+                await Task.Delay(100, timeout.Token);
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private async Task<IReadOnlyDictionary<string, DataValue>> ReadCurrentValuesAsync(
+        IReadOnlyCollection<string> keys,
+        CancellationToken cancellationToken)
+    {
+        var session = _session ?? throw new InvalidOperationException("OPC UA is not connected.");
+        var definitions = keys.Select(key =>
+        {
+            if (!_nodesByKey.TryGetValue(key, out var definition))
+            {
+                throw new InvalidOperationException($"Unknown OPC UA catalog key: {key}");
+            }
+
+            return definition;
+        }).ToArray();
+
+        var nodesToRead = new ReadValueIdCollection();
+        foreach (var definition in definitions)
+        {
+            nodesToRead.Add(new ReadValueId
+            {
+                NodeId = new NodeId(definition.Identifier, _namespaceIndex),
+                AttributeId = Attributes.Value
+            });
+        }
+
+        var response = await session.ReadAsync(
+            null,
+            maxAge: 0,
+            TimestampsToReturn.Neither,
+            nodesToRead,
+            cancellationToken);
+        if (response.Results.Count != definitions.Length)
+        {
+            throw new ServiceResultException("OPC UA prerequisite read returned an unexpected result count.");
+        }
+
+        var values = new Dictionary<string, DataValue>(definitions.Length, StringComparer.Ordinal);
+        for (var index = 0; index < definitions.Length; index++)
+        {
+            values[definitions[index].Key] = response.Results[index];
+        }
+
+        return values;
+    }
+
+    private static bool IsGoodTrue(DataValue value) =>
+        StatusCode.IsGood(value.StatusCode) &&
+        value.Value is true;
 }

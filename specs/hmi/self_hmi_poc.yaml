@@ -1,6 +1,6 @@
 schema_version: 1
 
-status: phase_1_read_only_implementation
+status: phase_1_1_implemented_mode_control_pending_live_acceptance
 
 purpose: >-
   Run an independent Windows HMI against the existing Station010 OPC UA
@@ -41,9 +41,10 @@ phase_1:
   screens:
     - overview
     - manual_functions_read_only
-    - events_contract_placeholder
-    - io_and_fieldbus
-    - live_data
+    - public_event_list
+    - io_and_full_ethercat_topology
+    - station_data
+    - type_data
   data:
     - station mode and run state
     - AutoInfoLine bilingual operator guidance
@@ -52,32 +53,55 @@ phase_1:
     - fixture and product sensors
     - four safety relay feedbacks
     - Burster and Kistler UnitState
+    - nine EtherCAT slave states and 38 published named digital I/O values
+    - Kistler semantic result, force and displacement values
+    - StationData and TypeData current values, excluding staging structures
     - explicit disconnected, waiting and bad-quality masking
   offline_demo: required
 
 phase_1_1:
-  - decode PublicEventList into active-event rows
-  - add reconnect backoff and stale-data timeout based on session keepalive
-  - generate the node catalog from reviewed Symbol/HMI exports
+  implemented:
+    - subscribe PublicEventList and decode supported ExtensionObject representations
+    - reconnect after OPC UA keepalive failure
+    - mask live data after 3000 ms without a healthy OPC UA session keepalive
+    - reviewed node and EtherCAT topology catalog with Symbol XML validation
+  live_acceptance_remaining:
+    - verify ctrlX runtime representation of PublicEventList once read-only
+    - verify active/cleared event filtering with one controlled event cycle
+    - verify all nine EtherCAT array indexes against online values
 
 phase_2_control:
-  status: blocked_until_phase_1_acceptance
+  status: minimal_mode_switch_implemented_pending_live_acceptance
   single_active_hmi: required
-  explicit_write_allowlist: required
-  required_protocols:
-    - token acquisition and release
-    - heartbeat
-    - momentary command pulse
-    - write/readback acknowledgement
+  panel_token: 1
+  explicit_write_allowlist:
+    - Station.Extension.TokenRequest
+    - Station.Extension.ModeIdRequest
+  allowed_mode_ids:
+    automatic: 1
+    manual: 3
+    home: 4
+    changeover: 5
+  behavior:
+    - fresh-read and require emergency-stop and maintenance-door feedback before a request
+    - fresh-read and require Station.Unit.IsEmpty for Changeover
+    - leave safety-door and combined-circuit mode release authority in the PLC
+    - request panel token 1 and require exact Token readback 1
+    - request mode and wait for ModeId readback
+    - never treat OPC UA write success as PLC mode acceptance
   prohibit:
     - direct physical output writes
     - internal Chain state writes
+    - Heartbeat writes until remote manual functions are implemented
+    - TokenChangeResponse until multi-panel behavior is accepted
     - persistence of credentials
 
 acceptance:
   - solution restores and builds with the locked dependency graph
   - offline demo updates all first-screen states
   - all configured NodeIds resolve against the current Symbol export
-  - no Write, FORCE, download, start or stop API exists in phase 1
+  - subscriptions remain read-only and the only write implementation is the semantic mode adapter
+  - mode adapter can target only TokenRequest and ModeIdRequest
+  - no FORCE, download, PLC start/stop or physical I/O write API exists
   - no credentials or certificates enter Git
   - Station010 and Std remain byte-for-byte untouched by this work

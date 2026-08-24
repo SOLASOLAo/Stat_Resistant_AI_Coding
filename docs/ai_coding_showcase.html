@@ -1351,6 +1351,10 @@
           </div>
         </article>
       </div>
+      <div class="hero-note" style="margin-top:18px">
+        <strong>并行自研 Windows HMI（不改 PLC）</strong>
+        <span>现已建立 .NET 8 WPF + ctrlX OPC UA 原型：订阅 94 个经 Symbol XML 校验的只读点，显示 9 个 EtherCAT 从站、38 个命名 DI/DO、PublicEventList、StationData、TypeData 及 Kistler 力/位移语义数据。Automatic / Manual / Homing / Change-over 是操作员模式按钮；唯一写白名单为 TokenRequest 与 ModeIdRequest，并等待 PLC Token/ModeId 回读。仍需一次只读真机验收复杂结构和数组，再单独批准模式切换测试。</span>
+      </div>
     </section>
 
     <section class="chapter" id="workflow" data-title="开发步骤">
@@ -1653,6 +1657,7 @@
         <article class="proof-card"><b>Run 操作提示</b><span class="proof-value">4–16</span><p>AutoInfoLineEnum 新项、中英文 HMI 资源与 SqC 14-step 图已通过 PLE 事务写入和保存后读回。</p></article>
         <article class="proof-card"><b>Kistler EtherCAT</b><span class="proof-value">400/400</span><p>200 byte 输入与 200 byte 输出均已绑定并读回零差异。</p></article>
         <article class="proof-card"><b>UserDefined HMI</b><span class="proof-value">1 → 5</span><p>OverView 只保留 1 个 Host，5 个业务控件迁入 UserDefined，并通过官方加载/保存验证。</p></article>
+        <article class="proof-card"><b>并行自研 HMI</b><span class="proof-value">94 / 2</span><p>94 个只读订阅点；仅 2 个 OpCon 模式请求输入进入写白名单。Release Build 与离线 UI smoke 均为 0 error。</p></article>
       </div>
 
       <div class="roadmap">

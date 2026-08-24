@@ -494,3 +494,14 @@
 - 数据断开、等待和 Bad quality 会遮罩实时区并清除旧值；Burster/Kistler 按真实 `OpconUnitState` 解码（Operational/Standby 绿、过渡黄、Disabled/Unknown 红、无数据灰）。连接账号移入独立对话框，主模式条不再因 1440 宽度挤压。
 - `IStationDataSource` 无 Write API；静态门禁扫描全部 HMI C#，拒绝 OPC UA `Write/WriteAsync/Call/CallAsync`、FORCE、下载和 runtime 控制调用。Windows PowerShell 5.1 一键测试完成 **24 nodes / no write surface / Release 0 errors, 0 warnings**；`--demo` 进程启动并响应正常。未连接实体 PLC，也未执行下载、启停、变量读写或 FORCE。
 - 下一步为 Phase 1.1：解析 `PublicEventList`、基于 keepalive 的 stale timeout/自动重连、生成式节点目录；随后由用户在关闭 Nexeed HMI 后授权一次实体 ctrlX 只读连接验收。只有该阶段接受后才讨论 Token/Heartbeat/命令脉冲/回读的精确写白名单。
+
+## 独立 Windows HMI Phase 1.1 + 最小模式控制（2026-08-25）
+
+- 只读订阅从 24 点扩展到 **94 点**，全部经当前 Application Symbol XML 校验：官方 20 行 `PublicEventList`、9 个 EtherCAT Slave 诊断数组、38 个已命名 DI/DO、Kistler Unit 的 Ready/程序号/报警/力/位移、13 项 StationData、4 个 REAL 数组 + 4 个 TypeData 标量。`StationDataNew/TypeDataNew` 暂存区不显示。
+- I/O 页显示完整静态拓扑：EK1100(index 1)、4×EL1018(index 2–5)、3×EL2008(index 6–8)、Kistler maXYmos BL 5867C(index 9)，并把 `SlaveDeviceState` 解码为 INIT/PREOP/BOOTSTRAP/SAFEOP/OP；WC 状态 FALSE 表示过程数据有效。页面列出 38 个已发布命名 DI/DO，未发布的空通道不列出；`_000B085A_LOW/HIGH` 标记为 `legacy/unwired`。
+- Kistler 原始 200 B 输入 + 200 B 输出虽已映射，但当前未发布到 Application OPC UA；自研 HMI 只显示已发布的语义结果，未伪造 raw PDO NodeId。Events 已订阅根结构并支持常见 ExtensionObject/字典/反射对象解码，离线演示已验证活动/已清除过滤；实际 ctrlX payload 与 Event 编号到 Nexeed 中英文消息目录的映射仍需一次只读验收，当前 `Source · Event N` 仅为明确占位文本。
+- OPC UA keepalive 失败会进入 `SessionReconnectHandler`；连续 3 s 没有健康 session keepalive 才整页显示 stale，静止设备不会因没有 DataChange 而误超时；任一订阅节点 Bad quality 也会遮罩旧值。Data 页明确拆为 StationData / TypeData。
+- 四种模式现为可由鼠标/触摸点击的操作员按钮，顶栏标为受控操作。APQ/IPC panel token 固定为 1：先保持写 `TokenRequest=1` 并要求精确回读 `Token==1`，再保持写 `ModeIdRequest∈{1,3,4,5}` 并等待 `ModeId` 回读。写入前通过服务器 `ReadAsync` 重新读取急停与维修门反馈，Changeover 额外读取 `Station.Unit.IsEmpty`；安全门及总回路继续显示，但不在 HMI 重复添加为模式选择联锁，PLC `OnModeRelease` 仍为最终权限源。在完成真实只读协议验收前，不把 255 当成本客户端的授权 token。
+- 唯一写实现为私有语义 allowlist；不提供任意 NodeId Write。明确不写 Token/ModeId 输出、Heartbeat、TokenChangeResponse、Start/Stop/Step、物理 BinIo、Chain 状态，也没有 FORCE/download/PLC start-stop。Heartbeat 已证实是远程手动功能执行时 PLC 置 TRUE、HMI 写 FALSE 的 challenge/ack，不是周期翻转，因此当前不实现。
+- 验证：`Test-HmiReadOnlyScaffold.ps1` 通过 **94 read-only nodes + 2 allowlisted request inputs**；Release Build **0 errors / 0 warnings**；自动 UI smoke 已点击 Automatic 演示模式、验证字典形态 PublicEventList 的活动/已清除过滤，并访问 Events/I-O/Data，StationData 与 TypeData Tab 可达。全过程未连接实体 PLC，未修改 `../Station010` 或 `../Std`。
+- 下一步严格分两次：① 用户关闭 Nexeed HMI 后授权一次实体 ctrlX **只读**验收 PublicEventList、EtherCAT 数组、I/O 和 Kistler；② 只读通过后，再由用户单独批准四种模式请求测试。不要把两步合并，也不要测试多面板 token 转移。

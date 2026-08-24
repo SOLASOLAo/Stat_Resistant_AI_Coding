@@ -13,7 +13,7 @@ public partial class App : Application
         var configurationPath = Path.Combine(
             AppContext.BaseDirectory,
             "Configuration",
-            "station010.readonly.json");
+            "station010.hmi.json");
 
         try
         {

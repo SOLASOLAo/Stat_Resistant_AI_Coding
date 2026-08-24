@@ -17,7 +17,7 @@ paths:
   kistler_5867c_quick_start: ../Technical Docs/maXYmos BL type 5867C quick start guide .pdf
   export_request: data/requests
   self_hmi_project: src/hmi/Bpp.ResistantStation.Hmi/Bpp.ResistantStation.Hmi.csproj
-  self_hmi_catalog: src/hmi/Bpp.ResistantStation.Hmi/Configuration/station010.readonly.json
+  self_hmi_catalog: src/hmi/Bpp.ResistantStation.Hmi/Configuration/station010.hmi.json
 
 tools:
   plc_engineering_profile: ctrlX PLC 2.6.8

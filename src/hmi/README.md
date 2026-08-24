@@ -12,8 +12,18 @@ OPC UA symbols without changing the PLC project.
 - Namespace indexes are resolved from the ctrlX Data Layer namespace URI at
   runtime; no `ns=2` assumption is stored.
 - Offline demo source for UI development without a PLC or network.
-- Strictly read-only data-source contract. No write, FORCE, download or runtime
-  operation exists in this phase.
+- 94 reviewed read-only subscriptions, including the nine-slave EtherCAT
+  topology, 38 named DI/DO values, PublicEventList, StationData, TypeData and
+  Kistler semantic force/displacement data.
+- StationData and TypeData are separate tabs; `StationDataNew` and
+  `TypeDataNew` staging structures are not shown.
+- Automatic, Manual, Homing and Change-over are operator buttons. Their only
+  write path is a semantic allowlist for `TokenRequest` and `ModeIdRequest`,
+  with Token/ModeId readback and safety prechecks.
+- No generic write, physical I/O write, Heartbeat write, FORCE, download or
+  PLC start/stop operation exists.
+- OPC UA keepalive reconnect and a three-second session-health timeout mask;
+  unchanged process values do not become stale merely because no DataChange is sent.
 - Username/password stay in memory and are never written to configuration.
 
 ## Build
@@ -37,3 +47,17 @@ dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj 
 For a real connection, close the Nexeed HMI control client first, enter the
 ctrlX OPC UA user at runtime, and select **Connect PLC**. The commissioning-only
 certificate checkbox is intentionally not persisted.
+
+Repeatable local acceptance:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File ..\..\tests\hmi\Test-HmiReadOnlyScaffold.ps1
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File ..\..\tests\hmi\Test-HmiDemoUi.ps1
+```
+
+The first real-device session should remain read-only until PublicEventList
+and EtherCAT array decoding are observed. Mode switching is then a separate,
+explicitly approved operator acceptance step; it does not alter the PLC code.
