@@ -485,3 +485,12 @@
 - 已把 `FB_PressureFeedbackSimulation` 改为跟随 `Station.MainPressureControl.xValveOn`：使能时先建立安全 LOW，阀命令 ON/OFF 后 1 s 原子切换 HIGH/LOW。保留主压力 5 s 诊断、维修门放行和官方 ControlOn 下电接口，不屏蔽真实故障。
 - 四个通用 FB 已在 PLE Declaration 和 canonical 源中建立 `V1.0.0` 受控基线；版本表与完整关系图见 `src/plc/common/README.md`、`docs/main_pressure_control_sequence.md`。四个 FB 与 `StationUnit.OnCall` 均逐字读回通过。
 - fresh offline Build 为 **0 errors / 101 warnings**。本轮目标对象无编译错误；其中 93 条为当前工程 I/O/Symbol 生成表达式的 “code has no effect”，另有 8 条供应商/保留字警告，未在本轮扩大范围处理。未连接、下载、启停、读写或 FORCE 实体 PLC。
+
+## 独立 Windows HMI Phase 1（2026-08-25）
+
+- 在 `src/hmi/Bpp.ResistantStation.Hmi` 新建 .NET 8 WPF 原型，使用官方 `OPCFoundation.NetStandard.Opc.Ua.Client 1.5.378.156` 与提交的 lock file；新 HMI 独立于 `Station010/Hmi`，不修改 CpStudio 模型、PLC、IO 或 `Std`。真实运行时由用户关闭 Nexeed HMI 后再打开本客户端，本阶段不处理双控制端并发。
+- 运行时从 `http://www.boschrexroth.com/OpcUa/Datalayer` 解析 namespace index，不持久化 `ns=2`；24 个只读 NodeId 均对照当前 `Stat010_V5.11_CtrlX_PLC.Device.Application.xml` 验证存在。账号/密码只在内存连接对话框使用，客户端 PKI 位于 `%LOCALAPPDATA%` 且不入 Git。
+- 画面采用 Nexeed 类似的信息层级而非复制专有组件：顶栏、模式条、左侧 Overview/Manual/Events/I/O/Data 导航、工位/安全/设备卡片和黄色双语 AutoInfoLine。Events 页明确标为待接 `PublicEventList`，不会把未实现误表示为无报警；Bosch/Nexeed 商标、图标和 VisiWin 控件均未复制。
+- 数据断开、等待和 Bad quality 会遮罩实时区并清除旧值；Burster/Kistler 按真实 `OpconUnitState` 解码（Operational/Standby 绿、过渡黄、Disabled/Unknown 红、无数据灰）。连接账号移入独立对话框，主模式条不再因 1440 宽度挤压。
+- `IStationDataSource` 无 Write API；静态门禁扫描全部 HMI C#，拒绝 OPC UA `Write/WriteAsync/Call/CallAsync`、FORCE、下载和 runtime 控制调用。Windows PowerShell 5.1 一键测试完成 **24 nodes / no write surface / Release 0 errors, 0 warnings**；`--demo` 进程启动并响应正常。未连接实体 PLC，也未执行下载、启停、变量读写或 FORCE。
+- 下一步为 Phase 1.1：解析 `PublicEventList`、基于 keepalive 的 stale timeout/自动重连、生成式节点目录；随后由用户在关闭 Nexeed HMI 后授权一次实体 ctrlX 只读连接验收。只有该阶段接受后才讨论 Token/Heartbeat/命令脉冲/回读的精确写白名单。

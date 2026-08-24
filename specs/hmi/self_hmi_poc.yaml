@@ -1,0 +1,83 @@
+schema_version: 1
+
+status: phase_1_read_only_implementation
+
+purpose: >-
+  Run an independent Windows HMI against the existing Station010 OPC UA
+  interface without changing the CpStudio model or PLC program, then compare
+  it with the Nexeed HMI. Only one HMI is used as the control client at a time.
+
+ownership:
+  cpstudio_hmi: ../Station010/Hmi
+  self_hmi: src/hmi/Bpp.ResistantStation.Hmi
+  plc_changes_allowed_for_phase_1: false
+
+technology:
+  runtime: .NET 8 WPF
+  protocol: OPC UA binary over opc.tcp
+  endpoint_source: ../Station010/PublicConfig/PublicInterface_Stat010_V5.11_CtrlX.xml
+  symbol_source: ../Station010/Plc/Stat010_V5.11_CtrlX_PLC.Device.Application.xml
+  namespace_uri: http://www.boschrexroth.com/OpcUa/Datalayer
+  namespace_index_policy: resolve_at_runtime
+
+visual_contract:
+  mimic:
+    - top station and connection header
+    - operation-mode strip
+    - left navigation rail
+    - central station overview
+    - persistent operator-guidance banner
+    - device and safety diagnostics
+  do_not_copy:
+    - Bosch or Nexeed trademarks
+    - proprietary icons
+    - closed-source VisiWin controls
+
+phase_1:
+  access: read_only
+  default_write: deny
+  source_contract_has_write_method: false
+  credentials: runtime_memory_only
+  screens:
+    - overview
+    - manual_functions_read_only
+    - events_contract_placeholder
+    - io_and_fieldbus
+    - live_data
+  data:
+    - station mode and run state
+    - AutoInfoLine bilingual operator guidance
+    - EtherCAT health
+    - home and cylinder positions
+    - fixture and product sensors
+    - four safety relay feedbacks
+    - Burster and Kistler UnitState
+    - explicit disconnected, waiting and bad-quality masking
+  offline_demo: required
+
+phase_1_1:
+  - decode PublicEventList into active-event rows
+  - add reconnect backoff and stale-data timeout based on session keepalive
+  - generate the node catalog from reviewed Symbol/HMI exports
+
+phase_2_control:
+  status: blocked_until_phase_1_acceptance
+  single_active_hmi: required
+  explicit_write_allowlist: required
+  required_protocols:
+    - token acquisition and release
+    - heartbeat
+    - momentary command pulse
+    - write/readback acknowledgement
+  prohibit:
+    - direct physical output writes
+    - internal Chain state writes
+    - persistence of credentials
+
+acceptance:
+  - solution restores and builds with the locked dependency graph
+  - offline demo updates all first-screen states
+  - all configured NodeIds resolve against the current Symbol export
+  - no Write, FORCE, download, start or stop API exists in phase 1
+  - no credentials or certificates enter Git
+  - Station010 and Std remain byte-for-byte untouched by this work

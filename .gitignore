@@ -27,6 +27,15 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# .NET HMI build/user state
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+src/hmi/**/appsettings.local.json
+src/hmi/**/pki/
+
 # 大文件和原始资料
 *.zip
 *.pdf

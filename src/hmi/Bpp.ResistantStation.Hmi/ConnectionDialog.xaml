@@ -1,0 +1,53 @@
+<Window x:Class="Bpp.ResistantStation.Hmi.ConnectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OPC UA connection / OPC UA 连接"
+        Width="520"
+        Height="360"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#EDF1F4"
+        FontFamily="Segoe UI">
+    <Border Margin="18" Padding="22" Background="White" BorderBrush="#CFD9E1" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="CONNECT TO ctrlX OPC UA / 连接 ctrlX OPC UA"
+                       FontSize="18" FontWeight="SemiBold" Foreground="#173148" />
+            <TextBlock Grid.Row="1" Text="{Binding EndpointUrl}" Margin="0,8,0,16"
+                       Foreground="#627989" />
+
+            <Grid Grid.Row="2" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="125" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBlock Text="User / 用户" VerticalAlignment="Center" />
+                <TextBox x:Name="UserNameInput" Grid.Column="1" Height="34" Padding="8,5" />
+            </Grid>
+
+            <Grid Grid.Row="3" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="125" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBlock Text="Password / 密码" VerticalAlignment="Center" />
+                <PasswordBox x:Name="PasswordInput" Grid.Column="1" Height="34" Padding="8,5" />
+            </Grid>
+
+            <StackPanel Grid.Row="4">
+                <CheckBox x:Name="AcceptCertificateInput"
+                          Content="Commissioning only: trust an untrusted server certificate / 仅调试：信任未受信任证书" />
+                <TextBlock Text="Credentials and this checkbox are kept in memory only and are not saved. / 凭据与此选项不会保存。"
+                           Margin="22,8,0,0" Foreground="#6A7E8D" FontSize="11" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel / 取消" Width="110" Height="36" Margin="0,0,8,0" Click="OnCancelClick" />
+                <Button Content="Connect / 连接" Width="120" Height="36" Background="#006EA8" Foreground="White"
+                        BorderThickness="0" FontWeight="SemiBold" IsDefault="True" Click="OnConnectClick" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -4,6 +4,7 @@
 - `cpstudio/`: isolated post-export queue and offline-audit self-tests.
 - `compile/`: offline PLC compile expectations and warning baselines.
 - `simulation/`: bounded PLC simulation scenarios; no physical device access.
+- `hmi/`: independent HMI node-contract, read-only-surface and Release-build checks.
 
 Run the framework smoke test from the repository root:
 
@@ -13,4 +14,5 @@ Run the framework smoke test from the repository root:
 .\tests\static\Test-SfcRestWriterTransaction.ps1
 .\tests\static\Test-RunOperatorGuidance.ps1
 .\tests\cpstudio\Test-PostExportQueue.ps1
+.\tests\hmi\Test-HmiReadOnlyScaffold.ps1
 ```

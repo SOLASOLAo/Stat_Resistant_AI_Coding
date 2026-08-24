@@ -6,7 +6,7 @@
 - 电阻测量工艺逻辑(PLC,IEC 61131-3 ST)
 - 工位状态机 / 模式管理(对齐 OpCon 规范,参考 Station010)
 - 测量数据记录与追溯
-- HMI(OpCon Modulo,后期)
+- HMI：保留 OpCon Modulo，并行开发独立 Windows HMI 做 A/B 对比
 
 ## 快速上手
 
@@ -73,6 +73,19 @@ scripts\cpstudio\Run-OfflinePostExportCheck.cmd
 Build，检查器还会复核工程前后哈希。它不执行任何真机在线动作，也没有接入
 CpStudio hook。`DONE_OFFLINE` 只表示无需继续 Export，不代表 warning/质量验收通过。
 
+独立 Windows HMI 首版位于 `src/hmi/`。它不改 CpStudio/HMI 或 PLC，使用当前
+Symbol Configuration 已发布的 24 个 ctrlX OPC UA 节点；Overview、Manual、Events、
+I/O、Data 五页采用 Nexeed 类似的信息层级，但首版严格只读：
+
+```powershell
+cd src\hmi
+dotnet restore .\Bpp.ResistantStation.Hmi.sln --locked-mode
+dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj -- --demo
+```
+
+真实连接前关闭 Nexeed HMI；账号和密码只在连接对话框内存中使用。当前 Events 页明确为
+待接入，控制动作也尚未开放，详见 `docs/self_hmi_parallel_poc.md`。
+
 新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
 不要从历史型 `HANDOVER.md` 反推安装步骤。
 
@@ -104,6 +117,7 @@ Skill 已可版本化安装并校验：
 ├── specs/         Station/IO/Event/Unit/Chain 需求事实源
 ├── ai/            AI 对象归属、混合钩子和 SFC 图形属性
 ├── src/plc/       AI-owned 通用与项目专用 PLC 源码
+├── src/hmi/       独立 Windows HMI（与 Nexeed HMI 并行比较）
 ├── catalog/       已验证 Unit/AddOn/Peripheral 知识库
 ├── scripts/       CpStudio/PLC/IOE/Git 自动化
 ├── tests/         静态、编译与仿真测试
@@ -122,6 +136,7 @@ Skill 已可版本化安装并校验：
 - 原始资料:`../电阻测试台.pdf`、`../BPP_ctrlX.zip`(不入 git)
 - CpStudio/Git/MCP 协同流程:`docs/cpstudio_git_mcp_workflow.md`
 - UserDefined HMI 集成与脱敏规则:`docs/hmi_userdefined_integration.md`
+- 独立 Windows HMI A/B 原型:`docs/self_hmi_parallel_poc.md`
 - AI Coding 展示页（离线 HTML，含演示与打印模式）:`docs/ai_coding_showcase.html`
 - CpStudio 生成差异分析:`docs/cpstudio_generation_analysis.md`
 - Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`

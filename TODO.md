@@ -8,7 +8,9 @@
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
-- [ ] 🟢 HMI 界面(OpCon Modulo 或路线②自研)
+- [x] 🟢 自研 HMI Phase 1 只读原型：.NET 8 WPF + 官方 OPC UA Client，24 个当前 Symbol 节点，Nexeed 类似的 Overview/Manual/Events/I/O/Data 层级、黄色双语操作提示和离线 Demo；Release Build 0 errors / 0 warnings，源码无 Write/Call 面（2026-08-25）
+- [ ] 🟡 自研 HMI Phase 1.1：解析 `PublicEventList`、加入 keepalive 驱动的 stale timeout 与自动重连，并由用户在关闭 Nexeed HMI 后完成一次实体 ctrlX 只读验收
+- [ ] 🔴 自研 HMI Phase 2：用户验收只读版后，单独设计 Token/Heartbeat/脉冲/回读协议和精确写白名单；禁止任意 NodeId、物理输出及 Chain 内部状态写入
 - [x] 🟢 依据 `docs/hmi_userdefined_integration.md` 更新 AI Coding 展示 HTML：明确 AI-first / 最低人工边界，加入 PLC、CpStudio、EtherCAT/BMK、HMI、断网五条操作流程和 UserDefined 案例；修正 Post-export runner/checker 状态并保留官方工具限制（2026-08-23）
 - [ ] 🟢 测量数据记录(CSV/数据库)与追溯
 - [ ] 🟢 对接 OpCon DataSetAccess / EventRecorder 接口
