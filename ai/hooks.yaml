@@ -16,7 +16,8 @@ hooks:
     invariants:
       - Station not OPERATIONAL or bus not OK drives controlled outputs to safe state
       - maintenance-door release gates the main-pressure valve
-      - virtual pressure feedback uses ControlOn.OutImm.IsCtrlOn and a T#1S transition delay
+      - virtual pressure feedback follows MainPressureControl.xValveOn with a T#1S transition delay
+      - ControlOn.OutImm.IsCtrlOn is not used as a substitute for the final valve command
       - physical _000B085A_LOW and _000B085A_HIGH inputs are not consumed by application logic
       - maintenance relay feedback is required within T#1S after both doors close
       - maintenance-door event AdditionalInfo identifies the failed BMK

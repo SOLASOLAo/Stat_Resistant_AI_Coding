@@ -1,4 +1,5 @@
 schema_version: 1
+version: V1.0.0
 
 object:
   path: Application/Fbs/FB_PressureFeedbackSimulation
@@ -7,27 +8,28 @@ object:
   purpose: replace two intentionally unwired pressure switches without writing BinIo inputs
 
 control_source:
-  on_state: Station.ControlOn.OutImm.IsCtrlOn
-  off_state: NOT Station.ControlOn.OutImm.IsCtrlOn
+  on_state: Station.MainPressureControl.xValveOn
+  off_state: NOT Station.MainPressureControl.xValveOn
   forbidden_sources:
     - raw Control On button
+    - ControlOn.OutImm.IsCtrlOn as a substitute for the final valve command
     - ControlOn rising/falling edge pulses as sustained states
     - direct write to a physical BinIo input
 
 timing:
   switch_delay: T#1S
-  initialization: synchronize immediately to the sustained ControlOn state
-  control_on_transition:
+  initialization: provide LOW immediately so the valve can start from a safe state
+  valve_on_transition:
     before_delay: retain the previous stable state
     after_delay: { low: false, high: true }
-  control_off_transition:
+  valve_off_transition:
     before_delay: retain the previous stable state
     after_delay: { low: true, high: false }
 
 invariants:
   - LOW and HIGH are never true simultaneously
   - disabling monitoring resets both outputs and both timers
-  - enabling monitoring does not create a startup deadlock before virtual LOW exists
+  - enabling monitoring always provides virtual LOW before the first valve command
   - the existing FB_MainPressureControl remains responsible for valve output, 5 s monitoring and events
   - the existing maintenance-door release remains in the valve command path
 

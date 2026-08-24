@@ -4,6 +4,7 @@
 *)
 
 (* ===== DECLARATION ===== *)
+(* Version: V1.0.0 *)
 FUNCTION_BLOCK FB_OperatorButton
 VAR_INPUT
   /// TRUE while the SFC step is requesting an operator acknowledgement

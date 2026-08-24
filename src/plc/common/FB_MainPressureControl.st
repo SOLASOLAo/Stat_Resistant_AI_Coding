@@ -4,6 +4,7 @@
 *)
 
 (* ===== DECLARATION ===== *)
+(* Version: V1.0.0 *)
 FUNCTION_BLOCK FB_MainPressureControl
 VAR_INPUT
   /// Enable monitoring only after Station is OPERATIONAL and the I/O bus is OK

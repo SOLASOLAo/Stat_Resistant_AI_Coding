@@ -481,6 +481,7 @@
 - 当前阻塞是取得 Bosch/Nexeed 提供的兼容修正版或正式处置；不要继续反复 Read/Restart，不手改 AppArmor，不修改供应商签名 App。修复后先验证 Logbook 稳定和 61863 连续 60 s 可达，再执行 CpStudio Read from target。此次只读诊断没有修改工程或设备状态。
 ## 2026-08-24 · 主气压虚拟反馈
 
-- 新增 AI-owned `FB_PressureFeedbackSimulation`：以 `Station.ControlOn.OutImm.IsCtrlOn` 为持续状态，Control On/Off 变化后 1 s 分别切换为 HIGH/LOW，且两路永不同时为 TRUE。
-- `StationUnit.OnCall` 已停止消费未接线的 `_000B085A_LOW/HIGH`，改接虚拟反馈；原 `FB_MainPressureControl`、维修门放行、`_000K085A` 和 5 s 报警逻辑保持不变。
-- 精确读回通过；同时经官方 Symbol Configuration 接口清除实验残留 `Wp100.DummySymbolProbe`，最终离线 Build 为 **0 errors / 4 warnings**。未连接、下载、启停、读写或 FORCE 实体 PLC。
+- 首次真机观察发现旧虚拟反馈跟随 `ControlOn.OutImm.IsCtrlOn`，而压力诊断跟随最终 `xValveOn`。当维修门释放尚未成立时，虚拟 HIGH 会提前出现，令主阀失去 LOW-only 开阀条件；5 s 后锁存 `EVENT_PRESSURE_NOT_LOWER`，再经 `UserEnableControlOn` 自动下电。
+- 已把 `FB_PressureFeedbackSimulation` 改为跟随 `Station.MainPressureControl.xValveOn`：使能时先建立安全 LOW，阀命令 ON/OFF 后 1 s 原子切换 HIGH/LOW。保留主压力 5 s 诊断、维修门放行和官方 ControlOn 下电接口，不屏蔽真实故障。
+- 四个通用 FB 已在 PLE Declaration 和 canonical 源中建立 `V1.0.0` 受控基线；版本表与完整关系图见 `src/plc/common/README.md`、`docs/main_pressure_control_sequence.md`。四个 FB 与 `StationUnit.OnCall` 均逐字读回通过。
+- fresh offline Build 为 **0 errors / 101 warnings**。本轮目标对象无编译错误；其中 93 条为当前工程 I/O/Symbol 生成表达式的 “code has no effect”，另有 8 条供应商/保留字警告，未在本轮扩大范围处理。未连接、下载、启停、读写或 FORCE 实体 PLC。

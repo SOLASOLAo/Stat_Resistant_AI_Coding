@@ -12,3 +12,16 @@ apply/readback/compile cycle before they are considered integrated.
 feedbacks, the maintenance safety-relay feedback, monitoring times and event
 mapping. Its detail fault outputs let each project construct BMK-specific
 AdditionalInfo without embedding project designators in the reusable FB.
+
+## Controlled versions
+
+| Function block | Version | Notes |
+|---|---:|---|
+| `FB_OperatorButton` | V1.0.0 | Initial controlled baseline |
+| `FB_MainPressureControl` | V1.0.0 | Initial controlled baseline |
+| `FB_MaintenanceDoorControl` | V1.0.0 | Initial controlled baseline |
+| `FB_PressureFeedbackSimulation` | V1.0.0 | Virtual feedback follows the final valve command |
+
+Version changes follow semantic versioning: bug fixes increment PATCH,
+backward-compatible features increment MINOR, and incompatible interfaces or
+behavior increment MAJOR.

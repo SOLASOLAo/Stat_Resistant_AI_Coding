@@ -25,17 +25,21 @@ addons:
 cyclic_application_controls:
   - instance: Station.MainPressureControl
     type: FB_MainPressureControl
+    version: V1.0.0
   - instance: Station.PressureFeedbackSimulation
     type: FB_PressureFeedbackSimulation
+    version: V1.0.0
   - instance: Station.MaintenanceDoorControl
     type: FB_MaintenanceDoorControl
+    version: V1.0.0
 
 virtual_pressure_feedback:
   reason: _000B085A_LOW and _000B085A_HIGH have no physical signal connection
-  source: Station.ControlOn.OutImm.IsCtrlOn
+  source: Station.MainPressureControl.xValveOn
   switch_delay: T#1S
-  control_on_state: { low: false, high: true }
-  control_off_state: { low: true, high: false }
+  initialization_state: { low: true, high: false }
+  valve_on_state: { low: false, high: true }
+  valve_off_state: { low: true, high: false }
   consumer: Station.MainPressureControl
   physical_binio_write: forbidden
 

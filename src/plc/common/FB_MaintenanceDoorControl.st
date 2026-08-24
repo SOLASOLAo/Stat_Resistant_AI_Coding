@@ -4,6 +4,7 @@
 *)
 
 (* ===== DECLARATION ===== *)
+(* Version: V1.0.0 *)
 FUNCTION_BLOCK FB_MaintenanceDoorControl
 VAR_INPUT
   /// Cyclic execution enable; normally Station OPERATIONAL and fieldbus OK
