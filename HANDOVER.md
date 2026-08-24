@@ -503,5 +503,6 @@
 - OPC UA keepalive 失败会进入 `SessionReconnectHandler`；连续 3 s 没有健康 session keepalive 才整页显示 stale，静止设备不会因没有 DataChange 而误超时；任一订阅节点 Bad quality 也会遮罩旧值。Data 页明确拆为 StationData / TypeData。
 - 四种模式现为可由鼠标/触摸点击的操作员按钮，顶栏标为受控操作。APQ/IPC panel token 固定为 1：先保持写 `TokenRequest=1` 并要求精确回读 `Token==1`，再保持写 `ModeIdRequest∈{1,3,4,5}` 并等待 `ModeId` 回读。写入前通过服务器 `ReadAsync` 重新读取急停与维修门反馈，Changeover 额外读取 `Station.Unit.IsEmpty`；安全门及总回路继续显示，但不在 HMI 重复添加为模式选择联锁，PLC `OnModeRelease` 仍为最终权限源。在完成真实只读协议验收前，不把 255 当成本客户端的授权 token。
 - 唯一写实现为私有语义 allowlist；不提供任意 NodeId Write。明确不写 Token/ModeId 输出、Heartbeat、TokenChangeResponse、Start/Stop/Step、物理 BinIo、Chain 状态，也没有 FORCE/download/PLC start-stop。Heartbeat 已证实是远程手动功能执行时 PLC 置 TRUE、HMI 写 FALSE 的 challenge/ack，不是周期翻转，因此当前不实现。
+- 实体 OPC UA 连接默认创建只读会话，模式按钮保持禁用；只有操作员在连接对话框显式勾选“本次会话允许模式切换”才开放，选项不持久化。离线 demo 单独开启该能力供 UI 自动验收，避免第一次只读真机验收误写模式请求。
 - 验证：`Test-HmiReadOnlyScaffold.ps1` 通过 **94 read-only nodes + 2 allowlisted request inputs**；Release Build **0 errors / 0 warnings**；自动 UI smoke 已点击 Automatic 演示模式、验证字典形态 PublicEventList 的活动/已清除过滤，并访问 Events/I-O/Data，StationData 与 TypeData Tab 可达。全过程未连接实体 PLC，未修改 `../Station010` 或 `../Std`。
 - 下一步严格分两次：① 用户关闭 Nexeed HMI 后授权一次实体 ctrlX **只读**验收 PublicEventList、EtherCAT 数组、I/O 和 Kistler；② 只读通过后，再由用户单独批准四种模式请求测试。不要把两步合并，也不要测试多面板 token 转移。

@@ -17,6 +17,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
     private Subscription? _subscription;
     private SessionReconnectHandler? _reconnectHandler;
     private ushort _namespaceIndex;
+    private bool _modeRequestsEnabled;
 
     public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
 
@@ -24,7 +25,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
     public bool IsConnected => _session?.Connected == true;
 
-    public bool SupportsModeRequests => settings.ModeControl.Enabled;
+    public bool SupportsModeRequests => _modeRequestsEnabled;
 
     public async Task ConnectAsync(
         ConnectionOptions options,
@@ -34,6 +35,8 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
         {
             return;
         }
+
+        _modeRequestsEnabled = settings.ModeControl.Enabled && options.EnableModeRequests;
 
         var configuration = await CreateConfigurationAsync(
             options,
@@ -121,10 +124,13 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
         byte modeId,
         CancellationToken cancellationToken)
     {
-        if (!settings.ModeControl.Enabled ||
+        if (!_modeRequestsEnabled ||
             !settings.ModeControl.AllowedModeIds.Contains(modeId))
         {
-            return new ModeRequestResult(false, modeId, "Mode ID is not in the allowlist.");
+            return new ModeRequestResult(
+                false,
+                modeId,
+                "Mode requests are disabled for this session or the mode ID is not allowlisted.");
         }
 
         if (!IsConnected)
@@ -198,6 +204,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
+        _modeRequestsEnabled = false;
         var session = _session;
         if (session is null)
         {

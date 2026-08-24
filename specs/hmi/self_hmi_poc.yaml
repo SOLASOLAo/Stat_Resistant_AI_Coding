@@ -36,7 +36,9 @@ visual_contract:
 phase_1:
   access: read_only
   default_write: deny
-  source_contract_has_write_method: false
+  source_contract_has_generic_write_method: false
+  semantic_mode_request_method: RequestModeAsync
+  real_connection_mode_requests_default: disabled
   credentials: runtime_memory_only
   screens:
     - overview

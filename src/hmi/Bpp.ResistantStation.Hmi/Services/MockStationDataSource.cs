@@ -8,12 +8,13 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
     private Task? _loopTask;
     private int _tick;
     private byte _modeId = 4;
+    private bool _modeRequestsEnabled;
 
     public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
     public event EventHandler<NodeValueChangedEventArgs>? NodeValueChanged;
 
     public bool IsConnected { get; private set; }
-    public bool SupportsModeRequests => true;
+    public bool SupportsModeRequests => _modeRequestsEnabled;
 
     public Task ConnectAsync(ConnectionOptions options, CancellationToken cancellationToken)
     {
@@ -23,6 +24,7 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         }
 
         IsConnected = true;
+        _modeRequestsEnabled = settings.ModeControl.Enabled && options.EnableModeRequests;
         _loopCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
             true,
@@ -54,6 +56,7 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         }
 
         IsConnected = false;
+        _modeRequestsEnabled = false;
         ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
             false,
             "Demonstration source stopped",
@@ -64,7 +67,8 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         byte modeId,
         CancellationToken cancellationToken)
     {
-        if (!settings.ModeControl.AllowedModeIds.Contains(modeId))
+        if (!_modeRequestsEnabled ||
+            !settings.ModeControl.AllowedModeIds.Contains(modeId))
         {
             return Task.FromResult(new ModeRequestResult(false, modeId, "Unsupported mode ID."));
         }

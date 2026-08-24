@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="OPC UA connection / OPC UA 连接"
         Width="520"
-        Height="360"
+        Height="410"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#EDF1F4"
@@ -39,7 +39,10 @@
             <StackPanel Grid.Row="4">
                 <CheckBox x:Name="AcceptCertificateInput"
                           Content="Commissioning only: trust an untrusted server certificate / 仅调试：信任未受信任证书" />
-                <TextBlock Text="Credentials and this checkbox are kept in memory only and are not saved. / 凭据与此选项不会保存。"
+                <CheckBox x:Name="EnableModeRequestsInput" Margin="0,10,0,0"
+                          IsChecked="False"
+                          Content="Enable operator mode requests for this session / 本次会话允许操作员模式切换" />
+                <TextBlock Text="Leave mode requests unchecked for the first read-only acceptance. Credentials and checkboxes are not saved. / 首次只读验收不要勾选模式切换；凭据与选项均不保存。"
                            Margin="22,8,0,0" Foreground="#6A7E8D" FontSize="11" TextWrapping="Wrap" />
             </StackPanel>
 

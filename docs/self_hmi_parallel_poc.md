@@ -41,6 +41,11 @@ but are not duplicated as HMI mode-selection interlocks because the PLC
 `OnModeRelease` logic remains authoritative. OPC UA write success alone is
 never treated as PLC acceptance.
 
+A real OPC UA connection starts as a read-only session. Mode buttons remain
+disabled unless the operator explicitly checks **Enable operator mode requests
+for this session** in the connection dialog; that choice is not persisted.
+Offline demo mode enables the buttons so the workflow remains testable.
+
 Heartbeat is deliberately not a periodic client toggle. The standard HMI
 shows it is a PLC challenge that a remote-manual-function client answers by
 writing FALSE. Because remote manual functions are not implemented yet,
@@ -106,6 +111,8 @@ configuration changes.
 - Client PKI files live under `%LOCALAPPDATA%\Bpp.ResistantStation.Hmi\pki`.
 - Automatic trust of an untrusted server certificate is a visible,
   commissioning-only checkbox and is not persisted.
+- Operator mode requests are disabled by default for every real connection and
+  require an explicit, non-persisted session checkbox.
 - The dependency lock is restored once while Wi-Fi is available. Afterwards
   the engineering-cable workflow can build from the local NuGet cache.
 

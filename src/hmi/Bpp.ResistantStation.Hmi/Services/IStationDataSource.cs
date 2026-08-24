@@ -22,7 +22,8 @@ public interface IStationDataSource : IAsyncDisposable
 public sealed record ConnectionOptions(
     string UserName,
     string Password,
-    bool AutoAcceptUntrustedCertificate);
+    bool AutoAcceptUntrustedCertificate,
+    bool EnableModeRequests);
 
 public sealed record ModeRequestResult(
     bool Accepted,

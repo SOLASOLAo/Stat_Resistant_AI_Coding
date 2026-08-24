@@ -557,6 +557,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         string userName,
         string password,
         bool autoAcceptUntrustedCertificate,
+        bool enableModeRequests,
         CancellationToken cancellationToken)
     {
         if (IsBusy)
@@ -572,8 +573,15 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 cancellationToken);
             IsDemo = useDemo;
             await _dataSource!.ConnectAsync(
-                new ConnectionOptions(userName, password, autoAcceptUntrustedCertificate),
+                new ConnectionOptions(
+                    userName,
+                    password,
+                    autoAcceptUntrustedCertificate,
+                    enableModeRequests),
                 cancellationToken);
+            ModeRequestMessage = _dataSource.SupportsModeRequests
+                ? "Mode requests enabled for this session / 本次会话已开放模式切换"
+                : "Read-only session: mode requests disabled / 只读会话：模式切换未开放";
         }
         catch (Exception exception)
         {
@@ -764,8 +772,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         if (!PublicEventDecoder.TryDecode(value, out var rows))
         {
+            ActiveEvents.Clear();
             EventDecodeMessage =
                 "PublicEventList is subscribed, but this server payload needs one read-only browse/decode acceptance. / 已订阅报警列表，需一次只读联机确认结构解码。";
+            RaisePropertyChanged(nameof(HasActiveEvents));
             return;
         }
 

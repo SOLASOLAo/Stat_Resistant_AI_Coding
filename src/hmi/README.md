@@ -19,7 +19,8 @@ OPC UA symbols without changing the PLC project.
   `TypeDataNew` staging structures are not shown.
 - Automatic, Manual, Homing and Change-over are operator buttons. Their only
   write path is a semantic allowlist for `TokenRequest` and `ModeIdRequest`,
-  with Token/ModeId readback and safety prechecks.
+  with Token/ModeId readback and safety prechecks. Real connections default to
+  read-only; the operator must explicitly enable mode requests for that session.
 - No generic write, physical I/O write, Heartbeat write, FORCE, download or
   PLC start/stop operation exists.
 - OPC UA keepalive reconnect and a three-second session-health timeout mask;
@@ -46,7 +47,8 @@ dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj 
 
 For a real connection, close the Nexeed HMI control client first, enter the
 ctrlX OPC UA user at runtime, and select **Connect PLC**. The commissioning-only
-certificate checkbox is intentionally not persisted.
+certificate and session-mode checkboxes are intentionally not persisted. Leave
+mode requests unchecked during the first read-only acceptance.
 
 Repeatable local acceptance:
 

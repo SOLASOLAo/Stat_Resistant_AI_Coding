@@ -28,10 +28,18 @@ $projectPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\Bpp.ResistantStation
 $catalogPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\Configuration\station010.hmi.json'
 $interfacePath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\Services\IStationDataSource.cs'
 $windowPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\MainWindow.xaml'
+$connectionDialogPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\ConnectionDialog.xaml'
 $viewModelPath = Join-Path $hmiRoot 'Bpp.ResistantStation.Hmi\ViewModels\MainViewModel.cs'
 $symbolPath = Join-Path $StationRoot 'Plc\Stat010_V5.11_CtrlX_PLC.Device.Application.xml'
 
-foreach ($path in @($projectPath, $catalogPath, $interfacePath, $windowPath, $viewModelPath, $symbolPath)) {
+foreach ($path in @(
+        $projectPath,
+        $catalogPath,
+        $interfacePath,
+        $windowPath,
+        $connectionDialogPath,
+        $viewModelPath,
+        $symbolPath)) {
     Assert-True (Test-Path -LiteralPath $path -PathType Leaf) "Required HMI file is missing: $path"
 }
 
@@ -141,6 +149,8 @@ Assert-True ($modeSourceText -notmatch 'byte\.MaxValue') `
     'Single-panel mode requests must require exact panel-token readback, not token 255.'
 Assert-True ($modeSourceText -match 'ReadCurrentValuesAsync') `
     'Mode prerequisites and readback must use fresh OPC UA Read requests.'
+Assert-True ($modeSourceText -match '_modeRequestsEnabled') `
+    'Real OPC UA sessions must have a separate mode-request enable gate.'
 Assert-True ($modeSourceText -notmatch '"SafetyDoorCircuitOk"|"AllSafetyCircuitsOk"') `
     'HMI mode selection must not add safety-door/all-circuit prerequisites beyond PLC mode release.'
 $semanticWrites = [regex]::Matches(
@@ -154,6 +164,12 @@ Assert-True ($windowText -notmatch '<Setter\s+Property="IsHitTestVisible"\s+Valu
     'Operator mode buttons must remain clickable by mouse and touch.'
 Assert-True ($windowText -notmatch 'READ ONLY /') `
     'The HMI header must not claim read-only operation after mode requests are enabled.'
+
+$connectionDialogText = [System.IO.File]::ReadAllText($connectionDialogPath)
+Assert-True ($connectionDialogText -match 'x:Name="EnableModeRequestsInput"') `
+    'Real connections need an explicit session-only mode-request checkbox.'
+Assert-True ($connectionDialogText -match 'EnableModeRequestsInput[\s\S]*?IsChecked="False"') `
+    'Real connections must default to read-only mode requests disabled.'
 
 $viewModelText = [System.IO.File]::ReadAllText($viewModelPath)
 Assert-True ($viewModelText -match '_badNodes\.Count\s*>\s*0') `

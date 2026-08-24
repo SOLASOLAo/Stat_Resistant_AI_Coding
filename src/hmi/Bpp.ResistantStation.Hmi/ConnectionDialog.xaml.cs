@@ -16,6 +16,8 @@ public partial class ConnectionDialog : Window
 
     public bool AutoAcceptUntrustedCertificate => AcceptCertificateInput.IsChecked == true;
 
+    public bool EnableModeRequests => EnableModeRequestsInput.IsChecked == true;
+
     private void OnConnectClick(object sender, RoutedEventArgs e)
     {
         DialogResult = true;

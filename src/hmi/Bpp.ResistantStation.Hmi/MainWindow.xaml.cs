@@ -20,6 +20,7 @@ public partial class MainWindow : Window
         string.Empty,
         string.Empty,
         autoAcceptUntrustedCertificate: false,
+        enableModeRequests: true,
         CancellationToken.None);
 
     private async void OnConnectPlcClick(object sender, RoutedEventArgs e)
@@ -38,6 +39,7 @@ public partial class MainWindow : Window
             dialog.UserName,
             dialog.Password,
             dialog.AutoAcceptUntrustedCertificate,
+            dialog.EnableModeRequests,
             CancellationToken.None));
     }
 
