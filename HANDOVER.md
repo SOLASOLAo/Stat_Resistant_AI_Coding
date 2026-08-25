@@ -521,3 +521,11 @@
 - `SelectedPageIndex` now represents only the four primary pages (`0..3`). Manual is not a fifth page: while the confirmed PLC `ModeId` is Manual (`3`), Overview renders the Station/Wp100 Unit and manual-function workspace; other modes render the station/Chain overview.
 - Mode requests and page navigation remain independent. This layout work did not change the OPC UA adapter, write allowlist, PLC, CpStudio, Station010, IO project or `Std`.
 - Added stable navigation automation names and a geometry regression check proving that mode buttons remain vertical and primary pages remain horizontal. Release Build is `0 errors / 0 warnings`; the 133-node static contract and offline UI smoke both pass.
+
+## Independent Windows HMI Phase 1.3 Unit detail views (2026-08-25)
+
+- Reviewed the generated Nexeed SmartForms and the current Application Symbol XML without changing `../Station010`, CpStudio, PLC or `../Std`. The missing content was a self-HMI presentation/catalog gap, not a missing PLC interface.
+- The Burster Unit page now shows five input readbacks (`UpperRange`, `LowerRange`, `UpperLimit`, `LowerLimit`, `ReadTemperature`), two result states (`ResistOk`, `OutOfLimit`) and two measured values (`Resistance`, `Temperature`). The nine-range enum is decoded from 2 mΩ through 200 kΩ.
+- The Kistler Unit page now shows requested/current program, measurement timeout, `EndMeasurement`, screen lock, ready, switch signals 1/2, no-pass, warning, alarm, OK/NOK, force and stroke. Existing Unit manual-command buttons and authoritative `Release*/Running*` indications remain below the detail panel.
+- The OPC UA catalog increased from 133 to **150 read-only nodes**. Every added identifier resolves through `Stat010_V5.11_CtrlX_PLC.Device.Application.xml`; no raw 400-byte Kistler PDO path was invented. The real adapter still writes only the separately enabled mode `TokenRequest`/`ModeIdRequest`; Unit parameters and commands remain locked pending live protocol acceptance.
+- Verification: Release Build **0 errors / 0 warnings**; static HMI contract **150 nodes**; offline UI automation switches to Burster and Kistler and confirms their parameter/status/result surfaces before completing Events/I/O/Data navigation. No physical PLC connection, download, runtime start/stop, variable write or FORCE was performed.

@@ -130,6 +130,38 @@ Assert-True (($catalog.nodes | Where-Object key -eq 'DetectedSlaves').dataType -
 Assert-True (($catalog.nodes | Where-Object key -eq 'KistlerProgram').dataType -eq 'Byte') `
     'Kistler program number must match the current BYTE symbol type.'
 
+$expectedUnitDetailNodes = @(
+    'BursterUpperRange',
+    'BursterLowerRange',
+    'BursterUpperLimit',
+    'BursterLowerLimit',
+    'BursterReadTemperature',
+    'BursterResistOk',
+    'BursterOutOfLimit',
+    'BursterResistance',
+    'BursterTemperature',
+    'KistlerProgramRequest',
+    'KistlerMeasuringTimeout',
+    'KistlerEndMeasurement',
+    'KistlerScreenLocked',
+    'KistlerReady',
+    'KistlerSignal1',
+    'KistlerSignal2',
+    'KistlerNoPass',
+    'KistlerWarning',
+    'KistlerAlarm',
+    'KistlerOk',
+    'KistlerNok',
+    'KistlerProgram',
+    'KistlerForce',
+    'KistlerStroke')
+$missingUnitDetailNodes = @($expectedUnitDetailNodes |
+    Where-Object { -not $nodeKeys.ContainsKey($_) })
+Assert-True ($missingUnitDetailNodes.Count -eq 0) `
+    ("Burster/Kistler Unit detail nodes are missing:`n - " + ($missingUnitDetailNodes -join "`n - "))
+Assert-True (@($catalog.nodes | Where-Object { $_.category -eq 'device-data' }).Count -eq 24) `
+    'Device data must contain the 24 Nexeed-visible Burster/Kistler parameter, status and result nodes.'
+
 $expectedModes = @(1, 3, 4, 5)
 Assert-True (@($catalog.modeControl.allowedModeIds).Count -eq 4) `
     'Mode allowlist must contain exactly four operator modes.'
@@ -245,6 +277,8 @@ Assert-True ($windowText -match 'ItemsSource="{Binding ManualUnits}"') `
     'The Manual page must render the CpStudio Unit list.'
 Assert-True ($windowText -match 'Click="OnManualFunctionClick"') `
     'The Manual page is missing its semantic Unit-function DEMO handler.'
+Assert-True ($windowText -match 'Selected Unit parameters and live values') `
+    'The Manual page is missing its device-specific parameter/status/result panel.'
 
 $connectionDialogText = [System.IO.File]::ReadAllText($connectionDialogPath)
 Assert-True ($connectionDialogText -match 'x:Name="EnableModeRequestsInput"') `

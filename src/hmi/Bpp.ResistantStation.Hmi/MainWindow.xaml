@@ -484,26 +484,111 @@
                                         </Grid>
                                     </Border>
                                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                        <ItemsControl ItemsSource="{Binding SelectedManualUnit.Actions}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Style="{StaticResource ManualFunctionButton}" IsEnabled="{Binding CanExecute}"
-                                                            Click="OnManualFunctionClick" AutomationProperties.Name="{Binding Label}">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                                            <StackPanel>
-                                                                <TextBlock Text="{Binding Label}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                                                <TextBlock Text="{Binding Description}" Foreground="#6D7F8B" FontSize="11" TextWrapping="Wrap" Margin="0,4,12,0" />
-                                                            </StackPanel>
-                                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                                <Ellipse Width="14" Height="14" Fill="{Binding Released, Converter={StaticResource BoolBrush}}" HorizontalAlignment="Right" />
-                                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#526B7B" Margin="8,5,0,0" />
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <StackPanel>
+                                            <Border Background="#F8FAFB" BorderBrush="#D5E0E7" BorderThickness="1" Padding="16" Margin="0,0,0,14"
+                                                    Visibility="{Binding SelectedManualUnit.HasDeviceDetails, Converter={StaticResource BoolVisibility}}"
+                                                    AutomationProperties.Name="Selected Unit parameters and live values">
+                                                <StackPanel>
+                                                    <TextBlock Text="UNIT PARAMETERS / Unit 输入参数" FontSize="16" FontWeight="SemiBold" Foreground="#173148" Margin="0,0,0,10" />
+                                                    <TextBlock Text="Values below are the current PLC parameter readback. Real parameter writes stay locked until each Unit command protocol is accepted. / 以下为 PLC 当前参数回读；逐项验收 Unit 命令协议前，真机参数写入保持锁定。"
+                                                               Foreground="#6B7D89" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                                    <ItemsControl ItemsSource="{Binding SelectedManualUnit.Parameters}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Background="White" Margin="0,0,0,6" MinHeight="42"
+                                                                      AutomationProperties.Name="{Binding Label}">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="160" />
+                                                                        <ColumnDefinition Width="45" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Text="{Binding Label}" Foreground="#243C50" TextWrapping="Wrap" VerticalAlignment="Center" Margin="10,0" />
+                                                                    <Border Grid.Column="1" Background="#EEF2F5" BorderBrush="#D2DCE3" BorderThickness="1" Padding="9,5">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <Ellipse Width="10" Height="10" Margin="0,0,7,0" VerticalAlignment="Center"
+                                                                                     Fill="{Binding IsTrue, Converter={StaticResource BoolBrush}}">
+                                                                                <Ellipse.Style>
+                                                                                    <Style TargetType="Ellipse">
+                                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
+                                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </Ellipse.Style>
+                                                                            </Ellipse>
+                                                                            <TextBlock Text="{Binding ValueText}" FontWeight="SemiBold" Foreground="#006EA8" />
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="#6B7D89" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock Text="LIVE STATUS / 实时状态" FontSize="16" FontWeight="SemiBold" Foreground="#173148" Margin="0,14,0,10" />
+                                                    <ItemsControl ItemsSource="{Binding SelectedManualUnit.Statuses}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="White" BorderBrush="#DCE4E9" BorderThickness="1" Padding="10,8" Margin="0,0,6,6"
+                                                                        AutomationProperties.Name="{Binding Label}">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                                        <Ellipse Width="13" Height="13" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                                                 Fill="{Binding IsTrue, Converter={StaticResource BoolBrush}}" />
+                                                                        <StackPanel Grid.Column="1">
+                                                                            <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Foreground="#243C50" />
+                                                                            <TextBlock Text="{Binding ValueText}" FontSize="10" Foreground="#6B7D89" />
+                                                                        </StackPanel>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock Text="RESULTS / 结果" FontSize="16" FontWeight="SemiBold" Foreground="#173148" Margin="0,14,0,10" />
+                                                    <ItemsControl ItemsSource="{Binding SelectedManualUnit.Results}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Background="White" Margin="0,0,0,6" MinHeight="38"
+                                                                      AutomationProperties.Name="{Binding Label}">
+                                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="150" /><ColumnDefinition Width="45" /></Grid.ColumnDefinitions>
+                                                                    <TextBlock Text="{Binding Label}" Foreground="#243C50" Margin="10,0" VerticalAlignment="Center" />
+                                                                    <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontWeight="SemiBold" Foreground="#006EA8" HorizontalAlignment="Right" />
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="#6B7D89" Margin="8,0,0,0" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <TextBlock Text="MANUAL COMMANDS / 手动命令" FontSize="16" FontWeight="SemiBold" Foreground="#173148" Margin="0,0,0,10" />
+                                            <ItemsControl ItemsSource="{Binding SelectedManualUnit.Actions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Style="{StaticResource ManualFunctionButton}" IsEnabled="{Binding CanExecute}"
+                                                                Click="OnManualFunctionClick" AutomationProperties.Name="{Binding Label}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                                <StackPanel>
+                                                                    <TextBlock Text="{Binding Label}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                                    <TextBlock Text="{Binding Description}" Foreground="#6D7F8B" FontSize="11" TextWrapping="Wrap" Margin="0,4,12,0" />
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                    <Ellipse Width="14" Height="14" Fill="{Binding Released, Converter={StaticResource BoolBrush}}" HorizontalAlignment="Right" />
+                                                                    <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#526B7B" Margin="8,5,0,0" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </ScrollViewer>
                                 </Grid>
                             </Border>

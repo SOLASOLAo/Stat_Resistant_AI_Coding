@@ -84,6 +84,25 @@ try {
         throw "Timed out waiting for '$Name' to become $state."
     }
 
+    function Wait-ByNameContains {
+        param(
+            [string]$Fragment,
+            [int]$TimeoutSeconds = 5
+        )
+
+        $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+        do {
+            $element = Find-ByNameContains $Fragment
+            if ($null -ne $element) {
+                return $element
+            }
+
+            Start-Sleep -Milliseconds 75
+        } until ([DateTime]::UtcNow -ge $deadline)
+
+        throw "Timed out waiting for an element containing '$Fragment'."
+    }
+
     function Invoke-ByName {
         param(
             [string]$Name,
@@ -92,6 +111,30 @@ try {
 
         $element = Wait-ByName -Name $Name -Enabled $true -TimeoutSeconds $TimeoutSeconds
         $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    }
+
+    function Select-ListItemByNameContains {
+        param([string]$Fragment)
+
+        $element = Find-ByNameContains $Fragment
+        if ($null -eq $element) {
+            throw "List item text not found: $Fragment"
+        }
+
+        $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+        while ($null -ne $element) {
+            $selectionPattern = $null
+            if ($element.TryGetCurrentPattern(
+                    [System.Windows.Automation.SelectionItemPattern]::Pattern,
+                    [ref]$selectionPattern)) {
+                ([System.Windows.Automation.SelectionItemPattern]$selectionPattern).Select()
+                return
+            }
+
+            $element = $walker.GetParent($element)
+        }
+
+        throw "No selectable ListBoxItem contains: $Fragment"
     }
 
     function Test-ChainStartStop {
@@ -181,6 +224,29 @@ try {
     # press has released; verify that the semantic action completes and is usable again.
     $null = Wait-ByName -Name $manualActionName -Enabled $true -TimeoutSeconds 3
 
+    # Device-specific Unit pages must expose the same parameters, statuses and
+    # results that the generated Nexeed SmartForms bind to PLC symbols.
+    Select-ListItemByNameContains 'Burster 2316'
+    foreach ($field in @(
+            'Upper range',
+            'Read temperature',
+            'Resistance OK',
+            'Resistance value')) {
+        $null = Wait-ByNameContains -Fragment $field
+    }
+
+    Select-ListItemByNameContains 'Kistler maXYmos 5867C'
+    foreach ($field in @(
+            'Requested program',
+            'Measurement timeout',
+            'Screen locked',
+            'Switch signal 1',
+            'IO / OK',
+            'Actual force',
+            'Actual stroke')) {
+        $null = Wait-ByNameContains -Fragment $field
+    }
+
     $eventsButton = Find-ByName 'Navigate Events'
     if ($null -eq $eventsButton) {
         throw 'Missing navigation button: Navigate Events'
@@ -221,7 +287,7 @@ try {
         }
     }
 
-    Write-Host 'HMI demo UI OK: Automatic/Homing/Change-over Chain controls, automatic step mode, Unit manual DEMO, hierarchical EtherCAT topology and Events/Data are reachable.'
+    Write-Host 'HMI demo UI OK: Chain/step controls, Burster/Kistler Unit details, manual DEMO, EtherCAT topology and Events/Data are reachable.'
 }
 finally {
     if (-not $process.HasExited) {

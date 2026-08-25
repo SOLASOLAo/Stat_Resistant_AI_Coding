@@ -293,13 +293,21 @@ public sealed class ManualUnitRow : ObservableObject
         string designator,
         string displayName,
         string category,
-        IEnumerable<ManualActionRow> actions)
+        IEnumerable<ManualActionRow> actions,
+        IEnumerable<DeviceFieldRow>? deviceFields = null)
     {
         Key = key;
         Designator = designator;
         DisplayName = displayName;
         Category = category;
         Actions = new ObservableCollection<ManualActionRow>(actions);
+        DeviceFields = new ObservableCollection<DeviceFieldRow>(deviceFields ?? []);
+        Parameters = new ObservableCollection<DeviceFieldRow>(
+            DeviceFields.Where(field => field.Section == DeviceFieldSection.Parameter));
+        Statuses = new ObservableCollection<DeviceFieldRow>(
+            DeviceFields.Where(field => field.Section == DeviceFieldSection.Status));
+        Results = new ObservableCollection<DeviceFieldRow>(
+            DeviceFields.Where(field => field.Section == DeviceFieldSection.Result));
     }
 
     public string Key { get; }
@@ -311,6 +319,16 @@ public sealed class ManualUnitRow : ObservableObject
     public string Category { get; }
 
     public ObservableCollection<ManualActionRow> Actions { get; }
+
+    public ObservableCollection<DeviceFieldRow> DeviceFields { get; }
+
+    public ObservableCollection<DeviceFieldRow> Parameters { get; }
+
+    public ObservableCollection<DeviceFieldRow> Statuses { get; }
+
+    public ObservableCollection<DeviceFieldRow> Results { get; }
+
+    public bool HasDeviceDetails => DeviceFields.Count > 0;
 
     public string StateText
     {
@@ -328,6 +346,127 @@ public sealed class ManualUnitRow : ObservableObject
     {
         StateText = stateText;
         Available = available;
+    }
+}
+
+public enum DeviceFieldSection
+{
+    Parameter,
+    Status,
+    Result
+}
+
+public sealed class DeviceFieldRow(
+    string key,
+    DeviceFieldSection section,
+    string english,
+    string chinese,
+    string unit = "",
+    bool isBoolean = false) : ObservableObject
+{
+    private string _valueText = "—";
+    private string _quality = "No data";
+    private bool _isTrue;
+
+    public string Key { get; } = key;
+
+    public DeviceFieldSection Section { get; } = section;
+
+    public string English { get; } = english;
+
+    public string Chinese { get; } = chinese;
+
+    public string Label => string.IsNullOrWhiteSpace(Chinese)
+        ? English
+        : $"{English} / {Chinese}";
+
+    public string Unit { get; } = unit;
+
+    public bool IsBoolean { get; } = isBoolean;
+
+    public bool IsInput => Section == DeviceFieldSection.Parameter;
+
+    public string ValueText
+    {
+        get => _valueText;
+        private set => SetProperty(ref _valueText, value);
+    }
+
+    public string Quality
+    {
+        get => _quality;
+        private set => SetProperty(ref _quality, value);
+    }
+
+    public bool IsTrue
+    {
+        get => _isTrue;
+        private set => SetProperty(ref _isTrue, value);
+    }
+
+    public void Update(object? value, bool isGood, string status)
+    {
+        Quality = isGood ? "Good" : status;
+        if (!isGood || value is null)
+        {
+            ValueText = "—";
+            IsTrue = false;
+            return;
+        }
+
+        if (IsBoolean)
+        {
+            IsTrue = Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+            ValueText = IsTrue ? "TRUE / ON" : "FALSE / OFF";
+            return;
+        }
+
+        ValueText = Key switch
+        {
+            "BursterUpperRange" or "BursterLowerRange" => DescribeBursterRange(value),
+            "KistlerMeasuringTimeout" => DescribeDuration(value),
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—"
+        };
+    }
+
+    public void Reset()
+    {
+        ValueText = "—";
+        Quality = "No data";
+        IsTrue = false;
+    }
+
+    private static string DescribeBursterRange(object value)
+    {
+        var index = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+        return index switch
+        {
+            0 => "2 mΩ",
+            1 => "20 mΩ",
+            2 => "200 mΩ",
+            3 => "2 Ω",
+            4 => "20 Ω",
+            5 => "200 Ω",
+            6 => "2 kΩ",
+            7 => "20 kΩ",
+            8 => "200 kΩ",
+            _ => $"UNKNOWN ({index})"
+        };
+    }
+
+    private static string DescribeDuration(object value)
+    {
+        if (value is TimeSpan duration)
+        {
+            return $"{duration.TotalMilliseconds:0} ms";
+        }
+
+        if (value is IConvertible)
+        {
+            return $"{Convert.ToDouble(value, CultureInfo.InvariantCulture):0} ms";
+        }
+
+        return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—";
     }
 }
 

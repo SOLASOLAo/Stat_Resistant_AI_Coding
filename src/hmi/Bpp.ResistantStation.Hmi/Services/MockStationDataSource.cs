@@ -291,11 +291,29 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         Publish("MinProcessTime", 5_000);
         Publish("PartCycleTime", 20);
 
+        Publish("BursterUpperRange", (short)0);
+        Publish("BursterLowerRange", (short)0);
+        Publish("BursterUpperLimit", 2.20f);
+        Publish("BursterLowerLimit", 1.80f);
+        Publish("BursterReadTemperature", true);
+        Publish("BursterResistOk", phase != 3);
+        Publish("BursterOutOfLimit", phase == 3);
+        Publish("BursterResistance", 1.96f + phase * 0.03f);
+        Publish("BursterTemperature", 23.6f + phase * 0.2f);
+
+        Publish("KistlerProgramRequest", (byte)2);
+        Publish("KistlerMeasuringTimeout", (uint)5_000);
+        Publish("KistlerEndMeasurement", false);
+        Publish("KistlerScreenLocked", true);
         Publish("KistlerReady", true);
-        Publish("KistlerProgram", (byte)1);
+        Publish("KistlerSignal1", phase is 1 or 2);
+        Publish("KistlerSignal2", phase is 2 or 3);
+        Publish("KistlerProgram", (byte)2);
         Publish("KistlerAlarm", false);
         Publish("KistlerWarning", false);
         Publish("KistlerNoPass", phase == 3);
+        Publish("KistlerOk", phase != 3);
+        Publish("KistlerNok", phase == 3);
         Publish("KistlerForce", 1_245.6f + phase * 8.3f);
         Publish("KistlerStroke", 18.42f + phase * 0.1f);
 

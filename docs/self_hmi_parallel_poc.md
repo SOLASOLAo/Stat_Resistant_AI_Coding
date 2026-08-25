@@ -92,6 +92,16 @@ challenge/ack can guarantee `Exec=FALSE` on mouse-up, focus loss, disconnect
 and process exit. The verified symbol and behavior contract is recorded in
 [`self_hmi_nexeed_control_contract.md`](self_hmi_nexeed_control_contract.md).
 
+The selected measurement Unit now also exposes the device-specific fields used
+by the generated Nexeed SmartForms. Burster shows Upper/Lower Range,
+Upper/Lower Limit, Read Temperature, Resist OK, Out of Limit, Resistance and
+Temperature. Kistler shows requested/current program, measurement timeout,
+End Measurement, screen/ready/switch/alarm/warning/no-pass/OK/NOK states, force
+and stroke. These 24 fields are subscribed as read-only PLC readback and are
+also available on the Data page. Parameter writes remain locked: displaying an
+input structure does not by itself prove the Unit command, heartbeat and
+release sequence required to write it safely.
+
 The offline decoder currently proves active/cleared filtering and displays
 event number, class, source and additional information. The real ctrlX complex
 payload and the Nexeed event-number-to-bilingual-message catalog still require
@@ -100,8 +110,9 @@ read-only commissioning acceptance; the UI does not claim that placeholder
 
 Kistler raw 200-byte input and output PDO areas are mapped in the PLC I/O
 project but are not published by the current Application Symbol Configuration.
-The HMI therefore shows the Unit's published semantic values: state, ready,
-program, alarm/warning/no-pass, force and displacement. This requires no PLC
+The HMI therefore shows the Unit's published semantic values: state,
+requested/current program, measurement timeout, screen/switch/ready states,
+alarm/warning/no-pass/OK/NOK, force and displacement. This requires no PLC
 change and avoids inventing OPC UA paths for unpublished process-image bytes.
 
 Disconnected, waiting, bad-quality and session-health timeout states mask the
@@ -162,5 +173,6 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 The test resolves all catalog paths against the current Application Symbol
 XML, proves that subscription nodes are read-only, proves that mode writes are
 limited to TokenRequest and ModeIdRequest, and performs a locked Release build.
-The separate `tests/hmi/Test-HmiDemoUi.ps1` smoke test invokes an operator mode
-button and verifies Events, I/O, StationData and TypeData navigation.
+The separate `tests/hmi/Test-HmiDemoUi.ps1` smoke test invokes operator modes,
+selects the Burster and Kistler Units, verifies their parameter/status/result
+fields, and verifies Events, I/O, StationData and TypeData navigation.

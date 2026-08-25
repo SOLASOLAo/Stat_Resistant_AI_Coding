@@ -15,6 +15,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly HashSet<string> _badNodes = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _manualReleaseValues = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _manualRunningValues = new(StringComparer.Ordinal);
+    private readonly IReadOnlyDictionary<string, DeviceFieldRow> _manualDeviceFields;
     private readonly IReadOnlyDictionary<string, DataValueRow> _dataRows;
     private readonly IReadOnlyDictionary<string, IoChannelRow> _ioRows;
     private readonly DispatcherTimer _freshnessTimer;
@@ -90,6 +91,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         TypeDataItems = CreateDataRows(settings, "type-data");
         DeviceDataItems = CreateDataRows(settings, "device-data");
         ManualUnits = CreateManualUnits();
+        _manualDeviceFields = ManualUnits
+            .SelectMany(unit => unit.DeviceFields)
+            .ToDictionary(field => field.Key, StringComparer.Ordinal);
         SelectedSlaveIoChannels = [];
         SelectedManualUnit = ManualUnits.Skip(1).FirstOrDefault() ?? ManualUnits.FirstOrDefault();
         SelectedEtherCatNode = EtherCatTopology.FirstOrDefault();
@@ -965,6 +969,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 ioRow.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
             }
 
+            if (_manualDeviceFields.TryGetValue(eventArgs.Key, out var deviceField))
+            {
+                deviceField.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
+            }
+
             if (!eventArgs.IsGood)
             {
                 _badNodes.Add(eventArgs.Key);
@@ -1181,6 +1190,17 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 [
                     new ManualActionRow("Wp100A103ResistantDetector", "SetRange", "Set range", "设置量程", "Uses the CpStudio Unit release output."),
                     new ManualActionRow("Wp100A103ResistantDetector", "StartMeas", "Start measurement", "启动测量", "Uses the CpStudio Unit release output.")
+                ],
+                [
+                    new DeviceFieldRow("BursterUpperRange", DeviceFieldSection.Parameter, "Upper range", "上量程"),
+                    new DeviceFieldRow("BursterLowerRange", DeviceFieldSection.Parameter, "Lower range", "下量程"),
+                    new DeviceFieldRow("BursterUpperLimit", DeviceFieldSection.Parameter, "Upper limit", "上限"),
+                    new DeviceFieldRow("BursterLowerLimit", DeviceFieldSection.Parameter, "Lower limit", "下限"),
+                    new DeviceFieldRow("BursterReadTemperature", DeviceFieldSection.Parameter, "Read temperature", "读取温度", isBoolean: true),
+                    new DeviceFieldRow("BursterResistOk", DeviceFieldSection.Status, "Resistance OK", "电阻合格", isBoolean: true),
+                    new DeviceFieldRow("BursterOutOfLimit", DeviceFieldSection.Status, "Result invalid / out of limit", "结果无效 / 超限", isBoolean: true),
+                    new DeviceFieldRow("BursterResistance", DeviceFieldSection.Result, "Resistance value", "电阻值"),
+                    new DeviceFieldRow("BursterTemperature", DeviceFieldSection.Result, "Temperature value", "温度值", "°C")
                 ]),
             new ManualUnitRow(
                 "Wp100A104Kistler",
@@ -1196,6 +1216,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                     new ManualActionRow("Wp100A104Kistler", "UnlockKeyboard", "Unlock keyboard", "解锁键盘", "Unlock the device keyboard."),
                     new ManualActionRow("Wp100A104Kistler", "ReadData", "Read data", "读取数据", "Read result data from the device."),
                     new ManualActionRow("Wp100A104Kistler", "WriteData", "Write data", "写入数据", "Write configured data to the device.")
+                ],
+                [
+                    new DeviceFieldRow("KistlerProgramRequest", DeviceFieldSection.Parameter, "Requested program", "目标程序号"),
+                    new DeviceFieldRow("KistlerMeasuringTimeout", DeviceFieldSection.Parameter, "Measurement timeout", "测量超时"),
+                    new DeviceFieldRow("KistlerEndMeasurement", DeviceFieldSection.Parameter, "End measurement request", "结束测量请求", isBoolean: true),
+                    new DeviceFieldRow("KistlerScreenLocked", DeviceFieldSection.Status, "Screen locked", "屏幕锁定", isBoolean: true),
+                    new DeviceFieldRow("KistlerReady", DeviceFieldSection.Status, "Ready", "就绪", isBoolean: true),
+                    new DeviceFieldRow("KistlerSignal1", DeviceFieldSection.Status, "Switch signal 1", "开关信号 1", isBoolean: true),
+                    new DeviceFieldRow("KistlerSignal2", DeviceFieldSection.Status, "Switch signal 2", "开关信号 2", isBoolean: true),
+                    new DeviceFieldRow("KistlerNoPass", DeviceFieldSection.Status, "No-pass zone", "未通过区域", isBoolean: true),
+                    new DeviceFieldRow("KistlerWarning", DeviceFieldSection.Status, "Warning active", "警告激活", isBoolean: true),
+                    new DeviceFieldRow("KistlerAlarm", DeviceFieldSection.Status, "Alarm active", "报警激活", isBoolean: true),
+                    new DeviceFieldRow("KistlerOk", DeviceFieldSection.Status, "IO / OK", "合格", isBoolean: true),
+                    new DeviceFieldRow("KistlerNok", DeviceFieldSection.Status, "NOK", "不合格", isBoolean: true),
+                    new DeviceFieldRow("KistlerProgram", DeviceFieldSection.Result, "Current program", "当前程序号"),
+                    new DeviceFieldRow("KistlerForce", DeviceFieldSection.Result, "Actual force", "实际力", "N"),
+                    new DeviceFieldRow("KistlerStroke", DeviceFieldSection.Result, "Actual stroke", "实际位移", "mm")
                 ])
         ];
     }
@@ -1399,6 +1436,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
 
         foreach (var row in _dataRows.Values)
+        {
+            row.Reset();
+        }
+
+        foreach (var row in _manualDeviceFields.Values)
         {
             row.Reset();
         }
