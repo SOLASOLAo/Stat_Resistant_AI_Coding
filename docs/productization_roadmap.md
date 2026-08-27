@@ -42,7 +42,7 @@
    - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 的单 owner、
      current-user Pipe/registration、typed allowlist、durable submit/query、崩溃后
      `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭均已实现。受控 adapter、
-     same-call 普通 Build、typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
+     typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
      action 中跑通；Build 为 0 errors / 101 条可见 warnings，采集 456 条 mapping facts，工程及
      结构哈希前后不变。当前 warning candidate 含 `PLE_WARNING_OUTPUT_TRUNCATED`，101 条
      只是可见记录。隔离 REST 已验证 `CompileOptionsEditor.maxCompilerWarnings` 可在同 SHA
@@ -50,9 +50,13 @@
      必须关闭不保存并重开。另已实现并安装独立 `clean_compile_project`，固定执行一次
      `application.clean()` 与一次 `application.build()`。同字节工程的原路径普通 Build
      为 101 条、隔离路径普通 Build 为 4 条，说明普通 Build 受路径/增量状态影响，均不能
-     作为正式语义基线。下一步在扩展重启后完成隔离副本 `<no limit>` 的保存—重开—连续
-     两次 Clean Build，再进行 warning/semantic candidate 人工审阅、正式 baseline 建立及
-     新 immutable action 复验。完成前仍必须 baseline-bootstrap `BLOCKED`。
+     作为正式语义基线。扩展重启后已仅在可丢弃隔离副本保存 `<no limit>`；关闭重开后
+     连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性、
+     identity、dirty 和 SHA 门禁全部通过，Station010 源工程 SHA 未变且没有在线操作。
+     Broker/evidence 现已接入 `clean_compile_project`，全部离线回归统一在 PowerShell 7 下
+     通过。下一步仍是生成本轮新的 warning/semantic candidates、人工审阅、正式 baseline
+     建立及新的 immutable action 复验；这些产物尚未创建，完成前仍必须 baseline-bootstrap
+     `BLOCKED`。
      不得执行 action 中的自由文本指令。
    - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
      baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/
@@ -67,7 +71,7 @@
    - 固定版本、安装包、升级/回滚、兼容矩阵和工作站体检；
    - 新电脑无需手工拼接多个脚本。
 
-实现约束：P1.1 先以 Windows PowerShell 5.1 薄入口复用现有已验证脚本并固定行为契约；
+实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
 Runner Agent/Broker，由它独占 MCP stdio 和 PLE；未来 Windows Service 只负责队列、
 策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。
@@ -133,8 +137,9 @@ Phase 1 验收：
 - 2026-08-27：当前可用多仓库基线已标记为 `usable-2026-08-27`；
 - 2026-08-27：P1.1 Runner 控制面已完成并通过当前项目、通用模板和新项目初始化器回归；
 - 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；隔离 REST warning-limit
-  事务和显式 Clean Build 工具也已完成并安装。当前会话尚需一次扩展重启来加载新工具，
-  随后必须在可丢弃隔离副本中完成无上限、重开、连续两次 Clean Build，取得完整稳定告警
-  全集，再进行人工 warning/semantic baseline 审阅和新 action 复验；这不改变 bootstrap
-  `BLOCKED`，当前不启动 P1.3；
+  事务和显式 Clean Build 工具也已完成并安装。可丢弃隔离副本已完成 `<no limit>`
+  保存—重开—连续两次 Clean Build，两次均为 0 errors / 4 条完全一致且不截断的
+  `OPC.UA.DA` warning；Broker/evidence 的 Clean Build 集成与全部 PowerShell 7 离线回归也已
+  通过。新的正式 candidate、人工 warning/semantic baseline 和新 immutable action 尚未完成；
+  这不改变 bootstrap `BLOCKED`，当前不启动 P1.3；
 - Phase 2–4 暂不展开实现。

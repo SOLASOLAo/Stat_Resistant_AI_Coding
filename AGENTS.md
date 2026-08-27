@@ -56,7 +56,9 @@
 - [x] 通用新项目初始化器、Post-export 离线审计队列与 `$ctrlx-opcon-engineering` Skill 已落地并通过离线测试(2026-08-20)
 - [x] Controlled Runner P1.1、P1.2a 与 P1.2b Broker 离线基础已完成：Named Pipe v2、current-user registration、durable submit/query、单 owner 及失败关闭(2026-08-27)
 - [x] Controlled Runner P1.2 真实 PLE 技术通道：受控 adapter、typed warnings 与 semantic snapshot 已通过 Station010 离线 action 验证；隔离 warning-limit REST 工具和显式 `clean_compile_project` 也已实现并安装（2026-08-28）
-- [ ] Controlled Runner P1.2 基线验收：重启扩展加载新工具后，仅在可丢弃隔离副本执行 `<no limit>` 保存—重开—连续两次 Clean Build；取得一致且不截断的告警全集后，再人工审阅 warning/semantic candidates、创建正式 baseline，并用新的 immutable action 复验；完成前 action 必须停在 baseline bootstrap `BLOCKED`
+- [x] Controlled Runner P1.2 告警完整性技术门禁：仅在可丢弃隔离副本保存 `<no limit>`，关闭重开后连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性/身份/dirty/SHA 门禁均通过；Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
+- [x] Controlled Runner P1.2 Broker/evidence 已接入 `clean_compile_project`，相关 Runner/Broker/Engineering/Stage/evidence/candidate/initializer 离线测试统一在 PowerShell 7 下通过（2026-08-28）
+- [ ] Controlled Runner P1.2 正式基线验收：尚未生成本轮新的正式 immutable action/candidate；后续须先生成并人工审阅 warning/semantic candidates、创建绑定独立审阅证据的正式 baseline，再用新的 immutable action 复验；完成前 action 必须停在 baseline bootstrap `BLOCKED`
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程

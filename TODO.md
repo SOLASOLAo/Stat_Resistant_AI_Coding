@@ -12,8 +12,9 @@
 - [x] 🔴 P1.2b 提交前失败关闭加固：截断 warning 全链路阻断、独立人工 review 证据、同字节有界 hash/parse、畸形请求脱敏、敏感值/预算扫描、semantic 最终 dirty probe、REST 全程超时/8 MiB 流式上限，以及 patch 语法失败回滚均完成离线回归（2026-08-28）
 - [x] 🔴 P1.2b 隔离 REST 门禁：同 SHA 隔离副本已通过官方 REST 完成 `maxCompilerWarnings: 100 → <no limit> → 100` 的 GET/PUT/readback/回滚验证，`.project` 字节未变；确认 REST PUT 即使回滚也会令 PLE 内存工程变脏，因此必须关闭不保存并重开，不能直接交给 Build（2026-08-28）
 - [x] 🔴 P1.2b 显式 Clean Build 工具：新增并安装 `clean_compile_project`，契约固定为恰好一次 `application.clean()` + 一次 `application.build()`，禁止 save/clean_all/generate_code；隔离安装、语法、失败回滚和 typed-warning 回归通过（2026-08-28）
-- [ ] 🔴 P1.2b 告警完整性实测：重启 Codex 扩展加载新工具后，只在可丢弃隔离副本中持久化 `<no limit>`，关闭重开并连续执行两次显式 Clean Build；要求结果一致、无截断 sentinel、工程身份/dirty/SHA 门禁全通过，再用新 action 生成完整候选
-- [ ] 🔴 P1.2b 人工基线验收：在告警完整性门禁通过后，审阅 warning/semantic candidates，创建绑定独立审阅证据的正式 baseline，再用新的 immutable action 复验到可接受终态；禁止自动晋升 candidate
+- [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
+- [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
+- [ ] 🔴 P1.2b 人工基线验收：由下一次真实 CpStudio Export 产生新的 request/immutable action 和 warning/semantic candidates；随后由人工创建绑定独立审阅证据的正式 baseline，再用新的 immutable action 复验到可接受终态；禁止伪造 Export、复用旧 action 或自动晋升 candidate，当前仍保持 baseline-bootstrap `BLOCKED`
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
