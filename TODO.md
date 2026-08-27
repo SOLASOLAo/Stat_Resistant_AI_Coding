@@ -6,7 +6,8 @@
 
 - [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
-- [ ] 🔴 P1.2 工程 action 执行器：复用唯一 persistent PLE/MCP，完成 action hash 门禁、readback、fresh Build、warning 指纹和 evidence；不得启动第二个 PLE
+- [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
+- [ ] 🔴 P1.2b Session Agent/Broker：由交互用户会话中的唯一进程独占 persistent PLE/MCP，完成 snapshot/readback/fresh Build/warning 指纹并返回 observation；不得启动第二个 PLE
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
@@ -60,7 +61,8 @@
 - [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
 - [x] 🟡 实现 Stage 2 PlanOnly operation ledger：消费 Stage 1 报告，生成幂等/哈希绑定 action，持久化 `WAITING_FOR_RUNNER/WAITING_FOR_CPSTUDIO/WAITING_FOR_EXPORT_2/DONE/BLOCKED/FAILED`，并校验 runner evidence；协调器不启动 PLE/MCP/REST(2026-08-22)
 - [x] 🟡 实现 runner evidence 封装边界：复核 action/Stage 1/ownership/所需关键 Station 指纹和当前 PLC SHA，要求显式离线/lease/验收事实，按固定算法生成 warning 签名多重集；封装器不调用 PLE/MCP/REST，PS5.1 根项目/模板自测通过（2026-08-23）
-- [x] 🟡 实现受控 Runner P1.1 控制面：单 owner、Stage 1/Stage 2 编排、immutable action hash 复核和 run manifest；P1.2 action 执行仍按本页当前阶段待办推进（2026-08-27）
+- [x] 🟡 实现受控 Runner P1.1 控制面：单 owner、Stage 1/Stage 2 编排、immutable action hash 复核和 run manifest（2026-08-27）
+- [x] 🔴 实现 P1.2a .NET action client：严格 action 合同、双层租约、崩溃后 UNKNOWN 阻断、Named Pipe v1 Broker 客户端和不可变 evidence；P1.2b 唯一 session Agent/Broker 继续按本页当前阶段待办推进（2026-08-27）
 - [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
 - [x] 🔴 PLC 写入落点决策:用户授权 `../Station010` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
 - [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)

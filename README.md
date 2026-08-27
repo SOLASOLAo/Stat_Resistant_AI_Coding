@@ -36,14 +36,20 @@ runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
   -AuditReport .\data\reports\cpstudio\<stage1-report>.json
 ```
 
-第一阶段统一入口已落在受控 Runner P1.1。它取得 OS 排他租约、检查工程路径/
-profile/ownership manifests、串联 Stage 1 和 Stage 2，并为每次调用保存
-`run-manifest.json`；这一版明确不会启动 PLE/MCP，也不含真机能力：
+第一阶段统一入口已落在受控 Runner。P1.1 取得 OS 排他租约、检查工程路径/
+profile/ownership manifests、串联 Stage 1 和 Stage 2，并保存 `run-manifest.json`；
+P1.2a 增加 .NET 8 action client、双租约、幂等终态、Named Pipe 协议和 evidence
+封口。两者都不会启动 PLE/MCP，也不含真机能力：
 
 ```powershell
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Status
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command ProcessOne
+.\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Doctor
 ```
+
+P1.2b 唯一 persistent session Agent/Broker 仍待实现；在此之前 action client 无法
+宣称 fresh Build 成功。完整用法和 NoSession 失败关闭边界见
+`scripts/runner/README.md`。
 
 完整产品阶段与当前边界见 `docs/productization_roadmap.md`。
 
