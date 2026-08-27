@@ -42,14 +42,17 @@
    - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 的单 owner、
      current-user Pipe/registration、typed allowlist、durable submit/query、崩溃后
      `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭均已实现。受控 adapter、
-     fresh Build、typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
+     same-call 普通 Build、typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
      action 中跑通；Build 为 0 errors / 101 条可见 warnings，采集 456 条 mapping facts，工程及
      结构哈希前后不变。当前 warning candidate 含 `PLE_WARNING_OUTPUT_TRUNCATED`，101 条
-     只是可见记录。已确认 100 条来自 PLE 工程 `Compile Options` 的生成上限，而不是 MCP
-     读取分页；下一切片先在隔离副本中经官方 REST 对
-     `CompileOptionsEditor.maxCompilerWarnings=<no limit>` 做 GET/PUT/readback/Build/回滚验证，再进行
-     warning/semantic candidate 人工审阅、正式 baseline 建立及新 immutable action 复验。
-     完成前仍必须 baseline-bootstrap `BLOCKED`。
+     只是可见记录。隔离 REST 已验证 `CompileOptionsEditor.maxCompilerWarnings` 可在同 SHA
+     副本中按 `100 → <no limit> → 100` 读写回滚；同时确认 PUT 回滚后内存工程仍 dirty，
+     必须关闭不保存并重开。另已实现并安装独立 `clean_compile_project`，固定执行一次
+     `application.clean()` 与一次 `application.build()`。同字节工程的原路径普通 Build
+     为 101 条、隔离路径普通 Build 为 4 条，说明普通 Build 受路径/增量状态影响，均不能
+     作为正式语义基线。下一步在扩展重启后完成隔离副本 `<no limit>` 的保存—重开—连续
+     两次 Clean Build，再进行 warning/semantic candidate 人工审阅、正式 baseline 建立及
+     新 immutable action 复验。完成前仍必须 baseline-bootstrap `BLOCKED`。
      不得执行 action 中的自由文本指令。
    - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
      baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/
@@ -129,9 +132,9 @@ Phase 1 验收：
 
 - 2026-08-27：当前可用多仓库基线已标记为 `usable-2026-08-27`；
 - 2026-08-27：P1.1 Runner 控制面已完成并通过当前项目、通用模板和新项目初始化器回归；
-- 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；真实 Station010
-  PLE action 验证了 fresh Build、typed warning 与 semantic snapshot。当前告警输出仍被
-  PLE 截断，必须先取得完整告警全集，再进行人工 warning/semantic baseline 审阅和新
-  action 复验；提交前失败关闭加固及对应 root/template/adapter/.NET 离线回归已完成，
-  但这不改变 bootstrap `BLOCKED`，当前不启动 P1.3；
+- 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；隔离 REST warning-limit
+  事务和显式 Clean Build 工具也已完成并安装。当前会话尚需一次扩展重启来加载新工具，
+  随后必须在可丢弃隔离副本中完成无上限、重开、连续两次 Clean Build，取得完整稳定告警
+  全集，再进行人工 warning/semantic baseline 审阅和新 action 复验；这不改变 bootstrap
+  `BLOCKED`，当前不启动 P1.3；
 - Phase 2–4 暂不展开实现。
