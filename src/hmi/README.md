@@ -12,7 +12,7 @@ OPC UA symbols without changing the PLC project.
 - Namespace indexes are resolved from the ctrlX Data Layer namespace URI at
   runtime; no `ns=2` assumption is stored.
 - Offline demo source for UI development without a PLC or network.
-- 94 reviewed read-only subscriptions, including the nine-slave EtherCAT
+- 150 reviewed read-only subscriptions, including the nine-slave EtherCAT
   topology, 38 named DI/DO values, PublicEventList, StationData, TypeData and
   Kistler semantic force/displacement data.
 - StationData and TypeData are separate tabs; `StationDataNew` and

@@ -23,8 +23,8 @@ ethercat_devices:
     opcon_matching: automatic_after_cpstudio_io_import
     opcon_channel: IKistlerForceStroke
     ioe_repository: verified
-    cpstudio_io_import: pending
-    cpstudio_binding: pending
+    cpstudio_io_import: verified
+    cpstudio_binding: verified
 
 signals:
   - bmk: _000S901
