@@ -36,6 +36,17 @@ runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
   -AuditReport .\data\reports\cpstudio\<stage1-report>.json
 ```
 
+第一阶段统一入口已落在受控 Runner P1.1。它取得 OS 排他租约、检查工程路径/
+profile/ownership manifests、串联 Stage 1 和 Stage 2，并为每次调用保存
+`run-manifest.json`；这一版明确不会启动 PLE/MCP，也不含真机能力：
+
+```powershell
+.\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Status
+.\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command ProcessOne
+```
+
+完整产品阶段与当前边界见 `docs/productization_roadmap.md`。
+
 唯一 persistent Codex 会话执行 action 后，用纯离线封装器复核 action/清单/
 关键 Station 指纹、Build 新鲜度、工程 SHA 和 warning 签名多重集，再生成不可变
 evidence；封装器本身不调用或启动任何工程工具：
@@ -119,7 +130,7 @@ Skill 已可版本化安装并校验：
 ├── src/plc/       AI-owned 通用与项目专用 PLC 源码
 ├── src/hmi/       独立 Windows HMI（与 Nexeed HMI 并行比较）
 ├── catalog/       已验证 Unit/AddOn/Peripheral 知识库
-├── scripts/       CpStudio/PLC/IOE/Git 自动化
+├── scripts/       Runner/CpStudio/PLC/IOE/Git 自动化
 ├── tests/         静态、编译与仿真测试
 ├── data/          请求、快照、报告和本地备份(不入 Git)
 ├── docs/          技术文档与生成机制分析
@@ -142,7 +153,8 @@ Skill 已可版本化安装并校验：
 - Kistler 5867C EtherCAT 集成:`docs/kistler_5867c_ethercat_integration.md`
 - Nexeed License Server 61863 故障诊断:`docs/nexeed_license_server_diagnosis.md`
 - 跨项目目录标准:`docs/project_structure_standard.md`
-- MCP 产品化路线:`ctrlx-ai-coding/docs/mcp_productization_roadmap.md`
+- 产品化主路线（Runner → 项目生成 → HMI → 商业交付）:`docs/productization_roadmap.md`
+- Phase 1 的 MCP/adapter 技术子路线:`ctrlx-ai-coding/docs/mcp_productization_roadmap.md`
 - 团队工作站部署:`TEAM_SETUP.md`
 
 ## 版权说明
