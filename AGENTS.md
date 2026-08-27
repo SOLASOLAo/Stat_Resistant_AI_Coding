@@ -27,7 +27,7 @@
 | 项 | 值 |
 |---|---|
 | PLC IDE | ctrlX WORKS / ctrlX PLC Engineering PLE_V_0206;profile 必须精确 `ctrlX PLC 2.6.8` |
-| MCP | codesys-persistent(persistent 唯一可行,ctrlX 品牌 IDE headless 不可用);ctrlX 兼容补丁 ✅(2026-08-20 -Check 全 OK，含编译超时修复) |
+| MCP | codesys-persistent(persistent 唯一可行,ctrlX 品牌 IDE headless 不可用)；ownership/fresh-Build/typed-warning/semantic-snapshot 受控补丁已应用，2026-08-28 `-Check` 与真实 PLE 离线通道验证通过 |
 | 库仓库 | `C:\ProgramData\Rexroth\PLE-V-0206\0\Studio\Managed Libraries`(OpCon 全套,占位符编译时自动解析) |
 | 工程模板 | `C:\ctrlXWORKS\ctrlXPLCEngineering\PLE_V_0206\Studio\Templates\Standard.project`(TrainingStation 拷贝,含 OpCon 骨架 + 34 库占位符) |
 | 编译 | `compile_project`(基准 errors=0;`get_compile_messages` 是缓存,改代码后先编译再取) |
@@ -54,6 +54,11 @@
 - [x] Station010 IO 硬件组态修复 + IOE-IPC 工具链(2026-08-18);踩坑归档 ctrlx-ai-coding/docs/ioe_scripting_playbook.md
 - [x] 采用 `../Station010` 作为 CpStudio + MCP 受控集成工程并持续保持离线编译 errors=0
 - [x] 通用新项目初始化器、Post-export 离线审计队列与 `$ctrlx-opcon-engineering` Skill 已落地并通过离线测试(2026-08-20)
+- [x] Controlled Runner P1.1、P1.2a 与 P1.2b Broker 离线基础已完成：Named Pipe v2、current-user registration、durable submit/query、单 owner 及失败关闭(2026-08-27)
+- [x] Controlled Runner P1.2 真实 PLE 技术通道：受控 adapter、fresh Build、typed warnings 与 semantic snapshot 已通过 Station010 离线 action 验证（0 errors / 101 条可见 warnings，456 条 mapping facts，2026-08-28）
+- [ ] Controlled Runner P1.2 基线验收：当前 warning candidate 含 `PLE_WARNING_OUTPUT_TRUNCATED`，101 条仅为可见记录，不能证明告警全集完整；必须先将告警降到截断阈值以下或实现并验证完整有界读取，再人工审阅 warning/semantic candidates、创建正式 baseline，并用新的 immutable action 复验；完成前 action 必须停在 baseline bootstrap `BLOCKED`
+- [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
+- [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程
 
 ## 7. 踩坑速查(2026-08-18 IO 组态实测;完整版见 ctrlx-ai-coding/docs/ioe_scripting_playbook.md)

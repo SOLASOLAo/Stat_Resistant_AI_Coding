@@ -420,6 +420,8 @@
 
 ## Post-export runner evidence 边界（2026-08-23）
 
+> 历史记录：本节描述 Broker 落地前的 workflow-local/Codex 执行边界，已由下方 2026-08-27～28 的 P1.2a、P1.2b 与真实 PLE 通道章节取代；保留用于追溯，不代表当前能力状态。
+
 - 新增 `scripts/cpstudio/New-PostExportRunnerEvidence.ps1`。它只接受 immutable action + ledger SHA + 当前 runner 的显式 observation，重新验证 Stage 1 报告、3 个 ownership 清单、所需关键 Station 指纹、Build 时间与当前 PLC SHA，并把逐条 warning 规范化为 `sha256:v1:normalized-warning-record` 签名多重集后原子写入不可变 evidence。它不启动或调用 PLE、MCP、REST、Symbol Configuration 或 watcher IPC，也不会默认把任何 guardrail/acceptance 设为 `TRUE`。
 - 新增 PS5.1 自测 `tests/cpstudio/Test-PostExportRunnerEvidence.ps1`，覆盖 UTF-8/BOM 与中文/空格路径、成功与无虚假 Build 的 blocked 路径、幂等/WhatIf、action/manifest/fingerprint 漂移、在线能力、第二 PLE、直接 watcher IPC、未显式释放 lease、旧 Build、warning 多重集不完整和敏感字段拒绝。Stage 2 另覆盖 apply 调用前空能力阻塞、顶层 null 拒绝、部分写入失败的已验证子集与严格 evidence 字段集。根项目与模板测试均通过；初始化器现为 **58 assertions**，生成项目会自动携带并执行该测试。
 - Stage 2 consumer 只从 `data/runner-evidence/` 接受 producer-contract evidence，并强制核对 action 身份/SHA、显式 guardrail、existing persistent session、按 action kind 区分的离线 capability 白名单、Build 工程/SHA/来源与 warning 算法。真实生成的测试 action 已完成 `Stage2 → producer → consumer → DONE` 离线回归；这仍是结构化合约校验，不是 producer 的加密签名。
@@ -484,7 +486,7 @@
 - 首次真机观察发现旧虚拟反馈跟随 `ControlOn.OutImm.IsCtrlOn`，而压力诊断跟随最终 `xValveOn`。当维修门释放尚未成立时，虚拟 HIGH 会提前出现，令主阀失去 LOW-only 开阀条件；5 s 后锁存 `EVENT_PRESSURE_NOT_LOWER`，再经 `UserEnableControlOn` 自动下电。
 - 已把 `FB_PressureFeedbackSimulation` 改为跟随 `Station.MainPressureControl.xValveOn`：使能时先建立安全 LOW，阀命令 ON/OFF 后 1 s 原子切换 HIGH/LOW。保留主压力 5 s 诊断、维修门放行和官方 ControlOn 下电接口，不屏蔽真实故障。
 - 四个通用 FB 已在 PLE Declaration 和 canonical 源中建立 `V1.0.0` 受控基线；版本表与完整关系图见 `src/plc/common/README.md`、`docs/main_pressure_control_sequence.md`。四个 FB 与 `StationUnit.OnCall` 均逐字读回通过。
-- fresh offline Build 为 **0 errors / 101 warnings**。本轮目标对象无编译错误；其中 93 条为当前工程 I/O/Symbol 生成表达式的 “code has no effect”，另有 8 条供应商/保留字警告，未在本轮扩大范围处理。未连接、下载、启停、读写或 FORCE 实体 PLC。
+- fresh offline Build 为 **0 errors / 101 条可见 warnings**。可见记录中 93 条为当前工程 I/O/Symbol 生成表达式的 “code has no effect”，另有 8 条供应商/保留字警告；后续确认 PLE 在该阈值截断输出，因此这不是完整告警全集。未连接、下载、启停、读写或 FORCE 实体 PLC。
 
 ## 独立 Windows HMI Phase 1（2026-08-25）
 
@@ -551,9 +553,39 @@
 
 ## Product Phase 1 / Controlled Runner P1.2b Broker foundation (2026-08-27)
 
+> 历史记录：本节记录 Broker foundation 当日尚未接入真实 adapter 的状态；`BLOCKED_CAPABILITY_NOT_IMPLEMENTED`、12/12 和 9/9 已由下方 2026-08-28 真实 PLE acceptance 与 fail-closed hardening 章节取代。
+
 - Added an explicitly started interactive Broker with one profile/project owner lease, current-user Named Pipe protocol v2, canonical registration discovery, durable submit/query operations and exact idempotent replay. The action client cannot choose a Pipe/PID and never starts the Broker.
 - Shutdown now stops admission, drains already accepted work, then stops/disposes the engineering session. Malformed Pipe clients are isolated per connection. Interrupted engineering work becomes `UNKNOWN_REVIEW_REQUIRED` and is never Build-replayed automatically.
 - The engineering session accepts only `inspect_and_build` and `verify_after_export_2`. It verifies exact session/project identity and project fingerprints around one Build. External PLE sessions are never opened, altered or shut down; an already Broker-owned orphan is rejected instead of adopted.
 - Production success is intentionally disabled. The installed MCP package does not yet provide the required ownership and same-call fresh-Build contracts, and semantic producers for ownership/mapping/readback/recoverable baseline/Symbol post-processing are not implemented. Missing proof returns `BLOCKED_CAPABILITY_NOT_IMPLEMENTED`; blocked/failed evidence contains no fabricated Build or acceptance fields.
 - Current-user processes are the present local trust boundary. A sellable release must add a controlled install location plus signed/release-bound Broker identity; do not describe the current registration as protection from a malicious process running under the same Windows account.
 - Verification used only .NET fixtures and a fake MCP RPC client: Runner 24 cases / 196 assertions in three consecutive runs, Broker 12/12 in three consecutive runs, Engineering 9/9, and Broker/CLI Release builds at 0 errors / 0 warnings. No Node, MCP, PLE, REST, Station010/Std, PLC connection, download, runtime start/stop, variable write or FORCE was used. The next target remains P1.2b adapter/evidence acceptance, not P1.3.
+
+## Product Phase 1 / Controlled Runner real PLE channel acceptance (2026-08-28)
+
+- Applied and rechecked the controlled `codesys-persistent` adapter extensions for explicit PLE ownership, same-call fresh Build, fixed-category typed warnings and read-only recursive I/O/Symbol semantic snapshots. The isolated adapter upgrade/readiness regressions and global `apply-crlf-patch.ps1 -Check` pass.
+- A new immutable Station010 `inspect_and_build` action ran through the unique interactive Broker and the real PLE. It invoked exactly `get_codesys_status`, `compile_project` and `get_ctrlx_semantic_snapshot`; it did not connect to a PLC, download, start/stop runtime, write/force a variable, edit PLC/IO/ST, or start a second PLE.
+- Fresh Build result: **0 errors / 101 visible warnings**, `typedRecordsVerified=true`. The visible warning multiset contains 98 unique signatures; the compiler included a `>100 warnings` truncation sentinel, so this is not a complete warning population and cannot be approved as a formal baseline.
+- Semantic result: 456 EtherCAT/I/O mapping records (438 bound, 18 unbound), mapping SHA-256 `491B719CA3FFDB28855CF207538B3CB0F1AAFD7C29AD5B577FBC5AACF51A5086`, Symbol Configuration SHA-256 `3FE32193B8EAC6FE03662F92BC2EF5AFF0827131C7C7226A2154FD6F2C8E686F`.
+- PLC project SHA-256 remained `0F9557B3F5100E4FF44EBF1BE30C5833EFE11F1E02D8A8AB3991DD24640734CA`; structure SHA-256 remained `A077CA1360309897FEB29B4F6080E393268DBD57FBC37767D390AE002B74F98A` before and after the action.
+- The action correctly ended `BLOCKED` with `SEMANTIC_BASELINE_BOOTSTRAP_REQUIRED`; this is a successful technical-channel acceptance, not final P1.2 production acceptance. Both semantic and warning candidates now exist under `docs/reviews/` as `pending-human-review` artifacts and cannot be renamed or automatically promoted into formal baselines.
+- The warning candidate is explicitly blocked by `PLE_WARNING_OUTPUT_TRUNCATED`; 101 visible records do not prove a complete warning population. First reduce warnings below the PLE truncation threshold or implement and validate complete bounded retrieval, then generate a new immutable action/candidate. Only after that may a human independently review both candidates, create formal warning and semantic baselines with reviewer/evidence hashes, and run another **new** immutable action. P1.3 remains deferred until that sequence is complete.
+- Final offline regression after the truncation guard: Runner 24 cases / 196 assertions, Broker 13/13, Engineering 33/33, Broker Release build 0 errors / 0 warnings, initializer 103 assertions, adapter readiness/global `-Check`, root/template Stage 1/Stage 2/evidence/candidate tests, and project static checks all pass. No MCP/PLE or physical PLC operation was used by these regression suites.
+
+## Product Phase 1 / P1.2b fail-closed hardening (2026-08-28)
+
+- Closed the pre-release evidence boundaries found by independent review. Stage 1 and Stage 2 now accept review provenance only from a separate human artifact under `docs/reviews/`; generated warning/semantic candidates, AI triage, the reviews index, path escapes and byte-identical renamed copies are rejected. The validated review bytes and the action-bound SHA now come from the same bounded read.
+- Malformed Post-export requests no longer persist raw/original payload text. Failure records retain only a 1 MiB-bounded byte count, SHA-256 and fixed safe diagnostic metadata. The evidence and both candidate generators now fail closed on credential assignments, connection strings/credential URLs, Bearer tokens, PEM/OpenSSH private keys, excessive nesting/node counts or oversized strings; rejection messages do not echo the matched value.
+- Warning, semantic-scope and semantic-baseline JSON are read once under explicit size limits; the same byte buffer is hashed and parsed, closing the prior hash/reopen race. PLE warning truncation remains a hard blocker at Broker, Stage 1, Stage 2 and evidence layers.
+- The semantic adapter now performs a final ScriptEngine clean/stability probe after both mapping and Symbol REST reads. REST body consumption is covered by the full 30 s abort window and stops/cancels at the first byte beyond 8 MiB. Patcher upgrades are exact-version gated; Python/Node syntax failure returns nonzero and restores the package files written in that run.
+- The release-bound normalized SHA-256 for `New-PostExportRunnerEvidence.ps1` is now `4796DDCC30945129743953EDEF00E881D80A5884E2CAFB1CE9FD6406B74E5493`. Root/template copies are byte-identical after line-ending normalization.
+- Focused verification passed: Runner 24 cases / 196 assertions, Broker 13/13, Engineering 37/37, Broker Release build 0 warnings / 0 errors, root/template PowerShell 5.1 Stage/queue/evidence/candidate tests, canonical-vector clean-clone fallback, adapter readiness, semantic Python/Node tests and global patch `-Check`. This hardening did not start PLE/MCP and did not modify Station010, PLC, CpStudio or `Std`.
+- Remaining P1.2 blocker is unchanged: acquire a complete non-truncated warning population, then perform independent human review, create formal warning/semantic baselines and verify them with a new immutable action. Do not start P1.3 before this closes.
+
+## PLE warning generation limit finding (2026-08-28)
+
+- Read-only inspection of the installed official PLE resources confirmed that the `>100 warnings` sentinel is emitted by the compiler's project-level warning cap, not by an MCP/ScriptEngine retrieval cap. ScriptEngine exposes the messages already generated by the compiler and has no documented paging/cursor API for discarded warnings.
+- The official PLE REST v2 schema exposes project setting type `CompileOptionsEditor` and property `maxCompilerWarnings`, documented as either `<no limit>` or a numeric value. This is the supported route; do not edit `.project`, `.opt`, registry or plugin files and do not use reflection.
+- Next controlled slice: create an isolated project copy; discover the settings child by `elementType == CompileOptionsEditor`; GET the full object; change only `maxCompilerWarnings`; PUT and read back; save and fresh Build; require the truncation sentinel to disappear; restore the original value through the same REST API on every failure. Do not apply this mutation to Station010 until the isolated-copy transaction and rollback tests pass.
+- Final clean-clone initializer regression passed **106 assertions** after adding a deterministic AST guard for the queue invariant “acquire exclusive lock before runtime request enumeration”; Station010 PLC SHA-256 remains `0F9557B3F5100E4FF44EBF1BE30C5833EFE11F1E02D8A8AB3991DD24640734CA` and the tracked PLC project is unchanged.

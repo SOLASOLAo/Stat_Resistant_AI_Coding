@@ -49,11 +49,24 @@ submit/query、单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Doctor
 ```
 
-P1.2b 尚未完成工程验收：仓库已提供受控 MCP ownership/fresh-Build 补丁，但本机
-全局 adapter 尚未单独审阅、应用和验收；ownership、mapping、readback、可恢复基线
-和 Symbol 后处理的独立证据生产器也尚未完成。
-因此生产 action 仍会返回 `BLOCKED_CAPABILITY_NOT_IMPLEMENTED`，绝不会把仅编译通过
-伪装成 `DONE`。完整边界见 `scripts/runner/README.md`。
+2026-08-28，P1.2b 已通过一次真实 Station010 PLE 离线 action 验证受控 adapter、
+fresh Build、typed warnings 与 semantic snapshot 通道：Build 为 `0 errors / 101 条可见 warnings`，
+提取 456 条 I/O mapping facts，工程和结构哈希前后不变。该 action 只调用 status、
+compile 与 semantic snapshot，没有修改 PLC/IO/ST，也没有任何在线操作。
+
+当前仍不是 `DONE`：本次 action 终态为 `SEMANTIC_BASELINE_BOOTSTRAP_REQUIRED`；
+warning proof 同时尚无正式 baseline，且 warning candidate 含
+`PLE_WARNING_OUTPUT_TRUNCATED`。因此 101 条只是 PLE 当前可见记录，不代表完整告警全集。
+必须先将告警降到截断阈值以下，或实现并验证完整有界读取；候选文件只用于审阅，禁止
+自动转成正式 baseline。之后仍须人工确认并生成新的 immutable action 复验。完整边界见
+`scripts/runner/README.md`。
+
+同日已完成提交前失败关闭加固：warning 截断在 Broker、Stage 1/2 与 evidence 层统一
+阻断；人工 review 必须是 `docs/reviews/` 下独立文档，candidate/AI triage 及其改名副本
+不能充当人审证据；review、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与
+解析；semantic adapter 在全部 I/O/Symbol 读取后再次确认工程未变脏，并对 REST 响应实行
+30 s 全程超时和 8 MiB 流式上限。敏感值扫描覆盖凭据赋值、连接串、Bearer 与私钥，且
+错误不会回显秘密。上述加固不改变当前 baseline-bootstrap `BLOCKED` 结论。
 
 完整产品阶段与当前边界见 `docs/productization_roadmap.md`。
 
@@ -94,9 +107,11 @@ scripts\cpstudio\Run-OfflinePostExportCheck.cmd
 Build，检查器还会复核工程前后哈希。它不执行任何真机在线动作，也没有接入
 CpStudio hook。`DONE_OFFLINE` 只表示无需继续 Export，不代表 warning/质量验收通过。
 
-独立 Windows HMI 首版位于 `src/hmi/`。它不改 CpStudio/HMI 或 PLC，使用当前
-Symbol Configuration 已发布的 24 个 ctrlX OPC UA 节点；Overview、Manual、Events、
-I/O、Data 五页采用 Nexeed 类似的信息层级，但首版严格只读：
+独立 Windows HMI 原型位于 `src/hmi/`。它不改 CpStudio/HMI 或 PLC，使用当前
+Symbol Configuration 已发布的 150 个经审阅 ctrlX OPC UA 订阅节点；Overview、Manual、
+Events、I/O、Data 五页采用 Nexeed 类似的信息层级。实时数据、设备参数和状态
+仍全部只读；唯一的写入能力是明确白名单中的 `TokenRequest` 和 `ModeIdRequest`，
+且真机连接默认不允许模式请求：
 
 ```powershell
 cd src\hmi
@@ -104,8 +119,9 @@ dotnet restore .\Bpp.ResistantStation.Hmi.sln --locked-mode
 dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj -- --demo
 ```
 
-真实连接前关闭 Nexeed HMI；账号和密码只在连接对话框内存中使用。当前 Events 页明确为
-待接入，控制动作也尚未开放，详见 `docs/self_hmi_parallel_poc.md`。
+真实连接前关闭 Nexeed HMI；账号和密码只在连接对话框内存中使用。首次真机验收仍只读，
+先核对 PublicEventList、EtherCAT 数组及 Unit 参数/状态解码；模式请求另行批准后
+才在当次会话开启。详见 `docs/self_hmi_parallel_poc.md`。
 
 新同事或新电脑先按 `TEAM_SETUP.md` 完成软件、三仓库、`Std`、MCP 补丁和首次离线验收；
 不要从历史型 `HANDOVER.md` 反推安装步骤。

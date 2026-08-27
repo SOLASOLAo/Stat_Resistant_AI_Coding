@@ -26,7 +26,7 @@ try {
     [System.IO.Directory]::CreateDirectory((Join-Path $temporaryBase 'Station010')) | Out-Null
     [System.IO.Directory]::CreateDirectory((Join-Path $temporaryBase 'Std')) | Out-Null
 
-    foreach ($directory in @('config', 'specs', 'ai', 'src', 'scripts')) {
+    foreach ($directory in @('config', 'specs', 'ai', 'src', 'scripts', 'docs')) {
         Copy-Item -LiteralPath (Join-Path $sourceRoot $directory) -Destination $temporaryRoot -Recurse
     }
     [System.IO.Directory]::CreateDirectory((Join-Path $temporaryRoot 'tests')) | Out-Null

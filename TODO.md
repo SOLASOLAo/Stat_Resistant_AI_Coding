@@ -8,13 +8,16 @@
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
 - [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
 - [x] 🔴 P1.2b Broker 基础：显式 interactive Host、单 owner、current-user registration/Named Pipe v2、typed action allowlist、durable submit/query、幂等/崩溃恢复、external PLE 不关闭；纯 fake-MCP 离线回归通过（2026-08-27）
-- [ ] 🔴 P1.2b 工程验收：单独审阅并将仓库中的受控 MCP ownership/fresh-Build 补丁应用到本机 adapter，补齐 ownership/mapping/readback/recoverable-baseline/Symbol 独立证据生产器，再完成一次实体 PLE 离线 acceptance；完成前生产 action 必须 `BLOCKED_CAPABILITY_NOT_IMPLEMENTED`
+- [x] 🔴 P1.2b 真实 PLE 技术通道：本机受控 adapter 已应用并通过 `-Check`；Station010 immutable action 完成 fresh Build（0 errors / 101 条可见 warnings）、typed warning、多重 ownership/readback/Git 基线证据、456 条 mapping facts 与 Symbol 指纹采集，工程及结构哈希不变，无在线动作（2026-08-28）
+- [x] 🔴 P1.2b 提交前失败关闭加固：截断 warning 全链路阻断、独立人工 review 证据、同字节有界 hash/parse、畸形请求脱敏、敏感值/预算扫描、semantic 最终 dirty probe、REST 全程超时/8 MiB 流式上限，以及 patch 语法失败回滚均完成离线回归（2026-08-28）
+- [ ] 🔴 P1.2b 告警完整性门禁：已确认 100 条是 PLE `Compile Options` 的生成上限，不是 MCP 读取分页；下一步只在隔离工程副本中经官方 REST 将 `CompileOptionsEditor.maxCompilerWarnings` 设为 `<no limit>`，完成 GET/PUT/readback/Build/回滚验证后，再用新 action 生成完整候选；此前禁止批准正式 warning baseline
+- [ ] 🔴 P1.2b 人工基线验收：在告警完整性门禁通过后，审阅 warning/semantic candidates，创建绑定独立审阅证据的正式 baseline，再用新的 immutable action 复验到可接受终态；禁止自动晋升 candidate
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
 ## 项目工程待办
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
-- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；当前离线基线 0 errors / 4 warnings（4 条均为 NexeedStateAddon 托管库 C0351，2026-08-24）
+- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；2026-08-24 历史基线为 0 errors / 4 warnings；2026-08-28 Runner 最新 fresh Build 为 0 errors / 101 条可见 warnings，但存在输出截断，不能作为完整告警基线
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
@@ -102,7 +105,7 @@
 - [ ] 🔴 真机专项验证 Home 原子操作：覆盖压缸已/未在原位、安全门已/未在原位四种分支，确认 `_000S610/_000P610`、WRKPOS/BASPOS 顺序、Unit 超时/报错和模式切换 CANCEL 后所有输出复位
 - [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressDelayTime、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
 - [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
-- [ ] 🟡 把官方 Post-export hook、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成一次操作入口；编译/修复仍由唯一 persistent Codex runner 执行，不直接改写 `Engineering_Data.xml`
+- [x] 🟡 P1.1 `ProcessOne` 已把 Post-export 请求、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成受控入口；CpStudio hook 继续只发 signal，不自动启动 Broker/PLE/MCP，也不直接改写 `Engineering_Data.xml`（2026-08-27）
 - [ ] 🔴 后续配置并验证 Burster HostName，放行 `SetRange/StartMeas` 手动功能；设备稳定后逐条实现 Homing/Changeover/Auto Chains
 - [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
 

@@ -60,12 +60,14 @@ The Broker foundation provides durable submit/query, exact replay and typed
 user is the local trust boundary; code signing/release-bound Broker identity is
 still required before commercial distribution.
 
-Production engineering success remains disabled until the repository's
-controlled MCP ownership/fresh-Build patch is separately reviewed, applied to
-the installed adapter and accepted, and the independent semantic acceptance
-producers are implemented. Missing proof returns
-`BLOCKED_CAPABILITY_NOT_IMPLEMENTED`; it cannot become a successful Stage 2
-result merely because compilation was clean.
+The controlled ownership/fresh-Build adapter and read-only semantic snapshot
+channel have now passed a real offline PLE action. Production acceptance is
+still blocked until the current warning population is complete (not truncated),
+independent human review evidence and formal warning/semantic baselines are
+hash-bound, and a new immutable action verifies them. Missing baselines return
+the corresponding baseline-bootstrap `BLOCKED` reason; a clean compile alone
+cannot become a successful Stage 2 result. `apply_change_set_and_build` remains
+unsupported and returns `BLOCKED_UNSUPPORTED_ACTION`.
 
 ## Safety boundary
 

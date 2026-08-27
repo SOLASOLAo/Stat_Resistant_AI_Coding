@@ -22,6 +22,12 @@ data/*
 !data/.gitkeep
 *.log
 
+# Baseline candidates and AI triage may contain project-specific BMK/topology.
+# Keep them local for human review; only deliberately sanitized review evidence is tracked.
+docs/reviews/*-baseline-candidate-*.json
+docs/reviews/*-baseline-triage-*.md
+docs/reviews/*-triage-*.md
+
 # Python/测试缓存
 __pycache__/
 *.pyc

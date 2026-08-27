@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "ctrlx-opcon-engineering-semantic-scope",
+  "project": {
+    "plcProjectRelativePath": "Plc/Stat010_V5.11_CtrlX_PLC.project",
+    "profile": "ctrlX PLC 2.6.8"
+  },
+  "mappingScopes": [
+    {
+      "devicePath": "Device/Realtime_Data/ethercat_master_instances_000SA620_X1",
+      "recursive": true,
+      "includeAllMappableChannels": true
+    }
+  ],
+  "symbolApplicationPath": "Device/Plc Logic/Application"
+}

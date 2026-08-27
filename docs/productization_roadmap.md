@@ -39,13 +39,23 @@
      Named Pipe v1 的实际 server PID/Windows session 核验、NoSession 失败关闭，
      以及已发布 evidence producer 的 SHA 封口；
      客户端没有启动 PLE/MCP/Broker 或调用在线能力的入口。
-   - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 基础已完成离线
-     实现和 fake-MCP 回归，包括单 owner、current-user Pipe/registration、typed
-     allowlist、durable submit/query、长 Build 客户端脱离后继续完成、崩溃后
-     `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭。当前生产 action 仍
-     失败关闭；还需单独审阅并将仓库中的受控 MCP ownership/fresh-Build 补丁应用到
-     本机 adapter，补齐语义验收证据生产器，并完成一次实体 PLE 离线 acceptance。
+   - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 的单 owner、
+     current-user Pipe/registration、typed allowlist、durable submit/query、崩溃后
+     `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭均已实现。受控 adapter、
+     fresh Build、typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
+     action 中跑通；Build 为 0 errors / 101 条可见 warnings，采集 456 条 mapping facts，工程及
+     结构哈希前后不变。当前 warning candidate 含 `PLE_WARNING_OUTPUT_TRUNCATED`，101 条
+     只是可见记录。已确认 100 条来自 PLE 工程 `Compile Options` 的生成上限，而不是 MCP
+     读取分页；下一切片先在隔离副本中经官方 REST 对
+     `CompileOptionsEditor.maxCompilerWarnings=<no limit>` 做 GET/PUT/readback/Build/回滚验证，再进行
+     warning/semantic candidate 人工审阅、正式 baseline 建立及新 immutable action 复验。
+     完成前仍必须 baseline-bootstrap `BLOCKED`。
      不得执行 action 中的自由文本指令。
+   - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
+     baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/
+     baseline 使用同一有界字节完成校验、SHA 与解析；semantic snapshot 在最终 REST 读取
+     后再次核对 clean/稳定状态，response 使用 30 s 全程超时与 8 MiB 流式上限；畸形请求
+     和证据生成器不会持久化或回显凭据。补丁语法检查失败会非零退出并恢复本轮写入。
 3. **P1.3 Windows Runner Host**
    - 将同一 Runner core 托管为稳定后台进程或 Windows Service；
    - 提供安装、启动、停止、状态、日志保留和崩溃恢复；
@@ -119,6 +129,9 @@ Phase 1 验收：
 
 - 2026-08-27：当前可用多仓库基线已标记为 `usable-2026-08-27`；
 - 2026-08-27：P1.1 Runner 控制面已完成并通过当前项目、通用模板和新项目初始化器回归；
-- 2026-08-27：P1.2a Action Client 已完成；P1.2b Broker 基础及离线故障回归已完成，
-  工程 adapter/语义证据/实体 PLE acceptance 尚未完成，下一步仍只推进 P1.2b；
+- 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；真实 Station010
+  PLE action 验证了 fresh Build、typed warning 与 semantic snapshot。当前告警输出仍被
+  PLE 截断，必须先取得完整告警全集，再进行人工 warning/semantic baseline 审阅和新
+  action 复验；提交前失败关闭加固及对应 root/template/adapter/.NET 离线回归已完成，
+  但这不改变 bootstrap `BLOCKED`，当前不启动 P1.3；
 - Phase 2–4 暂不展开实现。
