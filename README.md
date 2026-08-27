@@ -38,8 +38,10 @@ runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
 
 第一阶段统一入口已落在受控 Runner。P1.1 取得 OS 排他租约、检查工程路径/
 profile/ownership manifests、串联 Stage 1 和 Stage 2，并保存 `run-manifest.json`；
-P1.2a 增加 .NET 8 action client、双租约、幂等终态、Named Pipe 协议和 evidence
-封口。两者都不会启动 PLE/MCP，也不含真机能力：
+P1.2a 增加 .NET 8 action client、双租约、幂等终态和 evidence 封口；P1.2b 已完成
+interactive Broker 的离线基础：current-user registration、Named Pipe v2、持久化
+submit/query、单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 PLE/MCP，也不含
+真机能力：
 
 ```powershell
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Status
@@ -47,9 +49,11 @@ P1.2a 增加 .NET 8 action client、双租约、幂等终态、Named Pipe 协议
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Doctor
 ```
 
-P1.2b 唯一 persistent session Agent/Broker 仍待实现；在此之前 action client 无法
-宣称 fresh Build 成功。完整用法和 NoSession 失败关闭边界见
-`scripts/runner/README.md`。
+P1.2b 尚未完成工程验收：仓库已提供受控 MCP ownership/fresh-Build 补丁，但本机
+全局 adapter 尚未单独审阅、应用和验收；ownership、mapping、readback、可恢复基线
+和 Symbol 后处理的独立证据生产器也尚未完成。
+因此生产 action 仍会返回 `BLOCKED_CAPABILITY_NOT_IMPLEMENTED`，绝不会把仅编译通过
+伪装成 `DONE`。完整边界见 `scripts/runner/README.md`。
 
 完整产品阶段与当前边界见 `docs/productization_roadmap.md`。
 

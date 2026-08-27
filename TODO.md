@@ -7,7 +7,8 @@
 - [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
 - [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
-- [ ] 🔴 P1.2b Session Agent/Broker：由交互用户会话中的唯一进程独占 persistent PLE/MCP，完成 snapshot/readback/fresh Build/warning 指纹并返回 observation；不得启动第二个 PLE
+- [x] 🔴 P1.2b Broker 基础：显式 interactive Host、单 owner、current-user registration/Named Pipe v2、typed action allowlist、durable submit/query、幂等/崩溃恢复、external PLE 不关闭；纯 fake-MCP 离线回归通过（2026-08-27）
+- [ ] 🔴 P1.2b 工程验收：单独审阅并将仓库中的受控 MCP ownership/fresh-Build 补丁应用到本机 adapter，补齐 ownership/mapping/readback/recoverable-baseline/Symbol 独立证据生产器，再完成一次实体 PLE 离线 acceptance；完成前生产 action 必须 `BLOCKED_CAPABILITY_NOT_IMPLEMENTED`
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 

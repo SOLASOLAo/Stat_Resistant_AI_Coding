@@ -17,7 +17,7 @@ Every P1.1 invocation takes an OS-enforced exclusive file lease under
 `data/runner/` and writes `data/runs/runner/<run-id>/run-manifest.json`.
 Concurrent invocations return exit code `20`.
 
-## P1.2a action client
+## P1.2 action client and Broker discovery
 
 The .NET 8 Runner client is installed under `tools/runner/` by the project
 initializer. In this Station010 sidecar it can also use
@@ -37,9 +37,7 @@ dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Cli\CtrlX.OpCon.Run
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 `
   -Command ExecuteAction `
   -ActionPath '<absolute actionRequestPath from Stage 2>' `
-  -ExpectedActionSha256 '<actionRequestSha256>' `
-  -BrokerPipe 'ctrlx-opcon-runner-v1' `
-  -BrokerPid '<trusted PID from the registered Broker>'
+  -ExpectedActionSha256 '<actionRequestSha256>'
 
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 `
   -Command ActionStatus -ActionRunId '<runId>'
@@ -51,22 +49,23 @@ dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Cli\CtrlX.OpCon.Run
 The client binds the immutable action to `operation.json.currentAction`,
 validates hashes/fingerprints and every replay artifact, obtains separate
 profile/project and action-run leases, and connects only to an already-running
-local Named Pipe Broker. The Broker reply must match the actual Pipe server PID
-and the current interactive Windows session. The evidence producer is bound to
-the released script hash. The client never starts PLE, MCP, or the Broker.
+local Named Pipe Broker. Protocol v2 discovers the Broker only through the
+canonical current-user registration derived from `EngineeringRoot`; callers
+cannot provide or override its Pipe name or PID. The client checks heartbeat,
+live process identity, Windows session and exact project identity. It never
+starts PLE, MCP, or the Broker.
 
-If `ExecuteAction` is deliberately invoked without `-BrokerPipe`, it writes
-and seals an honest `BLOCKED_SESSION_UNAVAILABLE` result. That result is
-immutable for the action, so this no-session path is a diagnostic/acceptance
-test, not a way to queue an action for later retry.
+The Broker foundation provides durable submit/query, exact replay and typed
+`inspect_and_build` / `verify_after_export_2` allowlisting. The current Windows
+user is the local trust boundary; code signing/release-bound Broker identity is
+still required before commercial distribution.
 
-P1.2b is still pending: the interactive-session Agent/Broker that exclusively
-owns the persistent MCP stdio session and produces fresh Build/readback
-observations. It must also enforce Broker-side Pipe ACL/trusted registration,
-typed allowlisted actions and explicit cancel-or-completion semantics for a
-long Build; it must never execute free-form `instructions`. Until that Broker
-exists, the action client cannot claim a Build or a successful Stage 2
-engineering result.
+Production engineering success remains disabled until the repository's
+controlled MCP ownership/fresh-Build patch is separately reviewed, applied to
+the installed adapter and accepted, and the independent semantic acceptance
+producers are implemented. Missing proof returns
+`BLOCKED_CAPABILITY_NOT_IMPLEMENTED`; it cannot become a successful Stage 2
+result merely because compilation was clean.
 
 ## Safety boundary
 

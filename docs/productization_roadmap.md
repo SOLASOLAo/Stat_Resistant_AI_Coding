@@ -39,11 +39,13 @@
      Named Pipe v1 的实际 server PID/Windows session 核验、NoSession 失败关闭，
      以及已发布 evidence producer 的 SHA 封口；
      客户端没有启动 PLE/MCP/Broker 或调用在线能力的入口。
-   - **P1.2b Session Agent/Broker（下一步）**：由交互用户会话中的唯一进程独占
-     persistent MCP stdio 与 PLE，按 Named Pipe 契约执行只读 snapshot/readback/
-     fresh Build 并返回 observation；Broker 端还必须实现 Pipe ACL/可信注册、严格
-     typed action 白名单，以及长时间 Build 的取消或完成确认。不得执行 action 中的
-     自由文本指令。P1.2b 完成前，P1.2a 只能得到真实阻塞证据，不能宣称 Build 成功。
+   - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 基础已完成离线
+     实现和 fake-MCP 回归，包括单 owner、current-user Pipe/registration、typed
+     allowlist、durable submit/query、长 Build 客户端脱离后继续完成、崩溃后
+     `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭。当前生产 action 仍
+     失败关闭；还需单独审阅并将仓库中的受控 MCP ownership/fresh-Build 补丁应用到
+     本机 adapter，补齐语义验收证据生产器，并完成一次实体 PLE 离线 acceptance。
+     不得执行 action 中的自由文本指令。
 3. **P1.3 Windows Runner Host**
    - 将同一 Runner core 托管为稳定后台进程或 Windows Service；
    - 提供安装、启动、停止、状态、日志保留和崩溃恢复；
@@ -117,5 +119,6 @@ Phase 1 验收：
 
 - 2026-08-27：当前可用多仓库基线已标记为 `usable-2026-08-27`；
 - 2026-08-27：P1.1 Runner 控制面已完成并通过当前项目、通用模板和新项目初始化器回归；
-- 2026-08-27：P1.2a Action Client 已完成；下一步仅推进 P1.2b 唯一 session Agent/Broker；
+- 2026-08-27：P1.2a Action Client 已完成；P1.2b Broker 基础及离线故障回归已完成，
+  工程 adapter/语义证据/实体 PLE acceptance 尚未完成，下一步仍只推进 P1.2b；
 - Phase 2–4 暂不展开实现。
