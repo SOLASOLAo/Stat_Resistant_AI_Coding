@@ -58,7 +58,7 @@
 - [x] Controlled Runner P1.2 真实 PLE 技术通道：受控 adapter、typed warnings 与 semantic snapshot 已通过 Station010 离线 action 验证；隔离 warning-limit REST 工具和显式 `clean_compile_project` 也已实现并安装（2026-08-28）
 - [x] Controlled Runner P1.2 告警完整性技术门禁：仅在可丢弃隔离副本保存 `<no limit>`，关闭重开后连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性/身份/dirty/SHA 门禁均通过；Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] Controlled Runner P1.2 Broker/evidence 已接入 `clean_compile_project`，相关 Runner/Broker/Engineering/Stage/evidence/candidate/initializer 离线测试统一在 PowerShell 7 下通过（2026-08-28）
-- [ ] Controlled Runner P1.2 正式基线验收：新 Export/action 已取得 0 errors / 4 warnings，456 mapping 与 Symbol baseline 全部匹配；当前只因 `RECOVERABLE_BASELINE_NOT_AT_HEAD` 阻断。不得用提交 `.project` 二进制绕过，须先把 recoverable-baseline 合同调整为符合本文件“不入库”红线的最小恢复机制
+- [x] Controlled Runner P1.2 正式基线验收：Build 前本机内容寻址 `.project` checkpoint 已替代 Git-blob 假设；request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 经真实 PLE 离线验证为 0 errors / 4 warnings，456 mapping、Symbol、正式 baseline、checkpoint 与工程/结构哈希门禁全部通过，且无在线操作（2026-08-28）
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程

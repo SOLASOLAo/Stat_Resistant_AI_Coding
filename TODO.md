@@ -4,6 +4,15 @@
 
 ## 当前阶段：Phase 1 稳定受控 Runner
 
+### 四阶段总进度（给项目成员看的简版）
+
+- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2a、P1.2b 与正式 Station010 基线复验已完成；下一步只推进 P1.3 Windows Host，再做 P1.4 团队发行
+- [ ] **Phase 2 · 项目目录与流程生成（未开始）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；Phase 1 完成前不扩张
+- [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
+- [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
+
+详细范围和验收标准见 `docs/productization_roadmap.md`；这里保持短清单，后续每完成一个里程碑直接更新状态。
+
 - [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
 - [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
@@ -14,7 +23,7 @@
 - [x] 🔴 P1.2b 显式 Clean Build 工具：新增并安装 `clean_compile_project`，契约固定为恰好一次 `application.clean()` + 一次 `application.build()`，禁止 save/clean_all/generate_code；隔离安装、语法、失败回滚和 typed-warning 回归通过（2026-08-28）
 - [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
-- [ ] 🔴 P1.2b 正式基线验收：request `aadf8692-07e0-4862-b525-5dcfd0b78fb0` 的新 action 已完成 Clean Build 0 errors / 4 warnings，456 mapping 与 Symbol baseline 全部匹配；仅 `RECOVERABLE_BASELINE_NOT_AT_HEAD` 阻断。下一步以不提交 `.project` 二进制的最小恢复合同替代当前 Git-blob 假设，再用新 action 复验
+- [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 

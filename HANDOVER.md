@@ -642,3 +642,10 @@
 - request `26abbeb9-137e-4c65-9774-98846893103d` 的 action 在 Build 前因 PLE 工程树尚未完成加载而以 `PROJECT_STRUCTURE_READ_FAILED` 封口；工程未写入、Build 未执行，旧 action 不复用。Broker 的工程树读取现增加 500 ms 间隔、最多 30 s 的窄范围重试，持续失败仍关闭失败；Engineering/Broker/Runner 自测与 Release Build 全部通过。
 - AI 通过 CpStudio 官方 Export 按钮完成新的真实导出，request 为 `aadf8692-07e0-4862-b525-5dcfd0b78fb0`。新 action 的 Clean Build 为 **0 errors / 4 warnings**；PLC SHA `7914AFB4E3F3BFB75643C69A873E45426F2DBC7E2B9448957742854D49C3E7E3` 与 structure SHA `56F0519011BA2704C14374CF89A77DEFFDA6C8F4D3B5F15F03750C7BC794EDDC` 前后不变。正式 warning baseline、456 条 mapping、Symbol 与 combined SHA 全部验证通过，没有在线、下载、启停、变量写入或 FORCE。
 - action 唯一 blocker 为 `RECOVERABLE_BASELINE_NOT_AT_HEAD`：当前实现要求 `.project` 精确等于 Station010 Git HEAD，而本仓库红线禁止继续提交 `.project` 二进制。没有暂存或推送 Station010 生成文件，也没有削弱门禁。下一步只解决这一合同冲突：采用可验证、可恢复且不把 `.project` 放入 Git 的最小机制，然后由另一个 immutable action 最终复验。
+
+## Product Phase 1 / P1.2 final acceptance closed（2026-08-28）
+
+- recoverable-baseline 已由 Git HEAD 假设改为 Build 前本机内容寻址 checkpoint：按当前用户、工程 identity 与 PLC SHA 存一份不可变 `.project`，同 SHA 复用；现有 blob 损坏或源工程在复制期间漂移时，在进入 Build 前失败关闭。checkpoint 不入 Git、不自动恢复，也不连接设备。
+- 精确消费新的 CpStudio request `839ff68c-6ac8-4764-8258-7cef4aa10406`，生成全新 immutable action `cpstudio-stage2-839ff68c-6ac8-4764-8258-7cef4aa10406-282dae08-0001`。真实 PLE 离线 Clean Build 为 **0 errors / 4 warnings**；456 mapping、Symbol、正式 warning/semantic baseline 全部匹配。
+- PLC SHA `8274453076502750908CFC72353EB925A0504805F84B73E28DCD2FCCB18C79FD` 与结构 SHA `A63FDB2ADE23DC9168A602917FFE3CEA17705718CF1A9BE3E6C41EC507423CE5` 前后不变；checkpoint 长度 1,991,792 bytes，回读 SHA 与 PLC 完全一致。operation revision 2 最终为 `DONE`，无需 Export #2 或工程修复。
+- Broker/PLE 已优雅关闭，未留下 `.~u`；没有连接实体 PLC、下载、启停、变量写入、FORCE、第二 PLE，也没有修改 `Std`。P1.2 至此关闭，下一步只推进 P1.3 Windows Runner Host。

@@ -39,26 +39,15 @@
      Named Pipe v1 的实际 server PID/Windows session 核验、NoSession 失败关闭，
      以及已发布 evidence producer 的 SHA 封口；
      客户端没有启动 PLE/MCP/Broker 或调用在线能力的入口。
-   - **P1.2b Session Agent/Broker（进行中）**：interactive Broker 的单 owner、
+   - **P1.2b Session Agent/Broker（2026-08-28 已完成）**：interactive Broker 的单 owner、
      current-user Pipe/registration、typed allowlist、durable submit/query、崩溃后
      `UNKNOWN_REVIEW_REQUIRED` 和 external PLE 不接管/不关闭均已实现。受控 adapter、
-     typed warning 与 semantic snapshot 已在真实 Station010 PLE 离线
-     action 中跑通；Build 为 0 errors / 101 条可见 warnings，采集 456 条 mapping facts，工程及
-     结构哈希前后不变。当前 warning candidate 含 `PLE_WARNING_OUTPUT_TRUNCATED`，101 条
-     只是可见记录。隔离 REST 已验证 `CompileOptionsEditor.maxCompilerWarnings` 可在同 SHA
-     副本中按 `100 → <no limit> → 100` 读写回滚；同时确认 PUT 回滚后内存工程仍 dirty，
-     必须关闭不保存并重开。另已实现并安装独立 `clean_compile_project`，固定执行一次
-     `application.clean()` 与一次 `application.build()`。同字节工程的原路径普通 Build
-     为 101 条、隔离路径普通 Build 为 4 条，说明普通 Build 受路径/增量状态影响，均不能
-     作为正式语义基线。扩展重启后已仅在可丢弃隔离副本保存 `<no limit>`；关闭重开后
-     连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性、
-     identity、dirty 和 SHA 门禁全部通过，Station010 源工程 SHA 未变且没有在线操作。
-     Broker/evidence 现已接入 `clean_compile_project`，全部离线回归统一在 PowerShell 7 下
-     通过。两次新的真实 Export action 均取得完整 0 errors / 4 warnings；第二次暴露并修复了
-     raw mapping 顺序/内部字段与 Symbol 多阶段重建导致的稳定性误判。适配器现在比较最终
-     mapping 语义投影，并在最多 4 次的 Symbol 有界收敛后执行三组 Mapping/Symbol 交叉权威
-     读取，最后保留 Mapping/dirty guard。下一步仍需新的真实 Export 取得 semantic candidate，再完成人工审阅、
-     正式 baseline 建立及另一个 immutable action 复验；完成前仍必须保持 `BLOCKED`。
+     typed warning、显式 `clean_compile_project`、456 条 mapping 与 Symbol semantic snapshot
+     均已在真实 Station010 PLE 离线 action 中验证。正式 warning/semantic baseline 已建立；
+     recoverable-baseline 不再要求提交 `.project`，而是在 Build 前创建当前用户、本机、按
+     工程 SHA 寻址的不可变 checkpoint，并在损坏或源工程漂移时于 Build 前失败关闭。
+     request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 action 最终取得 0 errors / 4 条完整
+     `OPC.UA.DA` warning，456 mapping、Symbol、baseline、checkpoint 与工程/结构哈希全部通过。
      不得执行 action 中的自由文本指令。
    - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
      baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/
@@ -139,9 +128,7 @@ Phase 1 验收：
 - 2026-08-27：当前可用多仓库基线已标记为 `usable-2026-08-27`；
 - 2026-08-27：P1.1 Runner 控制面已完成并通过当前项目、通用模板和新项目初始化器回归；
 - 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；隔离 REST warning-limit
-  事务和显式 Clean Build 工具也已完成并安装。可丢弃隔离副本已完成 `<no limit>`
-  保存—重开—连续两次 Clean Build，两次均为 0 errors / 4 条完全一致且不截断的
-  `OPC.UA.DA` warning；Broker/evidence 的 Clean Build 集成与全部 PowerShell 7 离线回归也已
-  通过。新的正式 candidate、人工 warning/semantic baseline 和新 immutable action 尚未完成；
-  这不改变 bootstrap `BLOCKED`，当前不启动 P1.3；
+  事务、显式 Clean Build、本机内容寻址 checkpoint、正式 warning/semantic baseline 与全新
+  Station010 immutable action 复验均已完成。最终 action 为 0 errors / 4 warnings，456 mapping
+  与 Symbol 稳定，工程未改变且无在线操作；P1.2 已关闭，下一步进入 P1.3；
 - Phase 2–4 暂不展开实现。
