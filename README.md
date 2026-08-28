@@ -62,6 +62,9 @@ P1.3b 已让 current-user Host 自动发现并消费首次激活后生成的 imm
 启动 Broker、MCP、PLE、Node 或在线操作。Stage 2 ledger 的自动结果接收、稳定安装目录和
 升级/回滚仍未完成，因此整个 P1.3 继续进行。
 
+Host 的登录任务使用无控制台 apphost，后台运行不再弹出空白终端；人工执行
+`Status/Stop/Logs` 时仍通过 `dotnet + DLL` 返回结构化结果。
+
 提交前失败关闭加固保持有效：warning 截断在 Broker、Stage 1/2 与 evidence 层统一阻断；
 确认记录、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与解析；semantic adapter
 在全部 I/O/Symbol 读取后再次确认工程未变脏，并对 REST 响应实行 30 s 全程超时和 8 MiB

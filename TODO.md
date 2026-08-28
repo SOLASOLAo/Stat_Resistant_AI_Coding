@@ -25,7 +25,7 @@
 - [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
 - [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
 - [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下仅在存在待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
-- [x] 🟡 P1.3b 自动 action 消费：Host 只消费首次激活后由 operation ledger 指向的 immutable `currentAction`；无 Agent 等待、单 action 执行、历史终态隔离、open claim 恢复、结果保持 `WAITING_FOR_COORDINATOR`；本机 Install/Start/Stop/Restart 验收后为 `WAITING_FOR_ACTION`，5 个历史终态隔离且既有 22 个 claim/result 标记不变，全程未启动 Broker/MCP/PLE/Node/在线操作（2026-08-28）
+- [x] 🟡 P1.3b 自动 action 消费：Host 只消费首次激活后由 operation ledger 指向的 immutable `currentAction`；无 Agent 等待、单 action 执行、历史终态隔离、open claim 恢复、结果保持 `WAITING_FOR_COORDINATOR`；本机 Install/Start/Stop/Restart 验收后为 `WAITING_FOR_ACTION`，后台任务已改用无控制台 apphost，不再弹空白终端；5 个历史终态隔离且既有 22 个 claim/result 标记不变，全程未启动 Broker/MCP/PLE/Node/在线操作（2026-08-28）
 - [ ] 🟡 P1.3c 产品 Host 收口：自动接收 result/evidence 并推进 Stage 2 ledger，完成稳定安装目录、版本升级/回滚和完整本机生命周期验收；不得把 P1.3b 视为整个 P1.3 完成
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 

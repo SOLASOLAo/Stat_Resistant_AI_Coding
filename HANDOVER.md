@@ -667,5 +667,6 @@
 - 旧 schema-v1 状态只在内存中安全兼容；存活旧 Host 阻止第二实例，死亡/陈旧旧状态可由 schema-v2 Host 接管且不改写旧证据。Inbox、operation/action、run/result/evidence 的路径链遇到 junction/symlink 均失败关闭；停止流程先发布 `STOPPING`，再做 3 秒有界 drain，未完成 claim 留作恢复而不伪造终态。
 - 本机计划任务已按新二进制重新 `Uninstall → Install → Start → Stop → Start`。两次启动均稳定为 `WAITING_FOR_ACTION`，5 个历史终态 action 被隔离；22 个既有 claim/result 标记的组合 SHA-256 在前后均为 `DC48205C9A9B52C3AB8A6F1167E20C2F94D64350347A06739F9F1FBF887912F0`。durable consumer activation 已落在当前用户 LocalAppData，任务最终保持 Running。
 - Release 验证：8 个 .NET 工程全部 0 errors / 0 warnings；Core SelfTest 29 cases / 275 assertions，Host 18/18，Broker 与 Engineering 全部通过；Host wrapper、项目框架和新项目初始化器 230 assertions 全部通过。前后受控进程集合一致，没有新增 Broker/MCP/PLE；没有连接 PLC、下载、启停 runtime、读写/FORCE 变量，也没有修改 CpStudio、Station010 或 `Std`。
+- Host 后台入口已改为 Windows GUI subsystem apphost，计划任务启动时不再创建空白 Windows Terminal；`Status/Stop/Logs` 则固定通过 `dotnet + vcrunner-host.dll` 保留控制台 JSON。升级按 `Stop → Uninstall → Build → Install → Start` 完成，本机 Host 最终为 `WAITING_FOR_ACTION`，无子进程且未新增 `WindowsTerminal/OpenConsole/conhost`，22 个既有 claim/result 标记保持不变。
 - P1.3b 到此完成，但整个 P1.3 尚未完成。下一步 P1.3c 只做 result/evidence 自动接收与 Stage 2 ledger 推进，以及稳定安装目录、升级/回滚；完整 artifact 哈希复验、handle-based 路径加固和 Broker 重试退避保留为该阶段的产品化边界。
 - 可复用实现已提交到嵌套仓库 commit `41a49c0`，本项目计划/交接也已本地提交。收场时配置的 `127.0.0.1:7890` 代理未运行，临时禁用代理后本机又无法解析 `github.com`，所以两个 branch 仍待网络恢复后 push；没有修改全局代理或公司网络设置。
