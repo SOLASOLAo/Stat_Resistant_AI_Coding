@@ -49,31 +49,19 @@ submit/query、单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Doctor
 ```
 
-2026-08-28，P1.2b 已通过一次真实 Station010 PLE 离线 action 验证受控 adapter、
-same-call 普通 Build、typed warnings 与 semantic snapshot 通道：Build 为 `0 errors / 101 条可见 warnings`，
-提取 456 条 I/O mapping facts，工程和结构哈希前后不变。该 action 只调用 status、
-compile 与 semantic snapshot，没有修改 PLC/IO/ST，也没有任何在线操作。
+2026-08-28，P1.2b 已在真实 Station010 PLE 离线 action 中完成受控 adapter、显式 Clean
+Build、typed warnings 与 semantic snapshot 验证：`0 errors / 4 warnings`，提取 456 条
+I/O mapping facts，工程和结构哈希前后不变，且没有 PLC/IO/ST 修改或在线操作。
 
-当前仍不是 `DONE`：本次 action 终态为 `SEMANTIC_BASELINE_BOOTSTRAP_REQUIRED`；
-warning proof 同时尚无正式 baseline，且 warning candidate 含
-`PLE_WARNING_OUTPUT_TRUNCATED`。后续实测还证明，同一 `.project` 字节在原路径普通 Build
-显示 101 条可见 warnings，在隔离路径普通 Build 只显示 4 条；两者都不能替代语义 Clean
-Build。候选文件只用于审阅，禁止自动转成正式 baseline。
+同一轮 warning/semantic candidates 已由用户执行一次无身份显式确认；受控审批工具已原子
+生成正式 warning/semantic baselines 与绑定候选 SHA 的脱敏确认记录，不采集姓名或工号。
+当前下一步是完成一次新的正常 CpStudio Export，生成全新的 immutable action，并用新 action
+验证正式基线；旧 action 与旧 candidate 不复用。
 
-隔离副本已通过官方 REST 验证 `maxCompilerWarnings: 100 → <no limit> → 100`，磁盘字节
-保持不变；REST PUT 回滚后 PLE 内存工程仍为 dirty，必须关闭不保存并重开。通用补丁现已
-新增并安装显式 `clean_compile_project`：恰好一次 `application.clean()` 加一次
-`application.build()`，不保存工程。当前只差重启 Codex 扩展加载新工具，然后在可丢弃
-隔离副本中完成 `<no limit>` 持久化、重开和连续两次 Clean Build。取得一致且不截断的
-告警全集后，才进入人工确认和新 immutable action 复验。完整边界见
-`scripts/runner/README.md`。
-
-同日已完成提交前失败关闭加固：warning 截断在 Broker、Stage 1/2 与 evidence 层统一
-阻断；人工 review 必须是 `docs/reviews/` 下独立文档，candidate/AI triage 及其改名副本
-不能充当人审证据；review、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与
-解析；semantic adapter 在全部 I/O/Symbol 读取后再次确认工程未变脏，并对 REST 响应实行
-30 s 全程超时和 8 MiB 流式上限。敏感值扫描覆盖凭据赋值、连接串、Bearer 与私钥，且
-错误不会回显秘密。上述加固不改变当前 baseline-bootstrap `BLOCKED` 结论。
+提交前失败关闭加固保持有效：warning 截断在 Broker、Stage 1/2 与 evidence 层统一阻断；
+确认记录、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与解析；semantic adapter
+在全部 I/O/Symbol 读取后再次确认工程未变脏，并对 REST 响应实行 30 s 全程超时和 8 MiB
+流式上限。敏感值扫描覆盖凭据赋值、连接串、Bearer 与私钥，且错误不会回显秘密。
 
 完整产品阶段与当前边界见 `docs/productization_roadmap.md`。
 
