@@ -636,3 +636,9 @@
 - 已批准 request `cb1af562-25e6-4523-b2d8-037751d9433d` 对应的两个候选。正式事实为 4 条 warning / 1 个签名、456 条 mapping / 18 个当前不用的 unbound；mapping、Symbol 与 combined SHA 分别保持 `491B719CA3FFDB28855CF207538B3CB0F1AAFD7C29AD5B577FBC5AACF51A5086`、`3FE32193B8EAC6FE03662F92BC2EF5AFF0827131C7C7226A2154FD6F2C8E686F`、`3BC227C9D1FFAD917F0F5A08427A907A925AF06047FE88E7C7EEF32CEAA6CB52`。
 - 正式 review ID 为 `approval-3761fac2d36b-074f9525c2c7`；两份 baseline 均绑定同一去身份确认文件及 SHA。敏感字段扫描为 0，根项目审批/Stage 1/Stage 2/candidate/evidence/static 离线回归通过。
 - 本轮未启动 PLE/MCP、未连接或写入 PLC、未修改 Station010/Std。P1.2 最终验收只剩一次新的正常 CpStudio Export 和全新 immutable action；旧 action 不复用。
+
+## Product Phase 1 / final-baseline action and recoverability blocker（2026-08-28）
+
+- request `26abbeb9-137e-4c65-9774-98846893103d` 的 action 在 Build 前因 PLE 工程树尚未完成加载而以 `PROJECT_STRUCTURE_READ_FAILED` 封口；工程未写入、Build 未执行，旧 action 不复用。Broker 的工程树读取现增加 500 ms 间隔、最多 30 s 的窄范围重试，持续失败仍关闭失败；Engineering/Broker/Runner 自测与 Release Build 全部通过。
+- AI 通过 CpStudio 官方 Export 按钮完成新的真实导出，request 为 `aadf8692-07e0-4862-b525-5dcfd0b78fb0`。新 action 的 Clean Build 为 **0 errors / 4 warnings**；PLC SHA `7914AFB4E3F3BFB75643C69A873E45426F2DBC7E2B9448957742854D49C3E7E3` 与 structure SHA `56F0519011BA2704C14374CF89A77DEFFDA6C8F4D3B5F15F03750C7BC794EDDC` 前后不变。正式 warning baseline、456 条 mapping、Symbol 与 combined SHA 全部验证通过，没有在线、下载、启停、变量写入或 FORCE。
+- action 唯一 blocker 为 `RECOVERABLE_BASELINE_NOT_AT_HEAD`：当前实现要求 `.project` 精确等于 Station010 Git HEAD，而本仓库红线禁止继续提交 `.project` 二进制。没有暂存或推送 Station010 生成文件，也没有削弱门禁。下一步只解决这一合同冲突：采用可验证、可恢复且不把 `.project` 放入 Git 的最小机制，然后由另一个 immutable action 最终复验。

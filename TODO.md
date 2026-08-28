@@ -14,7 +14,7 @@
 - [x] 🔴 P1.2b 显式 Clean Build 工具：新增并安装 `clean_compile_project`，契约固定为恰好一次 `application.clean()` + 一次 `application.build()`，禁止 save/clean_all/generate_code；隔离安装、语法、失败回滚和 typed-warning 回归通过（2026-08-28）
 - [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
-- [ ] 🔴 P1.2b 正式基线验收：用户确认的 warning/semantic baselines 已创建并绑定同一确认记录（4 条 warning；456 条 mapping，含 18 个当前不用的 unbound）；只剩一次新的正常 Export/immutable action 最终复验，禁止复用旧 action
+- [ ] 🔴 P1.2b 正式基线验收：request `aadf8692-07e0-4862-b525-5dcfd0b78fb0` 的新 action 已完成 Clean Build 0 errors / 4 warnings，456 mapping 与 Symbol baseline 全部匹配；仅 `RECOVERABLE_BASELINE_NOT_AT_HEAD` 阻断。下一步以不提交 `.project` 二进制的最小恢复合同替代当前 Git-blob 假设，再用新 action 复验
 - [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
@@ -129,4 +129,3 @@
 - [x] 🔴 已经 CpStudio 官方 Export 生成 request `cb1af562-25e6-4523-b2d8-037751d9433d`，修复版 Runner 取得稳定 semantic canonical facts 并生成 warning/semantic candidates（0 errors / 4 complete warnings；456 mapping records）（2026-08-28）
 - [x] 🔴 用户已确认当前 candidates：18 个 unbound EtherCAT 通道当前不用，4 条相同 `OPC.UA.DA` managed-library warning 暂不处理；baseline 不采集姓名/工号，改用 `confirmedByUser` 与机器生成元数据（2026-08-28）
 - [x] 🔴 已由 `Approve-PostExportBaselines.ps1` 原子建立两个正式 baseline 和无身份确认记录；未收集姓名/工号（2026-08-28）
-- [ ] 🔴 进行一次新的正常 CpStudio Export，并以全新 immutable action 完成最终验收
