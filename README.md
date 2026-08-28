@@ -39,9 +39,8 @@ runner action，不自行启动 PLE、MCP 或 REST，也不修改生成工程：
 第一阶段统一入口已落在受控 Runner。P1.1 取得 OS 排他租约、检查工程路径/
 profile/ownership manifests、串联 Stage 1 和 Stage 2，并保存 `run-manifest.json`；
 P1.2a 增加 .NET 8 action client、双租约、幂等终态和 evidence 封口；P1.2b 已完成
-interactive Broker 的离线基础：current-user registration、Named Pipe v2、持久化
-submit/query、单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 PLE/MCP，也不含
-真机能力：
+interactive Broker、current-user registration、Named Pipe v2、持久化 submit/query、
+单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 PLE/MCP，也不含真机能力：
 
 ```powershell
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Status
@@ -53,10 +52,13 @@ submit/query、单 owner 和崩溃后人工复核。CLI/P1.1 本身不会启动 
 Build、typed warnings 与 semantic snapshot 验证：`0 errors / 4 warnings`，提取 456 条
 I/O mapping facts，工程和结构哈希前后不变，且没有 PLC/IO/ST 修改或在线操作。
 
-同一轮 warning/semantic candidates 已由用户执行一次无身份显式确认；受控审批工具已原子
-生成正式 warning/semantic baselines 与绑定候选 SHA 的脱敏确认记录，不采集姓名或工号。
-当前下一步是完成一次新的正常 CpStudio Export，生成全新的 immutable action，并用新 action
-验证正式基线；旧 action 与旧 candidate 不复用。
+warning/semantic candidates 已由用户一次明确确认；受控工具不采集姓名或工号。正式
+baselines、Build 前本机内容寻址 checkpoint 和全新 immutable action 已完成最终复验，P1.2
+至此关闭。
+
+P1.3a 已增加 current-user interactive Host：提供单实例、状态/心跳、受控停止、限定日志保留
+和可选 AtLogOn Scheduled Task。Host 永不启动 Broker、MCP、PLE、Node 或在线操作；同会话
+Agent 不存在时只显示 `WAITING_FOR_AGENT`。自动 action 消费仍未实现，因此整个 P1.3 仍在进行。
 
 提交前失败关闭加固保持有效：warning 截断在 Broker、Stage 1/2 与 evidence 层统一阻断；
 确认记录、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与解析；semantic adapter

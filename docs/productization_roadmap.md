@@ -50,14 +50,24 @@
      `OPC.UA.DA` warning，456 mapping、Symbol、baseline、checkpoint 与工程/结构哈希全部通过。
      不得执行 action 中的自由文本指令。
    - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
-     baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/
-     baseline 使用同一有界字节完成校验、SHA 与解析；semantic snapshot 在最终 REST 读取
+     baseline；一次明确用户确认即可且不采集姓名/工号，candidate/AI triage（含改名副本）
+     不能自动冒充确认；confirmation/scope/baseline 使用同一有界字节完成校验、SHA 与解析；
+     semantic snapshot 在最终 REST 读取
      后再次核对 clean/稳定状态，response 使用 30 s 全程超时与 8 MiB 流式上限；畸形请求
      和证据生成器不会持久化或回显凭据。补丁语法检查失败会非零退出并恢复本轮写入。
 3. **P1.3 Windows Runner Host**
    - 将同一 Runner core 托管为稳定后台进程或 Windows Service；
    - 提供安装、启动、停止、状态、日志保留和崩溃恢复；
    - UI/托盘只展示状态，不绕开 Runner 门禁。
+
+   当前切片：
+
+   - **P1.3a（2026-08-28 已实现）**：current-user interactive Host 提供单实例、
+     心跳/状态、受控停止、限定 JSONL 日志保留和可选 AtLogOn Scheduled Task；只观察同一
+     Windows 会话中已验证的 Agent/Broker。Host 永不启动 Broker、MCP、PLE、Node 或在线操作；
+     Agent 不存在时保持 `WAITING_FOR_AGENT`。
+   - **P1.3 后续（未完成）**：自动 action 消费、完整崩溃恢复、稳定安装目录和产品级生命周期
+     尚未完成，不能把 P1.3a 标记为整个 P1.3 完成。
 4. **P1.4 团队发行**
    - 固定版本、安装包、升级/回滚、兼容矩阵和工作站体检；
    - 新电脑无需手工拼接多个脚本。
@@ -65,7 +75,8 @@
 实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
 Runner Agent/Broker，由它独占 MCP stdio 和 PLE；未来 Windows Service 只负责队列、
-策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。
+策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。P1.3a Host
+同样只运行在当前用户交互会话，不替代或自动启动 Agent/Broker。
 
 Phase 1 验收：
 
@@ -130,5 +141,7 @@ Phase 1 验收：
 - 2026-08-28：P1.2a Action Client 与 P1.2b Broker 技术通道已完成；隔离 REST warning-limit
   事务、显式 Clean Build、本机内容寻址 checkpoint、正式 warning/semantic baseline 与全新
   Station010 immutable action 复验均已完成。最终 action 为 0 errors / 4 warnings，456 mapping
-  与 Symbol 稳定，工程未改变且无在线操作；P1.2 已关闭，下一步进入 P1.3；
+  与 Symbol 稳定，工程未改变且无在线操作；P1.2 已关闭；
+- 2026-08-28：P1.3a current-user interactive Host 已完成最小生命周期、状态、日志和可选
+  AtLogOn Task；自动 action 消费与产品级 Host 仍待 P1.3 后续完成；
 - Phase 2–4 暂不展开实现。

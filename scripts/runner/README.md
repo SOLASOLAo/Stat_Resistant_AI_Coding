@@ -61,16 +61,37 @@ user is the local trust boundary; code signing/release-bound Broker identity is
 still required before commercial distribution.
 
 The controlled ownership/fresh-Build adapter and read-only semantic snapshot
-channel have now passed a real offline PLE action. Production acceptance is
-still blocked until the current warning population is complete (not truncated),
-independent human review evidence and formal warning/semantic baselines are
-hash-bound, and a new immutable action verifies them. Missing baselines return
-the corresponding baseline-bootstrap `BLOCKED` reason; a clean compile alone
-cannot become a successful Stage 2 result. `apply_change_set_and_build` remains
-unsupported and returns `BLOCKED_UNSUPPORTED_ACTION`.
+channel have passed the final real offline PLE action. Formal warning/semantic
+baselines, the local content-addressed pre-Build checkpoint and a new immutable
+action were verified at 0 errors / 4 warnings with 456 mappings and stable
+Symbol/project hashes. One explicit user confirmation is sufficient; no name,
+employee ID or redundant approval is collected. `apply_change_set_and_build`
+remains unsupported and returns `BLOCKED_UNSUPPORTED_ACTION`.
+
+## P1.3a current-user Host
+
+Build the Host once, then use the project wrapper for its lifecycle:
+
+```powershell
+dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Host\CtrlX.OpCon.Runner.Host.csproj -c Release
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Status
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install -WhatIf
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Start
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Stop
+```
+
+The Host runs only in the current user's interactive Windows session. Optional
+`Install` registers an AtLogOn Scheduled Task. The Host never starts Broker,
+MCP, PLE, Node or an online PLC operation; without a validated same-session
+Agent it remains `WAITING_FOR_AGENT`. Automatic action consumption is not yet
+implemented, so P1.3 as a whole remains open. Default `Start` requires the exact
+validated task; raw process start is available only through explicit
+`-DevelopmentProcess` for development testing.
 
 ## Safety boundary
 
-Neither P1.1 nor P1.2a contains connect, download, start/stop, runtime write or
-FORCE capability. The client has no command that launches PLE/MCP/Broker and no
-generic tool-execution surface.
+P1.1, P1.2a and the P1.3a Host contain no connect, download, PLC runtime start/stop,
+runtime write or FORCE capability. The client and Host have no generic
+tool-execution surface; the Host also has no command that launches
+PLE/MCP/Broker/Node.

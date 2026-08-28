@@ -6,7 +6,7 @@
 
 ### 四阶段总进度（给项目成员看的简版）
 
-- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2a、P1.2b 与正式 Station010 基线复验已完成；下一步只推进 P1.3 Windows Host，再做 P1.4 团队发行
+- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2 与正式 Station010 基线复验已完成，P1.3a 交互式 Host 已落地；下一步完成自动 action 消费和产品级 Host，再做 P1.4 团队发行
 - [ ] **Phase 2 · 项目目录与流程生成（未开始）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；Phase 1 完成前不扩张
 - [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
 - [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
@@ -16,15 +16,16 @@
 - [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
 - [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
-- [x] 🔴 P1.2b Broker 基础：显式 interactive Host、单 owner、current-user registration/Named Pipe v2、typed action allowlist、durable submit/query、幂等/崩溃恢复、external PLE 不关闭；纯 fake-MCP 离线回归通过（2026-08-27）
+- [x] 🔴 P1.2b Broker 基础：显式 interactive Broker、单 owner、current-user registration/Named Pipe v2、typed action allowlist、durable submit/query、幂等/崩溃恢复、external PLE 不关闭；纯 fake-MCP 离线回归通过（2026-08-27）
 - [x] 🔴 P1.2b 真实 PLE 技术通道：本机受控 adapter 已应用并通过 `-Check`；Station010 immutable action 完成 same-call 普通 Build（0 errors / 101 条可见 warnings）、typed warning、多重 ownership/readback/Git 基线证据、456 条 mapping facts 与 Symbol 指纹采集，工程及结构哈希不变，无在线动作（2026-08-28）
-- [x] 🔴 P1.2b 提交前失败关闭加固：截断 warning 全链路阻断、独立人工 review 证据、同字节有界 hash/parse、畸形请求脱敏、敏感值/预算扫描、semantic 最终 dirty probe、REST 全程超时/8 MiB 流式上限，以及 patch 语法失败回滚均完成离线回归（2026-08-28）
+- [x] 🔴 P1.2b 提交前失败关闭加固：截断 warning 全链路阻断、一次明确用户确认且不采集姓名/工号、同字节有界 hash/parse、畸形请求脱敏、敏感值/预算扫描、semantic 最终 dirty probe、REST 全程超时/8 MiB 流式上限，以及 patch 语法失败回滚均完成离线回归（2026-08-28）
 - [x] 🔴 P1.2b 隔离 REST 门禁：同 SHA 隔离副本已通过官方 REST 完成 `maxCompilerWarnings: 100 → <no limit> → 100` 的 GET/PUT/readback/回滚验证，`.project` 字节未变；确认 REST PUT 即使回滚也会令 PLE 内存工程变脏，因此必须关闭不保存并重开，不能直接交给 Build（2026-08-28）
 - [x] 🔴 P1.2b 显式 Clean Build 工具：新增并安装 `clean_compile_project`，契约固定为恰好一次 `application.clean()` + 一次 `application.build()`，禁止 save/clean_all/generate_code；隔离安装、语法、失败回滚和 typed-warning 回归通过（2026-08-28）
 - [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
 - [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
-- [ ] 🟡 P1.3 Windows Runner Host：后台进程/Windows Service、安装/状态/日志/崩溃恢复
+- [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作，无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
+- [ ] 🟡 P1.3b Host 收口：接入受控自动 action 消费，完成崩溃恢复、稳定安装与生命周期验收；P1.3a 完成不等于整个 P1.3 完成
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
 ## 项目工程待办

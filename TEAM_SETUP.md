@@ -207,12 +207,28 @@ Get-Help .\scripts\setup\Test-TeamWorkstation.ps1 -Detailed
 1. MCP `get_codesys_status`，等待状态为 ready；
 2. MCP 打开 `config/project.yaml` 指向的 PLC 工程；
 3. 执行一次完整 `compile_project`；
-4. 当前 Station010 验收基线为 **0 errors / 6 warnings**；
+4. 当前 Station010 正式离线验收基线为 **0 errors / 4 warnings**；
 5. 回读一个 AI-owned POU，例如 `Application/Fbs/FB_OperatorButton`；
 6. 核对可读源 `src/plc/common/FB_OperatorButton.st`；
 7. 关闭/交接前确认两个 Git 工作树没有未知改动。
 
 首次验收不需要实体 PLC。禁止为了“测试环境”执行连接、下载、启动、停止或变量写入。
+
+### 8.1 可选 P1.3a Runner Host
+
+P1.3a Host 是当前用户交互会话中的状态/生命周期进程，可选注册为 AtLogOn Scheduled Task。
+它不会启动 Broker、MCP、PLE、Node 或在线 PLC 操作；同会话 Agent 不存在时显示
+`WAITING_FOR_AGENT`。自动 action 消费尚未实现，因此不应把它当作无人值守工程执行器。
+
+```powershell
+dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Host\CtrlX.OpCon.Runner.Host.csproj -c Release
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Status
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install -WhatIf
+```
+
+确认预览目标正确后才去掉 `-WhatIf` 完成安装；之后 `-Command Start` 默认只通过这条已验证的
+Scheduled Task 启动。`-DevelopmentProcess` 仅供显式开发测试使用。安装是可选项，不影响手动运行
+既有 P1.1/P1.2 流程。
 
 ## 9. 三套工程软件的边界
 

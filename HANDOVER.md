@@ -649,3 +649,13 @@
 - 精确消费新的 CpStudio request `839ff68c-6ac8-4764-8258-7cef4aa10406`，生成全新 immutable action `cpstudio-stage2-839ff68c-6ac8-4764-8258-7cef4aa10406-282dae08-0001`。真实 PLE 离线 Clean Build 为 **0 errors / 4 warnings**；456 mapping、Symbol、正式 warning/semantic baseline 全部匹配。
 - PLC SHA `8274453076502750908CFC72353EB925A0504805F84B73E28DCD2FCCB18C79FD` 与结构 SHA `A63FDB2ADE23DC9168A602917FFE3CEA17705718CF1A9BE3E6C41EC507423CE5` 前后不变；checkpoint 长度 1,991,792 bytes，回读 SHA 与 PLC 完全一致。operation revision 2 最终为 `DONE`，无需 Export #2 或工程修复。
 - Broker/PLE 已优雅关闭，未留下 `.~u`；没有连接实体 PLC、下载、启停、变量写入、FORCE、第二 PLE，也没有修改 `Std`。P1.2 至此关闭，下一步只推进 P1.3 Windows Runner Host。
+
+## Product Phase 1 / P1.3a current-user Host（2026-08-28）
+
+- 已实现 current-user interactive Host：单项目实例、状态/心跳、实例绑定停止、限定目录的 JSONL 日志保留，以及可选的当前用户 AtLogOn Scheduled Task。
+- Host 只观察同一 Windows 会话中已验证的 Agent/Broker，永不启动 Broker、MCP、PLE、Node 或任何在线 PLC 操作；Agent 不存在时保持 `WAITING_FOR_AGENT`。
+- 自动 action 消费、完整崩溃恢复、稳定安装目录和产品级升级/回滚仍未完成，因此只标记 P1.3a 完成，整个 P1.3 保持进行中。
+- P1.2 的正式 baseline 与最终 immutable action 已完成；确认流程只需用户一次明确确认，不采集姓名、工号或增加重复审批。
+- 本机已注册并精确回读当前用户任务 `CtrlX OpCon Runner Host c60aad6fd4c7512b`：Interactive/Limited、AtLogOn、IgnoreNew、失败后 1 分钟重启且最多 3 次。正常 `Start` 只走该任务；裸进程入口仅在显式 `-DevelopmentProcess` 下可用。
+- 真实本机生命周期已通过 Install 幂等、Start、重复 Start、Status、Logs、Stop、再次 Start；最终仅有 1 个 Host 处于 `WAITING_FOR_AGENT`。未新增 Broker/PLE，未连接、下载、启停或写入 PLC。
+- 离线回归：Host 9/9、Runner 207 assertions、Broker/Engineering fixtures 全通过；新项目初始化器 226 assertions、项目框架 36 core files / 62 ownership records / 48 PLC sources。当前用户任务属于本机部署状态，不进入 Git；其他工作站需各自执行一次 `Install`。
