@@ -620,3 +620,12 @@
 - Node regression、完整 adapter readiness、全局补丁应用和最终 `-Check` 均通过。唯一 Broker/PLE 已优雅关闭；没有连接实体 PLC、下载、启停 runtime、读写/FORCE 变量、保存 PLC 工程或修改 `../Std`。
 - 可复用适配器已提交到旁车仓库本地 commit `f08bb7e`。收场时 GitHub 无 DNS，且 `.gitconfig` 指向的本地 `127.0.0.1:7890` 代理未运行，因此该 commit 与本仓库本轮文档 commit 需在网络恢复后推送；未修改全局代理配置。
 - 正式 P1.2 验收仍需另一次真实 CpStudio Export 产生新 request/action，取得稳定 semantic canonical facts 并生成 semantic candidate；之后由用户独立审阅 warning/semantic candidates，建立正式 baseline，再由后续新的 immutable action 复验。
+
+## Product Phase 1 / semantic candidate bootstrap closed（2026-08-28）
+
+- 第三次真实 Export request `af26d2e5-563b-4776-8990-bdc133a63070` 生成 immutable action `cpstudio-stage2-af26d2e5-563b-4776-8990-bdc133a63070-561d25a4-0001`。Clean Build 为 **0 errors / 4 warnings**，但真实 action 揭示 Runner 验收器仍要求旧 `PLE ScriptEngine double-read` / `PLE REST api v2 GET` 元数据，而已安装 adapter 输出新版 triple-read、bounded-settle、raw-SHA 合同；action 以 `SEMANTIC_ADAPTER_EVIDENCE_INVALID` 封口且不复用。
+- Broker 验收合同已与 adapter 同步：mapping source 精确要求三组语义投影读取加最终 mapping/dirty guard；Symbol source 精确绑定 action 的 application/REST endpoint，要求 2–4 次 settle、3 次权威读取、raw payload SHA 和 8 MiB 上限。新增故障注入覆盖旧 source、缺失 SHA、settle 边界、权威次数、body 上限及 application/endpoint 漂移；Engineering、Runner、Broker 离线自测全部通过。
+- 在用户已授权 CpStudio UI 操作且外部 PLE 为 0 的条件下，AI 通过 CpStudio 官方 `Control plus Studio export` 按钮执行了一次无模型改动的正常 Export，并用正常窗口关闭 CpStudio 自己启动的临时 PLE；未手改 `.project`。新 request 为 `cb1af562-25e6-4523-b2d8-037751d9433d`，Stage 1 仍只发现已知 14 个生成文件变化，无 staged/untracked 文件。
+- 新 immutable action `cpstudio-stage2-cb1af562-25e6-4523-b2d8-037751d9433d-633764e6-0001` 经修复版唯一 Broker 完成：Clean Build **0 errors / 4 complete warnings**；PLC project SHA `7A5461472DF6F62334CCFF10DC807F3D4B78A22FC55E2D0CAD255142CEE4C8F9` 与 structure SHA `00E47D2910CA052887D3D15E0AAB2AA43BAC12544BD10A0ECFF460EA1D73465D` 前后不变；无在线、下载、启停、写变量、FORCE 或第二 PLE。
+- 新 action 正确停在预期的 `SEMANTIC_BASELINE_BOOTSTRAP_REQUIRED`，不是 adapter 故障。已生成无技术 blocker 的 warning candidate（4 次同一 `OPC.UA.DA` managed-library warning）和 semantic candidate：1 个 scope、456 条 mapping（438 bound / 18 unbound），mapping SHA `491B719CA3FFDB28855CF207538B3CB0F1AAFD7C29AD5B577FBC5AACF51A5086`，Symbol SHA `3FE32193B8EAC6FE03662F92BC2EF5AFF0827131C7C7226A2154FD6F2C8E686F`，combined SHA `3BC227C9D1FFAD917F0F5A08427A907A925AF06047FE88E7C7EEF32CEAA6CB52`。这些语义哈希与此前独立 capture 一致。
+- 自动化部分到此完成。下一步必须由用户独立确认 18 个未绑定通道是否符合电气设计、4 条 managed-library warning 是否可接受，并提供真实 reviewer/time/独立审阅证据；candidate/AI triage 不能冒充人审。正式 warning/semantic baseline 建立后还要再做一次正常 Export，以新的 immutable action 完成最终复验。

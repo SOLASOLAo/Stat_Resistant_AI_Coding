@@ -58,7 +58,7 @@
 - [x] Controlled Runner P1.2 真实 PLE 技术通道：受控 adapter、typed warnings 与 semantic snapshot 已通过 Station010 离线 action 验证；隔离 warning-limit REST 工具和显式 `clean_compile_project` 也已实现并安装（2026-08-28）
 - [x] Controlled Runner P1.2 告警完整性技术门禁：仅在可丢弃隔离副本保存 `<no limit>`，关闭重开后连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性/身份/dirty/SHA 门禁均通过；Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] Controlled Runner P1.2 Broker/evidence 已接入 `clean_compile_project`，相关 Runner/Broker/Engineering/Stage/evidence/candidate/initializer 离线测试统一在 PowerShell 7 下通过（2026-08-28）
-- [ ] Controlled Runner P1.2 正式基线验收：尚未生成本轮新的正式 immutable action/candidate；后续须先生成并人工审阅 warning/semantic candidates、创建绑定独立审阅证据的正式 baseline，再用新的 immutable action 复验；完成前 action 必须停在 baseline bootstrap `BLOCKED`
+- [ ] Controlled Runner P1.2 正式基线验收：request `cb1af562-25e6-4523-b2d8-037751d9433d` 已生成完整 warning/semantic candidates（Clean Build 0 errors / 4 warnings；456 mapping records），action 正确停在 `SEMANTIC_BASELINE_BOOTSTRAP_REQUIRED`；后续须由用户独立审阅、创建绑定独立审阅证据的正式 baseline，再用新的 Export/immutable action 复验
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程
