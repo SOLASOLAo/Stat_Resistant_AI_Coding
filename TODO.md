@@ -6,7 +6,7 @@
 
 ### 四阶段总进度（给项目成员看的简版）
 
-- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2 与正式 Station010 基线复验已完成，P1.3a 交互式 Host 已落地；下一步完成自动 action 消费和产品级 Host，再做 P1.4 团队发行
+- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2、正式 Station010 基线和 P1.3b 自动 action 消费已完成；下一步完成 coordinator 接收结果与稳定安装/升级，再做 P1.4 团队发行
 - [ ] **Phase 2 · 项目目录与流程生成（未开始）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；Phase 1 完成前不扩张
 - [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
 - [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
@@ -24,8 +24,9 @@
 - [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
 - [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
-- [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作，无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
-- [ ] 🟡 P1.3b Host 收口：接入受控自动 action 消费，完成崩溃恢复、稳定安装与生命周期验收；P1.3a 完成不等于整个 P1.3 完成
+- [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下仅在存在待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
+- [x] 🟡 P1.3b 自动 action 消费：Host 只消费首次激活后由 operation ledger 指向的 immutable `currentAction`；无 Agent 等待、单 action 执行、历史终态隔离、open claim 恢复、结果保持 `WAITING_FOR_COORDINATOR`；本机 Install/Start/Stop/Restart 验收后为 `WAITING_FOR_ACTION`，5 个历史终态隔离且既有 22 个 claim/result 标记不变，全程未启动 Broker/MCP/PLE/Node/在线操作（2026-08-28）
+- [ ] 🟡 P1.3c 产品 Host 收口：自动接收 result/evidence 并推进 Stage 2 ledger，完成稳定安装目录、版本升级/回滚和完整本机生命周期验收；不得把 P1.3b 视为整个 P1.3 完成
 - [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
 
 ## 项目工程待办

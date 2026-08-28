@@ -65,9 +65,13 @@
    - **P1.3a（2026-08-28 已实现）**：current-user interactive Host 提供单实例、
      心跳/状态、受控停止、限定 JSONL 日志保留和可选 AtLogOn Scheduled Task；只观察同一
      Windows 会话中已验证的 Agent/Broker。Host 永不启动 Broker、MCP、PLE、Node 或在线操作；
-     Agent 不存在时保持 `WAITING_FOR_AGENT`。
-   - **P1.3 后续（未完成）**：自动 action 消费、完整崩溃恢复、稳定安装目录和产品级生命周期
-     尚未完成，不能把 P1.3a 标记为整个 P1.3 完成。
+     有待处理 action 且 Agent 不存在时保持 `WAITING_FOR_AGENT`；没有 action 时保持 `WAITING_FOR_ACTION`。
+   - **P1.3b（2026-08-28 已实现）**：Host 只从 Stage 2 operation ledger 的
+     `currentAction` 发现任务，自动消费首次激活后生成的 immutable action；历史已终态任务
+     隔离、旧 open claim 可恢复、任一异常/歧义失败关闭。无 Agent 时等待，结果生成后保持
+     `WAITING_FOR_COORDINATOR`，不会自行推进 ledger。
+   - **P1.3 后续（未完成）**：result/evidence 自动接收与 ledger 推进、稳定安装目录、
+     产品级升级/回滚和完整生命周期尚未完成，不能把 P1.3b 标记为整个 P1.3 完成。
 4. **P1.4 团队发行**
    - 固定版本、安装包、升级/回滚、兼容矩阵和工作站体检；
    - 新电脑无需手工拼接多个脚本。
@@ -75,8 +79,9 @@
 实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
 Runner Agent/Broker，由它独占 MCP stdio 和 PLE；未来 Windows Service 只负责队列、
-策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。P1.3a Host
-同样只运行在当前用户交互会话，不替代或自动启动 Agent/Broker。
+策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。P1.3 Host
+同样只运行在当前用户交互会话；P1.3b 可调用已经存在且身份匹配的 Agent/Broker，但绝不
+替代或自动启动它。
 
 Phase 1 验收：
 
@@ -142,6 +147,7 @@ Phase 1 验收：
   事务、显式 Clean Build、本机内容寻址 checkpoint、正式 warning/semantic baseline 与全新
   Station010 immutable action 复验均已完成。最终 action 为 0 errors / 4 warnings，456 mapping
   与 Symbol 稳定，工程未改变且无在线操作；P1.2 已关闭；
-- 2026-08-28：P1.3a current-user interactive Host 已完成最小生命周期、状态、日志和可选
-  AtLogOn Task；自动 action 消费与产品级 Host 仍待 P1.3 后续完成；
+- 2026-08-28：P1.3b 已完成 activation 后 immutable action 的受控自动消费、历史隔离、
+  open-claim 恢复、单 action 和 `WAITING_FOR_COORDINATOR`；自动 ledger 推进、稳定安装与
+  升级/回滚仍待 P1.3 后续完成；
 - Phase 2–4 暂不展开实现。

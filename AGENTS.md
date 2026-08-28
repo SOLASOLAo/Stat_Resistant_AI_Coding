@@ -59,8 +59,9 @@
 - [x] Controlled Runner P1.2 告警完整性技术门禁：仅在可丢弃隔离副本保存 `<no limit>`，关闭重开后连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性/身份/dirty/SHA 门禁均通过；Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
 - [x] Controlled Runner P1.2 Broker/evidence 已接入 `clean_compile_project`，相关 Runner/Broker/Engineering/Stage/evidence/candidate/initializer 离线测试统一在 PowerShell 7 下通过（2026-08-28）
 - [x] Controlled Runner P1.2 正式基线验收：Build 前本机内容寻址 `.project` checkpoint 已替代 Git-blob 假设；request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 经真实 PLE 离线验证为 0 errors / 4 warnings，456 mapping、Symbol、正式 baseline、checkpoint 与工程/结构哈希门禁全部通过，且无在线操作（2026-08-28）
-- [x] Controlled Runner P1.3a：current-user interactive Host 已实现单实例、状态/心跳、受控停止、日志保留与可选 AtLogOn Scheduled Task；Host 不启动 Broker/MCP/PLE/Node/在线操作，无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
-- [ ] Controlled Runner P1.3 后续：自动 action 消费、完整崩溃恢复和产品级安装尚未完成；不得把 P1.3a 视为整个 P1.3 完成
+- [x] Controlled Runner P1.3a：current-user interactive Host 已实现单实例、状态/心跳、受控停止、日志保留与可选 AtLogOn Scheduled Task；Host 不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下只有存在待处理 action 且无同会话 Agent 时才保持 `WAITING_FOR_AGENT`（2026-08-28）
+- [x] Controlled Runner P1.3b：Host 已受控自动消费 activation 后的 immutable `currentAction`；历史终态隔离、open claim 恢复、单 action、无 Agent 等待和 `WAITING_FOR_COORDINATOR` 均通过纯离线回归（2026-08-28）
+- [ ] Controlled Runner P1.3 后续：Stage 2 result/evidence 自动接收、稳定安装目录、升级/回滚和产品级生命周期尚未完成；不得把 P1.3b 视为整个 P1.3 完成
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程

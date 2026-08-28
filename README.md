@@ -56,9 +56,11 @@ warning/semantic candidates 已由用户一次明确确认；受控工具不采�
 baselines、Build 前本机内容寻址 checkpoint 和全新 immutable action 已完成最终复验，P1.2
 至此关闭。
 
-P1.3a 已增加 current-user interactive Host：提供单实例、状态/心跳、受控停止、限定日志保留
-和可选 AtLogOn Scheduled Task。Host 永不启动 Broker、MCP、PLE、Node 或在线操作；同会话
-Agent 不存在时只显示 `WAITING_FOR_AGENT`。自动 action 消费仍未实现，因此整个 P1.3 仍在进行。
+P1.3b 已让 current-user Host 自动发现并消费首次激活后生成的 immutable `currentAction`：
+有待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`，执行中保持单 action，终态证据生成后保持
+`WAITING_FOR_COORDINATOR`；历史已终态 action 不会重跑，旧 open claim 可恢复。Host 仍永不
+启动 Broker、MCP、PLE、Node 或在线操作。Stage 2 ledger 的自动结果接收、稳定安装目录和
+升级/回滚仍未完成，因此整个 P1.3 继续进行。
 
 提交前失败关闭加固保持有效：warning 截断在 Broker、Stage 1/2 与 evidence 层统一阻断；
 确认记录、scope 和 baseline 均以同一份有界字节完成校验、SHA 绑定与解析；semantic adapter
