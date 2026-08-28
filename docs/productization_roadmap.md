@@ -69,18 +69,26 @@
    - **P1.3b（2026-08-28 已实现）**：Host 只从 Stage 2 operation ledger 的
      `currentAction` 发现任务，自动消费首次激活后生成的 immutable action；历史已终态任务
      隔离、旧 open claim 可恢复、任一异常/歧义失败关闭。无 Agent 时等待，结果生成后保持
-     `WAITING_FOR_COORDINATOR`，不会自行推进 ledger。
-   - **P1.3 后续（未完成）**：result/evidence 自动接收与 ledger 推进、稳定安装目录、
-     产品级升级/回滚和完整生命周期尚未完成，不能把 P1.3b 标记为整个 P1.3 完成。
+     `WAITING_FOR_COORDINATOR`。
+   - **P1.3c（2026-08-28 技术实现与本机验收完成）**：Host 校验 result/evidence SHA、
+     immutable action 与 ledger 后调用 Stage 2 coordinator；合法 `UNKNOWN`/`FAILED` 无 evidence
+     时保留 `WAITING_FOR_COORDINATOR` 人工复核，busy 有界退避，畸形 ledger 失败关闭。
+     production ingestor 默认装配通过 6 项 fixture E2E 和真实 ledger lock busy 验收。
+   - 稳定部署采用 `LocalAppData` 下 5 文件内容寻址不可变 release 和 durable pending
+     journal/reconcile；源任务禁用/已删除、`STATE_COMMITTED`、强杀后默认 `Start` 恢复、新 release
+     升级/同版本/回滚/损坏拒绝，以及 deployment 丢失时基于精确任务的安全 `Uninstall` 均已通过。
+     AtLogOn action 精确指向 release exe，description 记录 release/manifest；显式生命周期命令验证
+     5 个文件并执行 self-check，登录任务自身不做 prelaunch manifest 校验。Host 不启动 Broker、
+     MCP、PLE、Node 或在线操作。
 4. **P1.4 团队发行**
-   - 固定版本、安装包、升级/回滚、兼容矩阵和工作站体检；
+   - 团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵和工作站体检；
    - 新电脑无需手工拼接多个脚本。
 
 实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
 Runner Agent/Broker，由它独占 MCP stdio 和 PLE；未来 Windows Service 只负责队列、
 策略和证据，通过本地 IPC 调用 Agent，不从 Session 0 直接启动可见 PLE。P1.3 Host
-同样只运行在当前用户交互会话；P1.3b 可调用已经存在且身份匹配的 Agent/Broker，但绝不
+同样只运行在当前用户交互会话；P1.3b/P1.3c 可调用已经存在且身份匹配的 Agent/Broker，但绝不
 替代或自动启动它。
 
 Phase 1 验收：
@@ -148,6 +156,13 @@ Phase 1 验收：
   Station010 immutable action 复验均已完成。最终 action 为 0 errors / 4 warnings，456 mapping
   与 Symbol 稳定，工程未改变且无在线操作；P1.2 已关闭；
 - 2026-08-28：P1.3b 已完成 activation 后 immutable action 的受控自动消费、历史隔离、
-  open-claim 恢复、单 action 和 `WAITING_FOR_COORDINATOR`；自动 ledger 推进、稳定安装与
-  升级/回滚仍待 P1.3 后续完成；
+  open-claim 恢复、单 action 和 `WAITING_FOR_COORDINATOR`；
+- 2026-08-28：P1.3c 技术实现与本机验收完成。production ingestor 默认装配 6 项 fixture E2E、
+  真实 ledger lock busy、durable journal/reconcile，以及源任务禁用/已删除、`STATE_COMMITTED`、
+  强杀后默认 `Start` 恢复、新 release 升级/同版本/回滚/损坏拒绝和 deployment 丢失时基于精确
+  任务的安全 `Uninstall` 均通过。主 Host active `faa27c...0f1`、previous `ac89b...4b51`，状态
+  `WAITING_FOR_ACTION`；未启动 Broker/MCP/PLE/Node 或在线操作；
+- 2026-08-28：P1.4 尚未完成，范围为团队工作站安装、签名、受控安装包、登录前 manifest
+  bootstrap、兼容矩阵与新电脑验收；P1.3c 的任务 action 虽精确指向 release exe 且 description
+  记录 release/manifest，但登录任务自身不做 prelaunch manifest 校验；
 - Phase 2–4 暂不展开实现。

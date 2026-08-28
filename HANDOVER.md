@@ -670,3 +670,11 @@
 - Host 后台入口已改为 Windows GUI subsystem apphost，计划任务启动时不再创建空白 Windows Terminal；`Status/Stop/Logs` 则固定通过 `dotnet + vcrunner-host.dll` 保留控制台 JSON。升级按 `Stop → Uninstall → Build → Install → Start` 完成，本机 Host 最终为 `WAITING_FOR_ACTION`，无子进程且未新增 `WindowsTerminal/OpenConsole/conhost`，22 个既有 claim/result 标记保持不变。
 - P1.3b 到此完成，但整个 P1.3 尚未完成。下一步 P1.3c 只做 result/evidence 自动接收与 Stage 2 ledger 推进，以及稳定安装目录、升级/回滚；完整 artifact 哈希复验、handle-based 路径加固和 Broker 重试退避保留为该阶段的产品化边界。
 - 可复用实现已提交到嵌套仓库 commit `41a49c0`，本项目计划/交接也已本地提交。收场时配置的 `127.0.0.1:7890` 代理未运行，临时禁用代理后本机又无法解析 `github.com`，所以两个 branch 仍待网络恢复后 push；没有修改全局代理或公司网络设置。
+
+## Product Phase 1 / P1.3c technical and local acceptance closed（2026-08-28）
+
+- Host 已完整校验 result/evidence SHA、immutable action 与 operation ledger，再调用 Stage 2 coordinator 推进 ledger。合法 `UNKNOWN`/`FAILED` 且无 evidence 时保持 `WAITING_FOR_COORDINATOR` 交给人工复核；coordinator busy 使用有界退避，畸形 ledger 失败关闭。production ingestor 默认 Host 装配已通过 6 项 fixture E2E，另以真实 ledger lock 验证 busy 路径。
+- 稳定部署使用当前用户 `LocalAppData` 下包含 5 个文件的内容寻址不可变 release，并以 durable pending journal/reconcile 覆盖中断窗口。恢复验收覆盖源任务禁用、源任务已删除、`STATE_COMMITTED`，以及 wrapper 被强杀后由默认 `Start` 的窄门禁完成恢复。
+- 生命周期验收覆盖新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 状态丢失时从精确任务反推 immutable release 的安全 `Uninstall`。主 Host active release 为 `faa27c1d79415996ddcd524833160c57ea23ac63888f17b853487a81b46ab0f1`，previous release 为 `ac89b28f9a93a61c10b5bd7731c3b5b83288169a105c62eb4218a30c119f4b51`，状态为 `WAITING_FOR_ACTION`。
+- AtLogOn Scheduled Task 的 action 精确指向 release exe，description 记录 release/manifest。`Install`、`Start`、`Stop`、`Rollback`、`Uninstall` 等显式生命周期路径会验证 5 个 release 文件并执行 apphost self-check；登录任务自身直接启动 exe，不做 prelaunch manifest 校验。
+- P1.3c 技术实现与本机验收到此完成；Host 未启动 Broker、MCP、PLE、Node 或任何在线 PLC 操作，也未连接、下载、启停或写入 PLC。团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵与新电脑验收属于 P1.4，仍未完成。

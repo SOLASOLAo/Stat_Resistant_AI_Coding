@@ -59,8 +59,24 @@ baselines、Build 前本机内容寻址 checkpoint 和全新 immutable action �
 P1.3b 已让 current-user Host 自动发现并消费首次激活后生成的 immutable `currentAction`：
 有待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`，执行中保持单 action，终态证据生成后保持
 `WAITING_FOR_COORDINATOR`；历史已终态 action 不会重跑，旧 open claim 可恢复。Host 仍永不
-启动 Broker、MCP、PLE、Node 或在线操作。Stage 2 ledger 的自动结果接收、稳定安装目录和
-升级/回滚仍未完成，因此整个 P1.3 继续进行。
+启动 Broker、MCP、PLE、Node 或在线操作。
+
+P1.3c 技术实现与本机验收已完成。Host 会校验 result/evidence SHA、immutable action 与 operation
+ledger，再调用 Stage 2 coordinator 推进；合法 `UNKNOWN`/`FAILED` 且无 evidence 时保持
+`WAITING_FOR_COORDINATOR` 等待人工复核，busy 使用有界退避，畸形 ledger 失败关闭。production
+ingestor 默认装配已通过 6 项 fixture E2E 和真实 ledger lock busy 验收。
+
+稳定部署使用 `LocalAppData` 下包含 5 个文件的内容寻址不可变 release，并以 durable pending
+journal/reconcile 覆盖中断窗口。显式生命周期命令会验证全部 5 个文件和 apphost self-check；AtLogOn
+task 的 action 精确指向 release exe，description 记录 release/manifest，但登录任务自身不会在启动前
+执行 manifest 校验。`Install` 对同版本幂等并可升级，`Rollback` 可切回上一版本，失败升级恢复旧任务
+及原运行状态。
+
+本机验收还覆盖源任务禁用/已删除、`STATE_COMMITTED`、wrapper 被强杀后由默认 `Start` 窄门禁恢复、
+新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 丢失时基于精确任务的安全
+`Uninstall`。主 Host 当前 active release 为 `faa27c...0f1`，previous release 为 `ac89b...4b51`，
+状态为 `WAITING_FOR_ACTION`。团队工作站安装、签名、受控安装包和登录前 manifest bootstrap 转入
+P1.4，尚未完成。
 
 Host 的登录任务使用无控制台 apphost，后台运行不再弹出空白终端；人工执行
 `Status/Stop/Logs` 时仍通过 `dotnet + DLL` 返回结构化结果。

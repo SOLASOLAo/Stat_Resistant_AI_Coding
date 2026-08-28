@@ -6,7 +6,7 @@
 
 ### 四阶段总进度（给项目成员看的简版）
 
-- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2、正式 Station010 基线和 P1.3b 自动 action 消费已完成；下一步完成 coordinator 接收结果与稳定安装/升级，再做 P1.4 团队发行
+- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2、正式 Station010 基线和 P1.3c 技术实现/本机验收已完成；下一步进入 P1.4 团队发行
 - [ ] **Phase 2 · 项目目录与流程生成（未开始）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；Phase 1 完成前不扩张
 - [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
 - [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
@@ -26,8 +26,11 @@
 - [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
 - [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下仅在存在待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
 - [x] 🟡 P1.3b 自动 action 消费：Host 只消费首次激活后由 operation ledger 指向的 immutable `currentAction`；无 Agent 等待、单 action 执行、历史终态隔离、open claim 恢复、结果保持 `WAITING_FOR_COORDINATOR`；本机 Install/Start/Stop/Restart 验收后为 `WAITING_FOR_ACTION`，后台任务已改用无控制台 apphost，不再弹空白终端；5 个历史终态隔离且既有 22 个 claim/result 标记不变，全程未启动 Broker/MCP/PLE/Node/在线操作（2026-08-28）
-- [ ] 🟡 P1.3c 产品 Host 收口：自动接收 result/evidence 并推进 Stage 2 ledger，完成稳定安装目录、版本升级/回滚和完整本机生命周期验收；不得把 P1.3b 视为整个 P1.3 完成
-- [ ] 🟡 P1.4 团队发行：固定版本、安装包、升级回滚、兼容矩阵和新电脑验收
+- [x] 🟡 P1.3c result/evidence coordinator：验证 result/evidence SHA、immutable action 与 ledger 后自动推进；合法 `UNKNOWN`/`FAILED` 无 evidence 保持人工复核，busy 有界退避，畸形 ledger 失败关闭；production ingestor 默认装配 6 项 fixture E2E 和真实 ledger lock busy 均通过（2026-08-28）
+- [x] 🟡 P1.3c durable 稳定部署：`LocalAppData` 下 5 文件内容寻址不可变 release、pending journal/reconcile、幂等 Install/升级、Rollback 和失败升级恢复已实现；AtLogOn action 精确指向 release exe，description 记录 release/manifest。显式生命周期命令校验 5 个文件和 self-check，登录任务本身不做 prelaunch manifest 校验（2026-08-28）
+- [x] 🟡 P1.3c 本机生命周期：源任务禁用/已删除、`STATE_COMMITTED`、强杀后默认 `Start` 恢复、新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 丢失时基于精确任务的安全 `Uninstall` 均通过；主 Host active `faa27c...0f1`、previous `ac89b...4b51`、状态 `WAITING_FOR_ACTION`（2026-08-28）
+- [x] 🟡 P1.3c 技术实现与本机验收完成；Host 未启动 Broker/MCP/PLE/Node 或任何在线操作（2026-08-28）
+- [ ] 🟡 P1.4 团队发行：团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵和新电脑验收
 
 ## 项目工程待办
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)

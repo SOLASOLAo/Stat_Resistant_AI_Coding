@@ -68,30 +68,61 @@ Symbol/project hashes. One explicit user confirmation is sufficient; no name,
 employee ID or redundant approval is collected. `apply_change_set_and_build`
 remains unsupported and returns `BLOCKED_UNSUPPORTED_ACTION`.
 
-## P1.3a current-user Host
+## P1.3 current-user Host lifecycle
 
-Build the Host once, then use the project wrapper for its lifecycle:
+Production lifecycle commands use only a validated immutable release installed
+under the current user's `LocalAppData`:
+
+```powershell
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Rollback
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Status
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Start
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Stop
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Logs
+```
+
+`Install` is idempotent for the same release and performs an upgrade when the
+release changes. It installs a content-addressed immutable five-file release and
+registers an AtLogOn Scheduled Task whose action points exactly to the release
+executable; the task description records the release and manifest identities.
+Explicit lifecycle commands validate all five release files and run the apphost
+self-check. The logon task launches the executable directly and does not perform
+a prelaunch manifest validation. `Rollback` switches to the previous validated
+release. A failed upgrade restores the old task and its prior running/stopped state.
+
+Production `Start` never runs from build output. A raw build-output process is
+available only for explicit development testing:
 
 ```powershell
 dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Host\CtrlX.OpCon.Runner.Host.csproj -c Release
-.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Status
-.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install -WhatIf
-.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Install
-.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Start
-.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Stop
+.\scripts\runner\Invoke-CtrlXOpconRunnerHost.ps1 -Command Start -DevelopmentProcess
 ```
 
-The Host runs only in the current user's interactive Windows session. Optional
-`Install` registers an AtLogOn Scheduled Task. The Host never starts Broker,
-MCP, PLE, Node or an online PLC operation; without a validated same-session
-Agent it remains `WAITING_FOR_AGENT`. Automatic action consumption is not yet
-implemented, so P1.3 as a whole remains open. Default `Start` requires the exact
-validated task; raw process start is available only through explicit
-`-DevelopmentProcess` for development testing.
+The Host runs only in the current user's interactive Windows session. It consumes
+eligible immutable actions and verifies result/evidence hashes plus the immutable
+action/ledger before invoking the Stage 2 coordinator. Valid `UNKNOWN`/`FAILED`
+results without evidence remain `WAITING_FOR_COORDINATOR` for manual review;
+busy is retried with bounded backoff and malformed ledgers fail closed. The Host
+never starts Broker, MCP, PLE, Node or an online PLC operation.
+
+P1.3c technical implementation and local-machine acceptance are complete. The
+production ingestor's default Host assembly passed six fixture E2E cases and a
+real ledger-lock busy case. Durable pending journal/reconcile recovery passed for
+disabled and deleted source tasks, `STATE_COMMITTED`, and a force-killed wrapper
+followed by the narrowly gated default `Start`. New-release upgrade, same-release
+no-op, rollback, corrupt-candidate rejection, and safe task-derived `Uninstall`
+with missing deployment state also passed. The main Host is active on release
+`faa27c...0f1`, with previous release `ac89b...4b51`, and reports
+`WAITING_FOR_ACTION`.
+
+P1.4 remains open for team-workstation installation, signing, a controlled
+installer package, pre-logon manifest bootstrap, compatibility coverage, and
+new-machine acceptance.
 
 ## Safety boundary
 
-P1.1, P1.2a and the P1.3a Host contain no connect, download, PLC runtime start/stop,
+P1.1, P1.2a and the P1.3 Host contain no connect, download, PLC runtime start/stop,
 runtime write or FORCE capability. The client and Host have no generic
 tool-execution surface; the Host also has no command that launches
 PLE/MCP/Broker/Node.

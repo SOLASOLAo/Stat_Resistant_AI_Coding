@@ -1,12 +1,15 @@
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
 param(
     [Parameter(Mandatory = $false)]
-    [ValidateSet('Install', 'Uninstall', 'Start', 'Stop', 'Status', 'Logs')]
+    [ValidateSet('Install', 'Rollback', 'Uninstall', 'Start', 'Stop', 'Status', 'Logs')]
     [string]$Command = 'Status',
 
     [Parameter(Mandatory = $false)]
     [Alias('ProjectRoot', 'RepositoryRoot')]
     [string]$EngineeringRoot,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ReleasePath,
 
     [Parameter(Mandatory = $false)]
     [switch]$DevelopmentProcess
@@ -24,5 +27,6 @@ if (-not $EngineeringRoot) {
 & $implementation `
     -Command $Command `
     -EngineeringRoot $EngineeringRoot `
+    -ReleasePath $ReleasePath `
     -DevelopmentProcess:$DevelopmentProcess `
     -WhatIf:$WhatIfPreference
