@@ -54,9 +54,11 @@
      连续两次显式 Clean Build 均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，完整性、
      identity、dirty 和 SHA 门禁全部通过，Station010 源工程 SHA 未变且没有在线操作。
      Broker/evidence 现已接入 `clean_compile_project`，全部离线回归统一在 PowerShell 7 下
-     通过。下一步仍是生成本轮新的 warning/semantic candidates、人工审阅、正式 baseline
-     建立及新的 immutable action 复验；这些产物尚未创建，完成前仍必须 baseline-bootstrap
-     `BLOCKED`。
+     通过。两次新的真实 Export action 均取得完整 0 errors / 4 warnings；第二次暴露并修复了
+     raw mapping 顺序/内部字段与 Symbol 多阶段重建导致的稳定性误判。适配器现在比较最终
+     mapping 语义投影，并在最多 4 次的 Symbol 有界收敛后执行三组 Mapping/Symbol 交叉权威
+     读取，最后保留 Mapping/dirty guard。下一步仍需新的真实 Export 取得 semantic candidate，再完成人工审阅、
+     正式 baseline 建立及另一个 immutable action 复验；完成前仍必须保持 `BLOCKED`。
      不得执行 action 中的自由文本指令。
    - **P1.2b 失败关闭加固（2026-08-28 已实现）**：warning 截断不会进入正式
      baseline；candidate/AI triage（含改名副本）不能冒充独立人工 review；review/scope/

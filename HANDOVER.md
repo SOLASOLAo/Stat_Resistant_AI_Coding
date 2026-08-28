@@ -610,3 +610,13 @@
 - action 在 semantic snapshot 处失败关闭。只读复测证明 Clean Build 后 Symbol Configuration 首次成功 REST GET 可能仍是异步重建中的短响应；随后响应才稳定。适配器已改为丢弃恰好一次有界 warm-up GET，再保留严格权威双读；mapping 三读、最终 dirty probe 和任一差异失败关闭均未放宽。
 - 原 action 已提交 sealed evidence 并以 `BLOCKED` 封口，不能重跑或复用。已从完整告警证据生成待人工审阅的 warning candidate；该 action 没有有效 semantic candidate。下一步必须由一次新的真实 CpStudio Export 生成新 request/action，验证修复后的 semantic snapshot，再建立正式人工 baseline。
 - 本轮没有连接实体 PLC、下载、启停 runtime、读写/FORCE 变量或保存 PLC 工程；没有修改 `../Std`。OpCon Plus ControlOn 规则同步写入 catalog/spec/docs：Unit/Peripheral 故障通过 Station/应用释放聚合阻止或撤销 Control On，应用不得直接写 `_000K911/_000K951`。
+
+## Product Phase 1 / second real Export action and semantic stabilization（2026-08-28）
+
+- 精确消费 CpStudio request `fa0c5fa1-3fff-4b3c-a8d3-05f590538fb4`（本地 11:31:00），生成并执行 immutable action `cpstudio-stage2-fa0c5fa1-3fff-4b3c-a8d3-05f590538fb4-d8fa7348-0001`。Clean Build 为 **0 errors / 4 warnings**，四条均为完整、未截断的 `OPC.UA.DA` attribute warning；PLC project SHA `70024B739B6C39832644870D7612431280E5AA77A7FC461B8CAD384A27B1178A` 与 structure SHA `0252BF2D7580B8DF961634EC8D227DE04E19CEC8098E7DDF2B7BC73154EC1D9B` 前后不变。
+- action 在 semantic acceptance 处以 `SEMANTIC_ADAPTER_RETURNED_ERROR` 失败关闭并提交 sealed evidence；没有 semantic candidate。完整 warning evidence 已生成新的 `pending-human-review` candidate。该 action 已终态封口，不重跑、不复用。
+- 旧失败证据把 Project、Mapping 和 Symbol 合并成同一错误，不能证明本次究竟是哪一层变化；代码审查同时发现两个确定缺陷：适配器拿 PLE mapping 的原始记录顺序/内部诊断字段做比较，而最终 baseline 封存的是排序、去内部字段后的语义投影；Clean Build 后 Symbol Configuration 也可能经历多于一个成功但未完成的过渡响应。两者都会造成“实际语义未变但原始表示变化”的误判。
+- 修复后采用三组 Mapping/Symbol 交叉权威读取：mapping 只比较最终会封存的语义投影并逐条验证完整性，Symbol 在最多 4 次有界 settle 后丢弃 settle 数据并独立权威三读；最后再执行一次 Mapping/dirty guard，关闭最后一次 Symbol 读取后的编辑竞态。30 s 单读超时、8 MiB body 上限和 480 KiB MCP 响应上限均保留，失败诊断只返回大小/SHA 和固定组件名，不回显 Symbol/Mapping 内容。
+- Node regression、完整 adapter readiness、全局补丁应用和最终 `-Check` 均通过。唯一 Broker/PLE 已优雅关闭；没有连接实体 PLC、下载、启停 runtime、读写/FORCE 变量、保存 PLC 工程或修改 `../Std`。
+- 可复用适配器已提交到旁车仓库本地 commit `f08bb7e`。收场时 GitHub 无 DNS，且 `.gitconfig` 指向的本地 `127.0.0.1:7890` 代理未运行，因此该 commit 与本仓库本轮文档 commit 需在网络恢复后推送；未修改全局代理配置。
+- 正式 P1.2 验收仍需另一次真实 CpStudio Export 产生新 request/action，取得稳定 semantic canonical facts 并生成 semantic candidate；之后由用户独立审阅 warning/semantic candidates，建立正式 baseline，再由后续新的 immutable action 复验。

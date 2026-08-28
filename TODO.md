@@ -123,5 +123,7 @@
 - [x] 🔴 维修门/安全回路反馈闭环：维修门 A/B 缺失与 `_000K981_Y32` 1 s 超时共用 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED` 并写入具体 BMK AdditionalInfo；安全门、压缸手动与 Home 关门步骤加入 `_000K981_Y32/_000K913_Y32/_000K912_Y32` 联锁；四种 Mode Release 加入急停和维修门继电器反馈，离线编译 0 errors / 7 warnings(2026-08-19)
 - [ ] 🔴 真机专项验证维修门安全继电器：两门关闭后 `_000K981_Y32` 应在 1 s 内成立；分别断开 A 门、B 门和继电器反馈，核对 AdditionalInfo BMK、主气压禁止、模式释放与 Control Off 恢复流程
 - [x] 🔴 真实 Export `08bd1cc9-f16d-4903-99ff-7d83a88b0dae` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings；action 因 Clean Build 后首次 Symbol REST 瞬态响应而失败关闭，sealed evidence 与 warning candidate 已生成（2026-08-28）
-- [x] 🔴 semantic adapter 已增加一次有界 Symbol warm-up，之后仍执行严格权威双读、mapping 三读和最终 dirty probe；补丁/回归/全局安装检查通过（2026-08-28）
-- [ ] 🔴 用户再执行一次真实 CpStudio Export；按新 request 精确生成不可变 action，复验 semantic snapshot，生成 warning/semantic candidates，完成人工 baseline 审阅后再以第三个新 action 验收
+- [x] 🔴 第二次真实 Export `fa0c5fa1-3fff-4b3c-a8d3-05f590538fb4` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings、工程/结构 SHA 不变；action 停在合并式 semantic stability 错误门禁，审查发现并修复 raw mapping 表示噪声与 Symbol 多阶段重建两个缺陷，新 warning candidate 已生成（2026-08-28）
+- [x] 🔴 semantic adapter 已改为三组 Mapping/Symbol 交叉权威读取 + Symbol 最多 4 次有界 settle + 最终 Mapping/dirty guard；逐条 mapping 完整性与末端 Symbol TOCTOU 反例均纳入回归，补丁、全局安装和 `-Check` 通过（2026-08-28）
+- [ ] 🟡 网络恢复后推送本仓库本轮文档 commit 与 `ctrlx-ai-coding` commit `f08bb7e`；当前 GitHub 无 DNS，配置的本地 `127.0.0.1:7890` 代理未运行，未擅自更改公司代理配置
+- [ ] 🔴 用户再执行一次真实 CpStudio Export；按新 request 生成新 action，取得稳定 semantic canonical facts 并生成 semantic candidate；人工审阅并建立 warning/semantic baselines 后，再以另一个全新 action 完成正式验收
