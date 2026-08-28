@@ -9,10 +9,21 @@ application_interfaces:
   control_on_feedback: OutImm.IsCtrlOn
   application_release: ParImm.UserEnableControlOn
 
+standard_signal_contract:
+  enable_control_on: _000K911
+  switch_control_on_pulse: _000K951
+  control_on_feedback: _000K911_Y32
+  notes:
+    - _000K911 is the continuous Control On / safety-circuit release output
+    - _000K951 is the time-limited switch-on pulse, not the maintained release
+    - _000K911_Y32 is the electrical feedback used by the application and mode releases
+
 verified_rules:
   - application faults may revoke Control On through ParImm.UserEnableControlOn
+  - the standard addon also requires its configured bus-master and Control Off conditions
+  - unit or peripheral faults may reach Control On through the enclosing OpCon Station release and application aggregation
   - application code must not directly take ownership of the standard Control On output
 
 verified_in:
   project: Station010
-  date: 2026-08-18
+  date: 2026-08-28

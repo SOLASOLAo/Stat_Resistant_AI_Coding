@@ -33,6 +33,12 @@ flowchart TD
 
 `StationUnit.OnCall` 每个扫描周期按“维修门控制 → 虚拟反馈 → 主气压控制”调用。虚拟反馈读取的是主压力 FB 上一个扫描周期形成的最终阀命令；这一扫描周期差远小于 1 s 延时，不影响诊断。
 
+## OpCon Plus ControlOn 的释放模型
+
+本项目确认采用 OpCon Plus 的标准故障传播方式。`_000K911` 是持续的 Control On/安全回路释放输出，`_000K951` 是限时的 Switch Control On 脉冲，`_000K911_Y32` 是电气实际反馈。应用代码不得直接抢写 `_000K911` 或 `_000K951`。
+
+标准 `ControlOn` AddOn 自身会检查配置的 BusMaster、Control Off 和 `ParImm.UserEnableControlOn` 等条件。在 Station010 集成层，Unit/Peripheral 的故障或未就绪状态还会经 OpCon 的 Unit → Command Handler → Mode Handler/Station 聚合，使 Station/应用释放不成立；在本项目中最终体现为 `UserEnableControlOn` 不成立，Control On 因而不能建立或被撤销。本项目主气压故障也通过同一正式接口 `Station.ControlOn.ParImm.UserEnableControlOn` 主动撤销允许条件。因此，现场出现“某设备通讯恢复后 `_000K911` 才正常输出”属于这个设计链条，而不是 `_000K911` 与该设备被应用代码直接硬接。
+
 ## 正常上电时序
 
 1. 操作者按 `_000S901`。

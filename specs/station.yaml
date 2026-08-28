@@ -33,6 +33,18 @@ cyclic_application_controls:
     type: FB_MaintenanceDoorControl
     version: V1.0.0
 
+control_on_integration:
+  standard_addon: Station.ControlOn
+  maintained_release_output: _000K911
+  switch_on_pulse_output: _000K951
+  electrical_feedback: _000K911_Y32
+  application_release: Station.ControlOn.ParImm.UserEnableControlOn
+  fault_propagation:
+    - Unit and Peripheral diagnostics are aggregated by the enclosing OpCon Station
+    - in Station010 an unsatisfied Station/application release leaves application_release false and prevents or revokes Control On
+    - Station010 pressure faults additionally revoke application_release
+  ownership_boundary: application logic must not write _000K911 or _000K951 directly
+
 virtual_pressure_feedback:
   reason: _000B085A_LOW and _000B085A_HIGH have no physical signal connection
   source: Station.MainPressureControl.xValveOn

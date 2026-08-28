@@ -122,3 +122,6 @@
 - [x] 🔴 CpStudio 模型中 `Wp100A104Kistler` 的 8 个对象级手动条件已改为 `TRUE` 并重新导出；HMI 回读 8 个 TRUE、0 个 FALSE，与 PLC OnManRelease 一致(2026-08-19)
 - [x] 🔴 维修门/安全回路反馈闭环：维修门 A/B 缺失与 `_000K981_Y32` 1 s 超时共用 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED` 并写入具体 BMK AdditionalInfo；安全门、压缸手动与 Home 关门步骤加入 `_000K981_Y32/_000K913_Y32/_000K912_Y32` 联锁；四种 Mode Release 加入急停和维修门继电器反馈，离线编译 0 errors / 7 warnings(2026-08-19)
 - [ ] 🔴 真机专项验证维修门安全继电器：两门关闭后 `_000K981_Y32` 应在 1 s 内成立；分别断开 A 门、B 门和继电器反馈，核对 AdditionalInfo BMK、主气压禁止、模式释放与 Control Off 恢复流程
+- [x] 🔴 真实 Export `08bd1cc9-f16d-4903-99ff-7d83a88b0dae` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings；action 因 Clean Build 后首次 Symbol REST 瞬态响应而失败关闭，sealed evidence 与 warning candidate 已生成（2026-08-28）
+- [x] 🔴 semantic adapter 已增加一次有界 Symbol warm-up，之后仍执行严格权威双读、mapping 三读和最终 dirty probe；补丁/回归/全局安装检查通过（2026-08-28）
+- [ ] 🔴 用户再执行一次真实 CpStudio Export；按新 request 精确生成不可变 action，复验 semantic snapshot，生成 warning/semantic candidates，完成人工 baseline 审阅后再以第三个新 action 验收

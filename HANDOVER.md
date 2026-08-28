@@ -602,3 +602,11 @@
 - Station010 PLC 源工程 SHA-256 在全过程保持 `0F9557B3F5100E4FF44EBF1BE30C5833EFE11F1E02D8A8AB3991DD24640734CA`；没有连接实体 PLC、下载、启停 runtime、读写/Force 变量或执行其他在线操作，也没有修改 CpStudio、IO 或 `Std`。
 - Broker/evidence 已接入显式 `clean_compile_project` 合同，Runner/Broker/Engineering/Stage/evidence/candidate/initializer 的全部离线回归统一在 PowerShell 7 下通过。该结果只关闭技术执行与告警完整性门禁；本轮新的正式 immutable action/candidate 必须由下一次真实 CpStudio Export 产生，不能伪造 Export 或复用已经执行的旧 action。人工 warning/semantic baseline 也尚未审阅或建立，action 继续保持 baseline-bootstrap `BLOCKED`。
 - 先前 GitHub 网络阻塞已经解除：根仓库 `6090e32` 与嵌套 `ctrlx-ai-coding` 的 `bcda841` 均已在各自远端分支。上一节“尚未上传”的记录已被本节取代；本节及当前后续工作仍须另行提交和推送。
+
+## Product Phase 1 / first real Export action（2026-08-28）
+
+- 精确消费 CpStudio request `08bd1cc9-f16d-4903-99ff-7d83a88b0dae`（本地 09:31:42），Stage 1 报告为 `review`：检测到 14 个 Station010 生成文件变化，无 staged/untracked 文件；未盲取队列中 13 个更早的历史请求。
+- 生成并执行 immutable action `cpstudio-stage2-08bd1cc9-f16d-4903-99ff-7d83a88b0dae-c7a0ea87-0001`。受控 Broker 只调用 status、`clean_compile_project` 和 semantic snapshot；Clean Build 为 **0 errors / 4 warnings**，四条均为相同的 `OPC.UA.DA` attribute warning，warning 记录完整且未截断，PLC project SHA 与 structure SHA 前后不变。
+- action 在 semantic snapshot 处失败关闭。只读复测证明 Clean Build 后 Symbol Configuration 首次成功 REST GET 可能仍是异步重建中的短响应；随后响应才稳定。适配器已改为丢弃恰好一次有界 warm-up GET，再保留严格权威双读；mapping 三读、最终 dirty probe 和任一差异失败关闭均未放宽。
+- 原 action 已提交 sealed evidence 并以 `BLOCKED` 封口，不能重跑或复用。已从完整告警证据生成待人工审阅的 warning candidate；该 action 没有有效 semantic candidate。下一步必须由一次新的真实 CpStudio Export 生成新 request/action，验证修复后的 semantic snapshot，再建立正式人工 baseline。
+- 本轮没有连接实体 PLC、下载、启停 runtime、读写/FORCE 变量或保存 PLC 工程；没有修改 `../Std`。OpCon Plus ControlOn 规则同步写入 catalog/spec/docs：Unit/Peripheral 故障通过 Station/应用释放聚合阻止或撤销 Control On，应用不得直接写 `_000K911/_000K951`。
