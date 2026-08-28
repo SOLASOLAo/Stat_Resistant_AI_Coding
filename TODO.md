@@ -125,7 +125,6 @@
 - [x] 🔴 真实 Export `08bd1cc9-f16d-4903-99ff-7d83a88b0dae` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings；action 因 Clean Build 后首次 Symbol REST 瞬态响应而失败关闭，sealed evidence 与 warning candidate 已生成（2026-08-28）
 - [x] 🔴 第二次真实 Export `fa0c5fa1-3fff-4b3c-a8d3-05f590538fb4` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings、工程/结构 SHA 不变；action 停在合并式 semantic stability 错误门禁，审查发现并修复 raw mapping 表示噪声与 Symbol 多阶段重建两个缺陷，新 warning candidate 已生成（2026-08-28）
 - [x] 🔴 semantic adapter 已改为三组 Mapping/Symbol 交叉权威读取 + Symbol 最多 4 次有界 settle + 最终 Mapping/dirty guard；逐条 mapping 完整性与末端 Symbol TOCTOU 反例均纳入回归，补丁、全局安装和 `-Check` 通过（2026-08-28）
-- [ ] 🟡 网络恢复后推送本仓库本轮文档 commit 与 `ctrlx-ai-coding` commit `f08bb7e`；当前 GitHub 无 DNS，配置的本地 `127.0.0.1:7890` 代理未运行，未擅自更改公司代理配置
 - [x] 🔴 已经 CpStudio 官方 Export 生成 request `cb1af562-25e6-4523-b2d8-037751d9433d`，修复版 Runner 取得稳定 semantic canonical facts 并生成 warning/semantic candidates（0 errors / 4 complete warnings；456 mapping records）（2026-08-28）
 - [x] 🔴 用户已确认当前 candidates：18 个 unbound EtherCAT 通道当前不用，4 条相同 `OPC.UA.DA` managed-library warning 暂不处理；baseline 不采集姓名/工号，改用 `confirmedByUser` 与机器生成元数据（2026-08-28）
 - [x] 🔴 已由 `Approve-PostExportBaselines.ps1` 原子建立两个正式 baseline 和无身份确认记录；未收集姓名/工号（2026-08-28）
