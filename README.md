@@ -82,8 +82,9 @@ P1.4a 已完成精简团队离线包：发行端生成包含 `Install.ps1`、can
 runtime 和本 AI 工程根目录，不需要 Git、源码、SDK 或本机 build。安装器会在任何命令前校验
 path/length/SHA-256/contentId，支持首装/升级、精确回滚、安全卸载和只读状态查询。fresh
 `Install` 默认不启动 Host；升级保留原 running/stopped 状态。当前不增加自定义 ACL，数字签名
-延期到商业发行或公司 IT 明确要求。独立 AtLogOn 五文件 prelaunch bootstrap、兼容矩阵和新电脑
-验收仍未完成，因此 P1.4 整体保持开放。
+延期到商业发行或公司 IT 明确要求。独立 AtLogOn 五文件 prelaunch bootstrap 按用户决定延期到
+商业化/无人值守部署阶段；开发期继续显式启动 Host。兼容矩阵和新电脑验收在有团队工位时再做，
+这些部署项不阻塞当前功能开发，P1.4 产品化范围仍保持开放。
 
 Host 的登录任务使用无控制台 apphost，后台运行不再弹出空白终端；人工执行
 `Status/Stop/Logs` 时仍通过 `dotnet + DLL` 返回结构化结果。

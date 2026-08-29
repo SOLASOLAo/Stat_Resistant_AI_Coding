@@ -85,8 +85,10 @@
      wrapper/module、包 manifest 和 Host 五文件；接收工位无需 Git、源码、SDK 或本机 build，
      支持完整性校验、首装/升级、精确回滚、安全卸载与状态查询。fresh Install 默认停止，升级
      保留原 running/stopped 状态；
-   - **P1.4b/P1.4c（未完成）**：独立登录前五文件 bootstrap、最小兼容矩阵和全新同事电脑验收。
-     默认沿用当前用户权限、不增加自定义 ACL；数字签名延期到商业发行或公司 IT 明确要求。
+   - **P1.4b（延期，不阻塞开发）**：独立登录前五文件 bootstrap 只在商业化或明确需要无人值守
+     登录自启时实施；开发期继续显式启动 Host；
+   - **P1.4c（有团队工位时执行）**：最小兼容矩阵和全新同事电脑验收。默认沿用当前用户权限、
+     不增加自定义 ACL；数字签名延期到商业发行或公司 IT 明确要求。
 
 实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
@@ -167,7 +169,8 @@ Phase 1 验收：
   任务的安全 `Uninstall` 均通过。主 Host active `faa27c...0f1`、previous `ac89b...4b51`，状态
   `WAITING_FOR_ACTION`；未启动 Broker/MCP/PLE/Node 或在线操作；
 - 2026-08-29：P1.4a 精简团队离线包已完成并通过中文/空格路径、manifest/contentId、篡改阻断、
-  生命周期路由和 `WhatIf` 离线回归；真实 Release 包可只读查询当前 Host。独立 AtLogOn prelaunch
-  bootstrap、兼容矩阵与新电脑验收仍未完成；当前任务 action 虽精确指向 release exe 且 description
-  记录 release/manifest，但登录任务自身不做 prelaunch manifest 校验；
-- Phase 2–4 暂不展开实现。
+  生命周期路由和 `WhatIf` 离线回归；真实 Release 包可只读查询当前 Host。用户决定开发阶段跳过
+  独立 AtLogOn prelaunch bootstrap，延期到商业化/无人值守部署阶段；当前任务 action 虽精确指向
+  release exe 且 description 记录 release/manifest，但登录任务自身不做 prelaunch manifest 校验。
+  兼容矩阵与新电脑验收在有团队工位时再做；这些部署项不阻塞 Phase 2；
+- Phase 2 转为当前开发阶段；Phase 3–4 暂不展开实现。

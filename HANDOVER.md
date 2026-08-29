@@ -685,3 +685,12 @@
 - 接收工位要求 PowerShell 7、.NET 8 runtime 与显式 AI 工程根目录，不依赖 Git、源码、SDK 或本机 build。fresh `Install` 默认只注册 release、不启动 Host；升级复用同一 Install 并保留原 running/stopped 状态；另支持精确 `Rollback`、安全 `Uninstall` 和只读 `Status`。
 - 中文/空格路径、全新/空目标、非空拒绝、manifest/contentId、篡改阻断、五命令路由及两层 `WhatIf` 均通过；真实 Release 打包后的 `Status` 回读当前 Host 为 `WAITING_FOR_ACTION`。本轮未注册真实任务、未修改现有 Host、PLE/CpStudio/PLC/Station010/Std。
 - P1.4a 不增加自定义 ACL，数字签名延期到商业发行或公司 IT 明确要求。独立 AtLogOn 五文件 prelaunch Bootstrap、兼容矩阵和全新团队工作站验收仍未完成，P1.4 整体不得标完成。
+
+## Product Phase 1 / P1.4b deferred during development（2026-08-29）
+
+- 用户明确决定当前开发阶段跳过独立 AtLogOn 五文件 prelaunch Bootstrap；不实现、不注册新的
+  Bootstrap 或任务迁移，现有 Host/任务保持不变。
+- 开发期继续通过 canonical wrapper 显式启动 Host；P1.4a 团队离线包仍可正常使用，fresh
+  `Install` 仍默认停止。
+- Bootstrap 仅在进入商业化或明确要求无人值守登录自启时恢复；兼容矩阵和新电脑验收在有团队
+  工位时执行。两项均不再阻塞 Phase 2 项目目录与流程生成。
