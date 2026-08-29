@@ -132,6 +132,7 @@
 - [x] 🟡 P1.1 `ProcessOne` 已把 Post-export 请求、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成受控入口；CpStudio hook 继续只发 signal，不自动启动 Broker/PLE/MCP，也不直接改写 `Engineering_Data.xml`（2026-08-27）
 - [ ] 🔴 后续配置并验证 Burster HostName，放行 `SetRange/StartMeas` 手动功能；设备稳定后逐条实现 Homing/Changeover/Auto Chains
 - [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
+- [x] 🟢 记录 Ponytail 开发辅助边界：仅在 Phase 收口时按需做减法审查，不进入产品/交付/客户环境，不覆盖 ctrlX/OpCon 安全门禁（2026-08-29）
 
 ## 已完成(近期)补充
 - [x] Station010 GitHub 私有备份 Stat_Resistant_Station010(基线+快照,本地已同步 origin/main)(2026-08-18)

@@ -709,3 +709,7 @@
   Project Pack、45 条 wrapper 断言、280 条 Runner 断言、Stage2 E2E 和 251 条 initializer 断言通过。
 - 安全边界未改变：没有启动 PLE/MCP、没有连接 PLC、没有下载/启停/变量写入/FORCE；HMI 真机
   写白名单仍只有默认关闭的 `TokenRequest`/`ModeIdRequest`。现场 A/B 需另行即时批准。
+
+## 2026-08-29 开发辅助 Skill 边界
+
+- 已将 Ponytail 的唯一权威边界写入 `AGENTS.md` 第 5 节：仅作开发期减法审查，不进入产品或客户环境，也不得覆盖 ctrlX/OpCon 安全门禁。本轮未修改产品代码、PLE、PLC、`Station010` 或 `Std`。
