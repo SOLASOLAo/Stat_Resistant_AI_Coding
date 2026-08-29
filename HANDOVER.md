@@ -678,3 +678,10 @@
 - 生命周期验收覆盖新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 状态丢失时从精确任务反推 immutable release 的安全 `Uninstall`。主 Host active release 为 `faa27c1d79415996ddcd524833160c57ea23ac63888f17b853487a81b46ab0f1`，previous release 为 `ac89b28f9a93a61c10b5bd7731c3b5b83288169a105c62eb4218a30c119f4b51`，状态为 `WAITING_FOR_ACTION`。
 - AtLogOn Scheduled Task 的 action 精确指向 release exe，description 记录 release/manifest。`Install`、`Start`、`Stop`、`Rollback`、`Uninstall` 等显式生命周期路径会验证 5 个 release 文件并执行 apphost self-check；登录任务自身直接启动 exe，不做 prelaunch manifest 校验。
 - P1.3c 技术实现与本机验收到此完成；Host 未启动 Broker、MCP、PLE、Node 或任何在线 PLC 操作，也未连接、下载、启停或写入 PLC。团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵与新电脑验收属于 P1.4，仍未完成。
+
+## Product Phase 1 / P1.4a lean team package（2026-08-29）
+
+- 嵌套方法论仓库新增 `scripts/runner/New-CtrlXOpconRunnerHostPackage.ps1` 和对应离线回归。发行包固定包含 `Install.ps1`、canonical wrapper/module、`package-manifest.json` 与 Host 五文件 payload；manifest 绑定八个内容文件的 path/length/SHA-256 和整体 `contentId`，安装入口在任何 lifecycle 命令前验证。
+- 接收工位要求 PowerShell 7、.NET 8 runtime 与显式 AI 工程根目录，不依赖 Git、源码、SDK 或本机 build。fresh `Install` 默认只注册 release、不启动 Host；升级复用同一 Install 并保留原 running/stopped 状态；另支持精确 `Rollback`、安全 `Uninstall` 和只读 `Status`。
+- 中文/空格路径、全新/空目标、非空拒绝、manifest/contentId、篡改阻断、五命令路由及两层 `WhatIf` 均通过；真实 Release 打包后的 `Status` 回读当前 Host 为 `WAITING_FOR_ACTION`。本轮未注册真实任务、未修改现有 Host、PLE/CpStudio/PLC/Station010/Std。
+- P1.4a 不增加自定义 ACL，数字签名延期到商业发行或公司 IT 明确要求。独立 AtLogOn 五文件 prelaunch Bootstrap、兼容矩阵和全新团队工作站验收仍未完成，P1.4 整体不得标完成。

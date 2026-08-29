@@ -62,7 +62,8 @@
 - [x] Controlled Runner P1.3a：current-user interactive Host 已实现单实例、状态/心跳、受控停止、日志保留与可选 AtLogOn Scheduled Task；Host 不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下只有存在待处理 action 且无同会话 Agent 时才保持 `WAITING_FOR_AGENT`（2026-08-28）
 - [x] Controlled Runner P1.3b：Host 已受控自动消费 activation 后的 immutable `currentAction`；历史终态隔离、open claim 恢复、单 action、无 Agent 等待和 `WAITING_FOR_COORDINATOR` 均通过纯离线回归（2026-08-28）
 - [x] Controlled Runner P1.3c 技术实现与本机验收：production ingestor 默认装配的 6 项 E2E、真实 ledger lock busy、durable deployment journal/reconcile，以及源任务禁用/已删除、`STATE_COMMITTED`、强杀后默认 `Start` 恢复、新 release 升级/同版本/回滚/损坏拒绝和 deployment 丢失时基于精确任务的安全 `Uninstall` 均已通过。AtLogOn action 精确指向 release exe，description 记录 release/manifest；显式生命周期命令校验 5 个 release 文件并执行 self-check，但登录任务自身不做 prelaunch manifest 校验。主 Host active `faa27c...0f1`、previous `ac89b...4b51`，状态 `WAITING_FOR_ACTION`；全程未启动 Broker/MCP/PLE/Node 或在线操作（2026-08-28）
-- [ ] Controlled Runner P1.4 团队发行：团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵与新电脑验收尚未完成；不得把 P1.3c 的本机技术验收表述为团队发行完成
+- [x] Controlled Runner P1.4a 精简团队离线包：PowerShell 7 接收入口可在无 Git、源码、SDK 和本机 build 的工位完成包完整性校验、首装/升级、精确回滚、安全卸载与状态查询；fresh `Install` 默认不启动 Host，升级保留原 running/stopped 状态（2026-08-29）
+- [ ] Controlled Runner P1.4 后续：独立 AtLogOn 五文件 prelaunch bootstrap、兼容矩阵与新电脑验收尚未完成；沿用当前用户默认权限，不增加自定义 ACL，数字签名延期到商业发行或公司 IT 明确要求
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收
 - [ ] 补齐 `specs/` 中尚未定义的电阻测量生产流程

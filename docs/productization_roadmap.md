@@ -81,8 +81,12 @@
      5 个文件并执行 self-check，登录任务自身不做 prelaunch manifest 校验。Host 不启动 Broker、
      MCP、PLE、Node 或在线操作。
 4. **P1.4 团队发行**
-   - 团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵和工作站体检；
-   - 新电脑无需手工拼接多个脚本。
+   - **P1.4a（2026-08-29 已实现）**：精简团队离线包固定封装安装入口、canonical
+     wrapper/module、包 manifest 和 Host 五文件；接收工位无需 Git、源码、SDK 或本机 build，
+     支持完整性校验、首装/升级、精确回滚、安全卸载与状态查询。fresh Install 默认停止，升级
+     保留原 running/stopped 状态；
+   - **P1.4b/P1.4c（未完成）**：独立登录前五文件 bootstrap、最小兼容矩阵和全新同事电脑验收。
+     默认沿用当前用户权限、不增加自定义 ACL；数字签名延期到商业发行或公司 IT 明确要求。
 
 实现约束：P1.1 以 PowerShell 7 (`pwsh`) 薄入口复用现有已验证脚本并固定行为契约；
 产品 Runner Core/CLI 以 .NET 8 为目标。P1.2 增加运行在交互用户会话中的唯一
@@ -162,7 +166,8 @@ Phase 1 验收：
   强杀后默认 `Start` 恢复、新 release 升级/同版本/回滚/损坏拒绝和 deployment 丢失时基于精确
   任务的安全 `Uninstall` 均通过。主 Host active `faa27c...0f1`、previous `ac89b...4b51`，状态
   `WAITING_FOR_ACTION`；未启动 Broker/MCP/PLE/Node 或在线操作；
-- 2026-08-28：P1.4 尚未完成，范围为团队工作站安装、签名、受控安装包、登录前 manifest
-  bootstrap、兼容矩阵与新电脑验收；P1.3c 的任务 action 虽精确指向 release exe 且 description
+- 2026-08-29：P1.4a 精简团队离线包已完成并通过中文/空格路径、manifest/contentId、篡改阻断、
+  生命周期路由和 `WhatIf` 离线回归；真实 Release 包可只读查询当前 Host。独立 AtLogOn prelaunch
+  bootstrap、兼容矩阵与新电脑验收仍未完成；当前任务 action 虽精确指向 release exe 且 description
   记录 release/manifest，但登录任务自身不做 prelaunch manifest 校验；
 - Phase 2–4 暂不展开实现。

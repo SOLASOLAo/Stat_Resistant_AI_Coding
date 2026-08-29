@@ -6,7 +6,7 @@
 
 ### 四阶段总进度（给项目成员看的简版）
 
-- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2、正式 Station010 基线和 P1.3c 技术实现/本机验收已完成；下一步进入 P1.4 团队发行
+- [ ] **Phase 1 · 稳定受控 Runner（当前）**：P1.1、P1.2、正式 Station010 基线、P1.3c 和 P1.4a 精简团队离线包已完成；下一步实现独立 AtLogOn Bootstrap 并做新电脑验收
 - [ ] **Phase 2 · 项目目录与流程生成（未开始）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；Phase 1 完成前不扩张
 - [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
 - [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
@@ -30,7 +30,9 @@
 - [x] 🟡 P1.3c durable 稳定部署：`LocalAppData` 下 5 文件内容寻址不可变 release、pending journal/reconcile、幂等 Install/升级、Rollback 和失败升级恢复已实现；AtLogOn action 精确指向 release exe，description 记录 release/manifest。显式生命周期命令校验 5 个文件和 self-check，登录任务本身不做 prelaunch manifest 校验（2026-08-28）
 - [x] 🟡 P1.3c 本机生命周期：源任务禁用/已删除、`STATE_COMMITTED`、强杀后默认 `Start` 恢复、新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 丢失时基于精确任务的安全 `Uninstall` 均通过；主 Host active `faa27c...0f1`、previous `ac89b...4b51`、状态 `WAITING_FOR_ACTION`（2026-08-28）
 - [x] 🟡 P1.3c 技术实现与本机验收完成；Host 未启动 Broker/MCP/PLE/Node 或任何在线操作（2026-08-28）
-- [ ] 🟡 P1.4 团队发行：团队工作站安装、签名、受控安装包、登录前 manifest bootstrap、兼容矩阵和新电脑验收
+- [x] 🟡 P1.4a 精简团队离线包：固定封装安装入口、canonical wrapper/module、包 manifest 与 Host 五文件；接收工位无需 Git/源码/SDK/build，支持完整性校验、首装/升级、精确回滚、安全卸载与状态查询；fresh Install 默认停止，升级保留原运行状态（2026-08-29）
+- [ ] 🟡 P1.4b 独立 AtLogOn prelaunch Bootstrap：在 Host/.NET 启动前校验五文件，不改变现有 task/Host 身份与崩溃恢复语义
+- [ ] 🟡 P1.4c 团队验收：固化最小兼容矩阵，在一台全新同事电脑完成包传递、安装、显式启动、升级、回滚、卸载和诊断复验；默认不自定义 ACL，签名按商业/IT 要求延期
 
 ## 项目工程待办
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)

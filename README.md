@@ -75,8 +75,15 @@ task 的 action 精确指向 release exe，description 记录 release/manifest�
 本机验收还覆盖源任务禁用/已删除、`STATE_COMMITTED`、wrapper 被强杀后由默认 `Start` 窄门禁恢复、
 新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 丢失时基于精确任务的安全
 `Uninstall`。主 Host 当前 active release 为 `faa27c...0f1`，previous release 为 `ac89b...4b51`，
-状态为 `WAITING_FOR_ACTION`。团队工作站安装、签名、受控安装包和登录前 manifest bootstrap 转入
-P1.4，尚未完成。
+状态为 `WAITING_FOR_ACTION`。
+
+P1.4a 已完成精简团队离线包：发行端生成包含 `Install.ps1`、canonical wrapper/module、
+`package-manifest.json` 和 Host 五文件 payload 的独立目录；接收工位只需 PowerShell 7、.NET 8
+runtime 和本 AI 工程根目录，不需要 Git、源码、SDK 或本机 build。安装器会在任何命令前校验
+path/length/SHA-256/contentId，支持首装/升级、精确回滚、安全卸载和只读状态查询。fresh
+`Install` 默认不启动 Host；升级保留原 running/stopped 状态。当前不增加自定义 ACL，数字签名
+延期到商业发行或公司 IT 明确要求。独立 AtLogOn 五文件 prelaunch bootstrap、兼容矩阵和新电脑
+验收仍未完成，因此 P1.4 整体保持开放。
 
 Host 的登录任务使用无控制台 apphost，后台运行不再弹出空白终端；人工执行
 `Status/Stop/Logs` 时仍通过 `dotnet + DLL` 返回结构化结果。
