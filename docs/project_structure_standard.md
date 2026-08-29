@@ -16,11 +16,14 @@ Git 同时记录生成结果和可读工程资产。
 ├─ <StationDirectory>/          CpStudio/PLC/HMI 集成工程
 ├─ Std/                         供应商标准对象，只读
 └─ McpCoding/                   AI 工程与自动化控制仓库
+   ├─ project-pack.json          Project Pack 唯一入口与源文件索引
+   ├─ schemas/                   Project Pack/流程 JSON Schema
    ├─ config/                   工程定位与质量门禁
    ├─ specs/                    审核后的项目需求
    ├─ ai/                       AI 对象归属、钩子和图形属性
    ├─ src/plc/                  AI 拥有的可读 PLC 源码
    ├─ catalog/                  已验证 Unit/AddOn/Peripheral 接口
+   ├─ generated/                可重建的流程计划，禁止手改
    ├─ scripts/                  CpStudio/PLC/IOE/Git 自动化
    ├─ tests/                    静态、编译和仿真检查
    ├─ data/                     请求、快照、报告和备份，不入 Git
@@ -53,6 +56,8 @@ Station 目录继续保留供应商原始结构，例如 `Engineering/`、`Plc/`
 - `io.yaml`：业务使用的 BMK、方向、用途及已验证通道；
 - `events.yaml`：事件符号、设计号、类别和复位条件；
 - `units/`：实例、类型版本、I/O 绑定、手动联锁和 Home 条件；
+- `processes/`：经审阅的流程事实源，包含 Chain 接口归属、Step ID/Kind/Comment、
+  中英文操作提示、需求、步骤验收和验收测试；
 - `chains/`：步骤、短 Comment、启动/完成/跳过条件与取消清理。
 
 聊天是需求入口，`specs/` 是确认后的长期事实源。未确认内容必须明确标记
@@ -108,6 +113,7 @@ catalog/peripherals/NexeedIpBurster2316/V1.0/peripheral.yaml
 - `plc/`：PLE ScriptEngine/MCP/REST 辅助；
 - `ioe/`：IO Engineering IPC；
 - `git/`：差异、审计、报告和提交辅助。
+- `project/`：Project Pack 的 Build/Check 与流程计划生成。
 - `setup/`：新电脑所需目录、软件、MCP、补丁和配置的只读体检。
 
 Post-export 脚本只允许向 `data/requests/pending/` 原子发布独立请求，禁止启动第二个
@@ -115,10 +121,36 @@ PLC Engineering 或 MCP server。离线消费者以
 `pending → processing → done/failed` 串行处理并把 JSON/Markdown 报告写入
 `data/reports/cpstudio/`；PLC 写入仍由当前唯一 persistent MCP 会话显式执行。
 
+`scripts/project/Build-CtrlXOpconProjectPack.ps1` 是 Phase 2 的流程计划生成器；它只读取
+Project Pack 与其引用的事实源，不启动 CpStudio、PLE、MCP 或 REST。
+
 ### `tests/` 与 `data/`
 
 `tests/` 中只放可重复检查；`data/` 中放运行时请求、快照、报告和本地备份，默认
 不入 Git。真机连接、下载、启停和 FORCE 不属于自动测试，始终需要用户明确批准。
+
+### Project Pack、Schema 与生成计划
+
+- `project-pack.json`：项目入口，只引用 `config/`、`specs/`、`catalog/`、`ai/` 和 HMI
+  配置中的现有事实，不复制一份详细配置；
+- `schemas/project-pack.schema.json` 与 `schemas/process.schema.json`：约束包结构、
+  流程步骤和追溯字段；
+- `generated/engineering-plan.json`：由 Build 确定性生成的 SFC 计划、操作提示、
+  测试骨架、需求追溯和源文件指纹；禁止手改。
+
+Phase 2 标准命令为：
+
+```powershell
+pwsh -File scripts/project/Build-CtrlXOpconProjectPack.ps1 `
+  -Command Build -EngineeringRoot . -RequireReady -Json
+
+pwsh -File scripts/project/Build-CtrlXOpconProjectPack.ps1 `
+  -Command Check -EngineeringRoot . -RequireReady -Json
+```
+
+`Build` 校验事实源并重建计划；`Check` 重算并逐字校验已生成计划，源文件漂移或
+产物被手改都会失败。Runner 只把 `Check -RequireReady` 作为进入后续工程阶段的
+前置门禁。两条命令都不会在 CpStudio 创建接口，也不会向 PLE `.project` 写入代码或图形。
 
 ## 日常工作流
 

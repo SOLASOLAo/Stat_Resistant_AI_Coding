@@ -12,12 +12,17 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly HmiSettings _settings;
     private readonly IReadOnlyDictionary<int, LocalizedAutoInfo> _autoInfo;
+    private readonly IReadOnlyDictionary<byte, ModeDisplayDefinition> _modeDisplays;
     private readonly HashSet<string> _badNodes = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _manualReleaseValues = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _manualRunningValues = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object?> _liveValues = new(StringComparer.Ordinal);
     private readonly IReadOnlyDictionary<string, DeviceFieldRow> _manualDeviceFields;
     private readonly IReadOnlyDictionary<string, DataValueRow> _dataRows;
     private readonly IReadOnlyDictionary<string, IoChannelRow> _ioRows;
+    private readonly ILookup<string, OverviewCardRow> _overviewCardsByNodeKey;
+    private readonly IReadOnlyDictionary<string, ManualActionRow> _manualActionsByReleaseNodeKey;
+    private readonly IReadOnlyDictionary<string, ManualActionRow> _manualActionsByRunningNodeKey;
     private readonly DispatcherTimer _freshnessTimer;
     private IStationDataSource? _dataSource;
     private bool _isConnected;
@@ -76,9 +81,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _settings = settings;
         _autoInfo = settings.AutoInfoLines.ToDictionary(item => item.Index);
+        _modeDisplays = settings.ModeControl.Modes.ToDictionary(mode => mode.Id);
         EndpointUrl = settings.EndpointUrl;
         StationId = settings.StationId;
         StationName = settings.StationName;
+        ProductName = settings.Brand.ProductName;
+        ProductSubtitle = settings.Brand.Subtitle;
+        ProductMark = settings.Brand.Mark;
         EtherCatSlaves = new ObservableCollection<EtherCatSlaveRow>(
             settings.Fieldbus.Slaves.OrderBy(slave => slave.Index).Select(slave => new EtherCatSlaveRow(slave)));
         EtherCatTopology = BuildEtherCatTopology(settings, EtherCatSlaves);
@@ -90,11 +99,21 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StationDataItems = CreateDataRows(settings, "station-data");
         TypeDataItems = CreateDataRows(settings, "type-data");
         DeviceDataItems = CreateDataRows(settings, "device-data");
-        ManualUnits = CreateManualUnits();
+        OverviewCards = new ObservableCollection<OverviewCardRow>(
+            settings.OverviewCards.Select(card => new OverviewCardRow(card)));
+        _overviewCardsByNodeKey = OverviewCards.ToLookup(card => card.NodeKey, StringComparer.Ordinal);
+        ManualUnits = CreateManualUnits(settings);
         _manualDeviceFields = ManualUnits
             .SelectMany(unit => unit.DeviceFields)
             .ToDictionary(field => field.Key, StringComparer.Ordinal);
+        _manualActionsByReleaseNodeKey = ManualUnits
+            .SelectMany(unit => unit.Actions)
+            .ToDictionary(action => action.ReleaseNodeKey, StringComparer.Ordinal);
+        _manualActionsByRunningNodeKey = ManualUnits
+            .SelectMany(unit => unit.Actions)
+            .ToDictionary(action => action.RunningNodeKey, StringComparer.Ordinal);
         SelectedSlaveIoChannels = [];
+        SelectedDeviceDataItems = [];
         SelectedManualUnit = ManualUnits.Skip(1).FirstOrDefault() ?? ManualUnits.FirstOrDefault();
         SelectedEtherCatNode = EtherCatTopology.FirstOrDefault();
         ActiveEvents = [];
@@ -128,6 +147,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public ObservableCollection<DataValueRow> DeviceDataItems { get; }
 
+    public ObservableCollection<OverviewCardRow> OverviewCards { get; }
+
+    public ObservableCollection<DataValueRow> SelectedDeviceDataItems { get; }
+
     public ObservableCollection<PublicEventRow> ActiveEvents { get; }
 
     public string StationId { get; }
@@ -135,6 +158,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string StationName { get; }
 
     public string EndpointUrl { get; }
+
+    public string ProductName { get; }
+
+    public string ProductSubtitle { get; }
+
+    public string ProductMark { get; }
 
     public ManualUnitRow? SelectedManualUnit
     {
@@ -150,20 +179,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (SetProperty(ref _selectedEtherCatNode, value))
             {
                 RefreshSelectedSlaveIo();
-                RaisePropertyChanged(nameof(SelectedNodeIsKistler));
+                RefreshSelectedDeviceData();
+                RaisePropertyChanged(nameof(SelectedNodeHasDeviceData));
                 RaisePropertyChanged(nameof(SelectedNodeScopeText));
             }
         }
     }
 
-    public bool SelectedNodeIsKistler => SelectedEtherCatNode?.Slave?.Index == 9;
+    public bool SelectedNodeHasDeviceData =>
+        SelectedEtherCatNode?.Slave is { DeviceDataGroup.Length: > 0 };
 
     public string SelectedNodeScopeText => SelectedEtherCatNode switch
     {
         null => "No node selected / 未选择节点",
         { IsMaster: true } => "Entire EtherCAT network / 整条 EtherCAT 总线",
-        { Slave.Index: 1 } => "EK1100 terminal branch / EK1100 端子分支",
-        { Slave.Index: 9 } => "Kistler semantic interface / Kistler 语义接口",
+        { Slave.Role: "coupler" } => "Terminal branch / 端子分支",
+        { Slave.Role: "module" } => "I/O module channels / I/O 模块通道",
+        { Slave.Role: "device" } => "Device interface / 设备接口",
         _ => "Selected slave channels / 当前从站通道"
     };
 
@@ -229,7 +261,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _ => "Overview"
     };
 
-    public string WindowTitle => $"BPP Resistance Station HMI — {PageName}";
+    public string WindowTitle => $"{_settings.Brand.WindowTitle} — {PageName}";
 
     public bool IsDataUnavailable =>
         !IsConnected ||
@@ -351,14 +383,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
-    public string ActiveChainName => ModeId switch
-    {
-        1 => "SqM_Station_Auto → SqC_Wp100_Run",
-        4 => "SqM_Station_Home → SqC_Wp100_Home",
-        5 => "SqM_Station_Changeover → SqS_Station_ChangeOverFile",
-        3 => "Manual functions / Unit 单动",
-        _ => "No active Chain / 无活动 Chain"
-    };
+    public string ActiveChainName => _modeDisplays.TryGetValue((byte)ModeId, out var mode)
+        ? mode.ActiveChain
+        : "No active Chain / 无活动 Chain";
 
     public string StepModeText => IsStepping
         ? "STEP MODE ON / 步进已开启"
@@ -402,7 +429,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         !IsDataUnavailable &&
         !IsBusy &&
         PanelActive &&
-        ModeRequestSafetyReady &&
         _dataSource?.SupportsModeRequests == true;
 
     public string EventDecodeMessage
@@ -428,14 +454,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
-    public string ModeName => ModeId switch
-    {
-        1 => "AUTOMATIC / 自动",
-        3 => "MANUAL / 手动",
-        4 => "HOMING / 回原位",
-        5 => "CHANGE-OVER / 换型",
-        _ => "NO MODE / 无模式"
-    };
+    public string ModeName => _modeDisplays.TryGetValue((byte)ModeId, out var mode)
+        ? string.IsNullOrWhiteSpace(mode.Chinese)
+            ? mode.English.ToUpperInvariant()
+            : $"{mode.English.ToUpperInvariant()} / {mode.Chinese}"
+        : "NO MODE / 无模式";
 
     public bool ModeReleased
     {
@@ -974,6 +997,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 deviceField.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
             }
 
+            foreach (var overviewCard in _overviewCardsByNodeKey[eventArgs.Key])
+            {
+                overviewCard.Update(eventArgs.Value, eventArgs.IsGood, eventArgs.Status);
+            }
+
             if (!eventArgs.IsGood)
             {
                 _badNodes.Add(eventArgs.Key);
@@ -984,6 +1012,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
             _badNodes.Remove(eventArgs.Key);
             _hasReceivedData = true;
+            _liveValues[eventArgs.Key] = eventArgs.Value;
             ApplyValue(eventArgs.Key, eventArgs.Value);
             RefreshDataQuality();
         });
@@ -1095,25 +1124,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void ApplyManualFunctionValue(string key, object? value)
     {
-        if (!key.StartsWith("Manual.", StringComparison.Ordinal))
+        if (_manualActionsByReleaseNodeKey.ContainsKey(key))
         {
-            return;
+            _manualReleaseValues[key] = ToBoolean(value);
         }
-
-        var parts = key.Split('.');
-        if (parts.Length != 4)
+        else if (_manualActionsByRunningNodeKey.ContainsKey(key))
         {
-            return;
-        }
-
-        var functionKey = $"{parts[1]}.{parts[2]}";
-        if (string.Equals(parts[3], "Release", StringComparison.Ordinal))
-        {
-            _manualReleaseValues[functionKey] = ToBoolean(value);
-        }
-        else if (string.Equals(parts[3], "Running", StringComparison.Ordinal))
-        {
-            _manualRunningValues[functionKey] = ToBoolean(value);
+            _manualRunningValues[key] = ToBoolean(value);
         }
 
         RefreshManualFunctions();
@@ -1151,91 +1168,43 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         return [root];
     }
 
-    private static ObservableCollection<ManualUnitRow> CreateManualUnits()
+    private static ObservableCollection<ManualUnitRow> CreateManualUnits(HmiSettings settings)
     {
-        return
-        [
+        return new ObservableCollection<ManualUnitRow>(settings.ManualUnits.Select(unit =>
             new ManualUnitRow(
-                "Wp100",
-                "Wp100",
-                "Wp100 Command Handler / 工位命令层",
-                "Command Handler",
-                [
-                    new ManualActionRow("Wp100", "Home", "Home", "工位回原位", "Currently locked by the CpStudio CONST FALSE release condition."),
-                    new ManualActionRow("Wp100", "DeleteWpcData", "Delete WPC data", "删除工件数据", "Currently locked by the CpStudio CONST FALSE release condition.")
-                ]),
-            new ManualUnitRow(
-                "Wp100K101SafetyDoor",
-                "_100K101",
-                "Safety door / 安全门",
-                "Basic movement",
-                [
-                    new ManualActionRow("Wp100K101SafetyDoor", "MoveBasPos", "Move to base position", "返回原位（上升）", "Requires the maintenance-door safety relay."),
-                    new ManualActionRow("Wp100K101SafetyDoor", "MoveWrkPos", "Move to work position", "移动到工作位（下降）", "Requires the maintenance-door safety relay.")
-                ]),
-            new ManualUnitRow(
-                "Wp100K102PressingCylinder",
-                "_100K102",
-                "Pressing cylinder / 压缸",
-                "Basic movement",
-                [
-                    new ManualActionRow("Wp100K102PressingCylinder", "MoveBasPos", "Move to base position", "返回原位（上升）", "Safety door and both safety relay feedbacks must be valid."),
-                    new ManualActionRow("Wp100K102PressingCylinder", "MoveWrkPos", "Move to work position", "移动到工作位（下降）", "Safety door and both safety relay feedbacks must be valid.")
-                ]),
-            new ManualUnitRow(
-                "Wp100A103ResistantDetector",
-                "Wp100A103ResistantInterface",
-                "Burster 2316 / 电阻仪",
-                "Measurement",
-                [
-                    new ManualActionRow("Wp100A103ResistantDetector", "SetRange", "Set range", "设置量程", "Uses the CpStudio Unit release output."),
-                    new ManualActionRow("Wp100A103ResistantDetector", "StartMeas", "Start measurement", "启动测量", "Uses the CpStudio Unit release output.")
-                ],
-                [
-                    new DeviceFieldRow("BursterUpperRange", DeviceFieldSection.Parameter, "Upper range", "上量程"),
-                    new DeviceFieldRow("BursterLowerRange", DeviceFieldSection.Parameter, "Lower range", "下量程"),
-                    new DeviceFieldRow("BursterUpperLimit", DeviceFieldSection.Parameter, "Upper limit", "上限"),
-                    new DeviceFieldRow("BursterLowerLimit", DeviceFieldSection.Parameter, "Lower limit", "下限"),
-                    new DeviceFieldRow("BursterReadTemperature", DeviceFieldSection.Parameter, "Read temperature", "读取温度", isBoolean: true),
-                    new DeviceFieldRow("BursterResistOk", DeviceFieldSection.Status, "Resistance OK", "电阻合格", isBoolean: true),
-                    new DeviceFieldRow("BursterOutOfLimit", DeviceFieldSection.Status, "Result invalid / out of limit", "结果无效 / 超限", isBoolean: true),
-                    new DeviceFieldRow("BursterResistance", DeviceFieldSection.Result, "Resistance value", "电阻值"),
-                    new DeviceFieldRow("BursterTemperature", DeviceFieldSection.Result, "Temperature value", "温度值", "°C")
-                ]),
-            new ManualUnitRow(
-                "Wp100A104Kistler",
-                "_100A104",
-                "Kistler maXYmos 5867C",
-                "Measurement",
-                [
-                    new ManualActionRow("Wp100A104Kistler", "Measure", "Measure", "开始测量", "Start a force/displacement measurement."),
-                    new ManualActionRow("Wp100A104Kistler", "SetProgram", "Set program", "设置程序号", "Apply the configured Kistler program."),
-                    new ManualActionRow("Wp100A104Kistler", "ZeroX", "Zero X", "位移清零", "Zero the displacement channel."),
-                    new ManualActionRow("Wp100A104Kistler", "TareY", "Tare Y", "力清零", "Tare the force channel."),
-                    new ManualActionRow("Wp100A104Kistler", "LockKeyboard", "Lock keyboard", "锁定键盘", "Lock the device keyboard."),
-                    new ManualActionRow("Wp100A104Kistler", "UnlockKeyboard", "Unlock keyboard", "解锁键盘", "Unlock the device keyboard."),
-                    new ManualActionRow("Wp100A104Kistler", "ReadData", "Read data", "读取数据", "Read result data from the device."),
-                    new ManualActionRow("Wp100A104Kistler", "WriteData", "Write data", "写入数据", "Write configured data to the device.")
-                ],
-                [
-                    new DeviceFieldRow("KistlerProgramRequest", DeviceFieldSection.Parameter, "Requested program", "目标程序号"),
-                    new DeviceFieldRow("KistlerMeasuringTimeout", DeviceFieldSection.Parameter, "Measurement timeout", "测量超时"),
-                    new DeviceFieldRow("KistlerEndMeasurement", DeviceFieldSection.Parameter, "End measurement request", "结束测量请求", isBoolean: true),
-                    new DeviceFieldRow("KistlerScreenLocked", DeviceFieldSection.Status, "Screen locked", "屏幕锁定", isBoolean: true),
-                    new DeviceFieldRow("KistlerReady", DeviceFieldSection.Status, "Ready", "就绪", isBoolean: true),
-                    new DeviceFieldRow("KistlerSignal1", DeviceFieldSection.Status, "Switch signal 1", "开关信号 1", isBoolean: true),
-                    new DeviceFieldRow("KistlerSignal2", DeviceFieldSection.Status, "Switch signal 2", "开关信号 2", isBoolean: true),
-                    new DeviceFieldRow("KistlerNoPass", DeviceFieldSection.Status, "No-pass zone", "未通过区域", isBoolean: true),
-                    new DeviceFieldRow("KistlerWarning", DeviceFieldSection.Status, "Warning active", "警告激活", isBoolean: true),
-                    new DeviceFieldRow("KistlerAlarm", DeviceFieldSection.Status, "Alarm active", "报警激活", isBoolean: true),
-                    new DeviceFieldRow("KistlerOk", DeviceFieldSection.Status, "IO / OK", "合格", isBoolean: true),
-                    new DeviceFieldRow("KistlerNok", DeviceFieldSection.Status, "NOK", "不合格", isBoolean: true),
-                    new DeviceFieldRow("KistlerProgram", DeviceFieldSection.Result, "Current program", "当前程序号"),
-                    new DeviceFieldRow("KistlerForce", DeviceFieldSection.Result, "Actual force", "实际力", "N"),
-                    new DeviceFieldRow("KistlerStroke", DeviceFieldSection.Result, "Actual stroke", "实际位移", "mm")
-                ])
-        ];
+                unit.Key,
+                unit.Designator,
+                string.IsNullOrWhiteSpace(unit.Chinese)
+                    ? unit.English
+                    : $"{unit.English} / {unit.Chinese}",
+                unit.Category,
+                unit.StateNodeKey,
+                unit.SecondaryStateNodeKey,
+                unit.StateValueMap,
+                unit.Actions.Select(action => new ManualActionRow(
+                    unit.Key,
+                    action.Key,
+                    action.English,
+                    action.Chinese,
+                    action.Description,
+                    action.ReleaseNodeKey,
+                    action.RunningNodeKey)),
+                unit.Fields.Select(field => new DeviceFieldRow(
+                    field.NodeKey,
+                    ParseDeviceFieldSection(field.Section),
+                    field.English,
+                    field.Chinese,
+                    field.Unit,
+                    field.IsBoolean,
+                    field.ValueMap)))));
     }
+
+    private static DeviceFieldSection ParseDeviceFieldSection(string section) => section switch
+    {
+        "parameter" => DeviceFieldSection.Parameter,
+        "result" => DeviceFieldSection.Result,
+        _ => DeviceFieldSection.Status
+    };
 
     private void RefreshSelectedSlaveIo()
     {
@@ -1253,13 +1222,56 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         IEnumerable<IoChannelRow> selectedChannels = SelectedEtherCatNode switch
         {
             { IsMaster: true } => IoChannels,
-            { Slave.Index: 1 } => IoChannels.Where(channel => channel.SlaveIndex is >= 2 and <= 8),
+            { Slave.Role: "coupler" } node => IoChannels.Where(
+                channel => GetDescendantSlaveIndexes(node.Slave.Index).Contains(channel.SlaveIndex)),
             { Slave: not null } node => IoChannels.Where(channel => channel.SlaveIndex == node.Slave.Index),
             _ => []
         };
         foreach (var channel in selectedChannels)
         {
             SelectedSlaveIoChannels.Add(channel);
+        }
+    }
+
+    private HashSet<int> GetDescendantSlaveIndexes(int parentIndex)
+    {
+        var result = new HashSet<int>();
+        var pending = new Queue<int>();
+        pending.Enqueue(parentIndex);
+        while (pending.Count > 0)
+        {
+            var current = pending.Dequeue();
+            foreach (var child in EtherCatSlaves.Where(slave => slave.ParentIndex == current))
+            {
+                if (result.Add(child.Index))
+                {
+                    pending.Enqueue(child.Index);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private void RefreshSelectedDeviceData()
+    {
+        SelectedDeviceDataItems.Clear();
+        var group = SelectedEtherCatNode?.Slave?.DeviceDataGroup;
+        if (string.IsNullOrWhiteSpace(group))
+        {
+            return;
+        }
+
+        var keys = _settings.Nodes
+            .Where(node =>
+                string.Equals(node.Category, "device-data", StringComparison.Ordinal) &&
+                (string.Equals(node.Group, group, StringComparison.Ordinal) ||
+                 node.Group.StartsWith($"{group} -", StringComparison.Ordinal)))
+            .Select(node => node.Key)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var row in DeviceDataItems.Where(row => keys.Contains(row.Key)))
+        {
+            SelectedDeviceDataItems.Add(row);
         }
     }
 
@@ -1294,47 +1306,62 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             _dataSource?.SupportsManualFunctions == true;
         foreach (var unit in ManualUnits)
         {
-            switch (unit.Key)
+            if (string.IsNullOrWhiteSpace(unit.StateNodeKey))
             {
-                case "Wp100":
-                    unit.UpdateState("CpStudio release locked / CpStudio 未放行", false);
-                    UpdateManualActions(unit, false, controlAvailable);
-                    break;
-                case "Wp100K101SafetyDoor":
-                    unit.UpdateState(SafetyDoorState, SafetyDoorBase || SafetyDoorWork);
-                    UpdateManualActions(unit, _maintenanceCircuitOk && !ManualFunctionRunning, controlAvailable);
-                    break;
-                case "Wp100K102PressingCylinder":
-                    unit.UpdateState(PressingCylinderState, PressingCylinderBase || PressingCylinderWork);
-                    UpdateManualActions(
-                        unit,
-                        SafetyDoorWork && _safetyDoorCircuitOk && _allSafetyCircuitsOk && !ManualFunctionRunning,
-                        controlAvailable);
-                    break;
-                case "Wp100A103ResistantDetector":
-                    unit.UpdateState(ResistantState, ResistantAvailable);
-                    UpdateManualActions(unit, ResistantAvailable && !ManualFunctionRunning, controlAvailable);
-                    break;
-                case "Wp100A104Kistler":
-                    unit.UpdateState(KistlerState, KistlerAvailable);
-                    UpdateManualActions(unit, KistlerAvailable && !ManualFunctionRunning, controlAvailable);
-                    break;
+                unit.UpdateState("CONFIGURED / 已配置", true);
             }
+            else if (!_liveValues.TryGetValue(unit.StateNodeKey, out var stateValue))
+            {
+                unit.UpdateState("NO DATA / 无数据", false);
+            }
+            else if (!string.IsNullOrWhiteSpace(unit.SecondaryStateNodeKey))
+            {
+                if (!_liveValues.TryGetValue(unit.SecondaryStateNodeKey, out var secondaryStateValue))
+                {
+                    unit.UpdateState("NO DATA / 无数据", false);
+                    UpdateManualActions(unit, controlAvailable);
+                    continue;
+                }
+
+                var primaryState = ToBoolean(stateValue);
+                var secondaryState = ToBoolean(secondaryStateValue);
+                var stateKey = $"{(primaryState ? 1 : 0)}{(secondaryState ? 1 : 0)}";
+                var stateText = unit.StateValueMap.TryGetValue(stateKey, out var mappedState)
+                    ? mappedState
+                    : stateKey;
+                unit.UpdateState(stateText, primaryState ^ secondaryState);
+            }
+            else if (stateValue is bool booleanState)
+            {
+                var stateKey = booleanState ? "True" : "False";
+                var stateText = unit.StateValueMap.TryGetValue(stateKey, out var mappedState)
+                    ? mappedState
+                    : booleanState ? "TRUE / ON" : "FALSE / OFF";
+                unit.UpdateState(stateText, true);
+            }
+            else
+            {
+                var state = ToInt32(stateValue);
+                var stateKey = Convert.ToString(stateValue, CultureInfo.InvariantCulture) ?? string.Empty;
+                var stateText = unit.StateValueMap.TryGetValue(stateKey, out var mappedState)
+                    ? mappedState
+                    : DescribeUnitState(state);
+                unit.UpdateState(stateText, IsStableUnitState(state));
+            }
+
+            UpdateManualActions(unit, controlAvailable);
         }
     }
 
     private void UpdateManualActions(
         ManualUnitRow unit,
-        bool fallbackReleased,
         bool controlAvailable)
     {
         foreach (var action in unit.Actions)
         {
-            var functionKey = $"{unit.Key}.{action.Key}";
-            var released = _manualReleaseValues.TryGetValue(functionKey, out var releaseValue)
-                ? releaseValue
-                : fallbackReleased;
-            var running = _manualRunningValues.TryGetValue(functionKey, out var runningValue) &&
+            var released = _manualReleaseValues.TryGetValue(action.ReleaseNodeKey, out var releaseValue) &&
+                releaseValue;
+            var running = _manualRunningValues.TryGetValue(action.RunningNodeKey, out var runningValue) &&
                           runningValue;
             action.Update(released, running, controlAvailable);
         }
@@ -1385,6 +1412,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _badNodes.Clear();
         _manualReleaseValues.Clear();
         _manualRunningValues.Clear();
+        _liveValues.Clear();
         _hasReceivedData = false;
         IsStale = false;
         ModeId = 0;
@@ -1441,6 +1469,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
 
         foreach (var row in _manualDeviceFields.Values)
+        {
+            row.Reset();
+        }
+
+        foreach (var row in OverviewCards)
         {
             row.Reset();
         }

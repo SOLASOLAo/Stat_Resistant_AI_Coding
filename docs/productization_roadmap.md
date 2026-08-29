@@ -7,7 +7,7 @@
 
 把当前依赖人工编排的 CpStudio、Git、PLE/MCP 和验收脚本，逐步变成可重复、可审计、可在多个自动化项目复用的本地工程产品。
 
-当前只推进一个阶段，不同时扩张 Runner、项目生成、HMI 和商业包装。
+工程实现保持单线、精简：Phase 2 与 Phase 3 共用同一 Project Pack/HMI 配置事实源；商业包装仍不提前展开。
 
 ## 执行顺序
 
@@ -121,6 +121,10 @@ Phase 1 验收：
 
 验收：新项目只需填写项目事实和工艺差异即可进入受控工程闭环，目录和流程没有静默漂移。
 
+状态（2026-08-29）：离线实现完成。Station010 已由一个 Pack 生成 2 个流程、35 个步骤、
+14 条双语提示、13 条需求和 9 个验收用例；通用初始化器、Build/Check 与 Runner 全入口
+事实源漂移门禁均通过回归。
+
 ### Phase 3：HMI 产品化
 
 目标：把当前 Station010 自研 HMI 原型抽象为配置驱动的 Windows HMI 产品。
@@ -132,6 +136,11 @@ Phase 1 验收：
 - StationData/TypeData、Unit 参数和状态页面生成；
 - 断线、超时、权限、审计和与 Nexeed HMI 的 A/B 验收；
 - 由 Project Pack 生成工位配置，而非每台设备重新开发界面。
+
+状态（2026-08-29）：离线产品基线完成。HMI schema v2 的品牌、总览卡、模式 Chain、Manual
+Unit/字段和 EtherCAT role 均配置驱动；Station010 与独立 ExampleCell 通过 Release build、配置加载和
+UI 冒烟。当前不自动复制第二份 HMI 事实：Project Pack 直接引用唯一 `*.hmi.json`。真机 A/B、参数
+写入和扩展控制仍是现场验收项，写白名单没有扩大。
 
 ### Phase 4：商业交付
 
@@ -173,4 +182,6 @@ Phase 1 验收：
   独立 AtLogOn prelaunch bootstrap，延期到商业化/无人值守部署阶段；当前任务 action 虽精确指向
   release exe 且 description 记录 release/manifest，但登录任务自身不做 prelaunch manifest 校验。
   兼容矩阵与新电脑验收在有团队工位时再做；这些部署项不阻塞 Phase 2；
-- Phase 2 转为当前开发阶段；Phase 3–4 暂不展开实现。
+- 2026-08-29：Phase 2 离线实现完成；Project Pack Build/Check、initializer 与 Runner 预检形成同一条确定性闭环；
+- 2026-08-29：Phase 3 离线产品基线完成；同一 HMI 二进制可加载 Station010 或 ExampleCell 完整配置，写白名单仍仅为默认关闭的两个模式请求节点；
+- 下一步只做 Phase 3 明确批准后的真机 A/B/扩展写入验收，或由用户决定进入 Phase 4；不补做登录 Bootstrap、ACL、签名或通用 SFC 编译器。

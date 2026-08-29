@@ -176,3 +176,13 @@ limited to TokenRequest and ModeIdRequest, and performs a locked Release build.
 The separate `tests/hmi/Test-HmiDemoUi.ps1` smoke test invokes operator modes,
 selects the Burster and Kistler Units, verifies their parameter/status/result
 fields, and verifies Events, I/O, StationData and TypeData navigation.
+# 配置驱动产品基线（2026-08-29）
+
+- 同一个 WPF 程序通过 `--config <file>` 加载完整工位配置；`--validate-config` 仅校验后退出。
+- schema v2 统一描述品牌、Overview 卡片、模式/Chain 文本、Manual Unit/动作/字段和 EtherCAT role。
+- `station010.hmi.json` 是 Station010 唯一 HMI 事实；`example-cell.hmi.json` 是无 Station010/Wp100/Kistler/Burster 名称的跨项目证明。
+- Unit release/running 只使用配置中引用的 CpStudio 输出；不直接写 Chain、Unit、I/O 或参数。
+- Station010 Overview 保留夹具位置、产品双检测和安全回路原始诊断；双位置 Unit 状态由配置映射，
+  ExampleCell DEMO 已实际切换 Manual 并显示自己的夹具 Unit。
+- 配置解析拒绝未知字段；真实模式控制默认关闭，模式请求超时限定为 250–60000 ms。
+- 真机写入仍只有 `TokenRequest`/`ModeIdRequest`，默认关闭；离线 DEMO 控件不代表真实 PLC 已获准写入。

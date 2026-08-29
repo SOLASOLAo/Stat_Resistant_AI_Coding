@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 2,
+  "brand": {
+    "productName": "ACME AUTOMATION",
+    "subtitle": "Reusable ctrlX operator interface",
+    "windowTitle": "Example Cell HMI",
+    "mark": "A"
+  },
+  "stationId": "ExampleCell",
+  "stationName": "Example assembly cell / 示例装配工位",
+  "endpointUrl": "opc.tcp://127.0.0.1:4840",
+  "namespaceUri": "http://www.boschrexroth.com/OpcUa/Datalayer",
+  "publishingIntervalMs": 250,
+  "staleTimeoutMs": 3000,
+  "reconnectDelayMs": 3000,
+  "overviewCards": [
+    { "key": "home", "nodeKey": "IsInHomePosition", "english": "Home position", "chinese": "设备原位", "isBoolean": true },
+    { "key": "bus", "nodeKey": "BusOk", "english": "EtherCAT bus", "chinese": "EtherCAT 总线", "isBoolean": true },
+    { "key": "part", "nodeKey": "IoPartPresent", "english": "Part present", "chinese": "产品到位", "isBoolean": true },
+    { "key": "clamp", "nodeKey": "ClampUnitState", "english": "Clamp state", "chinese": "夹具状态", "valueMap": { "0": "NO DATA / 无数据", "1": "UNKNOWN / 未知", "2": "DISABLED / 已禁用", "4": "OPERATIONAL / 运行", "8": "STANDBY / 待机" } },
+    { "key": "score", "nodeKey": "VisionScore", "english": "Vision score", "chinese": "视觉评分", "unit": "%" }
+  ],
+  "manualUnits": [
+    {
+      "key": "ClampA",
+      "designator": "_200K101",
+      "english": "Fixture clamp",
+      "chinese": "夹具气缸",
+      "category": "Basic movement",
+      "stateNodeKey": "ClampUnitState",
+      "actions": [
+        {
+          "key": "Open",
+          "english": "Open clamp",
+          "chinese": "打开夹具",
+          "description": "The CpStudio release output remains authoritative.",
+          "releaseNodeKey": "Manual.ClampA.Open.Release",
+          "runningNodeKey": "Manual.ClampA.Open.Running"
+        }
+      ],
+      "fields": [
+        { "nodeKey": "VisionReady", "section": "status", "english": "Vision ready", "chinese": "视觉就绪", "isBoolean": true },
+        { "nodeKey": "VisionScore", "section": "result", "english": "Vision score", "chinese": "视觉评分", "unit": "%" }
+      ]
+    }
+  ],
+  "modeControl": {
+    "enabled": false,
+    "panelToken": 1,
+    "requestTimeoutMs": 5000,
+    "tokenRequestIdentifier": "plc/app/Application/sym/Station/Extension/TokenRequest",
+    "modeIdRequestIdentifier": "plc/app/Application/sym/Station/Extension/ModeIdRequest",
+    "allowedModeIds": [1, 3, 4, 5],
+    "modes": [
+      { "id": 1, "english": "Automatic", "chinese": "自动", "activeChain": "Example automatic sequence / 示例自动流程" },
+      { "id": 3, "english": "Manual", "chinese": "手动", "activeChain": "Manual functions / Unit 单动" },
+      { "id": 4, "english": "Homing", "chinese": "回原位", "activeChain": "Example homing sequence / 示例回原位流程" },
+      { "id": 5, "english": "Change-over", "chinese": "换型", "activeChain": "Example change-over sequence / 示例换型流程" }
+    ]
+  },
+  "nodes": [
+    { "key": "AutoInfoLine", "identifier": "plc/app/Application/sym/Station/_AutoInfoline", "dataType": "Int16", "category": "process" },
+    { "key": "Token", "identifier": "plc/app/Application/sym/Station/Extension/Token", "dataType": "Byte", "category": "mode" },
+    { "key": "ModeId", "identifier": "plc/app/Application/sym/Station/Extension/ModeId", "dataType": "Byte", "category": "mode" },
+    { "key": "ModeRelease", "identifier": "plc/app/Application/sym/Station/Extension/ModeRelease", "dataType": "Boolean", "category": "mode" },
+    { "key": "IsRunning", "identifier": "plc/app/Application/sym/Station/Extension/IsRunning", "dataType": "Boolean", "category": "mode" },
+    { "key": "IsStopping", "identifier": "plc/app/Application/sym/Station/Extension/IsStopping", "dataType": "Boolean", "category": "mode" },
+    { "key": "ModeRunning", "identifier": "plc/app/Application/sym/Station/Extension/ModeRunning", "dataType": "Boolean", "category": "mode" },
+    { "key": "StartVisible", "identifier": "plc/app/Application/sym/Station/Extension/StartVisible", "dataType": "Boolean", "category": "mode" },
+    { "key": "StopVisible", "identifier": "plc/app/Application/sym/Station/Extension/StopVisible", "dataType": "Boolean", "category": "mode" },
+    { "key": "StepVisible", "identifier": "plc/app/Application/sym/Station/Extension/StepVisible", "dataType": "Boolean", "category": "mode" },
+    { "key": "IsStepping", "identifier": "plc/app/Application/sym/Station/Extension/IsStepping", "dataType": "Boolean", "category": "mode" },
+    { "key": "ManualFunctionsActive", "identifier": "plc/app/Application/sym/Station/Extension/ManualFunctionsActive", "dataType": "Boolean", "category": "mode" },
+    { "key": "ManualFunctionRunning", "identifier": "plc/app/Application/sym/Station/Extension/ManualFunctionRunning", "dataType": "Boolean", "category": "mode" },
+    { "key": "ExecState", "identifier": "plc/app/Application/sym/Station/Extension/ExecState", "dataType": "UInt16", "category": "mode" },
+    { "key": "IsInHomePosition", "identifier": "plc/app/Application/sym/Station/Unit/IsInHomePosition", "dataType": "Boolean", "category": "station" },
+    { "key": "StationIsEmpty", "identifier": "plc/app/Application/sym/Station/Unit/IsEmpty", "dataType": "Boolean", "category": "station" },
+    { "key": "BusOk", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/BusInfo/BusOk", "dataType": "Boolean", "category": "fieldbus-master" },
+    { "key": "MasterOk", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/BusInfo/MasterOk", "dataType": "Boolean", "category": "fieldbus-master" },
+    { "key": "SlavesOk", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/BusInfo/SlavesOk", "dataType": "Boolean", "category": "fieldbus-master" },
+    { "key": "TopologyNotOk", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/MasterInfo/TopologyNotOk", "dataType": "Boolean", "category": "fieldbus-master" },
+    { "key": "ConfiguredSlaves", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/MasterInfo/Configured", "dataType": "UInt32", "category": "fieldbus-master" },
+    { "key": "DetectedSlaves", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/MasterInfo/Detected", "dataType": "UInt32", "category": "fieldbus-master" },
+    { "key": "LostFrames", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/FrameStatistics/LostFrames", "dataType": "UInt32", "category": "fieldbus-master" },
+    { "key": "SlaveAddress", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/SlaveAddress", "dataType": "UInt16[]", "category": "fieldbus-array" },
+    { "key": "SlaveDeviceState", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/SlaveDeviceState", "dataType": "Byte[]", "category": "fieldbus-array" },
+    { "key": "SlaveLinkState", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/SlaveLinkState", "dataType": "Byte[]", "category": "fieldbus-array" },
+    { "key": "SlaveWcState", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/SlaveWcState", "dataType": "Boolean[]", "category": "fieldbus-array" },
+    { "key": "SlaveWcStateErrorCnt", "identifier": "plc/app/Application/sym/Peripherals/EtherCat/SlaveWcStateErrorCnt", "dataType": "UInt32[]", "category": "fieldbus-array" },
+    { "key": "IoPartPresent", "identifier": "plc/app/Application/sym/Peripherals/IoPartPresent", "dataType": "Boolean", "category": "io" },
+    { "key": "ClampUnitState", "identifier": "plc/app/Application/sym/Station/ExampleCell/ClampA/Unit/State", "dataType": "Byte", "category": "unit" },
+    { "key": "Manual.ClampA.Open.Release", "identifier": "plc/app/Application/sym/Station/ExampleCell/ClampA/Extension/OpenRelease", "dataType": "Boolean", "category": "manual" },
+    { "key": "Manual.ClampA.Open.Running", "identifier": "plc/app/Application/sym/Station/ExampleCell/ClampA/Extension/OpenRunning", "dataType": "Boolean", "category": "manual" },
+    { "key": "VisionReady", "identifier": "plc/app/Application/sym/Station/ExampleCell/Vision/Ready", "dataType": "Boolean", "category": "device-data", "group": "Vision - status", "english": "Vision ready", "chinese": "视觉就绪" },
+    { "key": "VisionScore", "identifier": "plc/app/Application/sym/Station/ExampleCell/Vision/Score", "dataType": "Single", "category": "device-data", "group": "Vision - results", "english": "Vision score", "chinese": "视觉评分", "unit": "%" },
+    { "key": "CellNumber", "identifier": "plc/app/Application/sym/StationData/CellNumber", "dataType": "Int32", "category": "station-data", "group": "General", "english": "Cell number", "chinese": "工位编号" },
+    { "key": "RecipeName", "identifier": "plc/app/Application/sym/TypeData/RecipeName", "dataType": "String", "category": "type-data", "group": "Recipe", "english": "Recipe name", "chinese": "配方名称" },
+    { "key": "PublicEventList", "identifier": "plc/app/Application/sym/Root/Objects/HmiUtil/EventList/PublicEventList", "dataType": "PublicEventList", "category": "events" }
+  ],
+  "fieldbus": {
+    "masterDesignator": "=200+S-A620-X1",
+    "slaves": [
+      { "index": 1, "designator": "=200+S-K010", "deviceType": "EK1100", "displayName": "EtherCAT Coupler", "role": "coupler" },
+      { "index": 2, "parentIndex": 1, "designator": "=200+S-K010A1", "deviceType": "EL1018", "displayName": "8-channel DI", "role": "module" },
+      { "index": 3, "designator": "_200A201", "deviceType": "Vision sensor", "displayName": "Example vision device", "role": "device", "deviceDataGroup": "Vision" }
+    ],
+    "channels": [
+      { "slaveIndex": 2, "channel": 1, "direction": "DI", "bmk": "_200B201", "english": "Part present", "chinese": "产品到位", "nodeKey": "IoPartPresent" }
+    ]
+  },
+  "autoInfoLines": [
+    { "index": 0, "english": "Ready", "chinese": "就绪" },
+    { "index": 1, "english": "Place the part in the fixture", "chinese": "请将产品放入夹具" }
+  ]
+}

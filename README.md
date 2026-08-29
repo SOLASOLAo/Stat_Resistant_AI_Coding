@@ -133,16 +133,18 @@ scripts\cpstudio\Run-OfflinePostExportCheck.cmd
 Build，检查器还会复核工程前后哈希。它不执行任何真机在线动作，也没有接入
 CpStudio hook。`DONE_OFFLINE` 只表示无需继续 Export，不代表 warning/质量验收通过。
 
-独立 Windows HMI 原型位于 `src/hmi/`。它不改 CpStudio/HMI 或 PLC，使用当前
-Symbol Configuration 已发布的 150 个经审阅 ctrlX OPC UA 订阅节点；Overview、Manual、
-Events、I/O、Data 五页采用 Nexeed 类似的信息层级。实时数据、设备参数和状态
-仍全部只读；唯一的写入能力是明确白名单中的 `TokenRequest` 和 `ModeIdRequest`，
-且真机连接默认不允许模式请求：
+配置驱动的独立 Windows HMI 位于 `src/hmi/`。它不改 CpStudio/HMI 或 PLC；品牌、Overview、
+模式、Manual Unit、设备字段和 EtherCAT 拓扑均来自一个 `*.hmi.json`。Station010 配置继续使用
+150 个经审阅的 ctrlX OPC UA 订阅节点，另有完全独立的 ExampleCell 配置证明壳层可跨工位复用。
+实时数据、设备参数和状态仍全部只读；唯一写入白名单仍是 `TokenRequest` 和
+`ModeIdRequest`，且真机连接默认不允许模式请求：
 
 ```powershell
 cd src\hmi
 dotnet restore .\Bpp.ResistantStation.Hmi.sln --locked-mode
 dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj -- --demo
+dotnet run --project .\Bpp.ResistantStation.Hmi\Bpp.ResistantStation.Hmi.csproj -- `
+  --demo --config .\Bpp.ResistantStation.Hmi\Configuration\example-cell.hmi.json
 ```
 
 真实连接前关闭 Nexeed HMI；账号和密码只在连接对话框内存中使用。首次真机验收仍只读，
@@ -173,6 +175,18 @@ Skill 已可版本化安装并校验：
 .\ctrlx-ai-coding\scripts\Install-CtrlXOpconSkill.ps1 -Force
 .\ctrlx-ai-coding\scripts\Install-CtrlXOpconSkill.ps1 -Check
 ```
+
+每个新项目只维护一个精简 `project-pack.json`，引用现有 Station/I/O/Event/Unit/Process/HMI
+事实源。流程事实写入 `specs/processes/*.process.json` 后，统一生成并校验工程计划：
+
+```powershell
+pwsh -File .\scripts\project\Build-CtrlXOpconProjectPack.ps1 -Command Build -Json
+pwsh -File .\scripts\project\Build-CtrlXOpconProjectPack.ps1 -Command Check -RequireReady -Json
+```
+
+生成器只输出 SFC 计划、双语提示、测试骨架和追溯关系，不直接写 CpStudio 或 PLE。新 action
+固定 Pack/plan 身份；Host 与直接 ExecuteAction 都会逐项校验计划引用的事实源，并在进入 Broker
+前拒绝 draft、陈旧或漂移的计划。
 
 ## 仓库结构
 ```

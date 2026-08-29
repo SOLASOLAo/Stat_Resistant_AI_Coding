@@ -5,6 +5,70 @@ using Bpp.ResistantStation.Hmi.Configuration;
 
 namespace Bpp.ResistantStation.Hmi.ViewModels;
 
+public sealed class OverviewCardRow(OverviewCardDefinition definition) : ObservableObject
+{
+    private string _valueText = "—";
+    private string _quality = "No data";
+    private bool _isTrue;
+
+    public string Key { get; } = definition.Key;
+    public string NodeKey { get; } = definition.NodeKey;
+    public string Label { get; } = string.IsNullOrWhiteSpace(definition.Chinese)
+        ? definition.English
+        : $"{definition.English} / {definition.Chinese}";
+    public string Unit { get; } = definition.Unit;
+    public bool IsBoolean { get; } = definition.IsBoolean;
+    private IReadOnlyDictionary<string, string> ValueMap { get; } = definition.ValueMap;
+
+    public string ValueText
+    {
+        get => _valueText;
+        private set => SetProperty(ref _valueText, value);
+    }
+
+    public string Quality
+    {
+        get => _quality;
+        private set => SetProperty(ref _quality, value);
+    }
+
+    public bool IsTrue
+    {
+        get => _isTrue;
+        private set => SetProperty(ref _isTrue, value);
+    }
+
+    public void Update(object? value, bool isGood, string status)
+    {
+        Quality = isGood ? "Good" : status;
+        if (!isGood || value is null)
+        {
+            ValueText = "—";
+            IsTrue = false;
+            return;
+        }
+
+        if (IsBoolean)
+        {
+            IsTrue = Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+            ValueText = IsTrue ? "TRUE / ON" : "FALSE / OFF";
+            return;
+        }
+
+        var rawValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—";
+        ValueText = ValueMap.TryGetValue(rawValue, out var mappedValue)
+            ? mappedValue
+            : rawValue;
+    }
+
+    public void Reset()
+    {
+        ValueText = "—";
+        Quality = "No data";
+        IsTrue = false;
+    }
+}
+
 public sealed class DataValueRow(HmiNodeDefinition definition) : ObservableObject
 {
     private string _value = "—";
@@ -139,6 +203,8 @@ public sealed class EtherCatSlaveRow(FieldbusSlaveDefinition definition) : Obser
         ? definition.DeviceType
         : definition.DisplayName;
     public string SourceTypeName { get; } = definition.SourceTypeName;
+    public string Role { get; } = definition.Role;
+    public string DeviceDataGroup { get; } = definition.DeviceDataGroup;
 
     public int Address
     {
@@ -293,6 +359,9 @@ public sealed class ManualUnitRow : ObservableObject
         string designator,
         string displayName,
         string category,
+        string stateNodeKey,
+        string secondaryStateNodeKey,
+        IReadOnlyDictionary<string, string> stateValueMap,
         IEnumerable<ManualActionRow> actions,
         IEnumerable<DeviceFieldRow>? deviceFields = null)
     {
@@ -300,6 +369,9 @@ public sealed class ManualUnitRow : ObservableObject
         Designator = designator;
         DisplayName = displayName;
         Category = category;
+        StateNodeKey = stateNodeKey;
+        SecondaryStateNodeKey = secondaryStateNodeKey;
+        StateValueMap = stateValueMap;
         Actions = new ObservableCollection<ManualActionRow>(actions);
         DeviceFields = new ObservableCollection<DeviceFieldRow>(deviceFields ?? []);
         Parameters = new ObservableCollection<DeviceFieldRow>(
@@ -317,6 +389,12 @@ public sealed class ManualUnitRow : ObservableObject
     public string DisplayName { get; }
 
     public string Category { get; }
+
+    public string StateNodeKey { get; }
+
+    public string SecondaryStateNodeKey { get; }
+
+    public IReadOnlyDictionary<string, string> StateValueMap { get; }
 
     public ObservableCollection<ManualActionRow> Actions { get; }
 
@@ -362,7 +440,8 @@ public sealed class DeviceFieldRow(
     string english,
     string chinese,
     string unit = "",
-    bool isBoolean = false) : ObservableObject
+    bool isBoolean = false,
+    IReadOnlyDictionary<string, string>? valueMap = null) : ObservableObject
 {
     private string _valueText = "—";
     private string _quality = "No data";
@@ -385,6 +464,9 @@ public sealed class DeviceFieldRow(
     public bool IsBoolean { get; } = isBoolean;
 
     public bool IsInput => Section == DeviceFieldSection.Parameter;
+
+    private IReadOnlyDictionary<string, string> ValueMap { get; } =
+        valueMap ?? new Dictionary<string, string>(StringComparer.Ordinal);
 
     public string ValueText
     {
@@ -421,12 +503,10 @@ public sealed class DeviceFieldRow(
             return;
         }
 
-        ValueText = Key switch
-        {
-            "BursterUpperRange" or "BursterLowerRange" => DescribeBursterRange(value),
-            "KistlerMeasuringTimeout" => DescribeDuration(value),
-            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—"
-        };
+        var rawValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—";
+        ValueText = ValueMap.TryGetValue(rawValue, out var mappedValue)
+            ? mappedValue
+            : rawValue;
     }
 
     public void Reset()
@@ -436,38 +516,6 @@ public sealed class DeviceFieldRow(
         IsTrue = false;
     }
 
-    private static string DescribeBursterRange(object value)
-    {
-        var index = Convert.ToInt32(value, CultureInfo.InvariantCulture);
-        return index switch
-        {
-            0 => "2 mΩ",
-            1 => "20 mΩ",
-            2 => "200 mΩ",
-            3 => "2 Ω",
-            4 => "20 Ω",
-            5 => "200 Ω",
-            6 => "2 kΩ",
-            7 => "20 kΩ",
-            8 => "200 kΩ",
-            _ => $"UNKNOWN ({index})"
-        };
-    }
-
-    private static string DescribeDuration(object value)
-    {
-        if (value is TimeSpan duration)
-        {
-            return $"{duration.TotalMilliseconds:0} ms";
-        }
-
-        if (value is IConvertible)
-        {
-            return $"{Convert.ToDouble(value, CultureInfo.InvariantCulture):0} ms";
-        }
-
-        return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "—";
-    }
 }
 
 public sealed class ManualActionRow(
@@ -475,7 +523,9 @@ public sealed class ManualActionRow(
     string key,
     string english,
     string chinese,
-    string description) : ObservableObject
+    string description,
+    string releaseNodeKey,
+    string runningNodeKey) : ObservableObject
 {
     private bool _released;
     private bool _running;
@@ -492,6 +542,10 @@ public sealed class ManualActionRow(
     public string Label => $"{Chinese} / {English}";
 
     public string Description { get; } = description;
+
+    public string ReleaseNodeKey { get; } = releaseNodeKey;
+
+    public string RunningNodeKey { get; } = runningNodeKey;
 
     public bool Released
     {

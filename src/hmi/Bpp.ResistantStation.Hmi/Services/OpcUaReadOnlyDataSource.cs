@@ -9,7 +9,6 @@ namespace Bpp.ResistantStation.Hmi.Services;
 
 public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationDataSource
 {
-    private const string ApplicationName = "BPP Resistance Station HMI";
     private readonly ITelemetryContext _telemetry = DefaultTelemetry.Create(_ => { });
     private readonly IReadOnlyDictionary<string, HmiNodeDefinition> _nodesByKey =
         settings.Nodes.ToDictionary(node => node.Key, StringComparer.Ordinal);
@@ -46,6 +45,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
         var configuration = await CreateConfigurationAsync(
             options,
+            settings.Brand,
             _telemetry,
             cancellationToken);
         var application = new ApplicationInstance(configuration, _telemetry);
@@ -76,7 +76,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             endpoint,
             updateBeforeConnect: false,
             checkDomain: false,
-            sessionName: ApplicationName,
+            sessionName: settings.Brand.ProductName,
             sessionTimeout: 60_000,
             identity,
             preferredLocales: ["zh-CN", "en-US"]);
@@ -95,7 +95,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
         _subscription = new Subscription(_session.DefaultSubscription)
         {
-            DisplayName = "Station010 read-only overview",
+            DisplayName = $"{settings.StationId} read-only overview",
             PublishingInterval = settings.PublishingIntervalMs,
             KeepAliveCount = 20,
             LifetimeCount = 60,
@@ -144,14 +144,11 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             return new ModeRequestResult(false, modeId, "OPC UA is not connected.");
         }
 
-        var safetyKeys = new[]
-        {
-            "EmergencyCircuitOk",
-            "MaintenanceCircuitOk"
-        };
-        var prerequisiteKeys = modeId == 5
-            ? safetyKeys.Append("StationIsEmpty").ToArray()
-            : safetyKeys;
+        var safetyKeys = settings.ModeControl.SafetyPrerequisiteNodeKeys;
+        var changeoverKey = settings.ModeControl.ChangeoverPrerequisiteNodeKey;
+        var prerequisiteKeys = modeId == 5 && !string.IsNullOrWhiteSpace(changeoverKey)
+            ? safetyKeys.Append(changeoverKey).ToArray()
+            : safetyKeys.ToArray();
         var prerequisiteValues = await ReadCurrentValuesAsync(
             prerequisiteKeys,
             cancellationToken);
@@ -166,12 +163,14 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
                 $"Mode request safety feedback is not Good/TRUE: {string.Join(", ", missingSafety)}");
         }
 
-        if (modeId == 5 && !IsGoodTrue(prerequisiteValues["StationIsEmpty"]))
+        if (modeId == 5 &&
+            !string.IsNullOrWhiteSpace(changeoverKey) &&
+            !IsGoodTrue(prerequisiteValues[changeoverKey]))
         {
             return new ModeRequestResult(
                 false,
                 modeId,
-                "Change-over requires Station.Unit.IsEmpty = TRUE.");
+                $"Change-over prerequisite is not Good/TRUE: {changeoverKey}");
         }
 
         await WriteAllowlistedByteAsync(
@@ -272,6 +271,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
 
     private static async Task<ApplicationConfiguration> CreateConfigurationAsync(
         ConnectionOptions options,
+        BrandSettings brand,
         ITelemetryContext telemetry,
         CancellationToken cancellationToken)
     {
@@ -281,9 +281,9 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
             "pki");
         var configuration = new ApplicationConfiguration(telemetry)
         {
-            ApplicationName = ApplicationName,
-            ApplicationUri = $"urn:{Utils.GetHostName()}:Bpp:ResistanceStation:Hmi",
-            ProductUri = "urn:Bpp:ResistanceStation:Hmi",
+            ApplicationName = brand.ProductName,
+            ApplicationUri = $"urn:{Utils.GetHostName()}:CtrlX:OpCon:Hmi",
+            ProductUri = "urn:CtrlX:OpCon:Hmi",
             ApplicationType = ApplicationType.Client,
             SecurityConfiguration = new SecurityConfiguration
             {
@@ -291,7 +291,7 @@ public sealed class OpcUaReadOnlyDataSource(HmiSettings settings) : IStationData
                 {
                     StoreType = CertificateStoreType.Directory,
                     StorePath = Path.Combine(pkiRoot, "own"),
-                    SubjectName = $"CN={ApplicationName}, O=BPP"
+                    SubjectName = $"CN={brand.ProductName}, O=Automation"
                 },
                 TrustedPeerCertificates = new CertificateTrustList
                 {

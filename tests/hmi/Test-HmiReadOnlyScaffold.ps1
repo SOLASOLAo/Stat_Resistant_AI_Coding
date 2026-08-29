@@ -175,6 +175,8 @@ Assert-True ($catalog.modeControl.modeIdRequestIdentifier -eq 'plc/app/Applicati
     'Unexpected ModeIdRequest write target.'
 
 $modeSourceText = [System.IO.File]::ReadAllText($modeControlSource)
+Assert-True ($modeSourceText -match '_modeRequestsEnabled\s*=\s*settings\.ModeControl\.Enabled\s*&&\s*options\.EnableModeRequests') `
+    'Real OPC mode requests must remain behind both the project configuration and per-session opt-in.'
 Assert-True ($modeSourceText -match 'public\s+bool\s+SupportsStationCommands\s*=>\s*false\s*;') `
     'The real OPC UA adapter must keep Station Start/Stop/Step commands disabled.'
 Assert-True ($modeSourceText -match 'public\s+bool\s+SupportsManualFunctions\s*=>\s*false\s*;') `
@@ -230,6 +232,12 @@ Assert-True ($semanticWrites.Count -eq 1) `
     'The semantic OPC UA adapter must contain exactly one guarded protocol write call.'
 
 $mockSourceText = [System.IO.File]::ReadAllText($mockSourcePath)
+Assert-True ($mockSourceText -match '_modeRequestsEnabled\s*=\s*options\.EnableModeRequests') `
+    'Offline DEMO must allow project-pack mode switching without changing the real write policy.'
+Assert-True ($mockSourceText -match '_autoInfoIndexes') `
+    'Offline DEMO must derive AutoInfoLine values from the active HMI configuration.'
+Assert-True ($mockSourceText -notmatch '0\s*=>\s*4|1\s*=>\s*10|2\s*=>\s*12|_\s*=>\s*16') `
+    'Offline DEMO must not contain the old Station010-only AutoInfoLine switch.'
 Assert-True ($mockSourceText -match 'public\s+bool\s+SupportsStationCommands\s*=>\s*IsConnected\s*;') `
     'Offline DEMO must expose simulated Station Chain commands.'
 Assert-True ($mockSourceText -match 'public\s+bool\s+SupportsManualFunctions\s*=>\s*IsConnected\s*;') `
@@ -289,6 +297,32 @@ Assert-True ($connectionDialogText -match 'EnableModeRequestsInput[\s\S]*?IsChec
 $viewModelText = [System.IO.File]::ReadAllText($viewModelPath)
 Assert-True ($viewModelText -match '_badNodes\.Count\s*>\s*0') `
     'Bad OPC UA quality must mask old live values.'
+
+$overviewNodeKeys = @($catalog.overviewCards | ForEach-Object { [string]$_.nodeKey })
+foreach ($expectedOverviewNode in @(
+        'FixtureLeft',
+        'FixtureMiddle',
+        'FixtureRight',
+        'ProductSensorA',
+        'ProductSensorB',
+        'EmergencyCircuitOk',
+        'MaintenanceCircuitOk',
+        'SafetyDoorCircuitOk',
+        'AllSafetyCircuitsOk')) {
+    Assert-True ($overviewNodeKeys -contains $expectedOverviewNode) `
+        "Station010 Overview is missing the raw diagnostic signal: $expectedOverviewNode"
+}
+
+foreach ($unitKey in @('Wp100K101SafetyDoor', 'Wp100K102PressingCylinder')) {
+    $unit = @($catalog.manualUnits | Where-Object key -eq $unitKey | Select-Object -First 1)
+    Assert-True ($unit.Count -eq 1) "Station010 manual Unit is missing: $unitKey"
+    Assert-True (-not [string]::IsNullOrWhiteSpace([string]$unit[0].secondaryStateNodeKey)) `
+        "$unitKey must use two configured position signals instead of presenting one BOOL as a Unit state."
+    foreach ($stateKey in @('10', '01', '00', '11')) {
+        Assert-True ($null -ne $unit[0].stateValueMap.$stateKey) `
+            "$unitKey has no configured display for position input state $stateKey."
+    }
+}
 
 [xml]$symbolXml = [System.IO.File]::ReadAllText($symbolPath)
 $typeMembers = @{}

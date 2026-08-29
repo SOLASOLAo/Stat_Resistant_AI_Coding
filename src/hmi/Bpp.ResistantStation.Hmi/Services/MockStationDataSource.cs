@@ -4,6 +4,12 @@ namespace Bpp.ResistantStation.Hmi.Services;
 
 public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSource
 {
+    private readonly IReadOnlyDictionary<string, HmiNodeDefinition> _configuredNodes =
+        settings.Nodes.Where(node => node.Enabled).ToDictionary(node => node.Key, StringComparer.Ordinal);
+    private readonly int[] _autoInfoIndexes = settings.AutoInfoLines
+        .Select(line => line.Index)
+        .ToArray();
+    private readonly HashSet<string> _publishedKeys = new(StringComparer.Ordinal);
     private CancellationTokenSource? _loopCancellation;
     private Task? _loopTask;
     private int _tick;
@@ -30,7 +36,9 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         }
 
         IsConnected = true;
-        _modeRequestsEnabled = settings.ModeControl.Enabled && options.EnableModeRequests;
+        // DEMO never writes to OPC UA, so it remains navigable even when real
+        // mode writes are disabled in the selected project configuration.
+        _modeRequestsEnabled = options.EnableModeRequests;
         _loopCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs(
             true,
@@ -188,6 +196,7 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
 
     private void PublishSnapshot()
     {
+        _publishedKeys.Clear();
         var phase = (_tick / 12) % 4;
         Publish("ModeId", _modeId);
         Publish("ModeRelease", true);
@@ -202,32 +211,26 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
         Publish("ManualFunctionsActive", _modeId == 3);
         Publish("ManualFunctionRunning", _manualFunction is not null);
         Publish("Token", settings.ModeControl.PanelToken);
-        Publish("AutoInfoLine", _stationRunning && _modeId == 1 ? phase switch
-        {
-            0 => 4,
-            1 => 10,
-            2 => 12,
-            _ => 16
-        } : _stationRunning && _modeId is 4 or 5 ? phase switch
-        {
-            0 => 2,
-            1 => 14,
-            _ => 16
-        } : 0);
+        var idleInfoIndex = _autoInfoIndexes.FirstOrDefault();
+        var runningInfoIndex = _autoInfoIndexes.Length > 1
+            ? _autoInfoIndexes[1 + ((_tick / 12) % (_autoInfoIndexes.Length - 1))]
+            : idleInfoIndex;
+        Publish("AutoInfoLine", _stationRunning ? runningInfoIndex : idleInfoIndex);
         Publish("IsInHomePosition", phase is 0 or 3);
         Publish("StationIsEmpty", true);
         Publish("BusOk", true);
         Publish("MasterOk", true);
         Publish("SlavesOk", true);
         Publish("TopologyNotOk", false);
-        Publish("ConfiguredSlaves", (uint)9);
-        Publish("DetectedSlaves", (uint)9);
+        var slaveCount = settings.Fieldbus.Slaves.Count;
+        Publish("ConfiguredSlaves", (uint)slaveCount);
+        Publish("DetectedSlaves", (uint)slaveCount);
         Publish("LostFrames", (uint)0);
-        Publish("SlaveAddress", Enumerable.Range(1001, 9).Select(value => (ushort)value).ToArray());
-        Publish("SlaveDeviceState", Enumerable.Repeat((byte)0x08, 9).ToArray());
-        Publish("SlaveLinkState", Enumerable.Repeat((byte)0x00, 9).ToArray());
-        Publish("SlaveWcState", Enumerable.Repeat(false, 9).ToArray());
-        Publish("SlaveWcStateErrorCnt", Enumerable.Repeat((uint)0, 9).ToArray());
+        Publish("SlaveAddress", Enumerable.Range(1001, slaveCount).Select(value => (ushort)value).ToArray());
+        Publish("SlaveDeviceState", Enumerable.Repeat((byte)0x08, slaveCount).ToArray());
+        Publish("SlaveLinkState", Enumerable.Repeat((byte)0x00, slaveCount).ToArray());
+        Publish("SlaveWcState", Enumerable.Repeat(false, slaveCount).ToArray());
+        Publish("SlaveWcStateErrorCnt", Enumerable.Repeat((uint)0, slaveCount).ToArray());
 
         foreach (var node in settings.Nodes.Where(node => node.Category == "io"))
         {
@@ -326,7 +329,7 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
                     ["InstanceId"] = (uint)1,
                     ["Number"] = 60,
                     ["Class"] = (uint)2,
-                    ["Source"] = "Wp100",
+                    ["Source"] = settings.StationId,
                     ["AddText"] = "Move fixture to the requested position",
                     ["DtEntry"] = DateTime.UtcNow.AddSeconds(-2),
                     ["DtClear"] = DateTime.UnixEpoch,
@@ -337,7 +340,7 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
                     ["InstanceId"] = (uint)2,
                     ["Number"] = 61,
                     ["Class"] = (uint)2,
-                    ["Source"] = "Wp100",
+                    ["Source"] = settings.StationId,
                     ["AddText"] = "Cleared demo event must stay hidden",
                     ["DtEntry"] = DateTime.UtcNow.AddSeconds(-5),
                     ["DtClear"] = DateTime.UtcNow.AddSeconds(-1),
@@ -345,10 +348,68 @@ public sealed class MockStationDataSource(HmiSettings settings) : IStationDataSo
                 }
             }
         });
+
+        foreach (var definition in _configuredNodes.Values.Where(
+                     definition => !_publishedKeys.Contains(definition.Key)))
+        {
+            Publish(definition.Key, CreateDemoValue(definition, phase));
+        }
     }
 
-    private void Publish(string key, object value)
+    private object CreateDemoValue(HmiNodeDefinition definition, int phase)
     {
+        var manualAction = settings.ManualUnits
+            .SelectMany(unit => unit.Actions.Select(action => (unit.Key, Action: action)))
+            .FirstOrDefault(item =>
+                string.Equals(item.Action.ReleaseNodeKey, definition.Key, StringComparison.Ordinal));
+        if (manualAction.Action is not null)
+        {
+            return true;
+        }
+
+        var runningAction = settings.ManualUnits
+            .SelectMany(unit => unit.Actions.Select(action => (unit.Key, Action: action)))
+            .FirstOrDefault(item =>
+                string.Equals(item.Action.RunningNodeKey, definition.Key, StringComparison.Ordinal));
+        if (runningAction.Action is not null)
+        {
+            return string.Equals(_manualUnit, runningAction.Key, StringComparison.Ordinal) &&
+                   string.Equals(_manualFunction, runningAction.Action.Key, StringComparison.Ordinal);
+        }
+
+        if (definition.Category == "unit")
+        {
+            return (byte)4;
+        }
+
+        return definition.DataType switch
+        {
+            "Boolean" => phase % 2 == 0,
+            "Byte" => (byte)phase,
+            "Int16" => (short)phase,
+            "UInt16" => (ushort)phase,
+            "Int32" => phase,
+            "UInt32" => (uint)phase,
+            "Single" => 10.0f + phase,
+            "Double" => 10.0d + phase,
+            "String" => $"Demo {definition.English}",
+            "Byte[]" => Enumerable.Repeat((byte)phase, Math.Max(1, settings.Fieldbus.Slaves.Count)).ToArray(),
+            "Boolean[]" => Enumerable.Repeat(false, Math.Max(1, settings.Fieldbus.Slaves.Count)).ToArray(),
+            "UInt16[]" => Enumerable.Range(1001, Math.Max(1, settings.Fieldbus.Slaves.Count))
+                .Select(value => (ushort)value).ToArray(),
+            "UInt32[]" => Enumerable.Repeat((uint)0, Math.Max(1, settings.Fieldbus.Slaves.Count)).ToArray(),
+            _ => 0
+        };
+    }
+
+    private void Publish(string key, object? value)
+    {
+        if (!_configuredNodes.ContainsKey(key))
+        {
+            return;
+        }
+
+        _publishedKeys.Add(key);
         NodeValueChanged?.Invoke(this, new NodeValueChangedEventArgs(
             key,
             value,

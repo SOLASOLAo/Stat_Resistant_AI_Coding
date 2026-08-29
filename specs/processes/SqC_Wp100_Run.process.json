@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "kind": "ctrlx-opcon-process",
+  "processId": "wp100-run-command",
+  "displayName": "Wp100 three-position resistance measurement",
+  "status": "ready",
+  "chain": {
+    "name": "SqC_Wp100_Run",
+    "kind": "command_chain",
+    "plcPath": "Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run",
+    "interfaceOwner": "cpstudio",
+    "caller": "Wp100Unit with Wp100Cmd.RUN",
+    "inputs": [
+      {
+        "name": "rUnit",
+        "type": "REFERENCE TO Wp100Unit",
+        "source": "cpstudio"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Result",
+        "type": "Wp100RunSequenceResultStruct",
+        "source": "cpstudio"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-RUN-SEQUENCE",
+      "text": "Execute one SqS_Wp100_Run instance sequentially for LEFT, MIDDLE and RIGHT and retain all three results."
+    },
+    {
+      "id": "REQ-PART-PRESENT",
+      "text": "Require both fixture product sensors before each requested position and recheck them immediately before starting the atomic operation."
+    },
+    {
+      "id": "REQ-FIXTURE-ONE-HOT",
+      "text": "Release each fixture prompt only with the safety door open and press raised, then require exactly the requested position sensor."
+    },
+    {
+      "id": "REQ-COMMAND-GUIDANCE",
+      "text": "The command chain owns load-part and fixture-position prompts but does not overwrite prompts while the atomic subchain is active."
+    },
+    {
+      "id": "REQ-COMMAND-CLEANUP",
+      "text": "On completion or cancellation release the subchain and owned product event; retain results until the next initialization."
+    }
+  ],
+  "steps": [
+    {
+      "id": "N000",
+      "kind": "initialize",
+      "comment": "Initialize measurement sequence",
+      "operation": "Clear the previous sequence result, owned event state and stale operator prompt.",
+      "transition": "Initialization completed.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE",
+        "REQ-COMMAND-CLEANUP"
+      ],
+      "acceptance": [
+        "Left, middle and right results are initialized once at the start.",
+        "No prompt or product-event state remains from the previous execution."
+      ]
+    },
+    {
+      "id": "N010",
+      "kind": "check",
+      "comment": "Check part before LEFT",
+      "operation": "Wait until _100B701 and _100B702 both confirm the product before requesting LEFT.",
+      "transition": "Both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_LOAD_PART",
+        "english": "Place the product correctly on the fixture",
+        "chinese": "请将产品正确放置在夹具上"
+      },
+      "requirements": [
+        "REQ-RUN-SEQUENCE",
+        "REQ-PART-PRESENT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "A missing sensor holds the step and identifies the missing BMK in EVENT_PART_DETECT_SENSOR.",
+        "The load-part prompt is shown only while product presence blocks progress."
+      ]
+    },
+    {
+      "id": "N015",
+      "kind": "wait",
+      "comment": "Wait fixture LEFT",
+      "operation": "Prompt for LEFT and wait for the LEFT one-hot fixture state, then recheck product presence.",
+      "transition": "Door is open, press is raised, _100B601 is TRUE, _100B602 and _100B603 are FALSE, and both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_MOVE_FIXTURE_LEFT",
+        "english": "Move the fixture to the left position",
+        "chinese": "请将夹具移动到左侧位置"
+      },
+      "requirements": [
+        "REQ-PART-PRESENT",
+        "REQ-FIXTURE-ONE-HOT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "An unsafe machine position does not release the move-fixture instruction.",
+        "Removing the product while moving the fixture prevents measurement start."
+      ]
+    },
+    {
+      "id": "N020",
+      "kind": "start",
+      "comment": "Start LEFT measurement",
+      "operation": "Write MeasurePsoEnum.LEFT while SqS_Run is READY and set Execute TRUE.",
+      "transition": "The subchain accepts the LEFT request.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "The shared subchain receives LEFT before Execute is asserted."
+      ]
+    },
+    {
+      "id": "N030",
+      "kind": "capture",
+      "comment": "Wait LEFT measurement",
+      "operation": "Wait for CheckSubChainDone and copy the atomic result to Result.Left.",
+      "transition": "SqS_Run returns DONE; ERROR is propagated.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "LEFT finishes before MIDDLE can start and Result.Left remains retained."
+      ]
+    },
+    {
+      "id": "N040",
+      "kind": "check",
+      "comment": "Check part before MIDDLE",
+      "operation": "Wait until both product sensors confirm the product before requesting MIDDLE.",
+      "transition": "Both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_LOAD_PART",
+        "english": "Place the product correctly on the fixture",
+        "chinese": "请将产品正确放置在夹具上"
+      },
+      "requirements": [
+        "REQ-RUN-SEQUENCE",
+        "REQ-PART-PRESENT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "MIDDLE cannot be requested while either product sensor is FALSE."
+      ]
+    },
+    {
+      "id": "N045",
+      "kind": "wait",
+      "comment": "Wait fixture MIDDLE",
+      "operation": "Prompt for MIDDLE and wait for the MIDDLE one-hot fixture state, then recheck product presence.",
+      "transition": "Door is open, press is raised, _100B602 is TRUE, _100B601 and _100B603 are FALSE, and both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_MOVE_FIXTURE_MIDDLE",
+        "english": "Move the fixture to the middle position",
+        "chinese": "请将夹具移动到中间位置"
+      },
+      "requirements": [
+        "REQ-PART-PRESENT",
+        "REQ-FIXTURE-ONE-HOT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "Only the exact MIDDLE one-hot state releases this step."
+      ]
+    },
+    {
+      "id": "N050",
+      "kind": "start",
+      "comment": "Start MIDDLE measurement",
+      "operation": "Write MeasurePsoEnum.MIDDLE while SqS_Run is READY and set Execute TRUE.",
+      "transition": "The subchain accepts the MIDDLE request.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "The shared subchain receives MIDDLE before Execute is asserted."
+      ]
+    },
+    {
+      "id": "N060",
+      "kind": "capture",
+      "comment": "Wait MIDDLE measurement",
+      "operation": "Wait for CheckSubChainDone and copy the atomic result to Result.Middle.",
+      "transition": "SqS_Run returns DONE; ERROR is propagated.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "MIDDLE finishes before RIGHT can start and Result.Middle remains retained."
+      ]
+    },
+    {
+      "id": "N070",
+      "kind": "check",
+      "comment": "Check part before RIGHT",
+      "operation": "Wait until both product sensors confirm the product before requesting RIGHT.",
+      "transition": "Both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_LOAD_PART",
+        "english": "Place the product correctly on the fixture",
+        "chinese": "请将产品正确放置在夹具上"
+      },
+      "requirements": [
+        "REQ-RUN-SEQUENCE",
+        "REQ-PART-PRESENT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "RIGHT cannot be requested while either product sensor is FALSE."
+      ]
+    },
+    {
+      "id": "N075",
+      "kind": "wait",
+      "comment": "Wait fixture RIGHT",
+      "operation": "Prompt for RIGHT and wait for the RIGHT one-hot fixture state, then recheck product presence.",
+      "transition": "Door is open, press is raised, _100B603 is TRUE, _100B601 and _100B602 are FALSE, and both product sensors are TRUE.",
+      "prompt": {
+        "key": "USER_INFO_MOVE_FIXTURE_RIGHT",
+        "english": "Move the fixture to the right position",
+        "chinese": "请将夹具移动到右侧位置"
+      },
+      "requirements": [
+        "REQ-PART-PRESENT",
+        "REQ-FIXTURE-ONE-HOT",
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "acceptance": [
+        "Only the exact RIGHT one-hot state releases this step."
+      ]
+    },
+    {
+      "id": "N080",
+      "kind": "start",
+      "comment": "Start RIGHT measurement",
+      "operation": "Write MeasurePsoEnum.RIGHT while SqS_Run is READY and set Execute TRUE.",
+      "transition": "The subchain accepts the RIGHT request.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "The shared subchain receives RIGHT before Execute is asserted."
+      ]
+    },
+    {
+      "id": "N090",
+      "kind": "capture",
+      "comment": "Wait RIGHT measurement",
+      "operation": "Wait for CheckSubChainDone and copy the atomic result to Result.Right.",
+      "transition": "SqS_Run returns DONE; ERROR is propagated.",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "acceptance": [
+        "Result.Right is retained without overwriting the earlier two results."
+      ]
+    },
+    {
+      "id": "N999",
+      "kind": "finish",
+      "comment": "Finish measurement sequence",
+      "operation": "Return DONE and retain the three-position result until the next N000.",
+      "transition": "The command chain is complete.",
+      "prompt": {
+        "key": "USER_INFO_MEASUREMENT_COMPLETE",
+        "english": "Measurement complete",
+        "chinese": "测量完成"
+      },
+      "requirements": [
+        "REQ-RUN-SEQUENCE",
+        "REQ-COMMAND-GUIDANCE",
+        "REQ-COMMAND-CLEANUP"
+      ],
+      "acceptance": [
+        "Result.Left, Result.Middle and Result.Right remain available after DONE.",
+        "ERROR or CANCEL clears the child Execute and any event owned by this execution."
+      ]
+    }
+  ],
+  "cleanup": [
+    "Set Wp100.SqS_Run.Execute to FALSE on DONE, ERROR or CANCEL.",
+    "Unlock and clear EVENT_PART_DETECT_SENSOR owned by this execution.",
+    "Clear the product-sensor fault mask.",
+    "Retain Result until the next N000 initialization."
+  ],
+  "acceptanceTests": [
+    {
+      "id": "TEST-RUN-ORDER",
+      "title": "Sequential LEFT, MIDDLE and RIGHT execution",
+      "requirements": [
+        "REQ-RUN-SEQUENCE"
+      ],
+      "steps": [
+        "N020",
+        "N030",
+        "N050",
+        "N060",
+        "N080",
+        "N090"
+      ],
+      "expected": [
+        "Only one SqS_Run execution is active at a time.",
+        "The three retained results correspond to LEFT, MIDDLE and RIGHT in order."
+      ]
+    },
+    {
+      "id": "TEST-PART-AND-FIXTURE",
+      "title": "Product presence and one-hot fixture release",
+      "requirements": [
+        "REQ-PART-PRESENT",
+        "REQ-FIXTURE-ONE-HOT"
+      ],
+      "steps": [
+        "N010",
+        "N015",
+        "N040",
+        "N045",
+        "N070",
+        "N075"
+      ],
+      "expected": [
+        "A missing product or ambiguous position holds the active check step.",
+        "Every atomic start is preceded by a fresh two-sensor product check."
+      ]
+    },
+    {
+      "id": "TEST-COMMAND-GUIDANCE",
+      "title": "Command-chain operator guidance ownership",
+      "requirements": [
+        "REQ-COMMAND-GUIDANCE"
+      ],
+      "steps": [
+        "N010",
+        "N015",
+        "N040",
+        "N045",
+        "N070",
+        "N075",
+        "N999"
+      ],
+      "expected": [
+        "Load and fixture prompts match the active command step.",
+        "The command chain does not replace atomic-operation prompts while SqS_Run is active."
+      ]
+    },
+    {
+      "id": "TEST-COMMAND-CLEANUP",
+      "title": "Command finish and cancellation cleanup",
+      "requirements": [
+        "REQ-COMMAND-CLEANUP"
+      ],
+      "steps": [
+        "N000",
+        "N999"
+      ],
+      "expected": [
+        "DONE retains the result and completion prompt until the next initialization.",
+        "ERROR or CANCEL leaves no Execute request or locked event owned by this chain."
+      ]
+    }
+  ]
+}

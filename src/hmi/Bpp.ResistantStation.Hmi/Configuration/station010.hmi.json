@@ -1,4 +1,11 @@
 {
+  "schemaVersion": 2,
+  "brand": {
+    "productName": "BPP AUTOMATION",
+    "subtitle": "Configuration-driven ctrlX HMI",
+    "windowTitle": "BPP Resistance Station HMI",
+    "mark": "B"
+  },
   "stationId": "Station010",
   "stationName": "Resistance test station / 电阻测试台",
   "endpointUrl": "opc.tcp://192.168.0.51:4840",
@@ -6,13 +13,145 @@
   "publishingIntervalMs": 250,
   "staleTimeoutMs": 3000,
   "reconnectDelayMs": 3000,
+  "overviewCards": [
+    { "key": "home", "nodeKey": "IsInHomePosition", "english": "Home position", "chinese": "设备原位", "isBoolean": true },
+    { "key": "bus", "nodeKey": "BusOk", "english": "EtherCAT bus", "chinese": "EtherCAT 总线", "isBoolean": true },
+    { "key": "emergency", "nodeKey": "EmergencyCircuitOk", "english": "Emergency circuit", "chinese": "急停安全回路", "isBoolean": true },
+    { "key": "maintenance", "nodeKey": "MaintenanceCircuitOk", "english": "Maintenance circuit", "chinese": "维修门安全回路", "isBoolean": true },
+    { "key": "safety-door-circuit", "nodeKey": "SafetyDoorCircuitOk", "english": "Safety-door circuit", "chinese": "安全门安全回路", "isBoolean": true },
+    { "key": "all-safety-circuits", "nodeKey": "AllSafetyCircuitsOk", "english": "Common safety release", "chinese": "总安全回路", "isBoolean": true },
+    { "key": "safety-door", "nodeKey": "SafetyDoorBase", "english": "Safety door base position", "chinese": "安全门原位", "isBoolean": true },
+    { "key": "press", "nodeKey": "PressingCylinderBase", "english": "Press cylinder base position", "chinese": "压缸原位", "isBoolean": true },
+    { "key": "fixture-left", "nodeKey": "FixtureLeft", "english": "Fixture left position", "chinese": "夹具左侧位置", "isBoolean": true },
+    { "key": "fixture-middle", "nodeKey": "FixtureMiddle", "english": "Fixture middle position", "chinese": "夹具中间位置", "isBoolean": true },
+    { "key": "fixture-right", "nodeKey": "FixtureRight", "english": "Fixture right position", "chinese": "夹具右侧位置", "isBoolean": true },
+    { "key": "product-left", "nodeKey": "ProductSensorA", "english": "Product sensor left", "chinese": "左侧产品检测", "isBoolean": true },
+    { "key": "product-right", "nodeKey": "ProductSensorB", "english": "Product sensor right", "chinese": "右侧产品检测", "isBoolean": true },
+    { "key": "resistance-meter", "nodeKey": "ResistantUnitState", "english": "Resistance meter state", "chinese": "电阻仪状态", "valueMap": { "0": "NO DATA / 无数据", "1": "UNKNOWN / 未知", "2": "DISABLED / 已禁用", "4": "OPERATIONAL / 运行", "8": "STANDBY / 待机" } },
+    { "key": "force-monitor", "nodeKey": "KistlerUnitState", "english": "Force monitor state", "chinese": "力位移监控仪状态", "valueMap": { "0": "NO DATA / 无数据", "1": "UNKNOWN / 未知", "2": "DISABLED / 已禁用", "4": "OPERATIONAL / 运行", "8": "STANDBY / 待机" } }
+  ],
+  "manualUnits": [
+    {
+      "key": "Wp100",
+      "designator": "Wp100",
+      "english": "Wp100 Command Handler",
+      "chinese": "工位命令层",
+      "category": "Command Handler",
+      "actions": [
+        { "key": "Home", "english": "Home", "chinese": "工位回原位", "description": "CpStudio release output is authoritative.", "releaseNodeKey": "Manual.Wp100.Home.Release", "runningNodeKey": "Manual.Wp100.Home.Running" },
+        { "key": "DeleteWpcData", "english": "Delete WPC data", "chinese": "删除工件数据", "description": "CpStudio release output is authoritative.", "releaseNodeKey": "Manual.Wp100.DeleteWpcData.Release", "runningNodeKey": "Manual.Wp100.DeleteWpcData.Running" }
+      ]
+    },
+    {
+      "key": "Wp100K101SafetyDoor",
+      "designator": "_100K101",
+      "english": "Safety door",
+      "chinese": "安全门",
+      "category": "Basic movement",
+      "stateNodeKey": "SafetyDoorBase",
+      "secondaryStateNodeKey": "SafetyDoorWork",
+      "stateValueMap": { "10": "OPEN / 原位", "01": "CLOSED / 工作位", "00": "MOVING / 中间位", "11": "INVALID / 信号冲突" },
+      "actions": [
+        { "key": "MoveBasPos", "english": "Move to base position", "chinese": "返回原位", "description": "CpStudio release output includes the configured safety interlocks.", "releaseNodeKey": "Manual.Wp100K101SafetyDoor.MoveBasPos.Release", "runningNodeKey": "Manual.Wp100K101SafetyDoor.MoveBasPos.Running" },
+        { "key": "MoveWrkPos", "english": "Move to work position", "chinese": "移动到工作位", "description": "CpStudio release output includes the configured safety interlocks.", "releaseNodeKey": "Manual.Wp100K101SafetyDoor.MoveWrkPos.Release", "runningNodeKey": "Manual.Wp100K101SafetyDoor.MoveWrkPos.Running" }
+      ],
+      "fields": [
+        { "nodeKey": "SafetyDoorBase", "section": "status", "english": "Base position", "chinese": "原位到位", "isBoolean": true },
+        { "nodeKey": "SafetyDoorWork", "section": "status", "english": "Work position", "chinese": "工作位到位", "isBoolean": true }
+      ]
+    },
+    {
+      "key": "Wp100K102PressingCylinder",
+      "designator": "_100K102",
+      "english": "Pressing cylinder",
+      "chinese": "压缸",
+      "category": "Basic movement",
+      "stateNodeKey": "PressingCylinderBase",
+      "secondaryStateNodeKey": "PressingCylinderWork",
+      "stateValueMap": { "10": "UP / 上升到位", "01": "DOWN / 下降到位", "00": "MOVING / 运动中", "11": "INVALID / 信号冲突" },
+      "actions": [
+        { "key": "MoveBasPos", "english": "Move to base position", "chinese": "返回原位", "description": "CpStudio release output includes the configured safety interlocks.", "releaseNodeKey": "Manual.Wp100K102PressingCylinder.MoveBasPos.Release", "runningNodeKey": "Manual.Wp100K102PressingCylinder.MoveBasPos.Running" },
+        { "key": "MoveWrkPos", "english": "Move to work position", "chinese": "移动到工作位", "description": "CpStudio release output includes the configured safety interlocks.", "releaseNodeKey": "Manual.Wp100K102PressingCylinder.MoveWrkPos.Release", "runningNodeKey": "Manual.Wp100K102PressingCylinder.MoveWrkPos.Running" }
+      ],
+      "fields": [
+        { "nodeKey": "PressingCylinderBase", "section": "status", "english": "Base position", "chinese": "原位到位", "isBoolean": true },
+        { "nodeKey": "PressingCylinderWork", "section": "status", "english": "Work position", "chinese": "工作位到位", "isBoolean": true }
+      ]
+    },
+    {
+      "key": "Wp100A103ResistantDetector",
+      "designator": "Wp100A103ResistantInterface",
+      "english": "Burster 2316",
+      "chinese": "电阻仪",
+      "category": "Measurement",
+      "stateNodeKey": "ResistantUnitState",
+      "actions": [
+        { "key": "SetRange", "english": "Set range", "chinese": "设置量程", "description": "CpStudio release output is authoritative.", "releaseNodeKey": "Manual.Wp100A103ResistantDetector.SetRange.Release", "runningNodeKey": "Manual.Wp100A103ResistantDetector.SetRange.Running" },
+        { "key": "StartMeas", "english": "Start measurement", "chinese": "启动测量", "description": "CpStudio release output is authoritative.", "releaseNodeKey": "Manual.Wp100A103ResistantDetector.StartMeas.Release", "runningNodeKey": "Manual.Wp100A103ResistantDetector.StartMeas.Running" }
+      ],
+      "fields": [
+        { "nodeKey": "BursterUpperRange", "section": "parameter", "english": "Upper range", "chinese": "上量程", "valueMap": { "0": "2 mΩ", "1": "20 mΩ", "2": "200 mΩ", "3": "2 Ω", "4": "20 Ω", "5": "200 Ω", "6": "2 kΩ", "7": "20 kΩ", "8": "200 kΩ" } },
+        { "nodeKey": "BursterLowerRange", "section": "parameter", "english": "Lower range", "chinese": "下量程", "valueMap": { "0": "2 mΩ", "1": "20 mΩ", "2": "200 mΩ", "3": "2 Ω", "4": "20 Ω", "5": "200 Ω", "6": "2 kΩ", "7": "20 kΩ", "8": "200 kΩ" } },
+        { "nodeKey": "BursterUpperLimit", "section": "parameter", "english": "Upper limit", "chinese": "上限" },
+        { "nodeKey": "BursterLowerLimit", "section": "parameter", "english": "Lower limit", "chinese": "下限" },
+        { "nodeKey": "BursterReadTemperature", "section": "parameter", "english": "Read temperature", "chinese": "读取温度", "isBoolean": true },
+        { "nodeKey": "BursterResistOk", "section": "status", "english": "Resistance OK", "chinese": "电阻合格", "isBoolean": true },
+        { "nodeKey": "BursterOutOfLimit", "section": "status", "english": "Result invalid / out of limit", "chinese": "结果无效 / 超限", "isBoolean": true },
+        { "nodeKey": "BursterResistance", "section": "result", "english": "Resistance value", "chinese": "电阻值" },
+        { "nodeKey": "BursterTemperature", "section": "result", "english": "Temperature value", "chinese": "温度值", "unit": "°C" }
+      ]
+    },
+    {
+      "key": "Wp100A104Kistler",
+      "designator": "_100A104",
+      "english": "Kistler maXYmos 5867C",
+      "chinese": "力位移监控仪",
+      "category": "Measurement",
+      "stateNodeKey": "KistlerUnitState",
+      "actions": [
+        { "key": "Measure", "english": "Measure", "chinese": "开始测量", "description": "Start a force/displacement measurement.", "releaseNodeKey": "Manual.Wp100A104Kistler.Measure.Release", "runningNodeKey": "Manual.Wp100A104Kistler.Measure.Running" },
+        { "key": "SetProgram", "english": "Set program", "chinese": "设置程序号", "description": "Apply the configured program.", "releaseNodeKey": "Manual.Wp100A104Kistler.SetProgram.Release", "runningNodeKey": "Manual.Wp100A104Kistler.SetProgram.Running" },
+        { "key": "ZeroX", "english": "Zero X", "chinese": "位移清零", "description": "Zero the displacement channel.", "releaseNodeKey": "Manual.Wp100A104Kistler.ZeroX.Release", "runningNodeKey": "Manual.Wp100A104Kistler.ZeroX.Running" },
+        { "key": "TareY", "english": "Tare Y", "chinese": "力清零", "description": "Tare the force channel.", "releaseNodeKey": "Manual.Wp100A104Kistler.TareY.Release", "runningNodeKey": "Manual.Wp100A104Kistler.TareY.Running" },
+        { "key": "LockKeyboard", "english": "Lock keyboard", "chinese": "锁定键盘", "description": "Lock the device keyboard.", "releaseNodeKey": "Manual.Wp100A104Kistler.LockKeyboard.Release", "runningNodeKey": "Manual.Wp100A104Kistler.LockKeyboard.Running" },
+        { "key": "UnlockKeyboard", "english": "Unlock keyboard", "chinese": "解锁键盘", "description": "Unlock the device keyboard.", "releaseNodeKey": "Manual.Wp100A104Kistler.UnlockKeyboard.Release", "runningNodeKey": "Manual.Wp100A104Kistler.UnlockKeyboard.Running" },
+        { "key": "ReadData", "english": "Read data", "chinese": "读取数据", "description": "Read result data from the device.", "releaseNodeKey": "Manual.Wp100A104Kistler.ReadData.Release", "runningNodeKey": "Manual.Wp100A104Kistler.ReadData.Running" },
+        { "key": "WriteData", "english": "Write data", "chinese": "写入数据", "description": "Write configured data to the device.", "releaseNodeKey": "Manual.Wp100A104Kistler.WriteData.Release", "runningNodeKey": "Manual.Wp100A104Kistler.WriteData.Running" }
+      ],
+      "fields": [
+        { "nodeKey": "KistlerProgramRequest", "section": "parameter", "english": "Requested program", "chinese": "目标程序号" },
+        { "nodeKey": "KistlerMeasuringTimeout", "section": "parameter", "english": "Measurement timeout", "chinese": "测量超时", "unit": "ms" },
+        { "nodeKey": "KistlerEndMeasurement", "section": "parameter", "english": "End measurement request", "chinese": "结束测量请求", "isBoolean": true },
+        { "nodeKey": "KistlerScreenLocked", "section": "status", "english": "Screen locked", "chinese": "屏幕锁定", "isBoolean": true },
+        { "nodeKey": "KistlerReady", "section": "status", "english": "Ready", "chinese": "就绪", "isBoolean": true },
+        { "nodeKey": "KistlerSignal1", "section": "status", "english": "Switch signal 1", "chinese": "开关信号 1", "isBoolean": true },
+        { "nodeKey": "KistlerSignal2", "section": "status", "english": "Switch signal 2", "chinese": "开关信号 2", "isBoolean": true },
+        { "nodeKey": "KistlerNoPass", "section": "status", "english": "No-pass zone", "chinese": "未通过区域", "isBoolean": true },
+        { "nodeKey": "KistlerWarning", "section": "status", "english": "Warning active", "chinese": "警告激活", "isBoolean": true },
+        { "nodeKey": "KistlerAlarm", "section": "status", "english": "Alarm active", "chinese": "报警激活", "isBoolean": true },
+        { "nodeKey": "KistlerOk", "section": "status", "english": "IO / OK", "chinese": "合格", "isBoolean": true },
+        { "nodeKey": "KistlerNok", "section": "status", "english": "NOK", "chinese": "不合格", "isBoolean": true },
+        { "nodeKey": "KistlerProgram", "section": "result", "english": "Current program", "chinese": "当前程序号" },
+        { "nodeKey": "KistlerForce", "section": "result", "english": "Actual force", "chinese": "实际力", "unit": "N" },
+        { "nodeKey": "KistlerStroke", "section": "result", "english": "Actual stroke", "chinese": "实际位移", "unit": "mm" }
+      ]
+    }
+  ],
   "modeControl": {
     "enabled": true,
     "panelToken": 1,
     "requestTimeoutMs": 5000,
     "tokenRequestIdentifier": "plc/app/Application/sym/Station/Extension/TokenRequest",
     "modeIdRequestIdentifier": "plc/app/Application/sym/Station/Extension/ModeIdRequest",
-    "allowedModeIds": [1, 3, 4, 5]
+    "allowedModeIds": [1, 3, 4, 5],
+    "modes": [
+      { "id": 1, "english": "Automatic", "chinese": "自动", "activeChain": "SqM_Station_Auto → SqC_Wp100_Run" },
+      { "id": 3, "english": "Manual", "chinese": "手动", "activeChain": "Manual functions / Unit 单动" },
+      { "id": 4, "english": "Homing", "chinese": "回原位", "activeChain": "SqM_Station_Home → SqC_Wp100_Home" },
+      { "id": 5, "english": "Change-over", "chinese": "换型", "activeChain": "SqM_Station_Changeover → SqS_Station_ChangeOverFile" }
+    ],
+    "safetyPrerequisiteNodeKeys": ["EmergencyCircuitOk", "MaintenanceCircuitOk"],
+    "changeoverPrerequisiteNodeKey": "StationIsEmpty"
   },
   "nodes": [
     { "key": "AutoInfoLine", "identifier": "plc/app/Application/sym/Station/_AutoInfoline", "dataType": "Int16", "category": "process" },
@@ -175,15 +314,15 @@
   "fieldbus": {
     "masterDesignator": "=000+S-A620-X1",
     "slaves": [
-      { "index": 1, "designator": "=000+S-K010", "deviceType": "EK1100", "displayName": "EtherCAT Coupler" },
-      { "index": 2, "parentIndex": 1, "designator": "=000+S-K010A1", "deviceType": "EL1018", "displayName": "8-channel DI" },
-      { "index": 3, "parentIndex": 1, "designator": "=000+S-K010A2", "deviceType": "EL1018", "displayName": "8-channel DI" },
-      { "index": 4, "parentIndex": 1, "designator": "=000+S-K010A3", "deviceType": "EL1018", "displayName": "8-channel DI" },
-      { "index": 5, "parentIndex": 1, "designator": "=000+S-K010A4", "deviceType": "EL1018", "displayName": "8-channel DI" },
-      { "index": 6, "parentIndex": 1, "designator": "=000+S-K010C1", "deviceType": "EL2008", "displayName": "8-channel DO" },
-      { "index": 7, "parentIndex": 1, "designator": "=000+S-K010C2", "deviceType": "EL2008", "displayName": "8-channel DO" },
-      { "index": 8, "parentIndex": 1, "designator": "=000+S-K010C3", "deviceType": "EL2008", "displayName": "8-channel DO (unassigned)" },
-      { "index": 9, "designator": "_100A104", "deviceType": "maXYmos BL 5867C", "displayName": "Kistler force/displacement monitor", "sourceTypeName": "Kistler MaXYmos BL5867B TL5877B0" }
+      { "index": 1, "designator": "=000+S-K010", "deviceType": "EK1100", "displayName": "EtherCAT Coupler", "role": "coupler" },
+      { "index": 2, "parentIndex": 1, "designator": "=000+S-K010A1", "deviceType": "EL1018", "displayName": "8-channel DI", "role": "module" },
+      { "index": 3, "parentIndex": 1, "designator": "=000+S-K010A2", "deviceType": "EL1018", "displayName": "8-channel DI", "role": "module" },
+      { "index": 4, "parentIndex": 1, "designator": "=000+S-K010A3", "deviceType": "EL1018", "displayName": "8-channel DI", "role": "module" },
+      { "index": 5, "parentIndex": 1, "designator": "=000+S-K010A4", "deviceType": "EL1018", "displayName": "8-channel DI", "role": "module" },
+      { "index": 6, "parentIndex": 1, "designator": "=000+S-K010C1", "deviceType": "EL2008", "displayName": "8-channel DO", "role": "module" },
+      { "index": 7, "parentIndex": 1, "designator": "=000+S-K010C2", "deviceType": "EL2008", "displayName": "8-channel DO", "role": "module" },
+      { "index": 8, "parentIndex": 1, "designator": "=000+S-K010C3", "deviceType": "EL2008", "displayName": "8-channel DO (unassigned)", "role": "module" },
+      { "index": 9, "designator": "_100A104", "deviceType": "maXYmos BL 5867C", "displayName": "Kistler force/displacement monitor", "sourceTypeName": "Kistler MaXYmos BL5867B TL5877B0", "role": "device", "deviceDataGroup": "Kistler 5867C" }
     ],
     "channels": [
       { "slaveIndex": 2, "channel": 1, "direction": "DI", "bmk": "_000S901", "english": "Control On", "chinese": "控制上电按钮", "nodeKey": "Io_000S901" },

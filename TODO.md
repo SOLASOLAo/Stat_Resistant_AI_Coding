@@ -2,16 +2,21 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
-## 当前阶段：Phase 2 项目目录与流程生成
+## 当前阶段：Phase 2/3 离线实现已完成，等待现场验收
 
 ### 四阶段总进度（给项目成员看的简版）
 
 - [x] **Phase 1 · 稳定受控 Runner（开发基线完成）**：P1.1、P1.2、正式 Station010 基线、P1.3c 和 P1.4a 精简团队离线包已完成；AtLogOn Bootstrap 延期到商业化/无人值守部署阶段，不阻塞开发
-- [ ] **Phase 2 · 项目目录与流程生成（当前）**：Project Pack、初始化器、I/O/Event/Unit/Chain 规格和流程事实源；优先减少新设备项目的重复配置和口述
-- [ ] **Phase 3 · HMI 产品化（原型已有，产品化未开始）**：把 Station010 自研 HMI 变成配置驱动的通用 Windows HMI；先保留现有原型和真机验收待办
+- [x] **Phase 2 · 项目目录与流程生成（离线实现完成）**：Project Pack、Schema、初始化器、流程事实源、确定性工程计划和 Runner 漂移门禁已完成（2026-08-29）
+- [x] **Phase 3 · HMI 产品化（离线产品基线完成）**：同一 Windows HMI 已由完整 JSON 配置驱动；Station010 与独立 ExampleCell 均通过编译、配置和 UI 冒烟（2026-08-29）
 - [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
 
 详细范围和验收标准见 `docs/productization_roadmap.md`；这里保持短清单，后续每完成一个里程碑直接更新状态。
+
+- [x] 🔴 Phase 2 Project Pack：`project-pack.json` 汇总 Station/I/O/Event/Unit/Process/HMI/Catalog/ownership 事实源；PowerShell 7 Build/Check 生成内容寻址的 `generated/engineering-plan.json`，Runner 在执行前拒绝缺失、draft 或漂移计划（2026-08-29）
+- [x] 🔴 Phase 2 Station010 流程：`SqC_Wp100_Run` + `SqS_Wp100_Run` 共 35 个步骤、14 条双语提示、13 条需求和 9 个验收用例；所有生成 POU 接口仍归 CpStudio（2026-08-29）
+- [x] 🔴 Phase 3 配置驱动 HMI：品牌、Overview、Manual Unit/动作/字段、模式 Chain、EtherCAT role/device-data group 全部进入 schema v2 配置；新增不含 Station010/Wp100/Kistler/Burster 名称的 ExampleCell 配置（2026-08-29）
+- [ ] 🔴 Phase 3 现场验收：在用户单独批准真机操作后，与 Nexeed HMI 做只读与模式请求 A/B；Station/Manual/参数写入继续保持锁定，不能用离线 UI 冒烟代替现场结论
 
 - [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
 - [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）

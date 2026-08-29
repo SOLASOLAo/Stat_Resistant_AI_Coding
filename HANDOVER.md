@@ -694,3 +694,18 @@
   `Install` 仍默认停止。
 - Bootstrap 仅在进入商业化或明确要求无人值守登录自启时恢复；兼容矩阵和新电脑验收在有团队
   工位时执行。两项均不再阻塞 Phase 2 项目目录与流程生成。
+
+# 2026-08-29 Phase 2/3 精简交付
+
+- Phase 2：新增 Project Pack/process schema、PowerShell 7 `Build/Check`、initializer 与 Runner
+  门禁。Station010 计划为 2 processes / 35 steps / 14 prompts / 13 requirements / 9 tests；
+  generated POU interfaces 全部登记为 CpStudio ownership。新 action 固定 Pack contentId、Pack/plan
+  hash，并在 Host/ExecuteAction 共用校验器中逐项回读 plan sources；任一事实源漂移都会在 Broker 前阻断。
+- Phase 3：HMI 升级为 schema v2 配置驱动壳；Station010 与独立 ExampleCell 均使用相同二进制，
+  品牌/Overview/Manual/Mode/EtherCAT device data 不再写死在页面中。Station010 保留夹具、产品检测
+  和安全回路原始诊断卡；ExampleCell 实际启动 DEMO、切到 Manual 并显示其自有夹具 Unit。未知 JSON
+  字段失败关闭，真实模式控制默认关闭，模式请求超时被限定为 250–60000 ms。
+- 最终离线验收：HMI Release build 0 errors / 0 warnings；两套配置加载、Station010 完整 UI、
+  Project Pack、45 条 wrapper 断言、280 条 Runner 断言、Stage2 E2E 和 251 条 initializer 断言通过。
+- 安全边界未改变：没有启动 PLE/MCP、没有连接 PLC、没有下载/启停/变量写入/FORCE；HMI 真机
+  写白名单仍只有默认关闭的 `TokenRequest`/`ModeIdRequest`。现场 A/B 需另行即时批准。

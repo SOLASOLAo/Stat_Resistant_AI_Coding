@@ -1,0 +1,565 @@
+{
+  "schemaVersion": 1,
+  "kind": "ctrlx-opcon-process",
+  "processId": "wp100-run-atomic",
+  "displayName": "Wp100 one-position resistance measurement",
+  "status": "ready",
+  "chain": {
+    "name": "SqS_Wp100_Run",
+    "kind": "subchain",
+    "plcPath": "Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run",
+    "interfaceOwner": "cpstudio",
+    "caller": "Wp100.SqC_Run",
+    "inputs": [
+      {
+        "name": "rUnit",
+        "type": "REFERENCE TO Wp100Unit",
+        "source": "cpstudio"
+      },
+      {
+        "name": "MeasurePos",
+        "type": "MeasurePsoEnum",
+        "source": "cpstudio"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Result",
+        "type": "Wp100RunResultStruct",
+        "source": "cpstudio"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-ATOMIC-INPUT",
+      "text": "Consume the CpStudio-owned MeasurePos VAR_INPUT once and require the selected LEFT, MIDDLE or RIGHT one-hot fixture position."
+    },
+    {
+      "id": "REQ-OPERATOR-ACK",
+      "text": "Wait for the physical start button while flashing its lamp with the Station 500 ms pulse."
+    },
+    {
+      "id": "REQ-SAFETY-CLOSE",
+      "text": "Close the safety door only with the press raised and maintenance circuit healthy, then require both closing safety feedbacks."
+    },
+    {
+      "id": "REQ-MEASUREMENT-START",
+      "text": "Start press-down and Kistler measurement as separately diagnosable simultaneous branches and join only after both are running."
+    },
+    {
+      "id": "REQ-RESISTANCE",
+      "text": "Wait PressDelayTime after press-down, run one Burster resistance measurement and capture its result."
+    },
+    {
+      "id": "REQ-MEASUREMENT-FINISH",
+      "text": "Raise the press and finish Kistler measurement as simultaneous branches while retaining the final measurement values."
+    },
+    {
+      "id": "REQ-ATOMIC-GUIDANCE",
+      "text": "The atomic chain owns detailed measurement prompts only while active; parallel branch steps never write the prompt."
+    },
+    {
+      "id": "REQ-ATOMIC-CLEANUP",
+      "text": "Open the safety door only after the press is raised and clear all active commands on DONE, ERROR or CANCEL while retaining Result."
+    }
+  ],
+  "steps": [
+    {
+      "id": "N000",
+      "kind": "initialize",
+      "comment": "Initialize run",
+      "operation": "Latch MeasurePos into Result, clear the previous result and reset per-execution command state.",
+      "transition": "Initialization completed.",
+      "requirements": [
+        "REQ-ATOMIC-INPUT",
+        "REQ-ATOMIC-GUIDANCE",
+        "REQ-ATOMIC-CLEANUP"
+      ],
+      "acceptance": [
+        "Changing the caller input after N000 does not change the active position.",
+        "No command or prompt remains from the preceding execution."
+      ]
+    },
+    {
+      "id": "N010",
+      "kind": "check",
+      "comment": "Check fixture position",
+      "operation": "Validate the selected position as a one-hot fixture state and require the press in base position.",
+      "transition": "The selected sensor is TRUE, the other two are FALSE and the press is raised.",
+      "promptVariants": [
+        {
+          "when": "MeasurePsoEnum.LEFT",
+          "key": "USER_INFO_MOVE_FIXTURE_LEFT",
+          "english": "Move the fixture to the left position",
+          "chinese": "请将夹具移动到左侧位置"
+        },
+        {
+          "when": "MeasurePsoEnum.MIDDLE",
+          "key": "USER_INFO_MOVE_FIXTURE_MIDDLE",
+          "english": "Move the fixture to the middle position",
+          "chinese": "请将夹具移动到中间位置"
+        },
+        {
+          "when": "MeasurePsoEnum.RIGHT",
+          "key": "USER_INFO_MOVE_FIXTURE_RIGHT",
+          "english": "Move the fixture to the right position",
+          "chinese": "请将夹具移动到右侧位置"
+        }
+      ],
+      "requirements": [
+        "REQ-ATOMIC-INPUT",
+        "REQ-ATOMIC-GUIDANCE"
+      ],
+      "acceptance": [
+        "An invalid enum value or ambiguous sensor combination does not release the step.",
+        "The displayed requested position follows the latched MeasurePos."
+      ]
+    },
+    {
+      "id": "N020",
+      "kind": "wait",
+      "comment": "Wait start button",
+      "operation": "Execute FB_OperatorButton with _000S610 and flash _000P610 from Pulse500ms.",
+      "transition": "The operator presses the start button while the selected position remains valid.",
+      "promptVariants": [
+        {
+          "when": "MeasurePsoEnum.LEFT",
+          "key": "USER_INFO_PRESS_START_LEFT",
+          "english": "Press the start button to measure the left position",
+          "chinese": "请按启动按钮，开始测量左侧位置"
+        },
+        {
+          "when": "MeasurePsoEnum.MIDDLE",
+          "key": "USER_INFO_PRESS_START_MIDDLE",
+          "english": "Press the start button to measure the middle position",
+          "chinese": "请按启动按钮，开始测量中间位置"
+        },
+        {
+          "when": "MeasurePsoEnum.RIGHT",
+          "key": "USER_INFO_PRESS_START_RIGHT",
+          "english": "Press the start button to measure the right position",
+          "chinese": "请按启动按钮，开始测量右侧位置"
+        }
+      ],
+      "requirements": [
+        "REQ-OPERATOR-ACK",
+        "REQ-ATOMIC-GUIDANCE"
+      ],
+      "acceptance": [
+        "The lamp flashes at 500 ms while acknowledgement is requested.",
+        "Leaving this step ends the button FB execution."
+      ]
+    },
+    {
+      "id": "N030",
+      "kind": "command",
+      "comment": "Close safety door",
+      "operation": "Start Wp100K101SafetyDoor.WRKPOS.",
+      "transition": "The door command is accepted.",
+      "prompt": {
+        "key": "USER_INFO_CLOSING_SAFETY_DOOR",
+        "english": "Closing the safety door",
+        "chinese": "安全门正在关闭"
+      },
+      "requirements": [
+        "REQ-SAFETY-CLOSE",
+        "REQ-ATOMIC-GUIDANCE"
+      ],
+      "acceptance": [
+        "The command starts only with the press raised and _000K981_Y32 TRUE."
+      ]
+    },
+    {
+      "id": "N040",
+      "kind": "wait",
+      "comment": "Wait safety feedback",
+      "operation": "Wait for the safety door work position and both safety-circuit feedbacks.",
+      "transition": "Door work position, _000K913_Y32 and _000K912_Y32 are all TRUE.",
+      "requirements": [
+        "REQ-SAFETY-CLOSE"
+      ],
+      "acceptance": [
+        "Loss of either safety feedback prevents measurement release."
+      ]
+    },
+    {
+      "id": "N045",
+      "kind": "check",
+      "comment": "Check measure release",
+      "operation": "Verify the common machine state before entering the simultaneous measurement-start branches.",
+      "transition": "Door and safety feedbacks are valid, press is READY in base position, and Kistler is READY.",
+      "promptVariants": [
+        {
+          "when": "MeasurePsoEnum.LEFT",
+          "key": "USER_INFO_MEASURING_LEFT",
+          "english": "Measuring the left position. Please wait",
+          "chinese": "正在测量左侧位置，请稍候"
+        },
+        {
+          "when": "MeasurePsoEnum.MIDDLE",
+          "key": "USER_INFO_MEASURING_MIDDLE",
+          "english": "Measuring the middle position. Please wait",
+          "chinese": "正在测量中间位置，请稍候"
+        },
+        {
+          "when": "MeasurePsoEnum.RIGHT",
+          "key": "USER_INFO_MEASURING_RIGHT",
+          "english": "Measuring the right position. Please wait",
+          "chinese": "正在测量右侧位置，请稍候"
+        }
+      ],
+      "requirements": [
+        "REQ-MEASUREMENT-START",
+        "REQ-ATOMIC-GUIDANCE"
+      ],
+      "acceptance": [
+        "Both parallel branches are released from the same validated common state."
+      ]
+    },
+    {
+      "id": "N050",
+      "kind": "start",
+      "comment": "Start press WRKPOS",
+      "operation": "Start Wp100K102PressingCylinder.WRKPOS on measurement-start branch 1.",
+      "transition": "The press work-position command is accepted.",
+      "requirements": [
+        "REQ-MEASUREMENT-START"
+      ],
+      "parallel": {
+        "group": "measurement_start",
+        "branch": 1
+      },
+      "acceptance": [
+        "The press branch uses its own return value and diagnostic step."
+      ]
+    },
+    {
+      "id": "N051",
+      "kind": "start",
+      "comment": "Start Kistler MEASURE",
+      "operation": "Start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
+      "transition": "The Kistler measurement command is accepted.",
+      "requirements": [
+        "REQ-MEASUREMENT-START"
+      ],
+      "parallel": {
+        "group": "measurement_start",
+        "branch": 2
+      },
+      "acceptance": [
+        "The Kistler branch uses a return value independent from the press branch."
+      ]
+    },
+    {
+      "id": "N060",
+      "kind": "wait",
+      "comment": "Wait press WRKPOS",
+      "operation": "Wait for the pressing-cylinder command started by N050.",
+      "transition": "The press reaches work position; command ERROR is propagated.",
+      "requirements": [
+        "REQ-MEASUREMENT-START"
+      ],
+      "parallel": {
+        "group": "measurement_start",
+        "branch": 1
+      },
+      "acceptance": [
+        "The simultaneous convergence cannot pass before the press is down."
+      ]
+    },
+    {
+      "id": "N061",
+      "kind": "wait",
+      "comment": "Wait Kistler running",
+      "operation": "Wait for Wp100A104Kistler.Unit.OutImm.MeasRunning.",
+      "transition": "Kistler reports measurement running; command ERROR is propagated.",
+      "requirements": [
+        "REQ-MEASUREMENT-START"
+      ],
+      "parallel": {
+        "group": "measurement_start",
+        "branch": 2
+      },
+      "acceptance": [
+        "The simultaneous convergence cannot pass before Kistler is measuring."
+      ]
+    },
+    {
+      "id": "N070",
+      "kind": "delay",
+      "comment": "Wait press delay",
+      "operation": "Wait Station.StationData.PressDelayTime after the press is down and Kistler is running.",
+      "transition": "The configured delay has elapsed.",
+      "requirements": [
+        "REQ-RESISTANCE"
+      ],
+      "acceptance": [
+        "Burster measurement cannot begin before the configured delay expires."
+      ]
+    },
+    {
+      "id": "N080",
+      "kind": "start",
+      "comment": "Start resistance test",
+      "operation": "Start Wp100A103ResistantDetector.SINGLE_MEAS with the Unit's current range and limits.",
+      "transition": "The resistance-meter command is accepted.",
+      "requirements": [
+        "REQ-RESISTANCE"
+      ],
+      "acceptance": [
+        "Exactly one resistance measurement is requested for this position."
+      ]
+    },
+    {
+      "id": "N090",
+      "kind": "capture",
+      "comment": "Wait resistance result",
+      "operation": "Wait for the resistance command and copy its valid, verdict, value and temperature fields.",
+      "transition": "The Burster command completes; command ERROR is propagated.",
+      "requirements": [
+        "REQ-RESISTANCE"
+      ],
+      "acceptance": [
+        "Result.Resistance is complete before the return sequence starts."
+      ]
+    },
+    {
+      "id": "N095",
+      "kind": "check",
+      "comment": "Check release ready",
+      "operation": "Verify press work position and active Kistler measurement before entering the simultaneous finish branches.",
+      "transition": "Press is READY in work position and Kistler measurement is still running.",
+      "prompt": {
+        "key": "USER_INFO_RETURN_SAFE_POSITION",
+        "english": "Returning the station to a safe position. Please wait",
+        "chinese": "设备正在返回安全位置，请稍候"
+      },
+      "requirements": [
+        "REQ-MEASUREMENT-FINISH",
+        "REQ-ATOMIC-GUIDANCE"
+      ],
+      "acceptance": [
+        "An unexpectedly ended Kistler command returns ERROR instead of releasing the finish branches."
+      ]
+    },
+    {
+      "id": "N100",
+      "kind": "start",
+      "comment": "Start press BASPOS",
+      "operation": "Start Wp100K102PressingCylinder.BASPOS on measurement-finish branch 1.",
+      "transition": "The press base-position command is accepted.",
+      "requirements": [
+        "REQ-MEASUREMENT-FINISH"
+      ],
+      "parallel": {
+        "group": "measurement_finish",
+        "branch": 1
+      },
+      "acceptance": [
+        "Press return starts from its own diagnosable branch."
+      ]
+    },
+    {
+      "id": "N101",
+      "kind": "start",
+      "comment": "Stop Kistler MEASURE",
+      "operation": "Latch current Kistler verdict, program, force and stroke, then request EndMeasurement on branch 2.",
+      "transition": "The end-measurement request is active.",
+      "requirements": [
+        "REQ-MEASUREMENT-FINISH"
+      ],
+      "parallel": {
+        "group": "measurement_finish",
+        "branch": 2
+      },
+      "acceptance": [
+        "Force and stroke are captured before the Kistler command is ended."
+      ]
+    },
+    {
+      "id": "N110",
+      "kind": "wait",
+      "comment": "Wait press BASPOS",
+      "operation": "Wait for the pressing-cylinder command started by N100.",
+      "transition": "The press reaches base position; command ERROR is propagated.",
+      "requirements": [
+        "REQ-MEASUREMENT-FINISH"
+      ],
+      "parallel": {
+        "group": "measurement_finish",
+        "branch": 1
+      },
+      "acceptance": [
+        "The finish convergence cannot pass before the press is raised."
+      ]
+    },
+    {
+      "id": "N120",
+      "kind": "capture",
+      "comment": "Wait Kistler result",
+      "operation": "Wait for final Kistler completion and add its final verdict to Result.Kistler.",
+      "transition": "Kistler returns its final result; command ERROR is propagated.",
+      "requirements": [
+        "REQ-MEASUREMENT-FINISH"
+      ],
+      "parallel": {
+        "group": "measurement_finish",
+        "branch": 2
+      },
+      "acceptance": [
+        "The finish convergence cannot pass before the Kistler result is final."
+      ]
+    },
+    {
+      "id": "N130",
+      "kind": "command",
+      "comment": "Open safety door",
+      "operation": "Start Wp100K101SafetyDoor.BASPOS after the simultaneous finish branches converge.",
+      "transition": "The door base-position command is accepted.",
+      "prompt": {
+        "key": "USER_INFO_OPENING_SAFETY_DOOR",
+        "english": "Opening the safety door",
+        "chinese": "安全门正在打开"
+      },
+      "requirements": [
+        "REQ-ATOMIC-GUIDANCE",
+        "REQ-ATOMIC-CLEANUP"
+      ],
+      "acceptance": [
+        "The safety door cannot open until the press return branch has completed."
+      ]
+    },
+    {
+      "id": "N140",
+      "kind": "wait",
+      "comment": "Wait door open",
+      "operation": "Wait for the safety-door command started by N130.",
+      "transition": "The safety door reaches base position; command ERROR is propagated.",
+      "requirements": [
+        "REQ-ATOMIC-CLEANUP"
+      ],
+      "acceptance": [
+        "The chain cannot finish before the door is confirmed open."
+      ]
+    },
+    {
+      "id": "N999",
+      "kind": "finish",
+      "comment": "Finish run",
+      "operation": "Return DONE, clear the atomic-operation prompt and retain Result until the next N000.",
+      "transition": "The one-position operation is complete.",
+      "requirements": [
+        "REQ-ATOMIC-GUIDANCE",
+        "REQ-ATOMIC-CLEANUP"
+      ],
+      "acceptance": [
+        "No operator prompt or active Unit request remains after completion.",
+        "Result remains available to SqC_Wp100_Run."
+      ]
+    }
+  ],
+  "cleanup": [
+    "Set FB_OperatorButton Execute FALSE and turn _000P610 off.",
+    "Reset the press-delay timer and all per-execution started flags.",
+    "End and release safety-door, pressing-cylinder, Burster and Kistler commands.",
+    "Clear the operator prompt on ERROR or CANCEL.",
+    "Retain Result until the next N000 initialization."
+  ],
+  "acceptanceTests": [
+    {
+      "id": "TEST-ATOMIC-POSITION",
+      "title": "CpStudio input and one-hot position contract",
+      "requirements": [
+        "REQ-ATOMIC-INPUT"
+      ],
+      "steps": [
+        "N000",
+        "N010"
+      ],
+      "expected": [
+        "MeasurePos remains a CpStudio-owned VAR_INPUT.",
+        "Only the selected one-hot fixture state releases operator acknowledgement."
+      ]
+    },
+    {
+      "id": "TEST-OPERATOR-ACK",
+      "title": "Start-button acknowledgement",
+      "requirements": [
+        "REQ-OPERATOR-ACK"
+      ],
+      "steps": [
+        "N020"
+      ],
+      "expected": [
+        "The start lamp flashes while waiting and is off after the step or chain ends."
+      ]
+    },
+    {
+      "id": "TEST-SAFETY-CLOSE",
+      "title": "Safety-door close and feedback interlock",
+      "requirements": [
+        "REQ-SAFETY-CLOSE"
+      ],
+      "steps": [
+        "N030",
+        "N040"
+      ],
+      "expected": [
+        "The press remains raised during door closing.",
+        "Measurement starts only after _000K913_Y32 and _000K912_Y32 are TRUE."
+      ]
+    },
+    {
+      "id": "TEST-ATOMIC-MEASUREMENT",
+      "title": "Parallel Kistler and press measurement cycle",
+      "requirements": [
+        "REQ-MEASUREMENT-START",
+        "REQ-RESISTANCE",
+        "REQ-MEASUREMENT-FINISH"
+      ],
+      "steps": [
+        "N045",
+        "N050",
+        "N051",
+        "N060",
+        "N061",
+        "N070",
+        "N080",
+        "N090",
+        "N095",
+        "N100",
+        "N101",
+        "N110",
+        "N120"
+      ],
+      "expected": [
+        "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
+        "Resistance, Kistler verdict, program, force and stroke are retained in Result."
+      ]
+    },
+    {
+      "id": "TEST-ATOMIC-GUIDANCE-CLEANUP",
+      "title": "Atomic guidance ownership and cleanup",
+      "requirements": [
+        "REQ-ATOMIC-GUIDANCE",
+        "REQ-ATOMIC-CLEANUP"
+      ],
+      "steps": [
+        "N000",
+        "N010",
+        "N020",
+        "N030",
+        "N045",
+        "N095",
+        "N130",
+        "N140",
+        "N999"
+      ],
+      "expected": [
+        "Only common sequential steps own operator prompts; parallel branch steps have none.",
+        "DONE, ERROR and CANCEL leave no active request and preserve Result until the next run."
+      ]
+    }
+  ]
+}
