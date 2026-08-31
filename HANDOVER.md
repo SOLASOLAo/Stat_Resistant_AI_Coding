@@ -713,3 +713,36 @@
 ## 2026-08-29 开发辅助 Skill 边界
 
 - 已将 Ponytail 的唯一权威边界写入 `AGENTS.md` 第 5 节：仅作开发期减法审查，不进入产品或客户环境，也不得覆盖 ctrlX/OpCon 安全门禁。本轮未修改产品代码、PLE、PLC、`Station010` 或 `Std`。
+# 2026-08-31 Station010 ePLAN DIDO description automation baseline
+
+- Added a zero-dependency PowerShell 7 CSV-to-ASC converter at
+  `scripts/ioe/New-CpStudioEplanIoAsc.ps1`. The output contract is the verified
+  known CpStudio/ePLAN shape: UTF-16LE BOM, CRLF and 15 TAB-separated columns.
+  Station010 maps `E/X` to English/Chinese in its language configuration, but
+  actual `X` importer behavior still awaits the copy round trip. `Type=1` is DI
+  and `Type=2` is DO. The tool copies `IoDesignator` literally and never
+  guesses electrical BMK values.
+- Added the complete eight-channel A1 input probe at
+  `specs/station010-a1-eplan-roundtrip-probe.csv`. It is deliberately a
+  recoverable-copy test, not approved production input: Station010 has not yet
+  supplied a real ePLAN export proving that CpStudio accepts the current
+  `_000...` internal names through this importer.
+- Added read-only `scripts/ioe/Test-EthercatNameChain.ps1`. Its mandatory target
+  parameter must be copied from the ctrlX Web UI. With `_000SA620_X1`, current
+  Station010 passes the independent master-name chain; IOE ECAD and HMI BusDiag
+  name are `=000+S-A620-X1`.
+- `tests/ioe/Test-CpStudioEplanIoAutomation.ps1` covers byte encoding, fixed
+  columns, E/X descriptions, DI/DO mapping, duplicate rejection, the real
+  Station010 name chain, and deliberate target-name mismatch. No IDE, MCP,
+  `.project` or Station010 generated file was modified, and no online PLC
+  operation was used.
+- Next manual boundary: import the generated A1 ASC once in a recoverable
+  CpStudio project copy using the official ePLAN command, inspect all eight
+  rows, then follow Write designators → Export → PLE Link I/O/Build. Promote to
+  production/template use only after that round trip and a real Station010
+  ePLAN source are verified.
+- The implementation is committed locally. Push was attempted through the
+  configured `127.0.0.1:7890` proxy and once with a command-local proxy bypass;
+  the proxy was unavailable and direct DNS could not resolve `github.com`.
+  Global network/Git settings were not changed, so the commit remains pending
+  push when connectivity returns.
