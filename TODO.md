@@ -15,6 +15,8 @@
 - [ ] **P3 · PLE Link I/O 自动化判定**：验证稳定、受支持的官方接口；只有验证通过才自动化，否则明确保留一次人工 `Link I/O with variables`
 - [ ] **P4 · StationData/TypeData DAT 工具链**：取得 HMI IPC 真实运行时 DAT 副本后，再做格式校验、生成、备份和受控部署；不得用导出的 HMI 定义文件猜测运行时格式
 
+- [x] **Engineering Console v0.1 · 统一图形入口**：独立 .NET 8 WPF 薄壳已接入 Runner/Host/Project Pack 固定白名单，显示 P0–P4、当前状态、下一步、人工边界和证据；84 项 Workbench 断言、278 项初始化器回归与真实窗口 smoke 通过。P2 Apply、P3 自动 Link I/O、P4 DAT 部署继续按各自门禁禁用（2026-09-01）
+
 详细边界见 `docs/cpstudio_git_mcp_workflow.md`。历史 stale request 清理是维护项，不抢占当前 P2 主线。
 
 ### 四阶段总进度（给项目成员看的简版）

@@ -27,6 +27,24 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 
 完成证据和当前勾选状态以 `TODO.md` 为准；会话结论写入 `HANDOVER.md`。
 
+### Engineering Console 图形入口
+
+日常操作无需记忆全部脚本名，可从仓库根目录启动独立的 WPF 工程控制台：
+
+```powershell
+pwsh -NoProfile -File .\scripts\workbench\Start-CtrlXOpconWorkbench.ps1
+```
+
+界面只调用 Runner、Host、Project Pack 的固定白名单入口，并读取已有 manifest；
+不会复制状态机、启动第二个 PLE/MCP/IOE owner，也没有在线 PLC 操作。它把下面的
+完整闭环和当前人工步骤显示在同一页：
+
+`IOE Plan/Apply/readback → CpStudio Read fieldbus/Import ASC/Save/Write designators/Export #1 → Runner audit/AI review → PLE Link I/O/Build → 条件 Export #2 → final evidence`
+
+当前 P2 Apply 明确禁用；完成正式 Plan/checkpoint/Apply/readback 后端和回归后才允许
+接通按钮。P3 Link I/O 仍提示用户人工点击，P4 等待真实 DAT。界面实现及按钮边界见
+`docs/engineering_console.md`。
+
 ## 一次 CpStudio 生成的标准闭环
 
 1. 确认相关仓库工作区状态，并验证 Git/工程归档能恢复精确起点；无法恢复时只建立一个内容寻址 checkpoint。

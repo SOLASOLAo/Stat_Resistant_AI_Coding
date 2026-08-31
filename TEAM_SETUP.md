@@ -90,6 +90,7 @@ git clone https://github.com/SOLASOLAo/ctrlx-ai-coding.git McpCoding\ctrlx-ai-co
 | 组件 | 已验证版本/要求 | 默认路径或标识 |
 |---|---|---|
 | Windows / PowerShell | Windows 开发工作站；PowerShell 7.5+ | `%ProgramFiles%\PowerShell\7\pwsh.exe`，必须支持 `ConvertFrom-Json -DateKind` |
+| .NET SDK / Desktop Runtime | 8.x，用于 Runner、Host 和 WPF Engineering Console | `dotnet --list-sdks` 与 `dotnet --list-runtimes` |
 | CpStudio | V5.11 / 5.11.0.169 | `C:\Nexeed\Automation\CSV5_11\Bosch.Nexeed.Automation.CpStudio.exe` |
 | ctrlX PLC Engineering | PLE-V-0206.8 | profile 必须精确为 `ctrlX PLC 2.6.8` |
 | ctrlX IO Engineering | IOE-V-0206.4 | `C:\ctrlXWORKS\ctrlXIOEngineering\IOE_V_0206\Studio\Common\ctrlX-IO-Engineering.exe` |

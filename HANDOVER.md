@@ -892,3 +892,30 @@
   HMI IPC; exported HMI definition files are not accepted as substitutes.
 - This update changed documentation only. It did not open or modify CpStudio,
   PLE, IOE, Station010, `Std`, or any physical controller.
+
+# 2026-09-01 Engineering Console v0.1
+
+- Added an independent .NET 8 WPF Engineering Console as a thin facade over
+  the existing controlled Runner, Host and Project Pack entry points. It has
+  Workbench, Plan/Review and Evidence pages and shows project engineering
+  phases, current state, next action, the complete IOE/CpStudio/Runner/AI/PLE
+  sequence, human checkpoints and the latest immutable manifest.
+- The command surface is a fixed six-command PowerShell 7 allowlist: Runner
+  Status/Run, Host Status/Start/Stop and Project Pack Check. There is no shell
+  input, embedded AI service, second PLE/MCP/IOE owner, direct `.project`
+  editing, or PLC connect/download/runtime/write/FORCE capability.
+- P2 IOE Apply is visible but disabled until the formal
+  `Plan -> checkpoint -> Apply -> reopen/readback` backend passes regression.
+  P3 Link I/O remains a displayed manual PLE step and P4 remains blocked on a
+  real runtime DAT sample.
+- Added PowerShell 7 and double-click CMD launchers to the project and generic
+  template. `New-CtrlXOpconProject.ps1` now copies the text-only Workbench
+  source to `tools/workbench`; `bin`/`obj` and binary assets are excluded.
+- Acceptance passed: Release Build 0 errors / 0 warnings; Workbench self-test
+  84 assertions; initializer regression 278 assertions; current Station010
+  smoke reports 5 phases/current P2, P2 Apply false and online operations
+  false; generic template smoke reports 3 phases/current P0. A real window
+  opened with the expected title and closed cleanly. During the read-only
+  status probe Runner was READY and Host was STOPPED.
+- No CpStudio, PLE, IOE, MCP, Station010, `Std` or physical controller state
+  was modified. No online operation was performed.

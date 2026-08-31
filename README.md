@@ -21,6 +21,17 @@ PLC Engineering MCP/REST 维护应用逻辑：
 5. 完整离线编译，以 0 errors 和已记录 warning 基线验收
 ```
 
+日常工程流程也可以从独立的 Windows 工程控制台进入。它只调用受控 Runner、
+Host 和 Project Pack 固定入口，并在 CpStudio/PLE 人工边界暂停：
+
+```powershell
+pwsh -NoProfile -File .\scripts\workbench\Start-CtrlXOpconWorkbench.ps1
+```
+
+双击 `scripts\workbench\Start-CtrlXOpconWorkbench.cmd` 也可启动。控制台不提供
+PLC 连接、下载、runtime 启停、写变量或 FORCE；P2 IOE Apply 在正式后端合同完成前
+保持禁用。详细说明见 `docs/engineering_console.md`。
+
 CpStudio 导出后先运行纯离线审计，不启动第二个 PLE：
 
 ```powershell
