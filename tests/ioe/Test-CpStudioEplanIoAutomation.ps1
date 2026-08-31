@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $generator = Join-Path $repositoryRoot 'scripts\ioe\New-CpStudioEplanIoAsc.ps1'
+$exportChecker = Join-Path $repositoryRoot 'scripts\ioe\Test-CpStudioEplanIoExport.ps1'
 $nameChainChecker = Join-Path $repositoryRoot 'scripts\ioe\Test-EthercatNameChain.ps1'
 $fixture = Join-Path $PSScriptRoot 'fixtures\cpstudio-eplan-io.csv'
 $stationIoSource = Join-Path $repositoryRoot 'specs\station010-eplan-io.csv'
@@ -15,6 +16,7 @@ $stationRoot = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot '..\Stat
 $ioStructPath = Join-Path $stationRoot 'Plc\Stat010_V5.11_CtrlX_IO.Struct.json'
 $hmiConfigPath = Join-Path $stationRoot 'Hmi\config.xml'
 $plcStructPath = Join-Path $stationRoot 'Plc\Stat010_V5.11_CtrlX_PLC.Struct.json'
+$busConfigPath = Join-Path $stationRoot 'PublicConfig\BusConfig_Stat010_V5.11_CtrlX.yaml'
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('cpstudio-eplan-io-' + [guid]::NewGuid().ToString('N'))
 
 function Assert-True {
@@ -157,6 +159,26 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
     Assert-True -Condition ($stationA1Channel2[14] -ceq '控制下电') -Message 'Station010 A1 channel 2 Chinese description changed.'
     Assert-True -Condition ([string]::IsNullOrEmpty($stationA1Channel3[3])) `
         -Message 'Station010 inactive channel must have an empty I/O designator.'
+
+    $exportCheck = & $exportChecker -InputCsv $stationIoSource -BusConfigPath $busConfigPath
+    Assert-True -Condition ($exportCheck.passed -eq $true) -Message 'Station010 BusConfig does not match the reviewed I/O designator source.'
+    Assert-True -Condition ($exportCheck.state -ceq 'MATCHED') -Message 'Station010 BusConfig export check did not return MATCHED.'
+    Assert-True -Condition ($exportCheck.matchedChannels -eq 56) -Message 'Station010 BusConfig export check did not match all 56 channels.'
+    Assert-True -Condition ($exportCheck.actual.activeChannels -eq 38 -and $exportCheck.actual.inactiveChannels -eq 18) `
+        -Message 'Station010 BusConfig export check reported an unexpected active/inactive count.'
+
+    $driftedBusConfigPath = Join-Path $temporaryRoot 'drifted-bus-config.yaml'
+    $driftedBusConfig = [System.IO.File]::ReadAllText($busConfigPath)
+    $driftedBusConfig = $driftedBusConfig.Replace('zh: 控制上电', 'zh: 错误文本')
+    $driftedBusConfig = [regex]::new("(?m)^        name: ''\r?$").Replace($driftedBusConfig, '        name: _UNEXPECTED_ACTIVE', 1)
+    [System.IO.File]::WriteAllText($driftedBusConfigPath, $driftedBusConfig, [System.Text.UTF8Encoding]::new($false))
+    $driftedExportCheck = & $exportChecker -InputCsv $stationIoSource -BusConfigPath $driftedBusConfigPath
+    Assert-True -Condition ($driftedExportCheck.passed -eq $false) -Message 'BusConfig description/active-state drift was not rejected.'
+    Assert-True -Condition ($driftedExportCheck.state -ceq 'MISMATCH') -Message 'Drifted BusConfig did not return MISMATCH.'
+    Assert-True -Condition (@($driftedExportCheck.mismatches | Where-Object { $_.fields -contains 'Chinese' }).Count -eq 1) `
+        -Message 'BusConfig Chinese-description drift was not reported.'
+    Assert-True -Condition (@($driftedExportCheck.mismatches | Where-Object { $_.fields -contains 'IoDesignator' }).Count -eq 1) `
+        -Message 'BusConfig inactive-channel drift was not reported.'
 
     $nameChainJson = (& $nameChainChecker -TargetMasterName '_000SA620_X1' | Out-String).Trim()
     $nameChain = $nameChainJson | ConvertFrom-Json

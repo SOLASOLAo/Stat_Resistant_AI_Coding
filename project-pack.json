@@ -6,6 +6,7 @@
   "sources": {
     "station": "specs/station.yaml",
     "io": "specs/io.yaml",
+    "ioDesignators": "specs/station010-eplan-io.csv",
     "events": "specs/events.yaml",
     "units": [
       "specs/units/Wp100.yaml"

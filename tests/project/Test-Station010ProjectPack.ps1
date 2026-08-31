@@ -44,6 +44,12 @@ function Assert-ExactSequence {
     Assert-True -Condition ($difference.Count -eq 0) -Message "$Description differs from the reviewed sequence."
 }
 
+function Get-FileSha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
 $builderRelativePath = 'scripts/project/Build-CtrlXOpconProjectPack.ps1'
 $builderPath = Join-Path $root ($builderRelativePath -replace '/', [System.IO.Path]::DirectorySeparatorChar)
 Assert-True -Condition ([System.IO.File]::Exists($builderPath)) -Message "Project Pack builder is missing: $builderRelativePath"
@@ -51,6 +57,8 @@ Assert-True -Condition ([System.IO.File]::Exists($builderPath)) -Message "Projec
 $pack = Read-JsonFile -RelativePath 'project-pack.json'
 Assert-True -Condition ($pack.kind -ceq 'ctrlx-opcon-project-pack') -Message 'Unexpected Project Pack kind.'
 Assert-True -Condition ($pack.status -ceq 'ready') -Message 'Station010 Project Pack must remain ready.'
+Assert-True -Condition ($pack.sources.ioDesignators -ceq 'specs/station010-eplan-io.csv') `
+    -Message 'Station010 Project Pack must use the reviewed complete I/O designator source.'
 
 $expectedProcesses = @(
     'specs/processes/SqC_Wp100_Run.process.json',
@@ -156,6 +164,8 @@ $builderResult = $builderOutput | ConvertFrom-Json
 Assert-True -Condition ($builderResult.status -ceq 'VALID') -Message 'Project Pack Check did not return VALID.'
 Assert-True -Condition ($builderResult.readyForEngineering -eq $true) -Message 'Project Pack is not ready for engineering.'
 Assert-True -Condition ($builderResult.processCount -eq 2) -Message 'Generated plan must contain exactly two reviewed Station010 processes.'
+Assert-True -Condition ($builderResult.ioDesignators.activeChannels -eq 38) -Message 'Project Pack must report 38 active I/O designators.'
+Assert-True -Condition ($builderResult.ioDesignators.inactiveChannels -eq 18) -Message 'Project Pack must report 18 inactive I/O designators.'
 
 $plan = Read-JsonFile -RelativePath 'generated/engineering-plan.json'
 Assert-True -Condition ($plan.kind -ceq 'ctrlx-opcon-engineering-plan') -Message 'Unexpected engineering-plan kind.'
@@ -166,4 +176,34 @@ Assert-True -Condition (@($plan.traceability).Count -eq 13) -Message 'Generated 
 Assert-True -Condition (@($plan.traceability | Where-Object { @($_.stepIds).Count -eq 0 -or @($_.testIds).Count -eq 0 }).Count -eq 0) `
     -Message 'Every generated requirement must trace to both steps and acceptance tests.'
 
-Write-Output 'Station010 Project Pack OK: 2 processes, 35 steps, 13 requirements, 9 acceptance tests.'
+$ioDesignators = $plan.ioDesignators
+Assert-True -Condition ($ioDesignators.sourcePath -ceq 'specs/station010-eplan-io.csv') -Message 'Unexpected I/O designator source path.'
+Assert-True -Condition ($ioDesignators.artifactPath -ceq 'generated/cpstudio-io-designators.asc') -Message 'Unexpected I/O designator artifact path.'
+Assert-True -Condition ($ioDesignators.rowCount -eq 56) -Message 'I/O designator artifact must contain 56 channels.'
+Assert-True -Condition ($ioDesignators.digitalInputs -eq 32) -Message 'I/O designator artifact must contain 32 digital inputs.'
+Assert-True -Condition ($ioDesignators.digitalOutputs -eq 24) -Message 'I/O designator artifact must contain 24 digital outputs.'
+Assert-True -Condition ($ioDesignators.activeChannels -eq 38) -Message 'I/O designator artifact must contain 38 active channels.'
+Assert-True -Condition ($ioDesignators.inactiveChannels -eq 18) -Message 'I/O designator artifact must contain 18 inactive channels.'
+Assert-True -Condition ($ioDesignators.encoding -ceq 'UTF-16LE-BOM') -Message 'Unexpected I/O designator artifact encoding.'
+Assert-True -Condition ($ioDesignators.languageColumns -ceq 'E,X') -Message 'Unexpected I/O designator language columns.'
+Assert-True -Condition ($ioDesignators.checkerPath -ceq 'scripts/ioe/Test-CpStudioEplanIoExport.ps1') `
+    -Message 'I/O designator checker path is not fixed in the generated plan.'
+Assert-True -Condition ($ioDesignators.checkerSha256 -ceq (Get-FileSha256 -Path (Join-Path $root $ioDesignators.checkerPath))) `
+    -Message 'I/O designator checker SHA-256 differs from the generated plan.'
+
+$ioDesignatorArtifactPath = Join-Path $root ($ioDesignators.artifactPath -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+Assert-True -Condition ([System.IO.File]::Exists($ioDesignatorArtifactPath)) -Message 'Generated I/O designator ASC is missing.'
+$ioDesignatorArtifact = Get-Item -LiteralPath $ioDesignatorArtifactPath
+$ioDesignatorArtifactSha = Get-FileSha256 -Path $ioDesignatorArtifactPath
+Assert-True -Condition ($ioDesignatorArtifact.Length -eq $ioDesignators.artifactLength) -Message 'I/O designator artifact length differs from the plan.'
+Assert-True -Condition ($ioDesignatorArtifactSha -ceq [string]$ioDesignators.artifactSha256) -Message 'I/O designator artifact SHA differs from the plan.'
+Assert-True -Condition ($ioDesignatorArtifactSha -ceq '69ae9dad00c211e575632484700e9c966735d17158cce448ddbae0a8436344d5') `
+    -Message 'Generated I/O designator ASC differs from the file accepted by the Station010 CpStudio round trip.'
+Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'specs/station010-eplan-io.csv').Count -eq 1) `
+    -Message 'I/O designator source must appear exactly once in the engineering plan sources.'
+Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'scripts/ioe/New-CpStudioEplanIoAsc.ps1').Count -eq 1) `
+    -Message 'I/O designator generator must appear exactly once in the engineering plan sources.'
+Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'scripts/ioe/Test-CpStudioEplanIoExport.ps1').Count -eq 1) `
+    -Message 'I/O designator checker must appear exactly once in the engineering plan sources.'
+
+Write-Output 'Station010 Project Pack OK: 2 processes, 35 steps, 13 requirements, 9 acceptance tests, 56 I/O designators.'

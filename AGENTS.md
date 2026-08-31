@@ -66,6 +66,7 @@
 - [x] Controlled Runner P1.4a 精简团队离线包：PowerShell 7 接收入口可在无 Git、源码、SDK 和本机 build 的工位完成包完整性校验、首装/升级、精确回滚、安全卸载与状态查询；fresh `Install` 默认不启动 Host，升级保留原 running/stopped 状态（2026-08-29）
 - [ ] Controlled Runner P1.4 后续：独立 AtLogOn 五文件 prelaunch bootstrap 按用户决定延期到商业化/无人值守部署阶段，不阻塞当前开发；兼容矩阵与新电脑验收在有团队工位时再做。继续沿用当前用户默认权限，不增加自定义 ACL，数字签名延期到商业发行或公司 IT 明确要求
 - [x] Phase 2 Project Pack：通用 schema/Build/Check/初始化器/Runner 门禁已落地；Station010 工程计划包含 2 个流程、35 个步骤、14 条提示、13 条需求和 9 个验收用例；Host/ExecuteAction 都逐项校验计划事实源，生成接口全部归 CpStudio（2026-08-29）
+- [x] ePLAN DIDO 已接入 Project Pack：Build/Check 确定性生成完整 ASC，Post-export Stage 1 将 CSV 与 CpStudio BusConfig 逐通道只读核对；官方 Import/Save/Write/Export/Link I/O 边界不变（2026-08-31）
 - [x] Phase 3 HMI 离线产品基线：schema v2 配置驱动通用壳、Overview/Mode/Event/I/O/Data/Manual Unit；Station010 与 ExampleCell 均通过 Release build、配置校验和 UI 冒烟，真机写白名单未扩大且默认关闭（2026-08-29）
 - [x] Kistler maXYmos 5867C 已完成 IOE 组态、CpStudio EtherCAT I/O 导入、标准 Peripheral 匹配和 Unit Channel 绑定
 - [x] 并行自研 Windows HMI 已配置 150 个只读订阅节点；唯一写白名单为 `TokenRequest`/`ModeIdRequest`，默认关闭并待真机分步验收

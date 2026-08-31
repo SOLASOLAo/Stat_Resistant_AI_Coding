@@ -50,7 +50,20 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
   are supplied to the importer; retain every existing description instead of
   relying on an empty field to preserve it.
 
-Generate the reviewed complete Station010 56-channel import:
+For the integrated project, generate and verify the reviewed ASC through the
+Project Pack:
+
+```powershell
+pwsh -NoProfile -File .\scripts\project\Build-CtrlXOpconProjectPack.ps1 `
+  -Command Build -EngineeringRoot . -RequireReady -Json
+
+pwsh -NoProfile -File .\scripts\project\Build-CtrlXOpconProjectPack.ps1 `
+  -Command Check -EngineeringRoot . -RequireReady -Json
+```
+
+`Build` creates `generated/cpstudio-io-designators.asc` atomically. `Check`
+regenerates it in a temporary directory and rejects any CSV, generator or ASC
+drift. The generator can still be called directly for an isolated preview:
 
 ```powershell
 pwsh -NoProfile -File .\scripts\ioe\New-CpStudioEplanIoAsc.ps1 `
@@ -72,6 +85,18 @@ ASC export and passed the official round trip on 2026-08-31:
    the PLC IDE` and `Control plus Studio export` commands.
 5. In PLE, run `Link I/O`, then Build. If Symbol/Post-export requires it, run a
    second CpStudio Export and a final Build.
+
+After Export, Stage 1 automatically compares the reviewed CSV with the
+configured CpStudio `BusConfig` when `project-pack.json` contains
+`sources.ioDesignators` and `config/project.yaml` contains `paths.bus_config`.
+A mismatch produces `IO_DESIGNATOR_EXPORT_MISMATCH` and blocks later stages.
+The same read-only check can be run directly:
+
+```powershell
+pwsh -NoProfile -File .\scripts\ioe\Test-CpStudioEplanIoExport.ps1 `
+  -InputCsv .\specs\station010-eplan-io.csv `
+  -BusConfigPath ..\Station010\PublicConfig\BusConfig_Stat010_V5.11_CtrlX.yaml
+```
 
 The verified Station010 result was 38 active / 18 inactive channels, Export #2
 `0 errors / 3 warnings`, and final PLE Build `0 errors / 0 warnings`. The two A1

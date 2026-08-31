@@ -737,3 +737,24 @@
   the full 56-row source, 38/18 state counts, E/X content, byte contract and the
   EtherCAT master-name chain. No online PLC connection, download, runtime
   start/stop, variable write or FORCE was used; `Std` was not modified.
+
+# 2026-08-31 ePLAN DIDO automation integrated into Project Pack
+
+- `project-pack.json` now references the reviewed complete Station010 DIDO CSV.
+  Project Pack `Build` atomically produces `generated/cpstudio-io-designators.asc`;
+  `Check` regenerates it in TEMP and fails on CSV, generator or ASC drift. The
+  verified artifact is 6,390 bytes with SHA-256
+  `69ae9dad00c211e575632484700e9c966735d17158cce448ddbae0a8436344d5`.
+- The engineering plan records the source/generator/checker/artifact hashes and the
+  reviewed 56 / 32 DI / 24 DO / 38 active / 18 inactive counts. The optional
+  schema keeps projects without an I/O designator source backward compatible.
+- Post-export Stage 1 now fingerprints the configured BusConfig and compares all
+  expected channels, designators and English/Chinese descriptions with the CSV.
+  A semantic mismatch yields `IO_DESIGNATOR_EXPORT_MISMATCH`; an unreadable
+  export fails the request. Both stop before Stage 2. Stage 2 binds the matching CSV/BusConfig hashes into its
+  immutable operation/action and rejects later drift. The real Station010
+  BusConfig matched all 56 channels.
+- The official human boundary remains deliberately small: Import ASC, review,
+  Save, Write designators, Export and Link I/O stay in CpStudio/PLE. No Runner,
+  Broker or online PLC capability was added; no `.project`, Station010 or `Std`
+  file was modified by this integration.

@@ -137,6 +137,9 @@ Project Pack 与其引用的事实源，不启动 CpStudio、PLE、MCP 或 REST�
   流程步骤和追溯字段；
 - `generated/engineering-plan.json`：由 Build 确定性生成的 SFC 计划、操作提示、
   测试骨架、需求追溯和源文件指纹；禁止手改。
+- 可选 `sources.ioDesignators`：引用当前工位完整 DIDO CSV。配置后，Build 同时生成
+  `generated/cpstudio-io-designators.asc`，Check 对 CSV、生成器和 ASC 做逐字节漂移门禁；
+  不配置时现有项目行为不变。
 
 Phase 2 标准命令为：
 
@@ -151,6 +154,9 @@ pwsh -File scripts/project/Build-CtrlXOpconProjectPack.ps1 `
 `Build` 校验事实源并重建计划；`Check` 重算并逐字校验已生成计划，源文件漂移或
 产物被手改都会失败。Runner 只把 `Check -RequireReady` 作为进入后续工程阶段的
 前置门禁。两条命令都不会在 CpStudio 创建接口，也不会向 PLE `.project` 写入代码或图形。
+CpStudio Export 后，Stage 1 还会把该 CSV 与 `paths.bus_config` 指向的 BusConfig 做
+只读逐通道核对；不一致时以 `IO_DESIGNATOR_EXPORT_MISMATCH` 阻断。Stage 2 将匹配结果、
+CSV SHA 和 BusConfig SHA 绑定到 operation/action，后续源文件漂移会失败关闭。
 
 ## 日常工作流
 

@@ -73,6 +73,8 @@ station. It performs only:
 - request Station/PLC equality checks against `config/project.yaml`;
 - Git status/name-only diffs with `GIT_OPTIONAL_LOCKS=0`;
 - SHA-256 fingerprints of changed and critical generated files;
+- when configured, an exact read-only comparison of the Project Pack I/O
+  designator CSV against CpStudio's exported `BusConfig`;
 - existence/hash checks for `ai/ownership.yaml`, `ai/hooks.yaml` and
   `ai/graphical.yaml`;
 - a separate optional review of `config/warning-signature-baseline.json`;
@@ -81,6 +83,14 @@ station. It performs only:
 It does not run the live snapshot, I/O/Symbol repair, compile or code merge.
 Those remain an explicit second stage in the one active engineering session
 after the offline report receives explicit confirmation.
+
+The optional I/O comparison is enabled by `sources.ioDesignators` in
+`project-pack.json` plus `paths.bus_config` in `config/project.yaml`. Missing,
+malformed or different BusConfig data creates the blocking finding
+`IO_DESIGNATOR_EXPORT_MISMATCH`; Stage 1 never edits either source.
+Stage 2 accepts only `MATCHED`, verifies the source SHA against the current
+engineering plan and the BusConfig SHA against its Stage 1 fingerprint, then
+binds both into the immutable operation/action.
 
 ## Stage 2 PlanOnly coordinator
 
