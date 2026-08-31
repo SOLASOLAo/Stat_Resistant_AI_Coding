@@ -862,3 +862,19 @@
   Runner/ASC implementation scripts and their paired tests are byte-identical
   between root and template. No PLE, MCP, Broker, CpStudio, IOE or
   online PLC operation was started; `Station010` and `Std` were not modified.
+
+# 2026-09-01 CpStudio export Stage 2 closed
+
+- Request `9cc8d375-f4ba-4368-832a-d7331d13ef6c` completed operation
+  `cpstudio-stage2-9cc8d375-f4ba-4368-832a-d7331d13ef6c-d7b50493` at revision 2
+  with final status `DONE`; Export #2 was not required.
+- The offline Clean Build completed with **0 errors / 4 reviewed `OPC.UA.DA`
+  warnings**. All 456 mapping records and the Symbol Configuration matched the
+  reviewed semantic baseline; project and structure hashes were unchanged.
+- The optional `get_ctrlx_semantic_snapshot_retry` audit capability is now
+  accepted consistently by the Runner, evidence producer and Stage 2
+  coordinator while the original three success capabilities remain required.
+  This prevents a durable Broker success from remaining falsely pending after
+  a read-only Symbol snapshot retry.
+- No PLC connection, download, runtime start/stop, variable write or FORCE was
+  performed. The engineering session was closed after evidence ingestion.
