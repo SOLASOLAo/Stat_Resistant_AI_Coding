@@ -103,8 +103,8 @@ objects:
     interface_owner: cpstudio
     interface_write: forbidden
     apply_status: applied_offline_verified
-    source_state: operator_guidance_applied_and_readback_verified
-    last_plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
+    source_state: type_data_applied_and_readback_verified
+    last_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st
@@ -128,6 +128,14 @@ objects:
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN045_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N045.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN046_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N046.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN047_active
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N047.st
     write_mode: full_object
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN050_active
     owner: ai
@@ -195,6 +203,14 @@ objects:
     write_mode: implementation
     interface_owner: cpstudio
     interface_write: forbidden
+  - path: Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData
+    owner: mixed
+    source: src/plc/project/Station010/TypeDataSetManagerAddon/OnCheckData.ApplicationChecks.st
+    source_role: application_check_merge_area
+    write_mode: semantic_merge
+    interface_owner: cpstudio
+    interface_write: forbidden
+    hook_ids: [dataset_plausibility_warning_cleanup]
   - path: Application/Station/Wp100/_this/Structs/Data/Wp100RunSequenceResultStruct
     owner: ai
     source: src/plc/project/Station010/Wp100RunSequenceResultStruct.st

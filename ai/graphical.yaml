@@ -26,8 +26,8 @@ objects:
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
     apply_status: applied_offline_verified
-    source_state: operator_guidance_applied_and_readback_verified
-    last_plan_sha256: 0fcb072b9cc175f79559fea7b18f0f434474acc1044b7df608352d569b07fd50
+    source_state: type_data_applied_and_readback_verified
+    last_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
     write_strategy:
       - default to PlanOnly and require explicit Apply plus the fresh deterministic plan SHA-256
       - GET the complete object and every child before any mutation
@@ -47,6 +47,8 @@ objects:
       N030: Close safety door
       N040: Wait safety feedback
       N045: Check measure release
+      N046: Set Burster range
+      N047: Wait Burster range
       N050: Start press WRKPOS
       N051: Start Kistler MEASURE
       N060: Wait press WRKPOS
@@ -72,6 +74,7 @@ objects:
           - [N100, N110]
           - [N101, N120]
     branch_return_values: [_retVal, _retVal2]
+    sequential_prerequisite: [N045, N046, N047]
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
     language: SFC

@@ -14,7 +14,7 @@
 详细范围和验收标准见 `docs/productization_roadmap.md`；这里保持短清单，后续每完成一个里程碑直接更新状态。
 
 - [x] 🔴 Phase 2 Project Pack：`project-pack.json` 汇总 Station/I/O/Event/Unit/Process/HMI/Catalog/ownership 事实源；PowerShell 7 Build/Check 生成内容寻址的 `generated/engineering-plan.json`，Runner 在执行前拒绝缺失、draft 或漂移计划（2026-08-29）
-- [x] 🔴 Phase 2 Station010 流程：`SqC_Wp100_Run` + `SqS_Wp100_Run` 共 35 个步骤、14 条双语提示、13 条需求和 9 个验收用例；所有生成 POU 接口仍归 CpStudio（2026-08-29）
+- [x] 🔴 Phase 2 Station010 流程：`SqC_Wp100_Run` + `SqS_Wp100_Run` 共 37 个步骤、14 条双语提示、14 条需求和 9 个验收用例；所有生成 POU 接口仍归 CpStudio（2026-08-31）
 - [x] 🔴 Phase 3 配置驱动 HMI：品牌、Overview、Manual Unit/动作/字段、模式 Chain、EtherCAT role/device-data group 全部进入 schema v2 配置；新增不含 Station010/Wp100/Kistler/Burster 名称的 ExampleCell 配置（2026-08-29）
 - [ ] 🔴 Phase 3 现场验收：在用户单独批准真机操作后，与 Nexeed HMI 做只读与模式请求 A/B；Station/Manual/参数写入继续保持锁定，不能用离线 UI 冒烟代替现场结论
 
@@ -120,7 +120,7 @@
 - [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：位置改为正式 `VAR_INPUT MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈；下压+Kistler 启动及抬压+Kistler 结束均为可诊断的 SFC 同步分支，按 OpCon 约定分别使用 `_retVal/_retVal2`，结构化保存结果并统一处理 DONE/ERROR/CANCEL；离线编译 0 errors / 6 warnings，Additional code checks 0 errors(2026-08-20)
 - [x] 🔴 `SqC_Wp100_Run` 顺序调用原子操作：LEFT→MIDDLE→RIGHT，每轮仅在 READY 写 `Wp100.SqS_Run.MeasurePos` 并以 `CheckSubChainDone` 等待；每轮开始前检查 `_100B701 AND _100B702`，缺失时用 `EVENT_PART_DETECT_SENSOR` 和具体 BMK AdditionalInfo 阻塞提示；三位置结果分别保留，编译 0 errors / 6 warnings(2026-08-20)
 - [x] 🟡 统一 AI-owned PLC ST 条件排版：独立条件加括号且括号内侧留空格，换行 `AND`/`OR` 放上一行末尾；静态门禁、REST 哈希迁移、幂等回读及 Application Build 0 errors / 8 warnings 完成(2026-08-20)
-- [ ] 🔴 确认产品参数来源：把 Burster 上下限/温度开关与 Kistler 程序号从当前 Unit 参数正式接入 TypeData；补充范围校验和产品切换验收
+- [x] 🔴 产品参数来源：CpStudio 生成 Wp100 TypeData/量程枚举；PLE 在 N046/N047 先应用 Burster 量程，在 N051/N080 应用 Kistler 程序号及 Burster 上下限/温度开关，并在 OnCheckData 补充上下量程/上下限关系校验；离线 Build 0 errors / 5 条既有生成告警（2026-08-31）
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)

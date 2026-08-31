@@ -87,7 +87,7 @@ foreach ($process in @($commandProcess, $atomicProcess)) {
 }
 
 $expectedCommandSteps = @('N000', 'N010', 'N015', 'N020', 'N030', 'N040', 'N045', 'N050', 'N060', 'N070', 'N075', 'N080', 'N090', 'N999')
-$expectedAtomicSteps = @('N000', 'N010', 'N020', 'N030', 'N040', 'N045', 'N050', 'N051', 'N060', 'N061', 'N070', 'N080', 'N090', 'N095', 'N100', 'N101', 'N110', 'N120', 'N130', 'N140', 'N999')
+$expectedAtomicSteps = @('N000', 'N010', 'N020', 'N030', 'N040', 'N045', 'N046', 'N047', 'N050', 'N051', 'N060', 'N061', 'N070', 'N080', 'N090', 'N095', 'N100', 'N101', 'N110', 'N120', 'N130', 'N140', 'N999')
 Assert-ExactSequence -Actual @($commandProcess.steps.id) -Expected $expectedCommandSteps -Description 'SqC_Wp100_Run steps'
 Assert-ExactSequence -Actual @($atomicProcess.steps.id) -Expected $expectedAtomicSteps -Description 'SqS_Wp100_Run steps'
 
@@ -172,7 +172,7 @@ Assert-True -Condition ($plan.kind -ceq 'ctrlx-opcon-engineering-plan') -Message
 Assert-True -Condition ($plan.readyForEngineering -eq $true) -Message 'Generated engineering plan is not ready.'
 Assert-True -Condition (@($plan.sfcPlans).Count -eq 2) -Message 'Generated engineering plan must contain two SFC plans.'
 Assert-True -Condition (@($plan.testCases).Count -eq 9) -Message 'Generated engineering plan must contain nine acceptance tests.'
-Assert-True -Condition (@($plan.traceability).Count -eq 13) -Message 'Generated engineering plan must contain thirteen requirement traces.'
+Assert-True -Condition (@($plan.traceability).Count -eq 14) -Message 'Generated engineering plan must contain fourteen requirement traces.'
 Assert-True -Condition (@($plan.traceability | Where-Object { @($_.stepIds).Count -eq 0 -or @($_.testIds).Count -eq 0 }).Count -eq 0) `
     -Message 'Every generated requirement must trace to both steps and acceptance tests.'
 
@@ -206,4 +206,4 @@ Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'scripts/ioe/Ne
 Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'scripts/ioe/Test-CpStudioEplanIoExport.ps1').Count -eq 1) `
     -Message 'I/O designator checker must appear exactly once in the engineering plan sources.'
 
-Write-Output 'Station010 Project Pack OK: 2 processes, 35 steps, 13 requirements, 9 acceptance tests, 56 I/O designators.'
+Write-Output 'Station010 Project Pack OK: 2 processes, 37 steps, 14 requirements, 9 acceptance tests, 56 I/O designators.'

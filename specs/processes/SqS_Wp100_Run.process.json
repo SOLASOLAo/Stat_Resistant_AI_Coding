@@ -48,6 +48,10 @@
       "text": "Start press-down and Kistler measurement as separately diagnosable simultaneous branches and join only after both are running."
     },
     {
+      "id": "REQ-TYPE-DATA",
+      "text": "Use the active Wp100 TypeData for Burster range, limits and temperature selection and for the Kistler measurement program."
+    },
+    {
       "id": "REQ-RESISTANCE",
       "text": "Wait PressDelayTime after press-down, run one Burster resistance measurement and capture its result."
     },
@@ -218,6 +222,32 @@
       ]
     },
     {
+      "id": "N046",
+      "kind": "start",
+      "comment": "Set Burster range",
+      "operation": "Copy the active TypeData upper/lower range into the Burster parameters and start SET_RANGE.",
+      "transition": "The SET_RANGE command is accepted.",
+      "requirements": [
+        "REQ-TYPE-DATA"
+      ],
+      "acceptance": [
+        "The values come from Station.TypeData.Wp100 and are converted explicitly to the standard Burster enum."
+      ]
+    },
+    {
+      "id": "N047",
+      "kind": "wait",
+      "comment": "Wait Burster range",
+      "operation": "Wait for SET_RANGE and release Unit.Execute before any later Burster command.",
+      "transition": "SET_RANGE completes; command ERROR is propagated.",
+      "requirements": [
+        "REQ-TYPE-DATA"
+      ],
+      "acceptance": [
+        "Press-down and Kistler measurement cannot start before the Burster range is applied."
+      ]
+    },
+    {
       "id": "N050",
       "kind": "start",
       "comment": "Start press WRKPOS",
@@ -238,10 +268,11 @@
       "id": "N051",
       "kind": "start",
       "comment": "Start Kistler MEASURE",
-      "operation": "Start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
+      "operation": "Copy KistlerProgramNo from the active TypeData and start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
       "transition": "The Kistler measurement command is accepted.",
       "requirements": [
-        "REQ-MEASUREMENT-START"
+        "REQ-MEASUREMENT-START",
+        "REQ-TYPE-DATA"
       ],
       "parallel": {
         "group": "measurement_start",
@@ -302,10 +333,11 @@
       "id": "N080",
       "kind": "start",
       "comment": "Start resistance test",
-      "operation": "Start Wp100A103ResistantDetector.SINGLE_MEAS with the Unit's current range and limits.",
+      "operation": "Copy upper/lower limits and ReadTemperature from the active TypeData and start Wp100A103ResistantDetector.SINGLE_MEAS.",
       "transition": "The resistance-meter command is accepted.",
       "requirements": [
-        "REQ-RESISTANCE"
+        "REQ-RESISTANCE",
+        "REQ-TYPE-DATA"
       ],
       "acceptance": [
         "Exactly one resistance measurement is requested for this position."
@@ -515,11 +547,14 @@
       "title": "Parallel Kistler and press measurement cycle",
       "requirements": [
         "REQ-MEASUREMENT-START",
+        "REQ-TYPE-DATA",
         "REQ-RESISTANCE",
         "REQ-MEASUREMENT-FINISH"
       ],
       "steps": [
         "N045",
+        "N046",
+        "N047",
         "N050",
         "N051",
         "N060",
@@ -535,6 +570,7 @@
       ],
       "expected": [
         "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
+        "Burster ranges are applied before motion and every measurement uses the active TypeData limits, temperature selection and Kistler program.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },

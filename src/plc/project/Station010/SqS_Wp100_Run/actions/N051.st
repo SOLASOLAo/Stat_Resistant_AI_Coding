@@ -13,7 +13,7 @@ ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
 THEN
   Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;
   Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo :=
-    Wp100A104Kistler.Unit.OutImm.ProgNo;
+    Station.TypeData.Wp100.KistlerProgramNo;
 
   IF ( Wp100A104Kistler.Unit.ParCmd.Measure.MeasuringTimeout <= T#0MS )
   THEN

@@ -777,3 +777,34 @@
   The final Build result was user-reported as **0 errors / 0 warnings**.
 - No PLC connect, download, runtime start/stop, variable write or FORCE was
   performed. `Std` was not modified.
+
+# 2026-08-31 Wp100 TypeData production parameters integrated
+
+- CpStudio Export request `363c3534-47fc-49c3-bb8e-5f92bcb6b87b` added the
+  CpStudio-owned `Wp100BursterRangeEnum` (INT, values 0..8) and six Wp100
+  TypeData fields: upper/lower Burster range, upper/lower limit, temperature
+  switch and Kistler program number. The generated POU interfaces were only
+  read and consumed; no declaration was added or rewritten through PLE.
+- `SqS_Wp100_Run` is now 23 Steps. N046/N047 execute and wait for Burster
+  `SET_RANGE` before the press/Kistler parallel start. N051 copies the active
+  Kistler program before `MEASURE`; N080 copies the active limits and
+  temperature switch before `SINGLE_MEAS`.
+- `TypeDataSetManagerAddon.OnCheckData` was semantically merged only inside its
+  application-specific region. CpStudio's generated 0..8 checks remain; the
+  application adds `LowerRange <= UpperRange` and `LowerLimit <= UpperLimit`.
+- A failed enum-call attempt was corrected before acceptance to a checked
+  `TO_INT` conversion between the two INT-based enums. Final PLE Build is
+  **0 errors / 5 warnings**, Additional code checks **0 errors**. The warnings
+  are the existing four `OPC.UA.DA` C0351 messages plus one generated
+  SymbolConfig C0373 message; no new application warning signature was added.
+- Feature Plan SHA is
+  `92577f72164ac56e5cbae61ee788bd1663f1222d33216b17f766da0a0ff8f23d`;
+  final conversion-fix Plan SHA is
+  `35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7`.
+  Final PlanOnly readback SHA
+  `8285734b5fc0350cbb2d2899cc2b1333fef8a117dedf5dcdc1f40df3b04a6f7f`
+  contains zero operations. Project Pack is now 2 processes / 37 steps /
+  14 requirements / 9 tests.
+- A local content-addressed `.project` checkpoint was created under ignored
+  `data/checkpoints/plc/` before mutation. No PLC connect, download, runtime
+  start/stop, variable write or FORCE was performed; `Std` was not modified.

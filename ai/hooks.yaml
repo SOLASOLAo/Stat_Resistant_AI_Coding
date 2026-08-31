@@ -123,6 +123,9 @@ hooks:
       - Wp100A103ResistantDetector
       - Wp100K102PressingCylinder
     invariants:
+      - Burster SET_RANGE completes before the pressing-cylinder and Kistler start branches
+      - Burster range, limits and temperature selection come from the active Wp100 TypeData
+      - Kistler measurement program comes from the active Wp100 TypeData
       - Kistler MEASURE and pressing-cylinder WRKPOS use one simultaneous SFC divergence
       - branch 1 uses _retVal and branch 2 uses _retVal2
       - each device has a separate Start step and Wait step for diagnostics
@@ -164,4 +167,6 @@ hooks:
     interface_owner: cpstudio
     invariants:
       - generated range checks remain present
+      - Wp100 Burster lower range is not greater than upper range
+      - Wp100 Burster lower limit is not greater than upper limit
       - the application-specific placeholder warning is absent after review

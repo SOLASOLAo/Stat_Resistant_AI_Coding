@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "ebe1824f7dc01e697f9c5fef001af71f5e05e1360dd79841a54f6a297ce20e37",
+  "contentId": "11bb39c6d9f0d5b133147710b08d0ed08e6b81ae85a956cd8f1ba052025439aa",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 18390,
-      "sha256": "3ba19426ef3b55a64b63529760298604c395db10bd6658728d88be93eba9a525"
+      "length": 19826,
+      "sha256": "7234fc5433d68f3bfd34e26bd8b7c471831184b2df5360169926caa0c8af67b4"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -88,18 +88,18 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 13164,
-      "sha256": "f330a5dc25428014a6f38e2c865ae3ecc1ce2a3034019bacbb4f66cbea71f23f"
+      "length": 13923,
+      "sha256": "1f41bf56e07c37f6da8a195624ee1af26b053bbb0be4e66b822df3d41d4989b7"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 7764,
-      "sha256": "fea1c353c738e0ef05b4ef55ff98514248ad7538b8a354c4c7c743d78b88a371"
+      "length": 8153,
+      "sha256": "46966508217d8b35a90f679da4080266f7a003ef17a11ac9a1dd2efb0b714338"
     },
     {
       "path": "ai/graphical.yaml",
-      "length": 5178,
-      "sha256": "5f2b2ba5cc5ba074fc37773fb49e1b72e22acbf700972a9a97d34f0684e8d7fd"
+      "length": 5279,
+      "sha256": "72c669fa6347e90dc71420b0a91a09aa97d31a14f76e6b5bf8f05e2d509e7502"
     },
     {
       "path": "specs/station010-eplan-io.csv",
@@ -617,6 +617,38 @@
           "parallel": null
         },
         {
+          "id": "N046",
+          "kind": "start",
+          "comment": "Set Burster range",
+          "operation": "Copy the active TypeData upper/lower range into the Burster parameters and start SET_RANGE.",
+          "transition": "The SET_RANGE command is accepted.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-TYPE-DATA"
+          ],
+          "acceptance": [
+            "The values come from Station.TypeData.Wp100 and are converted explicitly to the standard Burster enum."
+          ],
+          "parallel": null
+        },
+        {
+          "id": "N047",
+          "kind": "wait",
+          "comment": "Wait Burster range",
+          "operation": "Wait for SET_RANGE and release Unit.Execute before any later Burster command.",
+          "transition": "SET_RANGE completes; command ERROR is propagated.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-TYPE-DATA"
+          ],
+          "acceptance": [
+            "Press-down and Kistler measurement cannot start before the Burster range is applied."
+          ],
+          "parallel": null
+        },
+        {
           "id": "N050",
           "kind": "start",
           "comment": "Start press WRKPOS",
@@ -639,12 +671,13 @@
           "id": "N051",
           "kind": "start",
           "comment": "Start Kistler MEASURE",
-          "operation": "Start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
+          "operation": "Copy KistlerProgramNo from the active TypeData and start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
           "transition": "The Kistler measurement command is accepted.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
-            "REQ-MEASUREMENT-START"
+            "REQ-MEASUREMENT-START",
+            "REQ-TYPE-DATA"
           ],
           "acceptance": [
             "The Kistler branch uses a return value independent from the press branch."
@@ -712,12 +745,13 @@
           "id": "N080",
           "kind": "start",
           "comment": "Start resistance test",
-          "operation": "Start Wp100A103ResistantDetector.SINGLE_MEAS with the Unit's current range and limits.",
+          "operation": "Copy upper/lower limits and ReadTemperature from the active TypeData and start Wp100A103ResistantDetector.SINGLE_MEAS.",
           "transition": "The resistance-meter command is accepted.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
-            "REQ-RESISTANCE"
+            "REQ-RESISTANCE",
+            "REQ-TYPE-DATA"
           ],
           "acceptance": [
             "Exactly one resistance measurement is requested for this position."
@@ -1209,11 +1243,14 @@
       "title": "Parallel Kistler and press measurement cycle",
       "requirements": [
         "REQ-MEASUREMENT-START",
+        "REQ-TYPE-DATA",
         "REQ-RESISTANCE",
         "REQ-MEASUREMENT-FINISH"
       ],
       "steps": [
         "N045",
+        "N046",
+        "N047",
         "N050",
         "N051",
         "N060",
@@ -1229,6 +1266,7 @@
       ],
       "expected": [
         "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
+        "Burster ranges are applied before motion and every measurement uses the active TypeData limits, temperature selection and Kistler program.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },
@@ -1382,6 +1420,20 @@
         "N051",
         "N060",
         "N061"
+      ],
+      "testIds": [
+        "TEST-ATOMIC-MEASUREMENT"
+      ]
+    },
+    {
+      "processId": "wp100-run-atomic",
+      "requirementId": "REQ-TYPE-DATA",
+      "text": "Use the active Wp100 TypeData for Burster range, limits and temperature selection and for the Kistler measurement program.",
+      "stepIds": [
+        "N046",
+        "N047",
+        "N051",
+        "N080"
       ],
       "testIds": [
         "TEST-ATOMIC-MEASUREMENT"

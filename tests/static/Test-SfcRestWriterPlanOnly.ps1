@@ -101,6 +101,28 @@ function New-MockNode {
     }
   }
 
+  if (($null -ne $typeDataCheckPath) -and ($Path -eq $typeDataCheckPath)) {
+    $applicationChecks = (Read-CanonicalText 'TypeDataSetManagerAddon\OnCheckData.ApplicationChecks.st').TrimEnd("`n")
+    $implementation = @"
+// Application specific data checks
+$applicationChecks
+
+////<OES_CODE MergeId="GeneratedDataCheck">
+// Station.TypeDataNew.Wp100.BursterUpperRange < 0
+// Station.TypeDataNew.Wp100.BursterUpperRange > 8
+// Station.TypeDataNew.Wp100.BursterLowerRange < 0
+// Station.TypeDataNew.Wp100.BursterLowerRange > 8
+////</OES_CODE>
+"@
+    return [pscustomobject]@{
+      name = 'OnCheckData'
+      elementType = 'POUMethod'
+      declaration = "METHOD PROTECTED OnCheckData`n"
+      implementation = $implementation.Replace("`r`n", "`n").Replace("`r", "`n")
+      children = @()
+    }
+  }
+
   if (-not $Path.StartsWith("$activeChainPath/", [StringComparison]::Ordinal)) {
     throw "Mock received an unexpected node path: $Path"
   }
@@ -341,6 +363,7 @@ foreach ($requiredPostSavePath in @(
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run',
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active',
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/OnChainFinish',
+    'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData',
     'Application/Station/Wp100/_this/Structs/Data/Wp100ResistanceResultStruct',
     'Application/Station/Wp100/_this/Structs/Data/Wp100KistlerResultStruct',
     'Application/Station/Wp100/_this/Structs/Data/Wp100RunResultStruct'

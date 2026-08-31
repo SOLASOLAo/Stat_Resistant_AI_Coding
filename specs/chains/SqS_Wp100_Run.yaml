@@ -82,6 +82,34 @@ station_data:
     type: DINT
     unit: ms
 
+type_data:
+  source: Station.TypeData.Wp100
+  apply_boundary: current TypeData after Change-over ApplyData
+  fields:
+    BursterUpperRange:
+      target: Wp100A103ResistantDetector.Unit.ParCmd.UpperRange
+      command: SET_RANGE
+    BursterLowerRange:
+      target: Wp100A103ResistantDetector.Unit.ParCmd.LowerRange
+      command: SET_RANGE
+    BursterUpperLimit:
+      target: Wp100A103ResistantDetector.Unit.ParCmd.UpperLimit
+      command: SINGLE_MEAS
+    BursterLowerLimit:
+      target: Wp100A103ResistantDetector.Unit.ParCmd.LowerLimit
+      command: SINGLE_MEAS
+    BursterReadTemperature:
+      target: Wp100A103ResistantDetector.Unit.ParCmd.ReadTemperature
+      command: SINGLE_MEAS
+    KistlerProgramNo:
+      target: Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo
+      command: MEASURE
+  validation:
+    - CpStudio generated range checks keep both range values within 0 through 8
+    - BursterLowerRange is not greater than BursterUpperRange
+    - BursterLowerLimit is not greater than BursterUpperLimit
+    - no narrower Kistler program-number range is assumed beyond BYTE
+
 steps:
   - id: N000
     comment: Initialize run
@@ -116,6 +144,15 @@ steps:
       - Peripherals.BinIo._000K912_Y32
       - pressing cylinder in base position and READY
       - Kistler READY and device ready
+  - id: N046
+    comment: Set Burster range
+    command: Wp100A103ResistantDetector.SET_RANGE
+    parameters:
+      - Station.TypeData.Wp100.BursterUpperRange
+      - Station.TypeData.Wp100.BursterLowerRange
+  - id: N047
+    comment: Wait Burster range
+    wait_for: Wp100A103ResistantDetector SET_RANGE started by N046
   - id: N050
     comment: Start press WRKPOS
     parallel_group: measurement_start
@@ -134,6 +171,7 @@ steps:
     branch: 2
     return_value: _retVal2
     command: Wp100A104Kistler.MEASURE
+    program: Station.TypeData.Wp100.KistlerProgramNo
   - id: N061
     comment: Wait Kistler running
     parallel_group: measurement_start
@@ -148,7 +186,10 @@ steps:
   - id: N080
     comment: Start resistance test
     command: Wp100A103ResistantDetector.SINGLE_MEAS
-    note: lower/upper limits and temperature selection remain the Unit's current parameters
+    parameters:
+      - Station.TypeData.Wp100.BursterUpperLimit
+      - Station.TypeData.Wp100.BursterLowerLimit
+      - Station.TypeData.Wp100.BursterReadTemperature
   - id: N090
     comment: Wait resistance result
     result: Result.Resistance
@@ -242,17 +283,25 @@ caller_contract:
   - do not start the single instance from two callers concurrently
 
 verification:
-  date: 2026-08-24
+  date: 2026-08-31
   offline_build: 0 errors / 4 warnings
-  warning_scope: four reviewed C0351 messages from NexeedStateAddon 1.1.1.0
+  warning_scope: four reviewed C0351 OPC.UA.DA messages from the formal warning baseline
+  latest_normal_build: 0 errors / 5 warnings
+  latest_additional_warning: generated SymbolConfig C0373; no application source warning was added
   additional_code_checks: 0 errors
   graph_readback:
-    steps: 21
+    steps: 23
     simultaneous_divergences: 2
     simultaneous_convergences: 2
+  feature_plan_sha256: 92577f72164ac56e5cbae61ee788bd1663f1222d33216b17f766da0a0ff8f23d
+  last_fix_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
+  no_change_readback_plan_sha256: 8285734b5fc0350cbb2d2899cc2b1333fef8a117dedf5dcdc1f40df3b04a6f7f
   online_test: not performed
   applied_change_note: >-
-    Operator guidance and N095 error propagation were applied transactionally.
-    The CpStudio-owned declaration was preserved byte-for-byte, all target
-    Actions and Methods passed post-save readback, and the fresh Build had no
-    application errors or new warning signatures.
+    CpStudio-owned TypeData and enum declarations were consumed without interface
+    edits. Burster range is applied before motion, measurement limits and the
+    temperature switch are copied before SINGLE_MEAS, and the Kistler program is
+    copied before MEASURE. The mixed OnCheckData method retained generated checks
+    and added only the two application plausibility checks. All writes were
+    transactional, declarations were preserved exactly and final PlanOnly had
+    zero operations.

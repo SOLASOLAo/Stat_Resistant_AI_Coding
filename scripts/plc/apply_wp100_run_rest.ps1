@@ -12,6 +12,8 @@ $deviceRoot = "$BaseUri/devices/Device/Plc%20Logic"
 $runPath = 'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run'
 $runUri = "$deviceRoot/$runPath"
 $dataStructPath = 'Application/Station/Wp100/_this/Structs/Data'
+$typeDataCheckPath = 'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData'
+$typeDataCheckBaselineRegionSha = '0c19a9147052cbf6631500ba8fc32e09bd60d3a20597206a38d43e01939263de'
 $autoInfoLineEnumPaths = @(
   'Application/Station/_this/Enums/AutoInfoLineEnum',
   'Application/Station/Enums/AutoInfoLineEnum',
@@ -115,6 +117,41 @@ function Get-SourceText {
     throw "Canonical source is missing: $path"
   }
   return [IO.File]::ReadAllText($path, [Text.Encoding]::UTF8).Replace("`r`n", "`n").Replace("`r", "`n")
+}
+
+function Get-TypeDataCheckTarget {
+  param([Parameter(Mandatory)][string]$CurrentImplementation)
+
+  $pattern = '(?s)// Application specific data checks.*?(?=\r?\n////<OES_CODE MergeId="GeneratedDataCheck">)'
+  $matches = [regex]::Matches($CurrentImplementation, $pattern)
+  if ($matches.Count -ne 1) {
+    throw 'TypeData OnCheckData application merge area was not found exactly once.'
+  }
+  foreach ($requiredText in @(
+    'Station.TypeDataNew.Wp100.BursterUpperRange < 0',
+    'Station.TypeDataNew.Wp100.BursterUpperRange > 8',
+    'Station.TypeDataNew.Wp100.BursterLowerRange < 0',
+    'Station.TypeDataNew.Wp100.BursterLowerRange > 8'
+  )) {
+    if (-not $CurrentImplementation.Contains($requiredText)) {
+      throw "CpStudio-generated TypeData check is missing: $requiredText"
+    }
+  }
+
+  $checks = (Get-SourceText 'TypeDataSetManagerAddon\OnCheckData.ApplicationChecks.st').TrimEnd("`n")
+  $targetRegion = "// Application specific data checks`n$checks`n"
+  $currentRegionSha = Get-Sha256 $matches[0].Value
+  $targetRegionSha = Get-Sha256 $targetRegion
+  if ($currentRegionSha -notin @($typeDataCheckBaselineRegionSha, $targetRegionSha)) {
+    throw 'TypeData OnCheckData contains unrecognized application-specific edits.'
+  }
+
+  $mergeArea = [regex]::new($pattern)
+  return $mergeArea.Replace(
+    $CurrentImplementation,
+    [Text.RegularExpressions.MatchEvaluator]{ param($match) $targetRegion },
+    1
+  )
 }
 
 function Add-OrVerify-Dut {
@@ -396,7 +433,9 @@ function New-Wp100RunSfcImplementation {
     N020 = 'N030'
     N030 = 'N040'
     N040 = 'N045'
-    N045 = 'N050'
+    N045 = 'N046'
+    N046 = 'N047'
+    N047 = 'N050'
     N070 = 'N080'
     N080 = 'N090'
     N090 = 'N095'
@@ -405,7 +444,7 @@ function New-Wp100RunSfcImplementation {
     N140 = 'N999'
   }
 
-  foreach ($name in @('N010', 'N020', 'N030', 'N040', 'N045')) {
+  foreach ($name in @('N010', 'N020', 'N030', 'N040', 'N045', 'N046', 'N047')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
     $transitionName = "${name}__to__$($nextStepByName[$name])"
     $sourceId = Add-SfcTransition -Context $ctx -SourceId $stepId -Name $transitionName -Expression '_retVal = OK'
@@ -529,6 +568,15 @@ function Assert-Wp100RunTargets {
       throw "AI-owned DUT readback differs during $Phase`: $dutName"
     }
   }
+
+  $typeDataCheckReadback = Get-Node $typeDataCheckPath
+  if (([string]$typeDataCheckReadback.declaration -cne $preservedTypeDataCheckDeclaration) -or
+      ((Get-ExactSha256 ([string]$typeDataCheckReadback.declaration)) -ne $preservedTypeDataCheckDeclarationExactSha)) {
+    throw "TypeData OnCheckData declaration text/SHA changed during $Phase."
+  }
+  if ((Get-Sha256 ([string]$typeDataCheckReadback.implementation)) -ne $targetTypeDataCheckImplementationSha) {
+    throw "TypeData OnCheckData implementation differs during $Phase."
+  }
 }
 
 $currentProject = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
@@ -552,6 +600,8 @@ $steps = @(
   [pscustomobject]@{ Name = 'N030'; Comment = 'Close safety door' },
   [pscustomobject]@{ Name = 'N040'; Comment = 'Wait safety feedback' },
   [pscustomobject]@{ Name = 'N045'; Comment = 'Check measure release' },
+  [pscustomobject]@{ Name = 'N046'; Comment = 'Set Burster range' },
+  [pscustomobject]@{ Name = 'N047'; Comment = 'Wait Burster range' },
   [pscustomobject]@{ Name = 'N050'; Comment = 'Start press WRKPOS' },
   [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press WRKPOS' },
   [pscustomobject]@{ Name = 'N051'; Comment = 'Start Kistler MEASURE' },
@@ -573,6 +623,7 @@ $targetDeclaration = Get-SourceText 'SqS_Wp100_Run\declaration.st'
 $targetImplementation = New-Wp100RunSfcImplementation $steps
 $runNode = Get-Node $runPath
 $baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b9294834132e2d7cfd'
+$preTypeDataImplementationSha = '0352fb0535c1588373103c50638da3cccb2d01a091f4b40f0dad1b8274ba6681'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -584,12 +635,12 @@ if ($currentDeclarationSha -ne $targetDeclarationSha) {
 $preservedRunDeclaration = [string]$runNode.declaration
 $preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
 $script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
-if ($currentImplementationSha -notin @($baselineImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
-$allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
+$allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN046_active', '_aN047_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
 if ($unknownChildren.Count -gt 0) {
   throw "SqS_Wp100_Run contains unrecognized child objects: $($unknownChildren -join ', ')"
@@ -599,6 +650,25 @@ $dutStatus = [ordered]@{}
 $dutStatus.Wp100ResistanceResultStruct = Add-OrVerify-Dut 'Wp100ResistanceResultStruct' 'Wp100ResistanceResultStruct.st'
 $dutStatus.Wp100KistlerResultStruct = Add-OrVerify-Dut 'Wp100KistlerResultStruct' 'Wp100KistlerResultStruct.st'
 $dutStatus.Wp100RunResultStruct = Add-OrVerify-Dut 'Wp100RunResultStruct' 'Wp100RunResultStruct.st'
+
+$typeDataCheckNode = Get-Node $typeDataCheckPath
+$preservedTypeDataCheckDeclaration = [string]$typeDataCheckNode.declaration
+$preservedTypeDataCheckDeclarationExactSha = Get-ExactSha256 $preservedTypeDataCheckDeclaration
+$script:PreservedDeclarations[$typeDataCheckPath] = $preservedTypeDataCheckDeclaration
+$targetTypeDataCheckImplementation = Get-TypeDataCheckTarget ([string]$typeDataCheckNode.implementation)
+$targetTypeDataCheckImplementationSha = Get-Sha256 $targetTypeDataCheckImplementation
+$typeDataCheckNeedsUpdate =
+  ((Get-Sha256 ([string]$typeDataCheckNode.implementation)) -ne $targetTypeDataCheckImplementationSha)
+if ($typeDataCheckNeedsUpdate) {
+  $typeDataCheckNode.implementation = $targetTypeDataCheckImplementation
+  Add-WriteRequest -Method Put `
+    -Uri (ConvertTo-ApiUri $typeDataCheckPath) `
+    -Path $typeDataCheckPath `
+    -Kind 'semantic-merge-type-data-checks' `
+    -Body $typeDataCheckNode `
+    -BeforeFingerprint $script:PreflightObservations[$typeDataCheckPath].Fingerprint `
+    -TargetSha256 $targetTypeDataCheckImplementationSha
+}
 
 $baselineActions = @{
   N000 = "// Init step`n// Initialize variables, check references, no actions`n`n_retVal := OK;`n"
@@ -686,6 +756,31 @@ $preGuidanceActionSha256 = @{
   N999 = '78d564a56c36840b6b333aafa0024a59121f484d0d79e53216007ab79e00e1b2'
   OnChainFinish = 'ff4c8309de0e605f8a2b364f062d2a4745bb1800a8c88257ee1775e4a2886426'
 }
+$preTypeDataActionSha256 = @{
+  # Current compiled source immediately before TypeData becomes authoritative.
+  N046 = @(
+    'bd6198eda8e2554ed6b61b6fb2c7a37c24537eba48ced1f663c49b903de1fb4b',
+    '0a427e6909b43f7c7966c650f268c9a59b30175790b73f16bf9540cf4342b43a'
+  )
+  N051 = '78e4cd56b895de1439b3c091c71e4a15446563961693bdc6494a7abe6165e3fb'
+  N080 = '9c96d9eeb76fc1c5c5c7f9e375d8a2c7c3c5371ff3265287d4d24a5d25946ef1'
+}
+
+$runGraphStatus = if ($runNeedsUpdate) {
+  $runNode = Get-Node $runPath
+  $runNode.implementation = $targetImplementation
+  Add-WriteRequest -Method Put `
+    -Uri $runUri `
+    -Path $runPath `
+    -Kind 'update-sfc-graph' `
+    -Body $runNode `
+    -BeforeFingerprint $script:PreflightObservations[$runPath].Fingerprint `
+    -TargetSha256 $targetImplementationSha
+  'planned-update'
+}
+else {
+  'verified'
+}
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -705,21 +800,12 @@ foreach ($step in $steps) {
   if ($preGuidanceActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preGuidanceActionSha256[$step.Name]
   }
+  if ($preTypeDataActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preTypeDataActionSha256[$step.Name]
+  }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
 $actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish)
-
-if ($runNeedsUpdate) {
-  $runNode = Get-Node $runPath
-  $runNode.implementation = $targetImplementation
-  Add-WriteRequest -Method Put `
-    -Uri $runUri `
-    -Path $runPath `
-    -Kind 'update-sfc-graph' `
-    -Body $runNode `
-    -BeforeFingerprint $script:PreflightObservations[$runPath].Fingerprint `
-    -TargetSha256 $targetImplementationSha
-}
 
 $plan = New-WriterPlan `
   -WriterName 'apply_wp100_run_rest.ps1' `
