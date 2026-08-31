@@ -878,3 +878,17 @@
   a read-only Symbol snapshot retry.
 - No PLC connection, download, runtime start/stop, variable write or FORCE was
   performed. The engineering session was closed after evidence ingestion.
+
+# 2026-09-01 engineering automation roadmap aligned
+
+- Product `Phase 1–4` and CpStudio + ctrlX engineering automation `P0–P4` are
+  now explicitly separate in `TODO.md`, `docs/productization_roadmap.md` and
+  `docs/cpstudio_git_mcp_workflow.md`; future status reports must not mix them.
+- Engineering automation **P0 Runner** and **P1 ASC-only electrical intake** are
+  complete. The current implementation target is **P2 IOE topology**:
+  `manifest → Plan → checkpoint → Apply → reopen/readback`.
+- P3 Link I/O remains manual unless a stable supported PLE interface is proven.
+  P4 waits for a copied real runtime StationData/TypeData DAT sample from the
+  HMI IPC; exported HMI definition files are not accepted as substitutes.
+- This update changed documentation only. It did not open or modify CpStudio,
+  PLE, IOE, Station010, `Std`, or any physical controller.

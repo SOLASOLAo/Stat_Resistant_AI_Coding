@@ -14,6 +14,19 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 | EtherCAT/IO 工程 | IOE 2.6.4 | PLE 不得打开 IO 工程 |
 | 真机连接、下载、启停、FORCE | 用户批准后执行 | 默认只做离线编译和仿真 |
 
+## 工程自动化实施路线（P0–P4）
+
+这套 P0–P4 只描述 CpStudio + ctrlX 工程自动化，不等同于产品化路线的 Phase 1–4。
+截至 2026-09-01，当前进度为 **P0、P1 完成，P2 是当前主线**：
+
+1. **P0 · 已完成**：统一 `Runner -Command Run`，自动获取 Export request，串联并续跑 Stage 1/2。
+2. **P1 · 已完成**：电气交换格式统一为真实 ePLAN ASC；不实现 AML/XML/OHD 万能解析器。
+3. **P2 · 当前**：IOE 硬件组态采用 `manifest → Plan → checkpoint → Apply → reopen/readback`；ASC 不承担硬件 BOM。
+4. **P3 · 待验证**：只有找到稳定、受支持的 PLE Link I/O 接口才自动化，否则保留一次人工点击。
+5. **P4 · 待开始**：取得 HMI IPC 的真实 StationData/TypeData DAT 副本后，开发校验、生成、备份和受控部署。
+
+完成证据和当前勾选状态以 `TODO.md` 为准；会话结论写入 `HANDOVER.md`。
+
 ## 一次 CpStudio 生成的标准闭环
 
 1. 确认相关仓库工作区状态，并验证 Git/工程归档能恢复精确起点；无法恢复时只建立一个内容寻址 checkpoint。

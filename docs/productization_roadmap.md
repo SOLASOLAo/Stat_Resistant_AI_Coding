@@ -2,6 +2,8 @@
 
 > 本文件是产品执行顺序的唯一事实源。`ctrlx-ai-coding/docs/mcp_productization_roadmap.md`
 > 只描述第一阶段内部的 MCP/adapter 技术子路线，不另行改变产品优先级。
+> CpStudio + ctrlX 工程自动化另用 P0–P4 编号，状态见 `TODO.md` 和
+> `docs/cpstudio_git_mcp_workflow.md`，两套编号不得混用。
 
 ## 目标
 
@@ -11,7 +13,7 @@
 
 ## 执行顺序
 
-### Phase 1：稳定受控 Runner（当前）
+### Phase 1：稳定受控 Runner（开发基线完成）
 
 目标：把零散脚本收拢为一个 Windows 本地执行入口，确定性地消费请求、执行门禁并生成证据。
 
@@ -121,8 +123,8 @@ Phase 1 验收：
 
 验收：新项目只需填写项目事实和工艺差异即可进入受控工程闭环，目录和流程没有静默漂移。
 
-状态（2026-08-29）：离线实现完成。Station010 已由一个 Pack 生成 2 个流程、35 个步骤、
-14 条双语提示、13 条需求和 9 个验收用例；通用初始化器、Build/Check 与 Runner 全入口
+状态（2026-08-31）：离线实现完成。Station010 已由一个 Pack 生成 2 个流程、37 个步骤、
+14 条双语提示、14 条需求和 9 个验收用例；通用初始化器、Build/Check 与 Runner 全入口
 事实源漂移门禁均通过回归。
 
 ### Phase 3：HMI 产品化
@@ -184,4 +186,5 @@ UI 冒烟。当前不自动复制第二份 HMI 事实：Project Pack 直接引�
   兼容矩阵与新电脑验收在有团队工位时再做；这些部署项不阻塞 Phase 2；
 - 2026-08-29：Phase 2 离线实现完成；Project Pack Build/Check、initializer 与 Runner 预检形成同一条确定性闭环；
 - 2026-08-29：Phase 3 离线产品基线完成；同一 HMI 二进制可加载 Station010 或 ExampleCell 完整配置，写白名单仍仅为默认关闭的两个模式请求节点；
-- 下一步只做 Phase 3 明确批准后的真机 A/B/扩展写入验收，或由用户决定进入 Phase 4；不补做登录 Bootstrap、ACL、签名或通用 SFC 编译器。
+- 2026-09-01：单独建立 CpStudio + ctrlX 工程自动化 P0–P4 进度；P0 Runner 和 P1 ASC 已完成，当前主线进入 P2 IOE `Plan → checkpoint → Apply → reopen/readback`；
+- 产品 Phase 3 真机 A/B 暂缓，Phase 4 尚未开始；不补做登录 Bootstrap、ACL、签名或通用 SFC 编译器。

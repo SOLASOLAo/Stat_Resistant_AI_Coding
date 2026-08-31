@@ -2,7 +2,20 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
-## 当前阶段：Phase 2/3 离线实现已完成，等待现场验收
+## 当前阶段：工程自动化 P0/P1 已完成，正在进入 P2；产品 Phase 1–3 离线基线已完成
+
+> 本文件有两套互不替代的编号：`Phase 1–4` 是产品化路线；`P0–P4` 是
+> CpStudio + ctrlX 工程自动化专项。讨论工程自动化进度时，以后统一使用下面的 P0–P4。
+
+### CpStudio + ctrlX 工程自动化专项（当前主线）
+
+- [x] **P0 · 统一 Runner**：`Runner -Command Run` 自动获取 Export request，串联 Stage 1/2 并可续跑；最新真实 Export 已到 `DONE`（2026-09-01）
+- [x] **P1 · 真实 ePLAN ASC**：外部电气输入只支持 ASC；真实 `AscBackup.asc` 已完成 56 点、38 active / 18 inactive 的转换、回环、CpStudio 导入和 BusConfig 核对（2026-08-31）
+- [ ] **P2 · IOE 受控硬件组态（当前）**：以模块顺序/型号 manifest 为输入，封装 `Plan → checkpoint → Apply → reopen/readback`；ASC 继续只负责 designator/描述
+- [ ] **P3 · PLE Link I/O 自动化判定**：验证稳定、受支持的官方接口；只有验证通过才自动化，否则明确保留一次人工 `Link I/O with variables`
+- [ ] **P4 · StationData/TypeData DAT 工具链**：取得 HMI IPC 真实运行时 DAT 副本后，再做格式校验、生成、备份和受控部署；不得用导出的 HMI 定义文件猜测运行时格式
+
+详细边界见 `docs/cpstudio_git_mcp_workflow.md`。历史 stale request 清理是维护项，不抢占当前 P2 主线。
 
 ### 四阶段总进度（给项目成员看的简版）
 
