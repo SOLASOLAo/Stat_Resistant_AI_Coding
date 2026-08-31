@@ -197,7 +197,7 @@ $ioDesignatorArtifact = Get-Item -LiteralPath $ioDesignatorArtifactPath
 $ioDesignatorArtifactSha = Get-FileSha256 -Path $ioDesignatorArtifactPath
 Assert-True -Condition ($ioDesignatorArtifact.Length -eq $ioDesignators.artifactLength) -Message 'I/O designator artifact length differs from the plan.'
 Assert-True -Condition ($ioDesignatorArtifactSha -ceq [string]$ioDesignators.artifactSha256) -Message 'I/O designator artifact SHA differs from the plan.'
-Assert-True -Condition ($ioDesignatorArtifactSha -ceq '69ae9dad00c211e575632484700e9c966735d17158cce448ddbae0a8436344d5') `
+Assert-True -Condition ($ioDesignatorArtifactSha -ceq '25f85082e85013b02ea933ac094697ac1ede5869152387468b4fb6f9a88d29a1') `
     -Message 'Generated I/O designator ASC differs from the file accepted by the Station010 CpStudio round trip.'
 Assert-True -Condition (@($plan.sources | Where-Object path -ceq 'specs/station010-eplan-io.csv').Count -eq 1) `
     -Message 'I/O designator source must appear exactly once in the engineering plan sources.'

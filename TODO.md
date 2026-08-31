@@ -42,7 +42,7 @@
 ## 项目工程待办
 - [x] 🟡 DIDO 描述自动导入：零依赖 CSV→CpStudio/ePLAN ASC 生成器已通过 Station010 官方回环；固定 UTF-16LE/15列/模块内连续顺序，完整源为 `specs/station010-eplan-io.csv`（2026-08-31）
 - [x] 🔴 已确认 CpStudio 导入语义：非空 `IoDesignator` 激活通道；未使用点必须为空，否则占位 `_..._Channel_N` 会被误激活。Station010 最终保持 38 active / 18 inactive（2026-08-31）
-- [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）
+- [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；38 个 active 点均有英文及中文描述，18 个 unused 点保持空白，最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）
 - [x] 🟡 DIDO 自动化已接入现有架构：Project Pack Build/Check 确定性生成并校验 ASC；Post-export Stage 1 将完整 CSV 与 CpStudio BusConfig 逐通道只读核对，漂移以 `IO_DESIGNATOR_EXPORT_MISMATCH` 阻断；Runner 核心及 CpStudio 官方操作边界不变（2026-08-31）
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
 - [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；2026-08-28 已证明同一 `.project` 字节在原路径普通 Build 为 101 条可见 warnings、隔离路径普通 Build 为 4 条 warnings，二者都不是正式语义基线；正式基线必须来自显式 Clean Build

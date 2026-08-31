@@ -726,7 +726,7 @@
   the corrected complete ASC left all 18 unused points empty.
 - The reviewed Station010 source is `specs/station010-eplan-io.csv`: seven
   modules, 56 channels, 32 DI, 24 DO, 38 active and 18 inactive. A1 channel 1/2
-  Chinese descriptions are `控制上电` / `控制下电`. Other stations must start
+  Chinese descriptions are `控制上电按钮` / `控制下电按钮`. Other stations must start
   from their own complete ASC export rather than copying these signal facts.
 - Official round trip completed successfully: Import → Save → Write peripheral
   and I/O designators → Export #1 → Link I/O → Build (0 errors / 5 warnings) →
@@ -743,8 +743,8 @@
 - `project-pack.json` now references the reviewed complete Station010 DIDO CSV.
   Project Pack `Build` atomically produces `generated/cpstudio-io-designators.asc`;
   `Check` regenerates it in TEMP and fails on CSV, generator or ASC drift. The
-  verified artifact is 6,390 bytes with SHA-256
-  `69ae9dad00c211e575632484700e9c966735d17158cce448ddbae0a8436344d5`.
+  verified artifact is 6,570 bytes with SHA-256
+  `25f85082e85013b02ea933ac094697ac1ede5869152387468b4fb6f9a88d29a1`.
 - The engineering plan records the source/generator/checker/artifact hashes and the
   reviewed 56 / 32 DI / 24 DO / 38 active / 18 inactive counts. The optional
   schema keeps projects without an I/O designator source backward compatible.
@@ -758,3 +758,22 @@
   Save, Write designators, Export and Link I/O stay in CpStudio/PLE. No Runner,
   Broker or online PLC capability was added; no `.project`, Station010 or `Std`
   file was modified by this integration.
+
+# 2026-08-31 Station010 complete bilingual DIDO acceptance
+
+- The reviewed CSV keeps the verified hardware facts unchanged: 56 channels,
+  32 DI, 24 DO, 38 active and 18 inactive. Every active row now has a non-empty
+  English description and a Chinese description; inactive rows remain blank.
+- Project Pack content ID is
+  `ebe1824f7dc01e697f9c5fef001af71f5e05e1360dd79841a54f6a297ce20e37`.
+  The generated ASC is 6,570 bytes with SHA-256
+  `25f85082e85013b02ea933ac094697ac1ede5869152387468b4fb6f9a88d29a1`.
+- Post-export audits `09f0b407-639e-48e1-a83b-61c96b367b89` and
+  `cbbbdddd-05dd-44c2-befe-e3e63164b444` both matched all 56 channels with zero
+  mismatches and preserved 38 active / 18 inactive. Both audits were read-only
+  and reported no engineering-tool launch or online operation.
+- The user completed Import, Save, Write designators, Export #1, Link I/O,
+  intermediate Build (0 errors / 5 warnings), Export #2 and final PLE Build.
+  The final Build result was user-reported as **0 errors / 0 warnings**.
+- No PLC connect, download, runtime start/stop, variable write or FORCE was
+  performed. `Std` was not modified.

@@ -150,15 +150,26 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
     $stationDataColumns = @($stationLines | Select-Object -Skip 1 | ForEach-Object { ,($_.Split([char]"`t")) })
     $writtenActiveCount = @($stationDataColumns | Where-Object { -not [string]::IsNullOrEmpty($_[3]) }).Count
     $writtenInactiveCount = @($stationDataColumns | Where-Object { [string]::IsNullOrEmpty($_[3]) }).Count
+    $activeStationDataColumns = @($stationDataColumns | Where-Object { -not [string]::IsNullOrEmpty($_[3]) })
     Assert-True -Condition ($writtenActiveCount -eq 38) -Message 'Generated Station010 ASC does not contain 38 non-empty I/O designators.'
     Assert-True -Condition ($writtenInactiveCount -eq 18) -Message 'Generated Station010 ASC does not contain 18 empty I/O designators.'
+    Assert-True -Condition (@($activeStationDataColumns | Where-Object { [string]::IsNullOrWhiteSpace($_[13]) }).Count -eq 0) `
+        -Message 'Every active Station010 I/O designator must have an English description.'
+    Assert-True -Condition (@($activeStationDataColumns | Where-Object { -not [regex]::IsMatch([string]$_[14], '[\p{IsCJKUnifiedIdeographs}]') }).Count -eq 0) `
+        -Message 'Every active Station010 I/O designator must have a Chinese description.'
     $stationA1Channel1 = $stationLines[1].Split([char]"`t")
     $stationA1Channel2 = $stationLines[2].Split([char]"`t")
     $stationA1Channel3 = $stationLines[3].Split([char]"`t")
-    Assert-True -Condition ($stationA1Channel1[14] -ceq '控制上电') -Message 'Station010 A1 channel 1 Chinese description changed.'
-    Assert-True -Condition ($stationA1Channel2[14] -ceq '控制下电') -Message 'Station010 A1 channel 2 Chinese description changed.'
+    Assert-True -Condition ($stationA1Channel1[14] -ceq '控制上电按钮') -Message 'Station010 A1 channel 1 Chinese description changed.'
+    Assert-True -Condition ($stationA1Channel2[14] -ceq '控制下电按钮') -Message 'Station010 A1 channel 2 Chinese description changed.'
     Assert-True -Condition ([string]::IsNullOrEmpty($stationA1Channel3[3])) `
         -Message 'Station010 inactive channel must have an empty I/O designator.'
+    $stationK911 = @($activeStationDataColumns | Where-Object { $_[3] -ceq '_000K911' })
+    $stationK951 = @($activeStationDataColumns | Where-Object { $_[3] -ceq '_000K951' })
+    Assert-True -Condition ($stationK911.Count -eq 1 -and $stationK911[0][13] -ceq 'Safety circuit relay power' -and $stationK911[0][14] -ceq '安全回路继电器电源') `
+        -Message 'Station010 K911 bilingual description no longer matches the confirmed safety-circuit power function.'
+    Assert-True -Condition ($stationK951.Count -eq 1 -and $stationK951[0][13] -ceq 'Switch Control On pulse' -and $stationK951[0][14] -ceq '控制上电使能脉冲') `
+        -Message 'Station010 K951 bilingual description no longer matches the confirmed Switch Control On pulse function.'
 
     $exportCheck = & $exportChecker -InputCsv $stationIoSource -BusConfigPath $busConfigPath
     Assert-True -Condition ($exportCheck.passed -eq $true) -Message 'Station010 BusConfig does not match the reviewed I/O designator source.'
@@ -169,7 +180,7 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
 
     $driftedBusConfigPath = Join-Path $temporaryRoot 'drifted-bus-config.yaml'
     $driftedBusConfig = [System.IO.File]::ReadAllText($busConfigPath)
-    $driftedBusConfig = $driftedBusConfig.Replace('zh: 控制上电', 'zh: 错误文本')
+    $driftedBusConfig = $driftedBusConfig.Replace('zh: 控制上电按钮', 'zh: 错误文本')
     $driftedBusConfig = [regex]::new("(?m)^        name: ''\r?$").Replace($driftedBusConfig, '        name: _UNEXPECTED_ACTIVE', 1)
     [System.IO.File]::WriteAllText($driftedBusConfigPath, $driftedBusConfig, [System.Text.UTF8Encoding]::new($false))
     $driftedExportCheck = & $exportChecker -InputCsv $stationIoSource -BusConfigPath $driftedBusConfigPath

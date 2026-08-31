@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "4f79e8e07b0082d5fb198dbf332dad7affb7b4ec82b532a0e2b7aa32ea68b523",
+  "contentId": "ebe1824f7dc01e697f9c5fef001af71f5e05e1360dd79841a54f6a297ce20e37",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -103,8 +103,8 @@
     },
     {
       "path": "specs/station010-eplan-io.csv",
-      "length": 3589,
-      "sha256": "ac07285a85fba65e3fbf44db7462f8f950433a0af8507d28b899b3f9ec962f1d"
+      "length": 3917,
+      "sha256": "bd7e1d160b2bd835c4c689cfc9abe17831ff9e9d13101646aad42cdde36d791a"
     },
     {
       "path": "scripts/ioe/New-CpStudioEplanIoAsc.ps1",
@@ -1450,14 +1450,14 @@
   ],
   "ioDesignators": {
     "sourcePath": "specs/station010-eplan-io.csv",
-    "sourceSha256": "ac07285a85fba65e3fbf44db7462f8f950433a0af8507d28b899b3f9ec962f1d",
+    "sourceSha256": "bd7e1d160b2bd835c4c689cfc9abe17831ff9e9d13101646aad42cdde36d791a",
     "generatorPath": "scripts/ioe/New-CpStudioEplanIoAsc.ps1",
     "generatorSha256": "073b5109abb13c208e9d9d79ecef0f19645fe7b4e1f09f3d801bf05ff7441e53",
     "checkerPath": "scripts/ioe/Test-CpStudioEplanIoExport.ps1",
     "checkerSha256": "f91fe3991945fc9cd4a4258aa48bc3abbc6a094e8079db5691c13429ed0a7d93",
     "artifactPath": "generated/cpstudio-io-designators.asc",
-    "artifactLength": 6390,
-    "artifactSha256": "69ae9dad00c211e575632484700e9c966735d17158cce448ddbae0a8436344d5",
+    "artifactLength": 6570,
+    "artifactSha256": "25f85082e85013b02ea933ac094697ac1ede5869152387468b4fb6f9a88d29a1",
     "rowCount": 56,
     "digitalInputs": 32,
     "digitalOutputs": 24,
