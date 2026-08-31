@@ -44,9 +44,29 @@ interactive Broker、current-user registration、Named Pipe v2、持久化 submi
 
 ```powershell
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Status
-.\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command ProcessOne
+.\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Run
 .\scripts\runner\Invoke-CtrlXOpconRunner.ps1 -Command Doctor
 ```
+
+`Run` 是日常推荐入口：每次最多推进一个现有 Stage 1/2 步骤，记录当前
+`operationId`，在 CpStudio 人工边界暂停，下一次调用再续跑；`ProcessOne` 仅保留为
+兼容命令。它不会自行启动 PLE/MCP/Broker，也不会执行在线 PLC 操作。
+
+电气侧交换格式统一使用完整 ASC；CSV 只是仓库内可审阅的事实源：
+
+```powershell
+pwsh -NoProfile -File .\scripts\ioe\Convert-CpStudioEplanIoAscToCsv.ps1 `
+  -InputAsc <本工位完整.asc> `
+  -OutputCsv .\specs\station010-eplan-io.csv -Force
+
+pwsh -NoProfile -File .\scripts\project\Build-CtrlXOpconProjectPack.ps1 `
+  -Command Build -EngineeringRoot . -RequireReady -Json
+```
+
+脚本会清除无描述的 CpStudio `_..._Channel_N` 未用点占位名；覆盖已有 CSV 时还会
+拒绝部分模块和拓扑漂移。随后在 CpStudio 一次完成 Import ASC、Save、Write
+designators、Export；Runner 会在需要时提示 Export #2。CpStudio 官方操作和 PLE
+`Link I/O` 仍是人工边界。
 
 2026-08-28，P1.2b 已在真实 Station010 PLE 离线 action 中完成受控 adapter、显式 Clean
 Build、typed warnings 与 semantic snapshot 验证：`0 errors / 4 warnings`，提取 456 条

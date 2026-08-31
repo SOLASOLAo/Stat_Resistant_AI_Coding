@@ -830,3 +830,35 @@
   and must not read the share or `.dat` files directly.
 - No PLC connect, download, runtime start/stop, variable write or FORCE was
   performed. `Std` was not modified.
+
+# 2026-08-31 resumable Runner and ASC-only electrical intake
+
+- `scripts/runner/Invoke-CtrlXOpconRunner.ps1 -Command Run` is now the normal
+  local entry. It reuses the existing Stage 1 audit and Stage 2 coordinator;
+  the latest earlier `Run` manifest identifies the one operation that may be
+  resumed. Untracked legacy ledgers are not adopted and no new state machine
+  or pointer file was introduced.
+- A tracked `WAITING_FOR_RUNNER` action is reported before any new request is
+  consumed. `WAITING_FOR_CPSTUDIO` remains the manual model boundary. The next
+  audit is bound automatically only when that tracked operation is
+  `WAITING_FOR_EXPORT_2`; with no tracked operation or request the result is
+  `IDLE` with `reasonCode=NO_PENDING`.
+- External electrical I/O exchange is now ASC-only. The new strict intake
+  converts UTF-16LE-BOM / CRLF / 15-column `E`/`X` ASC into the internal
+  reviewable UTF-8 CSV; AML/XML/OHD are intentionally unsupported. Project
+  Pack continues to own CSV→ASC generation and BusConfig comparison.
+- Real `../AscBackup.asc` acceptance produced 56 rows, 32 DI, 24 DO, 38 active
+  and 18 inactive. Fifteen exact, description-free CpStudio
+  `_..._Channel_N` placeholders were normalized to inactive; 15 active rows
+  were reported as lacking actual Chinese text. Wrong-channel or described
+  placeholders fail closed.
+- Replacing an existing canonical CSV requires the same complete
+  module/address/type key set. Partial-module input or topology drift is
+  rejected before the previous CSV is touched. A deliberate hardware topology
+  change must first use a new CSV path and receive separate review.
+- Offline acceptance passed: root/template Runner 61 assertions each,
+  root/template ASC intake, existing Station010 I/O automation, root static
+  framework, Project Pack Check and initializer 255 assertions. The new
+  Runner/ASC implementation scripts and their paired tests are byte-identical
+  between root and template. No PLE, MCP, Broker, CpStudio, IOE or
+  online PLC operation was started; `Station010` and `Std` were not modified.

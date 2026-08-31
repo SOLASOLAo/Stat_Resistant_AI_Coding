@@ -17,4 +17,5 @@ Run the framework smoke test from the repository root:
 .\tests\cpstudio\Test-PostExportQueue.ps1
 .\tests\hmi\Test-HmiReadOnlyScaffold.ps1
 pwsh -NoProfile -File .\tests\ioe\Test-CpStudioEplanIoAutomation.ps1
+pwsh -NoProfile -File .\tests\ioe\Test-CpStudioEplanIoAscIntake.ps1
 ```

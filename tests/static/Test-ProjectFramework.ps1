@@ -37,6 +37,8 @@ $requiredFiles = @(
     'scripts/plc/verify_plc_snapshot.ps1',
     'scripts/plc/SfcRestWriter.Transaction.ps1',
     'scripts/ioe/ioe_ipc.ps1',
+    'scripts/ioe/Convert-CpStudioEplanIoAscToCsv.ps1',
+    'tests/ioe/Test-CpStudioEplanIoAscIntake.ps1',
     'scripts/setup/Test-TeamWorkstation.ps1',
     'tests/cpstudio/Test-PostExportQueue.ps1',
     'tests/cpstudio/Test-PostExportEngineering.ps1',

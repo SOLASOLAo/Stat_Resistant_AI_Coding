@@ -44,6 +44,9 @@
 - [x] 🔴 已确认 CpStudio 导入语义：非空 `IoDesignator` 激活通道；未使用点必须为空，否则占位 `_..._Channel_N` 会被误激活。Station010 最终保持 38 active / 18 inactive（2026-08-31）
 - [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；38 个 active 点均有英文及中文描述，18 个 unused 点保持空白，最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）
 - [x] 🟡 DIDO 自动化已接入现有架构：Project Pack Build/Check 确定性生成并校验 ASC；Post-export Stage 1 将完整 CSV 与 CpStudio BusConfig 逐通道只读核对，漂移以 `IO_DESIGNATOR_EXPORT_MISMATCH` 阻断；Runner 核心及 CpStudio 官方操作边界不变（2026-08-31）
+- [x] 🟡 电气输入统一为 ASC：新增严格 ASC→canonical CSV 入口；真实 `AscBackup.asc` 验证为 56 点 / 38 active / 18 inactive，自动清除 15 个无描述 `_..._Channel_N` 占位名；覆盖已有 CSV 时部分模块或模块/地址/DI-DO 拓扑漂移在写入前阻断（2026-08-31）
+- [x] 🟡 日常统一 `Runner -Command Run`：复用既有 Stage 1/2，按上一轮 Run manifest 精确续跑 operation；ACTION_READY 时不消费新 Export，Export #2 自动绑定，CpStudio 边界暂停，无任务返回 `IDLE/NO_PENDING`；不认领历史 ledger、不启动 PLE/MCP/Broker（2026-08-31）
+- [ ] 🟢 后续 IOE 硬件拓扑自动化：为新工位建立可审阅的模块顺序/型号 manifest，经 IOE 官方接口 Plan→Apply→回读；ASC 只负责 designator/描述，不能冒充 EtherCAT 硬件 BOM
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
 - [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；2026-08-28 已证明同一 `.project` 字节在原路径普通 Build 为 101 条可见 warnings、隔离路径普通 Build 为 4 条 warnings，二者都不是正式语义基线；正式基线必须来自显式 Clean Build
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)

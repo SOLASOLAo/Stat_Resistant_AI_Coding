@@ -27,6 +27,32 @@ install fieldbus XML only through IO Engineering.
 
 ## CpStudio ePLAN I/O designators and descriptions
 
+ASC is the only supported external electrical I/O exchange format. Convert an
+ASC exported by the current station into the canonical reviewed CSV before
+editing descriptions or building the Project Pack:
+
+```powershell
+pwsh -NoProfile -File .\scripts\ioe\Convert-CpStudioEplanIoAscToCsv.ps1 `
+  -InputAsc <electrical-export.asc> `
+  -OutputCsv .\specs\station010-eplan-io.csv -Force
+```
+
+The intake rejects any format other than the verified UTF-16LE-BOM, CRLF,
+15-column ASC contract. It validates contiguous module/channel order, DI/DO
+types and the `E`/`X` language columns. An empty `I/O designator` is preserved
+as an inactive channel. CpStudio's exact generated
+`_<normalized-device>_Channel_<address>` name is also normalized to inactive,
+but only when both descriptions are empty; mismatched or described
+placeholder-like names are rejected. Descriptions on an inactive channel are rejected.
+Missing active English/Chinese descriptions are counted in the result so they
+can be completed in the reviewed CSV. Because `X` is the Chinese column, text
+without a CJK character is counted as missing Chinese even when it contains a
+copied English label. AML, XML and OHD are intentionally not accepted.
+When `-Force` replaces an existing canonical CSV, the complete
+module/address/type key set must remain identical; a partial ASC or topology
+change is rejected before the old CSV is touched. For a deliberate new
+topology, write to a new CSV path and review it first.
+
 `New-CpStudioEplanIoAsc.ps1` converts a reviewed CSV into the known
 CpStudio/ePLAN ASC byte and column shape. It does not open or automate
 CpStudio. The input columns are fixed:
