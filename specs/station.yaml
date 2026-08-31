@@ -22,6 +22,20 @@ addons:
   - instance: Station.StationDataSetManager
     type: data_set_manager
 
+data_sets:
+  runtime_owner: Nexeed DataSetAccess on the HMI IPC
+  runtime_format: .dat
+  folders:
+    station_data: '\\%DataSetAccessHost%\OpconData$\StationData'
+    type_data: '\\%DataSetAccessHost%\OpconData$\TypeData'
+  default_names:
+    station_data: StationData
+    type_data: '1111111111'
+  plc_boundary: >-
+    DataSetAccess loads and applies the selected files; PLC logic consumes
+    Station.StationData and Station.TypeData and does not access SMB or DAT files directly.
+  generated_hmi_manager_dat_role: schema_and_default_values_only
+
 cyclic_application_controls:
   - instance: Station.MainPressureControl
     type: FB_MainPressureControl

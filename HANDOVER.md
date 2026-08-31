@@ -808,3 +808,25 @@
 - A local content-addressed `.project` checkpoint was created under ignored
   `data/checkpoints/plc/` before mutation. No PLC connect, download, runtime
   start/stop, variable write or FORCE was performed; `Std` was not modified.
+
+# 2026-08-31 Export #2 and Nexeed dataset storage boundary
+
+- CpStudio Export #2 request `ae821c21-bb32-4310-9a41-7606716eec51` was
+  consumed by the read-only post-export audit. All 56 EtherCAT designators
+  matched (38 active / 18 inactive, zero mismatches).
+- Final PLE Build after Export #2 is **0 errors / 5 warnings** and Additional
+  code checks are **0 errors**. PlanOnly readback remains SHA-256
+  `8285734b5fc0350cbb2d2899cc2b1333fef8a117dedf5dcdc1f40df3b04a6f7f`
+  with zero operations, so Export #2 did not overwrite the 23-step Run Chain
+  or its TypeData integration.
+- Runtime StationData and TypeData are `.dat` datasets owned by Nexeed
+  DataSetAccess on the HMI IPC. Their configured folders are
+  `\\%DataSetAccessHost%\OpconData$\StationData` and
+  `\\%DataSetAccessHost%\OpconData$\TypeData`; the default names are
+  `StationData` and `1111111111` respectively.
+- The exported `Hmi/*DataSetManagerL1.dat` files define dataset fields and
+  defaults; they are not the selected runtime datasets on the IPC. PLC logic
+  consumes the applied `Station.StationData` / `Station.TypeData` structures
+  and must not read the share or `.dat` files directly.
+- No PLC connect, download, runtime start/stop, variable write or FORCE was
+  performed. `Std` was not modified.

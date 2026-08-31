@@ -218,9 +218,9 @@ Peripheral OOD 将它定义为 `NonBus`、接口 `IP`，继承 `NxSocketSysDep`�
 BursterSetting : StationDataTcpIpGeneralSettingStruct;
 ```
 
-其中 `HostName : STRING(128)`、`PortNo : DWORD`。本次真正新增的是 Peripheral 对 `BursterSetting.HostName` 的消费绑定，StationData 类型本身没有发生变化。当前生成的 HMI/DataSet 配置允许用户编辑该字段；`StationDataSetManager` 把文件数据加载/校验/应用到 `Station.StationDataNew` 与 `Station.StationData`，并配置了本地二进制文件 `StationData/StationDataSetManager.bin`。因此它在概念上确实是“硬盘数据进入 PLC 内存”，但实现上是 DataSetManager 的加载、反序列化与应用，不是操作系统意义上的逐字节 memory-mapped file。
+其中 `HostName : STRING(128)`、`PortNo : DWORD`。本次真正新增的是 Peripheral 对 `BursterSetting.HostName` 的消费绑定，StationData 类型本身没有发生变化。实际 StationData/TypeData 数据集是 Nexeed HMI IPC 上的 `.dat` 文件，分别位于 `\\%DataSetAccessHost%\OpconData$\StationData` 和 `\\%DataSetAccessHost%\OpconData$\TypeData`。DataSetAccess 负责加载、校验和应用，PLC 只消费加载后的 `Station.StationData` / `Station.TypeData` 结构，不直接读取 SMB 路径或 `.dat` 文件。
 
-当前 `Hmi/StationDataSetManagerL1.dat` 中 Burster HostName 默认值仍为空，真机通信前必须由用户配置有效地址。通用结构虽然还有 `PortNo`，但 `IpBurster2316` 当前生成参数只消费 Hostname 和 UseAutoRange，未消费 `BursterSetting.PortNo`；端口未通过该 StationData 路径开放。
+工程导出的 `Hmi/StationDataSetManagerL1.dat` 与 `Hmi/TypeDataSetManagerL1.dat` 是 HMI 数据集的结构和默认值定义，不是 IPC 上当前选中的运行时数据文件。当前 StationData 默认定义中的 Burster HostName 仍为空，真机通信前必须由用户在运行时数据集中配置有效地址。通用结构虽然还有 `PortNo`，但 `IpBurster2316` 当前生成参数只消费 Hostname 和 UseAutoRange，未消费 `BursterSetting.PortNo`；端口未通过该 StationData 路径开放。
 
 ### Unit 能力与本轮集成范围
 
