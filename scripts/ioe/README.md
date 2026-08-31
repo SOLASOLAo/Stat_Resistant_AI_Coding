@@ -38,41 +38,46 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
 - `Address` is the module channel number, such as `1` through `8`; it is not a
   PLC address such as `%IX0.0`.
 - `Type` is `1` for DI and `2` for DO.
-- `IoDesignator` is copied literally. The tool does not guess an ePLAN BMK from
-  a PLC-safe name.
+- `IoDesignator` is copied literally. A non-empty value makes the imported
+  channel active; an empty value makes it inactive and clears its stored name
+  and PLC variable reference. Never use generated `_..._Channel_N` placeholders
+  for unused channels.
+- CpStudio maps rows by occurrence order rather than by `Address`. Keep each
+  module in one block, start at channel 1 and do not omit or reorder an
+  intermediate channel. The generator rejects unsafe ordering.
 - Output is UTF-16LE with BOM, CRLF and 15 TAB-separated columns. Station010's
-  language configuration maps `E` to English and `X` to Chinese; actual `X`
-  import behavior remains part of the first CpStudio round-trip test.
+  language configuration maps `E` to English and `X` to Chinese. Both columns
+  are supplied to the importer; retain every existing description instead of
+  relying on an empty field to preserve it.
 
-Generate the Station010 A1 round-trip probe locally:
+Generate the reviewed complete Station010 56-channel import:
 
 ```powershell
 pwsh -NoProfile -File .\scripts\ioe\New-CpStudioEplanIoAsc.ps1 `
-  -InputCsv .\specs\station010-a1-eplan-roundtrip-probe.csv `
-  -OutputAsc .\data\eplan\station010-a1-roundtrip-probe.asc
+  -InputCsv .\specs\station010-eplan-io.csv `
+  -OutputAsc .\data\eplan\station010-eplan-io.asc
 ```
 
-The probe contains all eight A1 channels, so the test does not depend on
-unknown partial-module update behavior. Its `_000...` I/O designators are the
-current CpStudio values, not a verified Station010 ePLAN export. Therefore the
-first import is an isolated round-trip test only:
+The full source contains all seven modules and all 56 channels in order:
+38 active and 18 inactive. It was derived from the real Station010 CpStudio
+ASC export and passed the official round trip on 2026-08-31:
 
-1. Use a recoverable CpStudio project copy/checkpoint, not the only working
-   project.
+1. Create a recoverable CpStudio checkpoint before the first import for a new
+   station.
 2. In `Peripherals > I/O`, run the official `Import I/O designators from
    ePLAN` command and select the generated ASC.
-3. Confirm A1 still has exactly eight channels; only the expected English and
-   Chinese descriptions may change. If names or unused channels change, close
-   without saving and stop.
+3. Confirm the active/inactive counts and the intended English/Chinese
+   descriptions before saving.
 4. Save, then run CpStudio's official `Write peripheral and I/O designators to
    the PLC IDE` and `Control plus Studio export` commands.
-5. In PLE, run `Link I/O`, then Build. Do a second CpStudio Export only when the
-   normal Symbol/Post-export check requests it.
+5. In PLE, run `Link I/O`, then Build. If Symbol/Post-export requires it, run a
+   second CpStudio Export and a final Build.
 
-After one real Station010 ePLAN export is available, use its exact
-`IoDesignator` values as the production CSV source. Never copy the
-TrainingStation signal data; that file established only the ASC byte/column
-format.
+The verified Station010 result was 38 active / 18 inactive channels, Export #2
+`0 errors / 3 warnings`, and final PLE Build `0 errors / 0 warnings`. The two A1
+Chinese descriptions propagated to HMI labels, EventRecorder and generated
+message text. For another station, start from that station's own complete ASC
+export; never copy Station010 or TrainingStation signal data.
 
 `Test-EthercatNameChain.ps1` is a read-only guard for the separate EtherCAT
 master naming rule. Copy the actual name shown in the ctrlX Web UI into the

@@ -40,9 +40,9 @@
 - [ ] 🟢 P1.4c（有团队工位时执行）团队验收：固化最小兼容矩阵，在一台全新同事电脑完成包传递、安装、显式启动、升级、回滚、卸载和诊断复验；默认不自定义 ACL，签名按商业/IT 要求延期
 
 ## 项目工程待办
-- [x] 🟡 DIDO 描述自动导入基础：新增零依赖 CSV→CpStudio/ePLAN ASC 生成器（UTF-16LE、15 列、Station010 E/X 候选）和只读 EtherCAT 主站名称链检查器；当前 Station010 `_000SA620_X1` / `=000+S-A620-X1` 离线生成链路通过，X 列实际导入仍待回环（2026-08-31）
-- [ ] 🔴 在可恢复的 CpStudio 工程副本中导入 A1 完整 8 通道探针，确认当前 `_000...` designator、X 中文列和未使用通道的官方导入回环语义；验证前不得把探针当生产导入文件
-- [ ] 🟡 取得 Station010 一份真实 ePLAN I/O 导出后，以其准确 `IoDesignator` 替换探针来源，再决定是否把 ASC 生成器提升到通用项目模板
+- [x] 🟡 DIDO 描述自动导入：零依赖 CSV→CpStudio/ePLAN ASC 生成器已通过 Station010 官方回环；固定 UTF-16LE/15列/模块内连续顺序，完整源为 `specs/station010-eplan-io.csv`（2026-08-31）
+- [x] 🔴 已确认 CpStudio 导入语义：非空 `IoDesignator` 激活通道；未使用点必须为空，否则占位 `_..._Channel_N` 会被误激活。Station010 最终保持 38 active / 18 inactive（2026-08-31）
+- [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）
 - [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
 - [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；2026-08-28 已证明同一 `.project` 字节在原路径普通 Build 为 101 条可见 warnings、隔离路径普通 Build 为 4 条 warnings，二者都不是正式语义基线；正式基线必须来自显式 Clean Build
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)

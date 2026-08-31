@@ -713,36 +713,27 @@
 ## 2026-08-29 开发辅助 Skill 边界
 
 - 已将 Ponytail 的唯一权威边界写入 `AGENTS.md` 第 5 节：仅作开发期减法审查，不进入产品或客户环境，也不得覆盖 ctrlX/OpCon 安全门禁。本轮未修改产品代码、PLE、PLC、`Station010` 或 `Std`。
-# 2026-08-31 Station010 ePLAN DIDO description automation baseline
+# 2026-08-31 Station010 ePLAN DIDO description automation verified
 
-- Added a zero-dependency PowerShell 7 CSV-to-ASC converter at
-  `scripts/ioe/New-CpStudioEplanIoAsc.ps1`. The output contract is the verified
-  known CpStudio/ePLAN shape: UTF-16LE BOM, CRLF and 15 TAB-separated columns.
-  Station010 maps `E/X` to English/Chinese in its language configuration, but
-  actual `X` importer behavior still awaits the copy round trip. `Type=1` is DI
-  and `Type=2` is DO. The tool copies `IoDesignator` literally and never
-  guesses electrical BMK values.
-- Added the complete eight-channel A1 input probe at
-  `specs/station010-a1-eplan-roundtrip-probe.csv`. It is deliberately a
-  recoverable-copy test, not approved production input: Station010 has not yet
-  supplied a real ePLAN export proving that CpStudio accepts the current
-  `_000...` internal names through this importer.
-- Added read-only `scripts/ioe/Test-EthercatNameChain.ps1`. Its mandatory target
-  parameter must be copied from the ctrlX Web UI. With `_000SA620_X1`, current
-  Station010 passes the independent master-name chain; IOE ECAD and HMI BusDiag
-  name are `=000+S-A620-X1`.
-- `tests/ioe/Test-CpStudioEplanIoAutomation.ps1` covers byte encoding, fixed
-  columns, E/X descriptions, DI/DO mapping, duplicate rejection, the real
-  Station010 name chain, and deliberate target-name mismatch. No IDE, MCP,
-  `.project` or Station010 generated file was modified, and no online PLC
-  operation was used.
-- Next manual boundary: import the generated A1 ASC once in a recoverable
-  CpStudio project copy using the official ePLAN command, inspect all eight
-  rows, then follow Write designators → Export → PLE Link I/O/Build. Promote to
-  production/template use only after that round trip and a real Station010
-  ePLAN source are verified.
-- The implementation is committed locally. Push was attempted through the
-  configured `127.0.0.1:7890` proxy and once with a command-local proxy bypass;
-  the proxy was unavailable and direct DNS could not resolve `github.com`.
-  Global network/Git settings were not changed, so the commit remains pending
-  push when connectivity returns.
+- `scripts/ioe/New-CpStudioEplanIoAsc.ps1` now enforces the verified CpStudio
+  contract: UTF-16LE BOM, CRLF, 15 TAB columns, one contiguous block per module
+  and channel addresses starting at 1 without gaps. CpStudio maps by row order,
+  not by the `Address` value, so this ordering guard prevents shifted I/O.
+- The official importer treats every non-empty `IoDesignator` as active. An
+  empty value sets `Active=false`, clears the stored name and removes its PLC
+  variable reference. The first full import exposed 15 generated
+  `_..._Channel_N` placeholders as unsafe because they activated unused points;
+  the corrected complete ASC left all 18 unused points empty.
+- The reviewed Station010 source is `specs/station010-eplan-io.csv`: seven
+  modules, 56 channels, 32 DI, 24 DO, 38 active and 18 inactive. A1 channel 1/2
+  Chinese descriptions are `控制上电` / `控制下电`. Other stations must start
+  from their own complete ASC export rather than copying these signal facts.
+- Official round trip completed successfully: Import → Save → Write peripheral
+  and I/O designators → Export #1 → Link I/O → Build (0 errors / 5 warnings) →
+  Export #2 (0 errors / 3 warnings) → final PLE Build **0 errors / 0 warnings**.
+  The two Chinese descriptions propagated into HMI labels, EventRecorder and
+  generated message text; 38 active / 18 inactive remained unchanged.
+- `tests/ioe/Test-CpStudioEplanIoAutomation.ps1` now covers unsafe order gaps,
+  the full 56-row source, 38/18 state counts, E/X content, byte contract and the
+  EtherCAT master-name chain. No online PLC connection, download, runtime
+  start/stop, variable write or FORCE was used; `Std` was not modified.

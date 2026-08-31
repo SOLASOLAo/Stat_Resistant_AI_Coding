@@ -69,13 +69,22 @@ if (($actualColumns.Count -ne $requiredColumns.Count) -or
 
 $outputRows = [System.Collections.Generic.List[string]]::new()
 $seenChannels = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+$closedDevices = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 $typeCounts = @{ '1' = 0; '2' = 0 }
+$activeCount = 0
+$inactiveCount = 0
+$currentDevice = $null
+$currentType = $null
+$expectedAddress = 1
 
 for ($index = 0; $index -lt $rows.Count; $index++) {
     $rowNumber = $index + 2
     $row = $rows[$index]
     $deviceDesignator = [string]$row.DeviceDesignator
     $ioDesignator = [string]$row.IoDesignator
+    if ([string]::IsNullOrWhiteSpace($ioDesignator)) {
+        $ioDesignator = ''
+    }
     $english = [string]$row.English
     $chinese = [string]$row.Chinese
 
@@ -93,6 +102,30 @@ for ($index = 0; $index -lt $rows.Count; $index++) {
         throw "CSV row $rowNumber Type must be 1 (DI) or 2 (DO)."
     }
 
+    $channelKey = "$deviceDesignator`u{001F}$address`u{001F}$type"
+    if (-not $seenChannels.Add($channelKey)) {
+        throw "CSV row $rowNumber duplicates DeviceDesignator '$deviceDesignator' Address $address."
+    }
+
+    if ($null -eq $currentDevice -or $deviceDesignator -cne $currentDevice) {
+        if ($null -ne $currentDevice) {
+            [void]$closedDevices.Add($currentDevice)
+        }
+        if ($closedDevices.Contains($deviceDesignator)) {
+            throw "CSV row $rowNumber reopens DeviceDesignator '$deviceDesignator'. Keep each module in one block."
+        }
+        $currentDevice = $deviceDesignator
+        $currentType = $type
+        $expectedAddress = 1
+    }
+    if ($type -cne $currentType) {
+        throw "CSV row $rowNumber changes Type inside DeviceDesignator '$deviceDesignator'."
+    }
+    if ($address -ne $expectedAddress) {
+        throw "CSV row $rowNumber Address must be $expectedAddress for DeviceDesignator '$deviceDesignator'. CpStudio maps rows by order, not by Address."
+    }
+    $expectedAddress++
+
     foreach ($field in @{
         DeviceDesignator = $deviceDesignator
         IoDesignator = $ioDesignator
@@ -107,11 +140,6 @@ for ($index = 0; $index -lt $rows.Count; $index++) {
         throw "CSV row $rowNumber has descriptions but no IoDesignator."
     }
 
-    $channelKey = "$deviceDesignator`u{001F}$address`u{001F}$type"
-    if (-not $seenChannels.Add($channelKey)) {
-        throw "CSV row $rowNumber duplicates DeviceDesignator '$deviceDesignator' Address $address."
-    }
-
     $columns = @(
         $deviceDesignator,
         [string]$address,
@@ -124,6 +152,12 @@ for ($index = 0; $index -lt $rows.Count; $index++) {
     )
     $outputRows.Add(($columns -join "`t"))
     $typeCounts[$type]++
+    if ([string]::IsNullOrWhiteSpace($ioDesignator)) {
+        $inactiveCount++
+    }
+    else {
+        $activeCount++
+    }
 }
 
 $headerColumns = @(
@@ -152,6 +186,8 @@ if ($PSCmdlet.ShouldProcess($resolvedOutput, "Write $($rows.Count)-row CpStudio 
     RowCount = $rows.Count
     DigitalInputs = $typeCounts['1']
     DigitalOutputs = $typeCounts['2']
+    ActiveChannels = $activeCount
+    InactiveChannels = $inactiveCount
     Encoding = 'UTF-16LE-BOM'
     LanguageColumns = 'E,X'
 }

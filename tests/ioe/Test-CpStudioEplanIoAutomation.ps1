@@ -10,6 +10,7 @@ $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'
 $generator = Join-Path $repositoryRoot 'scripts\ioe\New-CpStudioEplanIoAsc.ps1'
 $nameChainChecker = Join-Path $repositoryRoot 'scripts\ioe\Test-EthercatNameChain.ps1'
 $fixture = Join-Path $PSScriptRoot 'fixtures\cpstudio-eplan-io.csv'
+$stationIoSource = Join-Path $repositoryRoot 'specs\station010-eplan-io.csv'
 $stationRoot = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot '..\Station010'))
 $ioStructPath = Join-Path $stationRoot 'Plc\Stat010_V5.11_CtrlX_IO.Struct.json'
 $hmiConfigPath = Join-Path $stationRoot 'Hmi\config.xml'
@@ -58,6 +59,8 @@ try {
     Assert-True -Condition ($result.RowCount -eq 2) -Message 'Generator reported an unexpected row count.'
     Assert-True -Condition ($result.DigitalInputs -eq 1) -Message 'Generator reported an unexpected DI count.'
     Assert-True -Condition ($result.DigitalOutputs -eq 1) -Message 'Generator reported an unexpected DO count.'
+    Assert-True -Condition ($result.ActiveChannels -eq 2) -Message 'Generator reported an unexpected active-channel count.'
+    Assert-True -Condition ($result.InactiveChannels -eq 0) -Message 'Generator reported an unexpected inactive-channel count.'
 
     $bytes = [System.IO.File]::ReadAllBytes($outputPath)
     Assert-True -Condition ($bytes.Length -gt 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) `
@@ -101,6 +104,59 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
         $duplicateRejected = $_.Exception.Message.Contains('duplicates DeviceDesignator', [System.StringComparison]::Ordinal)
     }
     Assert-True -Condition $duplicateRejected -Message 'Duplicate module/channel input was not rejected.'
+
+    $gapCsv = Join-Path $temporaryRoot 'gap.csv'
+    $gapText = @'
+DeviceDesignator,Address,IoDesignator,Type,English,Chinese
+=100+TEST-A1,1,_TEST_INPUT_1,1,Input 1,
+=100+TEST-A1,3,_TEST_INPUT_3,1,Input 3,
+'@
+    [System.IO.File]::WriteAllText($gapCsv, $gapText, [System.Text.UTF8Encoding]::new($false))
+    $gapRejected = $false
+    try {
+        & $generator -InputCsv $gapCsv -OutputAsc (Join-Path $temporaryRoot 'gap.asc') | Out-Null
+    }
+    catch {
+        $gapRejected = $_.Exception.Message.Contains('Address must be 2', [System.StringComparison]::Ordinal)
+    }
+    Assert-True -Condition $gapRejected -Message 'A channel-order gap was not rejected.'
+
+    $whitespaceCsv = Join-Path $temporaryRoot 'whitespace.csv'
+    $whitespaceText = @'
+DeviceDesignator,Address,IoDesignator,Type,English,Chinese
+=100+TEST-A1,1,   ,1,,
+'@
+    [System.IO.File]::WriteAllText($whitespaceCsv, $whitespaceText, [System.Text.UTF8Encoding]::new($false))
+    $whitespaceOutput = Join-Path $temporaryRoot 'whitespace.asc'
+    $whitespaceResult = & $generator -InputCsv $whitespaceCsv -OutputAsc $whitespaceOutput
+    $whitespaceRows = [System.IO.File]::ReadAllLines($whitespaceOutput, [System.Text.Encoding]::Unicode)
+    Assert-True -Condition ($whitespaceResult.InactiveChannels -eq 1) -Message 'Whitespace I/O designator was not counted as inactive.'
+    Assert-True -Condition ([string]::IsNullOrEmpty($whitespaceRows[1].Split([char]"`t")[3])) `
+        -Message 'Whitespace I/O designator was not normalized to an empty ASC field.'
+
+    $stationOutputPath = Join-Path $temporaryRoot 'station010.asc'
+    $stationResult = & $generator -InputCsv $stationIoSource -OutputAsc $stationOutputPath
+    Assert-True -Condition ($stationResult.RowCount -eq 56) -Message 'Station010 ASC must contain 56 channels.'
+    Assert-True -Condition ($stationResult.DigitalInputs -eq 32) -Message 'Station010 ASC must contain 32 digital inputs.'
+    Assert-True -Condition ($stationResult.DigitalOutputs -eq 24) -Message 'Station010 ASC must contain 24 digital outputs.'
+    Assert-True -Condition ($stationResult.ActiveChannels -eq 38) -Message 'Station010 ASC must contain 38 active channels.'
+    Assert-True -Condition ($stationResult.InactiveChannels -eq 18) -Message 'Station010 ASC must contain 18 inactive channels.'
+
+    $stationText = [System.IO.File]::ReadAllText($stationOutputPath, [System.Text.Encoding]::Unicode)
+    $stationLines = @($stationText.Split(@("`r`n"), [System.StringSplitOptions]::RemoveEmptyEntries))
+    Assert-True -Condition ($stationLines.Count -eq 57) -Message 'Station010 ASC must contain one header and 56 data rows.'
+    $stationDataColumns = @($stationLines | Select-Object -Skip 1 | ForEach-Object { ,($_.Split([char]"`t")) })
+    $writtenActiveCount = @($stationDataColumns | Where-Object { -not [string]::IsNullOrEmpty($_[3]) }).Count
+    $writtenInactiveCount = @($stationDataColumns | Where-Object { [string]::IsNullOrEmpty($_[3]) }).Count
+    Assert-True -Condition ($writtenActiveCount -eq 38) -Message 'Generated Station010 ASC does not contain 38 non-empty I/O designators.'
+    Assert-True -Condition ($writtenInactiveCount -eq 18) -Message 'Generated Station010 ASC does not contain 18 empty I/O designators.'
+    $stationA1Channel1 = $stationLines[1].Split([char]"`t")
+    $stationA1Channel2 = $stationLines[2].Split([char]"`t")
+    $stationA1Channel3 = $stationLines[3].Split([char]"`t")
+    Assert-True -Condition ($stationA1Channel1[14] -ceq '控制上电') -Message 'Station010 A1 channel 1 Chinese description changed.'
+    Assert-True -Condition ($stationA1Channel2[14] -ceq '控制下电') -Message 'Station010 A1 channel 2 Chinese description changed.'
+    Assert-True -Condition ([string]::IsNullOrEmpty($stationA1Channel3[3])) `
+        -Message 'Station010 inactive channel must have an empty I/O designator.'
 
     $nameChainJson = (& $nameChainChecker -TargetMasterName '_000SA620_X1' | Out-String).Trim()
     $nameChain = $nameChainJson | ConvertFrom-Json
@@ -154,7 +210,7 @@ DeviceDesignator,Address,IoDesignator,Type,English,Chinese
     Assert-NameChainRejected -IoStruct $ioStructPath -HmiConfig $hmiConfigPath -PlcStruct $missingPlcMasterPath `
         -Description 'A missing PLE EtherCAT master object'
 
-    Write-Output 'CpStudio ePLAN I/O automation tests passed: ASC contract and Station010 EtherCAT name chain.'
+    Write-Output 'CpStudio ePLAN I/O automation tests passed: ordered ASC contract, Station010 38/18 channel state, and EtherCAT name chain.'
 }
 finally {
     $resolvedTemporaryRoot = [System.IO.Path]::GetFullPath($temporaryRoot)

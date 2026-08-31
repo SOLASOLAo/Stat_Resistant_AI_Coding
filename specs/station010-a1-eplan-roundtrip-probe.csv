@@ -1,9 +1,0 @@
-DeviceDesignator,Address,IoDesignator,Type,English,Chinese
-=000+S-K010A1,1,_000S901,1,Control On,控制上电
-=000+S-K010A1,2,_000S902,1,Control Off,控制下电
-=000+S-K010A1,3,_000SK010A1_Channel_3,1,,
-=000+S-K010A1,4,_000SK010A1_Channel_4,1,,
-=000+S-K010A1,5,_000SK010A1_Channel_5,1,,
-=000+S-K010A1,6,_000B085A_LOW,1,primary MAX < 0.3bar,primary MAX < 0.3bar
-=000+S-K010A1,7,_000B085A_HIGH,1,primary MAX > 4.5bar,primary MAX > 4.5bar
-=000+S-K010A1,8,_000S610,1,Start button,Start button
