@@ -919,3 +919,18 @@
   status probe Runner was READY and Host was STOPPED.
 - No CpStudio, PLE, IOE, MCP, Station010, `Std` or physical controller state
   was modified. No online operation was performed.
+
+# 2026-09-01 Engineering Console v0.2 compact UI
+
+- Simplified only the generic WPF surface: one state, one next action and one
+  primary Run next button; secondary tools share one row and the workflow is
+  reduced from seven verbose rows to four grouped steps.
+- Moved P2 detail to the Plan page as four explicit cards: Plan, checkpoint,
+  Apply and readback. Apply remains disabled until the backend contract is
+  implemented and accepted.
+- Release Build passed with 0 errors / 0 warnings; Workbench self-test passed
+  84 assertions; Station010 smoke remained Ready with current P2,
+  `p2ApplyEnabled=false` and `onlineOperationsAllowed=false`. Workbench and
+  Plan pages were inspected from real rendered windows.
+- No command, dependency, Runner/Host behavior, CpStudio/PLE/IOE project or
+  online operation changed.
