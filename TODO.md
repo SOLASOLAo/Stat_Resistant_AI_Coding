@@ -142,6 +142,7 @@
 - [x] 🟡 统一 AI-owned PLC ST 条件排版：独立条件加括号且括号内侧留空格，换行 `AND`/`OR` 放上一行末尾；静态门禁、REST 哈希迁移、幂等回读及 Application Build 0 errors / 8 warnings 完成(2026-08-20)
 - [x] 🔴 产品参数来源：CpStudio 生成 Wp100 TypeData/量程枚举；PLE 在 N046/N047 先应用 Burster 量程，在 N051/N080 应用 Kistler 程序号及 Burster 上下限/温度开关，并在 OnCheckData 补充上下量程/上下限关系校验；离线 Build 0 errors / 5 条既有生成告警（2026-08-31）
 - [x] 🔴 Burster 程序号离线集成：不修改 CpStudio 接口；新增 AI-owned `FB_Wp100BursterProgramSelect`/`AiWp100`，N045 在标准 Unit READY 时短暂释放其 socket，以 2316 `*RCL Pn` 选择 TypeData `ProgramNo`（0..15），ACK 后发送 EOT 并关闭，再进入 SET_RANGE；事务 Apply、完整读回及真实 Clean Build 0 errors / 4 条既有 warning（2026-09-04）
+- [x] 🔴 Burster 现场手动功能：用户完成下载/运行并确认 Nexeed HMI 中 Burster 手动测试正常；量程枚举保持 9 个真实量程（0..8），不包含无效的 `NONE/0 Ω`（2026-09-04）
 - [ ] 🔴 Burster 程序号真机验收：另行确认下载/运行后，用一个已知安全程序号验证 `Done/Error/ErrorCode`、2316 当前程序、标准 Nexeed driver 重连、SET_RANGE 与 SINGLE_MEAS；禁止用独立 TCP 探针和 PLC driver 同时占用 5555
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)

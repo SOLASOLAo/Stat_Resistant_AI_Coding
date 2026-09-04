@@ -971,3 +971,22 @@
   start/stop, variable write, FORCE or Burster protocol command was performed.
   The remaining step is one separately approved, bounded field test using a
   known-safe Burster program.
+
+# 2026-09-04 Burster manual field check and range cleanup
+
+- The user removed the invalid CpStudio `Wp100BursterRangeEnum.NONE` item and
+  exported again. Readback showed exactly the nine real instrument ranges at
+  indices 0..8; the CpStudio-generated TypeData range checks returned to
+  `UpperRange > 8` / `LowerRange > 8`. The guarded PLC PlanOnly result contained
+  zero operations, so no AI repair was required after this export.
+- The user performed the physical download/runtime operation and reported that
+  Burster manual testing from the Nexeed HMI works normally. This confirms the
+  standard manual Unit path for the tested operation; it does not yet close the
+  separate automatic `*RCL Pn` program-selection acceptance item.
+- The sanitized Station010 export snapshot is commit `42c373a`. It contains the
+  CpStudio model, TypeData/HMI definitions, Symbol XML and both structure JSON
+  snapshots. Local credentials, License workflow state, runtime connection
+  files and the encrypted `.project` working copy were deliberately excluded;
+  the replayable AI-owned PLC sources remain in this repository.
+- The AI did not download, start/stop the runtime, write/FORCE a PLC variable or
+  issue a Burster command during this check. `Std` was not modified.
