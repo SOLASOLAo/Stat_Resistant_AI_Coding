@@ -309,7 +309,7 @@ verification:
   program_selection_plan_sha256: 81bca2e9f146f1341f61e6ad3b1fa132222f80225d0d65a6585422fae1418935
   no_change_readback_plan_sha256: 48693ceb2da0d9aedb59f43581a3f3a3e94cbe5c9c4d40f401e621274a6229ca
   project_sha256: f00dc266e58c59496e1f1553017c0591ee3909ec837dd63b9aa90eaf3b17640a
-  online_test: not performed
+  online_test: read-only login only; Application STOP and values unknown; no download or protocol execution
   applied_change_note: >-
     CpStudio-owned TypeData and enum declarations were consumed without interface
     edits. N045 closes the standard Burster connection, selects ProgramNo 0..15

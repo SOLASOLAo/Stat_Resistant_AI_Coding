@@ -963,6 +963,11 @@
   Final project SHA-256 is
   `F00DC266E58C59496E1F1553017C0591EE3909EC837DD63B9AA90EAF3B17640A`;
   its hash-identical local checkpoint is under ignored `data/checkpoints/plc/`.
-- No PLC connection, download, runtime start/stop, variable write or FORCE was
-  performed. The MCP-owned PLE session was closed. The remaining step is one
-  separately approved, bounded field test using a known-safe Burster program.
+- After offline acceptance, one MCP login used the project's existing target
+  configuration for a read-only preflight. The target reported Application
+  `STOP`; `Station.TypeData.Wp100.Burster.ProgramNo` and the new `AiWp100`
+  diagnostics all had online quality `unknown`, so no runtime conclusion was
+  claimed. The session was disconnected and PLE closed. No download, runtime
+  start/stop, variable write, FORCE or Burster protocol command was performed.
+  The remaining step is one separately approved, bounded field test using a
+  known-safe Burster program.
