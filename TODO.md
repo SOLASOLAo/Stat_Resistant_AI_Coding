@@ -141,6 +141,8 @@
 - [x] 🔴 `SqC_Wp100_Run` 顺序调用原子操作：LEFT→MIDDLE→RIGHT，每轮仅在 READY 写 `Wp100.SqS_Run.MeasurePos` 并以 `CheckSubChainDone` 等待；每轮开始前检查 `_100B701 AND _100B702`，缺失时用 `EVENT_PART_DETECT_SENSOR` 和具体 BMK AdditionalInfo 阻塞提示；三位置结果分别保留，编译 0 errors / 6 warnings(2026-08-20)
 - [x] 🟡 统一 AI-owned PLC ST 条件排版：独立条件加括号且括号内侧留空格，换行 `AND`/`OR` 放上一行末尾；静态门禁、REST 哈希迁移、幂等回读及 Application Build 0 errors / 8 warnings 完成(2026-08-20)
 - [x] 🔴 产品参数来源：CpStudio 生成 Wp100 TypeData/量程枚举；PLE 在 N046/N047 先应用 Burster 量程，在 N051/N080 应用 Kistler 程序号及 Burster 上下限/温度开关，并在 OnCheckData 补充上下量程/上下限关系校验；离线 Build 0 errors / 5 条既有生成告警（2026-08-31）
+- [x] 🔴 Burster 程序号离线集成：不修改 CpStudio 接口；新增 AI-owned `FB_Wp100BursterProgramSelect`/`AiWp100`，N045 在标准 Unit READY 时短暂释放其 socket，以 2316 `*RCL Pn` 选择 TypeData `ProgramNo`（0..15），ACK 后发送 EOT 并关闭，再进入 SET_RANGE；事务 Apply、完整读回及真实 Clean Build 0 errors / 4 条既有 warning（2026-09-04）
+- [ ] 🔴 Burster 程序号真机验收：另行确认下载/运行后，用一个已知安全程序号验证 `Done/Error/ErrorCode`、2316 当前程序、标准 Nexeed driver 重连、SET_RANGE 与 SINGLE_MEAS；禁止用独立 TCP 探针和 PLC driver 同时占用 5555
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)
@@ -154,7 +156,7 @@
 - [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressDelayTime、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
 - [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
 - [x] 🟡 P1.1 `ProcessOne` 已把 Post-export 请求、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成受控入口；CpStudio hook 继续只发 signal，不自动启动 Broker/PLE/MCP，也不直接改写 `Engineering_Data.xml`（2026-08-27）
-- [ ] 🔴 后续配置并验证 Burster HostName，放行 `SetRange/StartMeas` 手动功能；设备稳定后逐条实现 Homing/Changeover/Auto Chains
+- [x] 🔴 Burster HostName 与标准连接已由用户现场调通，Nexeed HMI 无设备错误且 Control On 恢复；`SetRange/StartMeas` 手动放行已由 CpStudio 正式导出（2026-09-04）
 - [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
 - [x] 🟢 记录 Ponytail 开发辅助边界：仅在 Phase 收口时按需做减法审查，不进入产品/交付/客户环境，不覆盖 ctrlX/OpCon 安全门禁（2026-08-29）
 

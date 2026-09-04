@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "bce875a41678e3698e57a11183ce8e1b2627533c1e2503b4515b82d566ded7d0",
+  "contentId": "d5471568a6bde773ecb658c68cdfbaaafcd199d4fcf2cb5e05a848806b998e93",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 19826,
-      "sha256": "7234fc5433d68f3bfd34e26bd8b7c471831184b2df5360169926caa0c8af67b4"
+      "length": 20220,
+      "sha256": "9d25803c7f5022206285570b1b7630e5a7da03c2bd3126a8d26d5590d8cc7ba0"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -88,13 +88,13 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 13923,
-      "sha256": "1f41bf56e07c37f6da8a195624ee1af26b053bbb0be4e66b822df3d41d4989b7"
+      "length": 14221,
+      "sha256": "e143135ba260c0667534319130b0beee4dae8c0a70a66e3a3a2034ad0b193c14"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 8153,
-      "sha256": "46966508217d8b35a90f679da4080266f7a003ef17a11ac9a1dd2efb0b714338"
+      "length": 8500,
+      "sha256": "f038d9d7bd041d3c12a1ddacc039ed3b3bbf6dc69d088326bdd6a7a61c61bd01"
     },
     {
       "path": "ai/graphical.yaml",
@@ -584,8 +584,8 @@
           "id": "N045",
           "kind": "check",
           "comment": "Check measure release",
-          "operation": "Verify the common machine state before entering the simultaneous measurement-start branches.",
-          "transition": "Door and safety feedbacks are valid, press is READY in base position, and Kistler is READY.",
+          "operation": "Verify the common machine state, close the standard Burster connection and select Station.TypeData.Wp100.Burster.ProgramNo with one short *RCL TCP session.",
+          "transition": "Door and safety feedbacks are valid, all three Units are READY, and the Burster has acknowledged the program selection before EOT and socket close.",
           "prompt": null,
           "promptVariants": [
             {
@@ -609,10 +609,12 @@
           ],
           "requirements": [
             "REQ-MEASUREMENT-START",
+            "REQ-TYPE-DATA",
             "REQ-ATOMIC-GUIDANCE"
           ],
           "acceptance": [
-            "Both parallel branches are released from the same validated common state."
+            "ProgramNo outside 0 through 15 is rejected before opening a socket.",
+            "Both parallel branches are released only after the Burster ACK; NAK, timeout or unexpected response returns a Chain error."
           ],
           "parallel": null
         },
@@ -930,6 +932,7 @@
       "cleanup": [
         "Set FB_OperatorButton Execute FALSE and turn _000P610 off.",
         "Reset the press-delay timer and all per-execution started flags.",
+        "Reset the Burster program selector and close its temporary TCP session.",
         "End and release safety-door, pressing-cylinder, Burster and Kistler commands.",
         "Clear the operator prompt on ERROR or CANCEL.",
         "Retain Result until the next N000 initialization."
@@ -1266,7 +1269,7 @@
       ],
       "expected": [
         "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
-        "Burster ranges are applied before motion and every measurement uses the active TypeData limits, temperature selection and Kistler program.",
+        "The Burster acknowledges the active TypeData program before SET_RANGE; range, limits, temperature selection and Kistler program then come from the same active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },
@@ -1428,8 +1431,9 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-TYPE-DATA",
-      "text": "Use the active Wp100 TypeData for Burster range, limits and temperature selection and for the Kistler measurement program.",
+      "text": "Use the active Wp100 TypeData for the Burster program, range, limits and temperature selection and for the Kistler measurement program.",
       "stepIds": [
+        "N045",
         "N046",
         "N047",
         "N051",

@@ -86,28 +86,33 @@ type_data:
   source: Station.TypeData.Wp100
   apply_boundary: current TypeData after Change-over ApplyData
   fields:
-    BursterUpperRange:
+    Burster.UpperRange:
       target: Wp100A103ResistantDetector.Unit.ParCmd.UpperRange
       command: SET_RANGE
-    BursterLowerRange:
+    Burster.LowerRange:
       target: Wp100A103ResistantDetector.Unit.ParCmd.LowerRange
       command: SET_RANGE
-    BursterUpperLimit:
+    Burster.UpperLimit:
       target: Wp100A103ResistantDetector.Unit.ParCmd.UpperLimit
       command: SINGLE_MEAS
-    BursterLowerLimit:
+    Burster.LowerLimit:
       target: Wp100A103ResistantDetector.Unit.ParCmd.LowerLimit
       command: SINGLE_MEAS
-    BursterReadTemperature:
+    Burster.ReadTemperature:
       target: Wp100A103ResistantDetector.Unit.ParCmd.ReadTemperature
       command: SINGLE_MEAS
+    Burster.ProgramNo:
+      target: Burster 2316 active measuring program before the first measurement
+      command: "*RCL Pn through FB_Wp100BursterProgramSelect"
+      transport: close standard Nexeed socket, use one short TCP 5555 session, send EOT, close
     KistlerProgramNo:
       target: Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo
       command: MEASURE
   validation:
     - CpStudio generated range checks keep both range values within 0 through 8
-    - BursterLowerRange is not greater than BursterUpperRange
-    - BursterLowerLimit is not greater than BursterUpperLimit
+    - Burster.LowerRange is not greater than Burster.UpperRange
+    - Burster.LowerLimit is not greater than Burster.UpperLimit
+    - Burster.ProgramNo is within the instrument range 0 through 15
     - no narrower Kistler program-number range is assumed beyond BYTE
 
 steps:
@@ -137,19 +142,24 @@ steps:
       - Peripherals.BinIo._000K912_Y32
   - id: N045
     comment: Check measure release
-    purpose: release both parallel start branches from one common machine state
+    purpose: select and acknowledge the TypeData Burster program before releasing both parallel start branches
     start_requires:
       - safety door in work position
       - Peripherals.BinIo._000K913_Y32
       - Peripherals.BinIo._000K912_Y32
       - pressing cylinder in base position and READY
+      - Burster Unit READY
       - Kistler READY and device ready
+    program_selection:
+      source: Station.TypeData.Wp100.Burster.ProgramNo
+      protocol: RESISTOMAT 2316 *RCL Pn over TCP 5555
+      completion: instrument ACK received, EOT sent, temporary socket closed
   - id: N046
     comment: Set Burster range
     command: Wp100A103ResistantDetector.SET_RANGE
     parameters:
-      - Station.TypeData.Wp100.BursterUpperRange
-      - Station.TypeData.Wp100.BursterLowerRange
+      - Station.TypeData.Wp100.Burster.UpperRange
+      - Station.TypeData.Wp100.Burster.LowerRange
   - id: N047
     comment: Wait Burster range
     wait_for: Wp100A103ResistantDetector SET_RANGE started by N046
@@ -187,9 +197,9 @@ steps:
     comment: Start resistance test
     command: Wp100A103ResistantDetector.SINGLE_MEAS
     parameters:
-      - Station.TypeData.Wp100.BursterUpperLimit
-      - Station.TypeData.Wp100.BursterLowerLimit
-      - Station.TypeData.Wp100.BursterReadTemperature
+      - Station.TypeData.Wp100.Burster.UpperLimit
+      - Station.TypeData.Wp100.Burster.LowerLimit
+      - Station.TypeData.Wp100.Burster.ReadTemperature
   - id: N090
     comment: Wait resistance result
     result: Result.Resistance
@@ -270,6 +280,7 @@ cleanup:
     - press-delay timer
     - safety-door Execute
     - pressing-cylinder Execute
+    - Burster program selector Execute and temporary TCP session
     - Burster Execute
     - Kistler EndMeasurement true and Execute false
     - per-execution started flags
@@ -283,7 +294,7 @@ caller_contract:
   - do not start the single instance from two callers concurrently
 
 verification:
-  date: 2026-08-31
+  date: 2026-09-04
   offline_build: 0 errors / 4 warnings
   warning_scope: four reviewed C0351 OPC.UA.DA messages from the formal warning baseline
   latest_normal_build: 0 errors / 5 warnings
@@ -295,13 +306,16 @@ verification:
     simultaneous_convergences: 2
   feature_plan_sha256: 92577f72164ac56e5cbae61ee788bd1663f1222d33216b17f766da0a0ff8f23d
   last_fix_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
-  no_change_readback_plan_sha256: 8285734b5fc0350cbb2d2899cc2b1333fef8a117dedf5dcdc1f40df3b04a6f7f
+  program_selection_plan_sha256: 81bca2e9f146f1341f61e6ad3b1fa132222f80225d0d65a6585422fae1418935
+  no_change_readback_plan_sha256: 48693ceb2da0d9aedb59f43581a3f3a3e94cbe5c9c4d40f401e621274a6229ca
+  project_sha256: f00dc266e58c59496e1f1553017c0591ee3909ec837dd63b9aa90eaf3b17640a
   online_test: not performed
   applied_change_note: >-
     CpStudio-owned TypeData and enum declarations were consumed without interface
-    edits. Burster range is applied before motion, measurement limits and the
-    temperature switch are copied before SINGLE_MEAS, and the Kistler program is
-    copied before MEASURE. The mixed OnCheckData method retained generated checks
-    and added only the two application plausibility checks. All writes were
-    transactional, declarations were preserved exactly and final PlanOnly had
-    zero operations.
+    edits. N045 closes the standard Burster connection, selects ProgramNo 0..15
+    with one short *RCL session, requires ACK, sends EOT and closes that session
+    before SET_RANGE. Burster range is applied before motion; measurement limits
+    and temperature are copied before SINGLE_MEAS; the Kistler program is copied
+    before MEASURE. The mixed OnCheckData method retains generated checks and adds
+    the application plausibility checks. All writes were transactional,
+    declarations were preserved exactly and final PlanOnly had zero operations.

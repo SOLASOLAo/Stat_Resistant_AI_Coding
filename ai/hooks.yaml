@@ -123,6 +123,9 @@ hooks:
       - Wp100A103ResistantDetector
       - Wp100K102PressingCylinder
     invariants:
+      - Burster ProgramNo is validated as 0 through 15 and acknowledged through *RCL before SET_RANGE
+      - the standard Nexeed Burster socket is closed before the short program-selection TCP session
+      - the program-selection TCP session sends EOT and closes before the standard Unit continues
       - Burster SET_RANGE completes before the pressing-cylinder and Kistler start branches
       - Burster range, limits and temperature selection come from the active Wp100 TypeData
       - Kistler measurement program comes from the active Wp100 TypeData
@@ -140,6 +143,7 @@ hooks:
       - press-delay timer false
       - safety-door Execute false
       - pressing-cylinder Execute false
+      - Burster program selector Execute false
       - Burster Execute false
       - Kistler EndMeasurement true and Execute false
       - all per-execution flags false

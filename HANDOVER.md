@@ -934,3 +934,35 @@
   Plan pages were inspected from real rendered windows.
 - No command, dependency, Runner/Host behavior, CpStudio/PLE/IOE project or
   online operation changed.
+
+# 2026-09-04 Burster 2316 TypeData program selection
+
+- CpStudio remains the owner of `Station.TypeData.Wp100.Burster.ProgramNo` and
+  every generated Chain/TypeData declaration. No generated interface was
+  changed. The standard Nexeed Burster libraries expose no public program
+  selection command, so the implementation is isolated in the AI-owned
+  `FB_Wp100BursterProgramSelect` plus the `AiWp100` GVL.
+- N045 now requires the Burster Unit to be READY, closes its normal connection,
+  sends the documented RESISTOMAT 2316 `*RCL Pn` request for program 0..15 over
+  one short TCP 5555 session, waits for ACK, sends EOT and closes. Only then are
+  both SFC start branches released; NAK, timeout or an unexpected response is
+  returned as `HAS_ERROR`. `OnChainFinish` resets the selector and performs a
+  best-effort EOT/close cleanup.
+- The official PLE REST writer was extended with immutable Plan/checkpoint/
+  Apply/readback support for the new FB and GVL. Its mocked PlanOnly, drift,
+  exact request, post-save readback and rollback tests pass, including deletion
+  of newly created support objects after an injected persistence-time failure.
+- Real Station010 Apply used Plan SHA-256
+  `81bca2e9f146f1341f61e6ad3b1fa132222f80225d0d65a6585422fae1418935`:
+  two POSTs (FB/GVL) and two PUTs (N045/OnChainFinish). All declarations were
+  preserved exactly. Final PlanOnly SHA-256
+  `48693ceb2da0d9aedb59f43581a3f3a3e94cbe5c9c4d40f401e621274a6229ca`
+  has zero operations.
+- A real PLE Clean Build passed with **0 errors / 4 existing `OPC.UA.DA`
+  warnings**, build token `62658432b17448b4bc720cb09fd223dc`.
+  Final project SHA-256 is
+  `F00DC266E58C59496E1F1553017C0591EE3909EC837DD63B9AA90EAF3B17640A`;
+  its hash-identical local checkpoint is under ignored `data/checkpoints/plc/`.
+- No PLC connection, download, runtime start/stop, variable write or FORCE was
+  performed. The MCP-owned PLE session was closed. The remaining step is one
+  separately approved, bounded field test using a known-safe Burster program.

@@ -18,6 +18,10 @@ BinIo._000P610 := _startButton.LampOn;
 
 _pressDelay(IN := FALSE, PT := T#0MS);
 
+AiWp100.BursterProgramSelect(
+  Execute := FALSE,
+  ProgramNo := 0
+);
 Wp100K101SafetyDoor.Unit.Execute       := FALSE;
 Wp100K102PressingCylinder.Unit.Execute := FALSE;
 Wp100A103ResistantDetector.Unit.Execute := FALSE;

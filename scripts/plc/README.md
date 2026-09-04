@@ -6,7 +6,9 @@
   project hash.
 - `apply_wp100_run_rest.ps1` plans or applies the AI-owned
   `SqS_Wp100_Run` parallel SFC graph, Action/cleanup implementations and result
-  DUTs through the active PLC Engineering official REST extension. The
+  DUTs through the active PLC Engineering official REST extension. It also
+  creates/verifies the AI-owned Burster program-selector FB/GVL used to apply
+  TypeData `ProgramNo` before the standard Unit resumes. The
   CpStudio-generated chain and existing Method declarations are verification
   contracts only and are never assigned by the writer.
 - `apply_wp100_run_sequence_rest.ps1` applies `SqC_Wp100_Run`: the linear

@@ -6,11 +6,11 @@ IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
    ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY )
 THEN
   Wp100A103ResistantDetector.Unit.ParCmd.UpperLimit :=
-    Station.TypeData.Wp100.BursterUpperLimit;
+    Station.TypeData.Wp100.Burster.UpperLimit;
   Wp100A103ResistantDetector.Unit.ParCmd.LowerLimit :=
-    Station.TypeData.Wp100.BursterLowerLimit;
+    Station.TypeData.Wp100.Burster.LowerLimit;
   Wp100A103ResistantDetector.Unit.ParCmd.ReadTemperature :=
-    Station.TypeData.Wp100.BursterReadTemperature;
+    Station.TypeData.Wp100.Burster.ReadTemperature;
 
   Wp100A103ResistantDetector.Unit.Command :=
     BursterResis2316Cmd.SINGLE_MEAS;

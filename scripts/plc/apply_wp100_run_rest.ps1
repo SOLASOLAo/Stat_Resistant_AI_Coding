@@ -12,8 +12,11 @@ $deviceRoot = "$BaseUri/devices/Device/Plc%20Logic"
 $runPath = 'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run'
 $runUri = "$deviceRoot/$runPath"
 $dataStructPath = 'Application/Station/Wp100/_this/Structs/Data'
+$fbsPath = 'Application/Fbs'
+$bursterProgramSelectorPath = "$fbsPath/FB_Wp100BursterProgramSelect"
+$aiWp100Path = "$fbsPath/AiWp100"
 $typeDataCheckPath = 'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData'
-$typeDataCheckBaselineRegionSha = '0c19a9147052cbf6631500ba8fc32e09bd60d3a20597206a38d43e01939263de'
+$typeDataCheckBaselineRegionSha = 'b7274856e45bfa71f04f32b6c4af907e6910ffbccab182c5af656a3fd0439f84'
 $autoInfoLineEnumPaths = @(
   'Application/Station/_this/Enums/AutoInfoLineEnum',
   'Application/Station/Enums/AutoInfoLineEnum',
@@ -119,6 +122,94 @@ function Get-SourceText {
   return [IO.File]::ReadAllText($path, [Text.Encoding]::UTF8).Replace("`r`n", "`n").Replace("`r", "`n")
 }
 
+function Get-FunctionBlockSourceParts {
+  param([Parameter(Mandatory)][string]$SourceFile)
+
+  $source = Get-SourceText $SourceFile
+  $match = [regex]::Match(
+    $source,
+    '(?s)\(\* ===== DECLARATION ===== \*\)\s*(?<Declaration>.*?)\s*\(\* ===== IMPLEMENTATION ===== \*\)\s*(?<Implementation>.*)\z'
+  )
+  if (-not $match.Success) {
+    throw "Canonical Function Block source markers are missing: $SourceFile"
+  }
+  return [pscustomobject]@{
+    Declaration = $match.Groups['Declaration'].Value.Trim() + "`n"
+    Implementation = $match.Groups['Implementation'].Value.Trim() + "`n"
+  }
+}
+
+function Add-OrVerify-FunctionBlock {
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][string]$SourceFile
+  )
+
+  $parts = Get-FunctionBlockSourceParts $SourceFile
+  $path = "$fbsPath/$Name"
+  if (Test-NodeExists $path) {
+    $existing = Get-Node $path
+    if (($existing.elementType -ne 'POU') -or
+        ($existing.language -ne 'ST') -or
+        ((Get-Sha256 ([string]$existing.declaration)) -ne (Get-Sha256 $parts.Declaration)) -or
+        ((Get-Sha256 ([string]$existing.implementation)) -ne (Get-Sha256 $parts.Implementation))) {
+      throw "Existing AI-owned Function Block differs from canonical source: $path"
+    }
+    return 'verified'
+  }
+
+  $null = Get-Node $fbsPath
+  $body = [ordered]@{
+    name = $Name
+    elementType = 'POU'
+    language = 'ST'
+    declaration = $parts.Declaration
+    implementation = $parts.Implementation
+    level = 'Standard'
+  }
+  Add-WriteRequest -Method Post `
+    -Uri (ConvertTo-ApiUri $fbsPath) `
+    -Path $path `
+    -Kind 'create-ai-owned-function-block' `
+    -Body $body `
+    -BeforeFingerprint 'missing' `
+    -TargetSha256 (Get-Sha256 ($parts.Declaration + "`n" + $parts.Implementation))
+  return 'planned-create'
+}
+
+function Add-OrVerify-Gvl {
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][string]$SourceFile
+  )
+
+  $declaration = Get-SourceText $SourceFile
+  $path = "$fbsPath/$Name"
+  if (Test-NodeExists $path) {
+    $existing = Get-Node $path
+    if (($existing.elementType -ne 'GVL') -or
+        ((Get-Sha256 ([string]$existing.declaration)) -ne (Get-Sha256 $declaration))) {
+      throw "Existing AI-owned GVL differs from canonical source: $path"
+    }
+    return 'verified'
+  }
+
+  $null = Get-Node $fbsPath
+  $body = [ordered]@{
+    name = $Name
+    elementType = 'GVL'
+    declaration = $declaration
+  }
+  Add-WriteRequest -Method Post `
+    -Uri (ConvertTo-ApiUri $fbsPath) `
+    -Path $path `
+    -Kind 'create-ai-owned-gvl' `
+    -Body $body `
+    -BeforeFingerprint 'missing' `
+    -TargetSha256 (Get-Sha256 $declaration)
+  return 'planned-create'
+}
+
 function Get-TypeDataCheckTarget {
   param([Parameter(Mandatory)][string]$CurrentImplementation)
 
@@ -128,10 +219,10 @@ function Get-TypeDataCheckTarget {
     throw 'TypeData OnCheckData application merge area was not found exactly once.'
   }
   foreach ($requiredText in @(
-    'Station.TypeDataNew.Wp100.BursterUpperRange < 0',
-    'Station.TypeDataNew.Wp100.BursterUpperRange > 8',
-    'Station.TypeDataNew.Wp100.BursterLowerRange < 0',
-    'Station.TypeDataNew.Wp100.BursterLowerRange > 8'
+    'Station.TypeDataNew.Wp100.Burster.UpperRange < 0',
+    'Station.TypeDataNew.Wp100.Burster.UpperRange > 8',
+    'Station.TypeDataNew.Wp100.Burster.LowerRange < 0',
+    'Station.TypeDataNew.Wp100.Burster.LowerRange > 8'
   )) {
     if (-not $CurrentImplementation.Contains($requiredText)) {
       throw "CpStudio-generated TypeData check is missing: $requiredText"
@@ -569,6 +660,20 @@ function Assert-Wp100RunTargets {
     }
   }
 
+  $selectorNode = Get-Node $bursterProgramSelectorPath
+  if (($selectorNode.elementType -ne 'POU') -or
+      ($selectorNode.language -ne 'ST') -or
+      ((Get-Sha256 ([string]$selectorNode.declaration)) -ne (Get-Sha256 $bursterProgramSelectorSource.Declaration)) -or
+      ((Get-Sha256 ([string]$selectorNode.implementation)) -ne (Get-Sha256 $bursterProgramSelectorSource.Implementation))) {
+    throw "Burster program selector readback differs during $Phase."
+  }
+
+  $aiWp100Node = Get-Node $aiWp100Path
+  if (($aiWp100Node.elementType -ne 'GVL') -or
+      ((Get-Sha256 ([string]$aiWp100Node.declaration)) -ne (Get-Sha256 $aiWp100Declaration))) {
+    throw "AiWp100 GVL readback differs during $Phase."
+  }
+
   $typeDataCheckReadback = Get-Node $typeDataCheckPath
   if (([string]$typeDataCheckReadback.declaration -cne $preservedTypeDataCheckDeclaration) -or
       ((Get-ExactSha256 ([string]$typeDataCheckReadback.declaration)) -ne $preservedTypeDataCheckDeclarationExactSha)) {
@@ -650,6 +755,16 @@ $dutStatus = [ordered]@{}
 $dutStatus.Wp100ResistanceResultStruct = Add-OrVerify-Dut 'Wp100ResistanceResultStruct' 'Wp100ResistanceResultStruct.st'
 $dutStatus.Wp100KistlerResultStruct = Add-OrVerify-Dut 'Wp100KistlerResultStruct' 'Wp100KistlerResultStruct.st'
 $dutStatus.Wp100RunResultStruct = Add-OrVerify-Dut 'Wp100RunResultStruct' 'Wp100RunResultStruct.st'
+
+$bursterProgramSelectorSource = Get-FunctionBlockSourceParts 'FB_Wp100BursterProgramSelect.st'
+$aiWp100Declaration = Get-SourceText 'AiWp100.gvl.st'
+$supportObjectStatus = [ordered]@{}
+$supportObjectStatus.FB_Wp100BursterProgramSelect = Add-OrVerify-FunctionBlock `
+  -Name 'FB_Wp100BursterProgramSelect' `
+  -SourceFile 'FB_Wp100BursterProgramSelect.st'
+$supportObjectStatus.AiWp100 = Add-OrVerify-Gvl `
+  -Name 'AiWp100' `
+  -SourceFile 'AiWp100.gvl.st'
 
 $typeDataCheckNode = Get-Node $typeDataCheckPath
 $preservedTypeDataCheckDeclaration = [string]$typeDataCheckNode.declaration
@@ -760,11 +875,20 @@ $preTypeDataActionSha256 = @{
   # Current compiled source immediately before TypeData becomes authoritative.
   N046 = @(
     'bd6198eda8e2554ed6b61b6fb2c7a37c24537eba48ced1f663c49b903de1fb4b',
-    '0a427e6909b43f7c7966c650f268c9a59b30175790b73f16bf9540cf4342b43a'
+    '0a427e6909b43f7c7966c650f268c9a59b30175790b73f16bf9540cf4342b43a',
+    'ceacf04829fc045ef5492a53aeaa536c110049ba80baee3334589197adbb1af2'
   )
   N051 = '78e4cd56b895de1439b3c091c71e4a15446563961693bdc6494a7abe6165e3fb'
-  N080 = '9c96d9eeb76fc1c5c5c7f9e375d8a2c7c3c5371ff3265287d4d24a5d25946ef1'
+  N080 = @(
+    '9c96d9eeb76fc1c5c5c7f9e375d8a2c7c3c5371ff3265287d4d24a5d25946ef1',
+    'a8a2f72f78c15537f965d4b260569e4021fc76861314ec37addbc3196bbfb0cd'
+  )
 }
+$preProgramSelectActionSha256 = @{
+  # Compiled TypeData version immediately before Burster *RCL program selection.
+  N045 = '325d9ec70dde05d472ad1946cbc0b6e4a3ee1ae7ad94e596c40c899c496b5416'
+}
+$preProgramSelectOnChainFinishSha256 = '5678238b38592f4517261d5f8a24885f958f4ea6c9f25120eb7713ac4e10533d'
 
 $runGraphStatus = if ($runNeedsUpdate) {
   $runNode = Get-Node $runPath
@@ -803,9 +927,12 @@ foreach ($step in $steps) {
   if ($preTypeDataActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preTypeDataActionSha256[$step.Name]
   }
+  if ($preProgramSelectActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preProgramSelectActionSha256[$step.Name]
+  }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish)
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256)
 
 $plan = New-WriterPlan `
   -WriterName 'apply_wp100_run_rest.ps1' `
@@ -865,6 +992,7 @@ catch {
 [pscustomobject]@{
   project = $currentProject.path
   duts = $dutStatus
+  supportObjects = $supportObjectStatus
   actions = $actionStatus
   stepCount = $steps.Count
   mode = $Mode

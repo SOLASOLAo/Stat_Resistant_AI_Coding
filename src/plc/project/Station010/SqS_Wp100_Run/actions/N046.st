@@ -5,11 +5,11 @@ IF ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY )
 THEN
   Wp100A103ResistantDetector.Unit.ParCmd.UpperRange :=
     TO_INT(
-      Station.TypeData.Wp100.BursterUpperRange
+      Station.TypeData.Wp100.Burster.UpperRange
     );
   Wp100A103ResistantDetector.Unit.ParCmd.LowerRange :=
     TO_INT(
-      Station.TypeData.Wp100.BursterLowerRange
+      Station.TypeData.Wp100.Burster.LowerRange
     );
 
   Wp100A103ResistantDetector.Unit.Command :=

@@ -49,7 +49,7 @@
     },
     {
       "id": "REQ-TYPE-DATA",
-      "text": "Use the active Wp100 TypeData for Burster range, limits and temperature selection and for the Kistler measurement program."
+      "text": "Use the active Wp100 TypeData for the Burster program, range, limits and temperature selection and for the Kistler measurement program."
     },
     {
       "id": "REQ-RESISTANCE",
@@ -191,8 +191,8 @@
       "id": "N045",
       "kind": "check",
       "comment": "Check measure release",
-      "operation": "Verify the common machine state before entering the simultaneous measurement-start branches.",
-      "transition": "Door and safety feedbacks are valid, press is READY in base position, and Kistler is READY.",
+      "operation": "Verify the common machine state, close the standard Burster connection and select Station.TypeData.Wp100.Burster.ProgramNo with one short *RCL TCP session.",
+      "transition": "Door and safety feedbacks are valid, all three Units are READY, and the Burster has acknowledged the program selection before EOT and socket close.",
       "promptVariants": [
         {
           "when": "MeasurePsoEnum.LEFT",
@@ -215,10 +215,12 @@
       ],
       "requirements": [
         "REQ-MEASUREMENT-START",
+        "REQ-TYPE-DATA",
         "REQ-ATOMIC-GUIDANCE"
       ],
       "acceptance": [
-        "Both parallel branches are released from the same validated common state."
+        "ProgramNo outside 0 through 15 is rejected before opening a socket.",
+        "Both parallel branches are released only after the Burster ACK; NAK, timeout or unexpected response returns a Chain error."
       ]
     },
     {
@@ -494,6 +496,7 @@
   "cleanup": [
     "Set FB_OperatorButton Execute FALSE and turn _000P610 off.",
     "Reset the press-delay timer and all per-execution started flags.",
+    "Reset the Burster program selector and close its temporary TCP session.",
     "End and release safety-door, pressing-cylinder, Burster and Kistler commands.",
     "Clear the operator prompt on ERROR or CANCEL.",
     "Retain Result until the next N000 initialization."
@@ -570,7 +573,7 @@
       ],
       "expected": [
         "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
-        "Burster ranges are applied before motion and every measurement uses the active TypeData limits, temperature selection and Kistler program.",
+        "The Burster acknowledges the active TypeData program before SET_RANGE; range, limits, temperature selection and Kistler program then come from the same active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },

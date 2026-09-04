@@ -40,6 +40,22 @@ function Split-CanonicalMethod {
   }
 }
 
+function Split-CanonicalFunctionBlock {
+  param([Parameter(Mandatory)][string]$Source)
+
+  $match = [regex]::Match(
+    $Source,
+    '(?s)\(\* ===== DECLARATION ===== \*\)\s*(?<Declaration>.*?)\s*\(\* ===== IMPLEMENTATION ===== \*\)\s*(?<Implementation>.*)\z'
+  )
+  if (-not $match.Success) {
+    throw 'Mock canonical Function Block is malformed.'
+  }
+  return [pscustomobject]@{
+    Declaration = $match.Groups['Declaration'].Value.Trim() + "`n"
+    Implementation = $match.Groups['Implementation'].Value.Trim() + "`n"
+  }
+}
+
 function ConvertFrom-MockDeviceUri {
   param([Parameter(Mandatory)][string]$Uri)
 
@@ -68,6 +84,23 @@ function New-MockNode {
       implementation = $targetImplementation
       children = $children
     }
+  }
+
+  if ($Path -eq 'Application/Fbs') {
+    return [pscustomobject]@{
+      name = 'Fbs'
+      elementType = 'Folder'
+      declaration = ''
+      implementation = ''
+      children = @()
+    }
+  }
+
+  if ($Path -in @(
+      'Application/Fbs/FB_Wp100BursterProgramSelect',
+      'Application/Fbs/AiWp100'
+    )) {
+    throw [IO.FileNotFoundException]::new("Mock node does not exist: $Path")
   }
 
   if (($null -ne $autoInfoLineEnumPaths) -and ($Path -eq $autoInfoLineEnumPaths[0])) {
@@ -108,10 +141,10 @@ function New-MockNode {
 $applicationChecks
 
 ////<OES_CODE MergeId="GeneratedDataCheck">
-// Station.TypeDataNew.Wp100.BursterUpperRange < 0
-// Station.TypeDataNew.Wp100.BursterUpperRange > 8
-// Station.TypeDataNew.Wp100.BursterLowerRange < 0
-// Station.TypeDataNew.Wp100.BursterLowerRange > 8
+// Station.TypeDataNew.Wp100.Burster.UpperRange < 0
+// Station.TypeDataNew.Wp100.Burster.UpperRange > 8
+// Station.TypeDataNew.Wp100.Burster.LowerRange < 0
+// Station.TypeDataNew.Wp100.Burster.LowerRange > 8
 ////</OES_CODE>
 "@
     return [pscustomobject]@{
@@ -223,6 +256,39 @@ function Invoke-RestMethod {
     }
     return [pscustomobject]@{ status = 'ok' }
   }
+  if (($Method -eq 'Post') -and ($null -ne $path)) {
+    $json = [Text.Encoding]::UTF8.GetString([byte[]]$Body)
+    $bodyNode = $json | ConvertFrom-Json
+    if ($null -eq $bodyNode.PSObject.Properties['children']) {
+      $bodyNode | Add-Member -NotePropertyName children -NotePropertyValue @()
+    }
+    $targetPath = "$path/$($bodyNode.name)"
+    $global:SfcWriterTestNodes[$targetPath] = $bodyNode
+    if (-not $global:SfcWriterTestNodes.ContainsKey($path)) {
+      $global:SfcWriterTestNodes[$path] = New-MockNode $path
+    }
+    $parent = $global:SfcWriterTestNodes[$path]
+    $parent.children = @($parent.children) + [string]$bodyNode.name
+    $global:SfcWriterTestMutations.Add([pscustomobject]@{ method = $Method; path = $targetPath })
+    return [pscustomobject]@{ status = 'ok' }
+  }
+  if (($Method -eq 'Delete') -and ($null -ne $path)) {
+    if (-not $global:SfcWriterTestNodes.ContainsKey($path)) {
+      $notFound = [InvalidOperationException]::new("Mock node does not exist: $path")
+      $notFound.Data['StatusCode'] = 404
+      throw $notFound
+    }
+    $null = $global:SfcWriterTestNodes.Remove($path)
+    $separator = $path.LastIndexOf('/')
+    $parentPath = $path.Substring(0, $separator)
+    $leafName = $path.Substring($separator + 1)
+    if ($global:SfcWriterTestNodes.ContainsKey($parentPath)) {
+      $parent = $global:SfcWriterTestNodes[$parentPath]
+      $parent.children = @($parent.children | Where-Object { $_ -ne $leafName })
+    }
+    $global:SfcWriterTestMutations.Add([pscustomobject]@{ method = $Method; path = $path })
+    return [pscustomobject]@{ status = 'ok' }
+  }
   if (($Method -eq 'Post') -and ($Uri -eq "$mockBaseUri/jobs")) {
     $global:SfcWriterTestMutations.Add([pscustomobject]@{ method = $Method; path = 'ProjectJob/Save' })
     return [pscustomobject]@{ id = 'mock-save' }
@@ -275,11 +341,12 @@ if ($defaultPlan.mode -ne 'PlanOnly') {
 if ($global:SfcWriterTestMutations.Count -ne 0) {
   throw 'Default PlanOnly performed a REST mutation.'
 }
-if (@($defaultPlan.plan.operations).Count -ne 1) {
-  throw 'Mock PlanOnly did not report the expected single Action update.'
+if (@($defaultPlan.plan.operations).Count -ne 3) {
+  throw 'Mock PlanOnly did not report the two support-object creates and single Action update.'
 }
-if ($defaultPlan.plan.operations[0].kind -ne 'update-action') {
-  throw 'Mock PlanOnly reported an unexpected operation kind.'
+if ((@($defaultPlan.plan.operations.kind) -join ',') -ne
+    'create-ai-owned-function-block,create-ai-owned-gvl,update-action') {
+  throw 'Mock PlanOnly reported unexpected operation kinds.'
 }
 
 $missingHashRejected = $false
@@ -350,13 +417,17 @@ $apply = Invoke-Writer -Writer $runWriter -Arguments @{
 if (($apply.mode -ne 'Apply') -or (-not $apply.declarationTextUnchanged)) {
   throw 'Authorized Apply did not report exact declaration preservation.'
 }
-if ($global:SfcWriterTestMutations.Count -ne 2) {
+if ($global:SfcWriterTestMutations.Count -ne 4) {
   throw "Authorized Apply produced an unexpected mutation count: $($global:SfcWriterTestMutations.Count)"
 }
-if (($global:SfcWriterTestMutations[0].method -ne 'Put') -or
-    (-not $global:SfcWriterTestMutations[0].path.EndsWith('/_aN000_active', [StringComparison]::Ordinal)) -or
-    ($global:SfcWriterTestMutations[1].path -ne 'ProjectJob/Save')) {
-  throw 'Authorized Apply did not perform only the planned Action PUT followed by Save.'
+if (($global:SfcWriterTestMutations[0].method -ne 'Post') -or
+    ($global:SfcWriterTestMutations[0].path -ne 'Application/Fbs/FB_Wp100BursterProgramSelect') -or
+    ($global:SfcWriterTestMutations[1].method -ne 'Post') -or
+    ($global:SfcWriterTestMutations[1].path -ne 'Application/Fbs/AiWp100') -or
+    ($global:SfcWriterTestMutations[2].method -ne 'Put') -or
+    (-not $global:SfcWriterTestMutations[2].path.EndsWith('/_aN000_active', [StringComparison]::Ordinal)) -or
+    ($global:SfcWriterTestMutations[3].path -ne 'ProjectJob/Save')) {
+  throw 'Authorized Apply did not create both support objects, update the Action, then Save.'
 }
 $postSaveGetSet = @($global:SfcWriterTestPostSaveGets | Sort-Object -Unique)
 foreach ($requiredPostSavePath in @(
@@ -366,13 +437,15 @@ foreach ($requiredPostSavePath in @(
     'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData',
     'Application/Station/Wp100/_this/Structs/Data/Wp100ResistanceResultStruct',
     'Application/Station/Wp100/_this/Structs/Data/Wp100KistlerResultStruct',
-    'Application/Station/Wp100/_this/Structs/Data/Wp100RunResultStruct'
+    'Application/Station/Wp100/_this/Structs/Data/Wp100RunResultStruct',
+    'Application/Fbs/FB_Wp100BursterProgramSelect',
+    'Application/Fbs/AiWp100'
   )) {
   if ($requiredPostSavePath -notin $postSaveGetSet) {
     throw "Authorized Apply did not re-read a required target after Save: $requiredPostSavePath"
   }
 }
-if ($postSaveGetSet.Count -lt 26) {
+if ($postSaveGetSet.Count -lt 28) {
   throw "Authorized Apply post-Save verification was not full-target (unique GET count=$($postSaveGetSet.Count))."
 }
 
@@ -414,6 +487,17 @@ if ((@($global:SfcWriterTestNodes[$corruptPath].children) -join "`n") -cne
     (@($beforeCorruptNode.children) -join "`n")) {
   throw 'Post-Save verification failure did not restore the exact preflight Action children.'
 }
+foreach ($rolledBackSupportPath in @(
+    'Application/Fbs/FB_Wp100BursterProgramSelect',
+    'Application/Fbs/AiWp100'
+  )) {
+  if ($global:SfcWriterTestNodes.ContainsKey($rolledBackSupportPath)) {
+    throw "Post-Save verification failure did not delete created support object: $rolledBackSupportPath"
+  }
+}
+if (@($global:SfcWriterTestNodes['Application/Fbs'].children).Count -ne 0) {
+  throw 'Post-Save verification failure did not restore the Application/Fbs child list.'
+}
 
 $global:SfcWriterTestNodes = @{}
 $global:SfcWriterTestMutations.Clear()
@@ -441,4 +525,4 @@ if ($global:SfcWriterTestMutations.Count -ne 0) {
   throw 'Sequence no-change Apply performed a REST mutation or Save.'
 }
 
-Write-Output 'SFC REST writer PlanOnly coverage OK: default mode, SHA/drift rejection, mocked Action PUT, exact declaration preservation, post-Save full readback/fault rollback, and no-change sequence plan'
+Write-Output 'SFC REST writer PlanOnly coverage OK: default mode, SHA/drift rejection, support-object POSTs, Action PUT, exact declaration preservation, post-Save full readback/fault rollback, and no-change sequence plan'
