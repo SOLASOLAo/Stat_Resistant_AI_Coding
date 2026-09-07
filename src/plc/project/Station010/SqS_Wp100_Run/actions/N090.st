@@ -1,7 +1,14 @@
 // Wait for SINGLE_MEAS and copy the command result exactly once on DONE.
+// Force loss wins over completion in the same PLC scan. A fault never resumes.
+_retVal := CheckPressForce(Phase := 3);
+IF ( _retVal <> OK )
+THEN
+  RETURN;
+END_IF
+
 IF ( NOT _bursterStarted )
 THEN
-  _retVal := OK;
+  _retVal := RUNNING;
 ELSE
   _unitResult := CheckUnitDone(
     Wp100A103ResistantDetector.Unit,

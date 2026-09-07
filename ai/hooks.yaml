@@ -132,7 +132,8 @@ hooks:
       - Kistler MEASURE and pressing-cylinder WRKPOS use one simultaneous SFC divergence
       - branch 1 uses _retVal and branch 2 uses _retVal2
       - each device has a separate Start step and Wait step for diagnostics
-      - resistance measurement starts after StationData.PressDelayTime milliseconds
+      - Kistler MeasRunning releases press-down; resistance starts only after force >2500 N continuously for 2 s
+      - StationData.PressForceTimeout bounds total qualification waiting; low force or invalid data during resistance measurement latches a soft error and holds the step
       - Kistler EndMeasurement and pressing-cylinder BASPOS use one simultaneous SFC divergence
       - Kistler stop therefore occurs no later than one second after press-up start
       - Result remains available after DONE and is cleared only by the next N000

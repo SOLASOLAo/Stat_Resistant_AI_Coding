@@ -76,6 +76,9 @@ function New-MockNode {
     if ($null -ne $sequencePath) {
       $children += 'CheckPartPresent'
     }
+    if ($null -ne $runPath) {
+      $children += 'CheckPressForce'
+    }
     $children += 'OnChainFinish'
     return [pscustomobject]@{
       name = ($activeChainPath -split '/')[-1]
@@ -93,6 +96,21 @@ function New-MockNode {
       declaration = ''
       implementation = ''
       children = @()
+    }
+  }
+
+  if ($Path -eq $forceTimeoutPath) {
+    return [pscustomobject]@{
+      name = 'StationDataStruct'; elementType = 'DUT'; children = @()
+      declaration = "TYPE StationDataStruct : STRUCT`n  PressForceTimeout : DINT;`nEND_STRUCT END_TYPE`n"
+      implementation = ''
+    }
+  }
+  if ($Path -eq $forceEventPath) {
+    return [pscustomobject]@{
+      name = 'Wp100'; elementType = 'GVL'; children = @()
+      declaration = "VAR_GLOBAL CONSTANT`n  EVENT_PRESS_FORCE_INVALID : DINT := -5;`nEND_VAR`n"
+      implementation = ''
     }
   }
 
@@ -179,6 +197,13 @@ $applicationChecks
       declaration = $parts.Declaration
       implementation = $parts.Implementation
       children = @()
+    }
+  }
+  if ($name -eq 'CheckPressForce') {
+    $parts = Split-CanonicalMethod (Read-CanonicalText 'SqS_Wp100_Run\methods\CheckPressForce.st')
+    return [pscustomobject]@{
+      name = $name; elementType = 'POUMethod'; children = @()
+      declaration = $parts.Declaration; implementation = $parts.Implementation
     }
   }
   if ($name -notmatch '^_a(N\d{3})_active$') {

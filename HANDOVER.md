@@ -1045,3 +1045,87 @@
   未启动另一套 PLE/MCP，也未 Build、保存工程、下载、启停、写变量、FORCE
   或重启服务。本次 Git 提交限交接与待办记录；Station010 本地生成/运行
   配置和加密 PLC 工程保留原样，未上传凭据、License、运行缓存或 `.project`。
+
+## 2026-09-07 · Wp100 压紧力联锁初始需求（历史记录，实施结果见下）
+
+- 用户明确的新工艺：左、中、右三个位置均在压缸下压到位后，要求实时力
+  **严格大于 2500 N 且连续保持 2 s**，随后启动一次 Burster 测量；正常测量
+  完成才允许上升。等待达标超过最大诊断时间，或电阻测量期间力
+  `<=2500 N`，均报警并阻止流程继续。
+- 当前可读源码仍是旧逻辑：N050/N051 并行下压与 Kistler MEASURE；N070
+  只等待 `Station.StationData.PressDelayTime`；N080/N090 没有测量期间掉力
+  联锁。SqC_Run 已按 LEFT → MIDDLE → RIGHT 顺序复用同一 SqS_Run，
+  不应复制三套逻辑。本次没有读取在线代码或证明现场已部署源码一致。
+- CpStudio 待新增接口（不能由 AI 在 PLE 强补生成声明）：
+
+  | 位置 | 名称 | 配置 |
+  |---|---|---|
+  | Station 的 StationDataStruct，与 PressDelayTime 同级 | PressForceTimeout | DINT，单位 ms；中文“压紧力达标最大等待时间”；英文“Maximum wait for stable pressing force (ms)” |
+  | Wp100 → Events | EVENT_PRESS_FORCE_INVALID | 本次已保存模型的 Wp100 本地编号 5 空闲，可用于新事件；以重新导出的常量为准，不复用 Station 的压力事件 |
+
+  事件中文：`压紧力异常：等待达标超时或电阻测量期间压紧力不足`。
+  事件英文：`Press force fault: stabilization timeout or insufficient force during resistance measurement`。
+  最大等待时间必须大于 2000 ms；实际工艺值待用户确定，不能把 0 当作禁用。
+- 最小实现计划：保留单个原子 Chain，先确认 Kistler 进入有效测量状态再
+  下压（避免当前压电 OPERATE/START 耦合下带载归零）；用现有实时值
+  `Wp100A104Kistler.Unit.OutImm.ForceAct` 判定。2 s 稳定计时在条件不成立时
+  清零；独立总等待计时从下压到位起算，不随力的波动重置。新判定替代
+  原来的单纯压后延时，不能把旧 PressDelayTime 的到时当成力达标。
+- 测量启动前再确认有效力；从 Burster 启动请求到完成判定均检测掉力，
+  同一扫描周期掉力与完成同时出现时按失败处理，不接受该次结果。通信
+  无效或 Kistler 意外结束也不能使用旧的力值放行。故障锁存后不因力恢复
+  自动清除/重测/上升/进入下一位置。
+- 报警计划沿用链内锁定 SOFTERROR + AdditionalInfo（位置、阶段、力值和
+  原因）来阻止步骤放行，不直接用 ERROR 假装“保持原步骤”。**压缸在
+  故障后的实际处置与复位/重测方式仍待用户确认**；现有安全回路、
+  ControlOn 和标准 Unit 故障处理始终优先，不保证气动保持、不屏蔽下电。
+  Kistler 整次测量超时还需覆盖启动/下压、力达标等待、Burster 测量和结束
+  握手，不能与新增的力达标诊断时间混为同一个计时器或简单禁用超时。
+- 验收应覆盖：三个位置、2500 N 等号边界、2 s 中途跌落重新计时、等待
+  反复波动仍会超时、Burster 测量中掉力/数据失效、故障不自恢复、正常
+  结果后才上升。本次仅记录需求与待办；原 process.json/PLC 源码保留
+  当前实现状态，新增接口 Export 后再同步修改流程事实源和 ST、回读、
+  Build。没有修改 CpStudio/PLE、连接或操作真机，亦未提交推送 Git。
+
+## 2026-09-07 · Wp100 压紧力联锁已写入 PLE（离线通过，未下载）
+
+- 用户确认故障时压缸保持下压、等待人工处理；不是自动上升或自动重测。
+  已从本次 CpStudio 导出和当前 PLE 读取到
+  `Station.StationData.PressForceTimeout : DINT`（ms）以及
+  `Wp100.EVENT_PRESS_FORCE_INVALID : DINT := -5`。生成声明没有改动。
+- 仅在 `SqS_Wp100_Run` 增加 AI-owned `CheckPressForce` 方法，左/中/右
+  继续复用原来的 23 步 SFC。使用方法的原生 `VAR_INST` 保存诊断 TON 和
+  故障锁存，复用链中原有 `_pressDelay` 做连续 2 s 判断；没有新增框架/FB。
+  原理参考：[CODESYS VAR_INST](https://content.helpme-codesys.com/en/CODESYS%20Development%20System/_cds_vartypes_var_inst.html)。
+- 实际改动：N000/OnChainFinish 清理计时和锁定事件；N050 等 Kistler
+  MeasRunning 且 ExecState 非 ERROR 后才下压；N051 校验诊断时间并启动
+  Kistler；N060 从压缸到位开始总等待；N070 要求有效力严格 `>2500 N`
+  连续 2 s；N080 启动前复查且单次触发；N090 在接收 Burster DONE 前
+  检查掉力。原 PressDelayTime 字段保留兼容，但不再用它代替力达标。
+- 力跌到 `<=2500 N` 会重置达标的 2 s TON，但不会重启总诊断时间。
+  电阻测量开始后不再去抖；掉力、Kistler 结束/ERROR/Alarm、非有限数或
+  压缸工作位丢失均锁存首次故障。SOFTERROR 附加信息保留位置/原因/力值；
+  测量结果无效，结束/取消仪表请求，**不发送压缸上升命令**。
+  力恢复或只确认报警不会自动继续；人工取消当前链、处理后重新启动。
+  安全回路、ControlOn 和标准 Unit 故障处理仍可中止过程，软件不保证物理保压。
+- 自动 Kistler 测量 watchdog 至少为 `PressForceTimeout + 30 s`，已有更大值
+  保留；30 s 是下压/Burster/结束握手的工程余量，现场需确认覆盖实际时长。
+  HMI 手动测量的现有输入值/超时机制没有改成无限等待。
+- 写入过程：现有唯一 PLE（profile `ctrlX PLC 2.6.8`）官方 REST，先 Plan
+  再按 SHA Apply、逐对象回读、Save。首次新增方法后父对象校验不一致，事务
+  自动回退并验证恢复；调整为先改现有图再新增方法，未放宽哈希门禁。
+  编译修正了本库不存在的 ErrorSet 成员，使用实际的 ExecState.ERROR。
+- 最终 PLE F11 Build：**0 errors / 5 warnings**，与改前同为四条 C0351
+  OPC.UA.DA 和一条 C0373 SymbolConfig。REST 没有应用 Build 接口，本轮仅
+  Build 使用 UI；没有通过 UI 编辑代码，也没有启动第二套 PLE/MCP。
+  全目标最终 PlanOnly 为 0 个操作，生成父声明 SHA 未变。
+- 本轮通过框架静态检查、REST PlanOnly/事务回退测试、力时序模型测试及
+  Station010 Project Pack 检查。时序模型不是 PLC 仿真，编译不是现场验收。
+  检查记录：`data/reports/plc/wp100-force-interlock-20260907.json`（仅本地）。
+  Stage 2 建立了 PlanOnly action，但没有以 UI 截图冒充结构化 Runner evidence，
+  所以不宣称该 ledger DONE。原审计和本次新审计均保留。
+- 用户下一步：在 IPC 实际 StationData 中设置 `PressForceTimeout >2000 ms`
+  并加载为 active dataset；0/未设置会报警，不会静默禁用诊断。导出接口不等于
+  运行时 DAT 已有值。部署前同步新事件文本/数据定义；下载由用户操作或再次批准。
+  现场还需验收三个位置、2500 N 等号、2 s 中断、总等待超时、测量中掉力、
+  锁存不自恢复和取消后重新开始。本轮没有连接真机、下载、启停或写变量/FORCE。

@@ -1,4 +1,9 @@
-// Parallel branch 2: start Kistler MEASURE.
+// Branch 2: validate configuration, then start Kistler before press-down.
+_retVal2 := CheckPressForce(Phase := 1);
+IF ( _retVal2 <> OK )
+THEN
+  RETURN;
+END_IF
 _retVal2 := RUNNING;
 
 IF ( _kistlerStarted )
@@ -15,9 +20,13 @@ THEN
   Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo :=
     Station.TypeData.Wp100.KistlerProgramNo;
 
-  IF ( Wp100A104Kistler.Unit.ParCmd.Measure.MeasuringTimeout <= T#0MS )
+  // Keep a larger watchdog; reserve 30 s beyond force waiting for movement,
+  // Burster and the end handshake. This is bounded, not an unlimited measure.
+  IF ( Wp100A104Kistler.Unit.ParCmd.Measure.MeasuringTimeout <
+       ( DINT_TO_TIME(Station.StationData.PressForceTimeout) + T#30S ) )
   THEN
-    Wp100A104Kistler.Unit.ParCmd.Measure.MeasuringTimeout := T#30S;
+    Wp100A104Kistler.Unit.ParCmd.Measure.MeasuringTimeout :=
+      DINT_TO_TIME(Station.StationData.PressForceTimeout) + T#30S;
   END_IF
 
   Wp100A104Kistler.Unit.Command := KistlerForceStrokeCmd.MEASURE;

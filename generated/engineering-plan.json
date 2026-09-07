@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "d5471568a6bde773ecb658c68cdfbaaafcd199d4fcf2cb5e05a848806b998e93",
+  "contentId": "554106f3fa8d831ea227977188da19352a22810f7083df145d1a403f0eb21e03",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -38,8 +38,8 @@
     },
     {
       "path": "specs/events.yaml",
-      "length": 879,
-      "sha256": "fcb20faef229d95d7f129537cfb53523ea822c024bd9e678f985ad83ba3ee0e6"
+      "length": 1731,
+      "sha256": "673ef7bdc0f9c5484f272c1dc3f9230c98bbbcb8918a2fcbbf7d09f11d0a6264"
     },
     {
       "path": "specs/units/Wp100.yaml",
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 20220,
-      "sha256": "9d25803c7f5022206285570b1b7630e5a7da03c2bd3126a8d26d5590d8cc7ba0"
+      "length": 22445,
+      "sha256": "19b02e4ac307cd32d20d5cd73d9b70539bd098380bb564d7de2f19ca0d296421"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -88,18 +88,18 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 14221,
-      "sha256": "e143135ba260c0667534319130b0beee4dae8c0a70a66e3a3a2034ad0b193c14"
+      "length": 14426,
+      "sha256": "809d415dc596535e8915ce6f1d66e04e918aa24f11ff4cab44d548c094c47731"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 8500,
-      "sha256": "f038d9d7bd041d3c12a1ddacc039ed3b3bbf6dc69d088326bdd6a7a61c61bd01"
+      "length": 8699,
+      "sha256": "903d16b0378b8c7a62ffec9f82bb9843879d13c70a381979baa93f371edac295"
     },
     {
       "path": "ai/graphical.yaml",
-      "length": 5279,
-      "sha256": "72c669fa6347e90dc71420b0a91a09aa97d31a14f76e6b5bf8f05e2d509e7502"
+      "length": 5287,
+      "sha256": "fee3779b7a3e3e21fefb00749e5f0fa992e3981c967648e622e2a732ada36c59"
     },
     {
       "path": "specs/station010-eplan-io.csv",
@@ -454,7 +454,7 @@
           "id": "N000",
           "kind": "initialize",
           "comment": "Initialize run",
-          "operation": "Latch MeasurePos into Result, clear the previous result and reset per-execution command state.",
+          "operation": "Latch MeasurePos into Result, clear the previous result, reset per-execution commands and reset CheckPressForce only at this explicit new-execution boundary.",
           "transition": "Initialization completed.",
           "prompt": null,
           "promptVariants": null,
@@ -654,7 +654,7 @@
           "id": "N050",
           "kind": "start",
           "comment": "Start press WRKPOS",
-          "operation": "Start Wp100K102PressingCylinder.WRKPOS on measurement-start branch 1.",
+          "operation": "Wait for Kistler started, MeasRunning and no Unit error, then start Wp100K102PressingCylinder.WRKPOS on branch 1.",
           "transition": "The press work-position command is accepted.",
           "prompt": null,
           "promptVariants": null,
@@ -662,7 +662,7 @@
             "REQ-MEASUREMENT-START"
           ],
           "acceptance": [
-            "The press branch uses its own return value and diagnostic step."
+            "The press branch uses its own return value and diagnostic step; it cannot apply load before Kistler enters measurement."
           ],
           "parallel": {
             "group": "measurement_start",
@@ -673,7 +673,7 @@
           "id": "N051",
           "kind": "start",
           "comment": "Start Kistler MEASURE",
-          "operation": "Copy KistlerProgramNo from the active TypeData and start Wp100A104Kistler.MEASURE on measurement-start branch 2.",
+          "operation": "Validate and latch PressForceTimeout >2000 ms through CheckPressForce Phase 1. Copy KistlerProgramNo and start MEASURE on branch 2. Keep a larger configured watchdog, otherwise set its minimum to PressForceTimeout plus a 30 s movement/Burster/end-handshake budget.",
           "transition": "The Kistler measurement command is accepted.",
           "prompt": null,
           "promptVariants": null,
@@ -682,7 +682,7 @@
             "REQ-TYPE-DATA"
           ],
           "acceptance": [
-            "The Kistler branch uses a return value independent from the press branch."
+            "The Kistler branch uses an independent return value; invalid timeout configuration blocks START. The extra 30 s watchdog budget needs field acceptance and does not disable standard timeouts."
           ],
           "parallel": {
             "group": "measurement_start",
@@ -693,7 +693,7 @@
           "id": "N060",
           "kind": "wait",
           "comment": "Wait press WRKPOS",
-          "operation": "Wait for the pressing-cylinder command started by N050.",
+          "operation": "Wait for the pressing-cylinder command started by N050 and start CheckPressForce Phase 2 at confirmed work position.",
           "transition": "The press reaches work position; command ERROR is propagated.",
           "prompt": null,
           "promptVariants": null,
@@ -730,16 +730,17 @@
         {
           "id": "N070",
           "kind": "delay",
-          "comment": "Wait press delay",
-          "operation": "Wait Station.StationData.PressDelayTime after the press is down and Kistler is running.",
-          "transition": "The configured delay has elapsed.",
+          "comment": "Wait force >2500N for 2s",
+          "operation": "CheckPressForce Phase 2 requires valid force >2500 N continuously for 2 s. Force bounce resets only the stability TON, never the total PressForceTimeout wait. A fault stays latched until an explicit chain boundary.",
+          "transition": "Force is valid and strictly >2500 N continuously for 2 s without a latched fault.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
             "REQ-RESISTANCE"
           ],
           "acceptance": [
-            "Burster measurement cannot begin before the configured delay expires."
+            "At exactly 2500 N the stable timer resets; a 1.9 s rise followed by a dip cannot release measurement.",
+            "Repeated force bounce still reaches the total timeout. Timeout holds the press command state and logs position, reason and force; safety remains authoritative."
           ],
           "parallel": null
         },
@@ -747,7 +748,7 @@
           "id": "N080",
           "kind": "start",
           "comment": "Start resistance test",
-          "operation": "Copy upper/lower limits and ReadTemperature from the active TypeData and start Wp100A103ResistantDetector.SINGLE_MEAS.",
+          "operation": "Recheck force qualification, copy upper/lower limits and ReadTemperature, and issue SINGLE_MEAS once. After the request, Phase 3 guards force even if single-step mode holds this action; do not retrigger the instrument.",
           "transition": "The resistance-meter command is accepted.",
           "prompt": null,
           "promptVariants": null,
@@ -764,7 +765,7 @@
           "id": "N090",
           "kind": "capture",
           "comment": "Wait resistance result",
-          "operation": "Wait for the resistance command and copy its valid, verdict, value and temperature fields.",
+          "operation": "Run CheckPressForce Phase 3 before checking Burster completion. Force <=2500 N or invalid force data latches a soft error and invalidates the result even if DONE arrives in the same scan. Only a valid completed command may be copied.",
           "transition": "The Burster command completes; command ERROR is propagated.",
           "prompt": null,
           "promptVariants": null,
@@ -772,7 +773,8 @@
             "REQ-RESISTANCE"
           ],
           "acceptance": [
-            "Result.Resistance is complete before the return sequence starts."
+            "Result.Resistance is complete before the return sequence starts.",
+            "A force fault never advances to press-up or the next fixture position, and restored force cannot automatically clear/retry the failed measurement. Instrument requests are ended/cancelled while waiting for the operator."
           ],
           "parallel": null
         },
@@ -931,7 +933,7 @@
       ],
       "cleanup": [
         "Set FB_OperatorButton Execute FALSE and turn _000P610 off.",
-        "Reset the press-delay timer and all per-execution started flags.",
+        "Reset the force timers, locked force event and per-execution flags only at the explicit chain boundary; merely restoring force does not reset the fault.",
         "Reset the Burster program selector and close its temporary TCP session.",
         "End and release safety-door, pressing-cylinder, Burster and Kistler commands.",
         "Clear the operator prompt on ERROR or CANCEL.",
@@ -1268,7 +1270,9 @@
         "N120"
       ],
       "expected": [
-        "Both simultaneous groups expose separate branch diagnostics and require both branches at convergence.",
+        "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
+        "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
+        "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
         "The Burster acknowledges the active TypeData program before SET_RANGE; range, limits, temperature selection and Kistler program then come from the same active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
@@ -1416,7 +1420,7 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-MEASUREMENT-START",
-      "text": "Start press-down and Kistler measurement as separately diagnosable simultaneous branches and join only after both are running.",
+      "text": "Retain separately diagnosable start branches, but release press-down only after Kistler MeasRunning with no Unit error, so piezo OPERATE/START precedes loading. Join after press work position and active Kistler measurement.",
       "stepIds": [
         "N045",
         "N050",
@@ -1446,7 +1450,7 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-RESISTANCE",
-      "text": "Wait PressDelayTime after press-down, run one Burster resistance measurement and capture its result.",
+      "text": "After confirmed press-down require force strictly greater than 2500 N continuously for 2 s within StationData.PressForceTimeout. Then run one Burster measurement and monitor force through completion. Timeout, force <=2500 N during measurement or invalid force data latches EVENT_PRESS_FORCE_INVALID, invalidates the result and holds the step without automatic press-up or retry.",
       "stepIds": [
         "N070",
         "N080",

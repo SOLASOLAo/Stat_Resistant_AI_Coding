@@ -1,6 +1,21 @@
 schema_version: 1
 
 events:
+  - owner: Wp100
+    symbol: EVENT_PRESS_FORCE_INVALID
+    designator: -5
+    class: SOFTERROR
+    lock: true
+    conditions:
+      - total force qualification wait expires without force >2500 N continuously for 2 s
+      - force <=2500 N during resistance measurement, including a single-step hold after its start
+      - Kistler measurement/data becomes invalid or press work position is lost during force monitoring
+      - PressForceTimeout <=2000 ms
+    additional_info:
+      requirement: retain first fault position, reason and force in STRING(63)
+    behavior: hold the SFC step and invalidate the result; finish/cancel instruments, never request press-up
+    reset: explicit chain cancel/finish and next initialization; never clear on force recovery alone
+    safety: existing safety, ControlOn and standard device faults remain authoritative
   - owner: Station
     symbol: EVENT_MAINTENANCE_DOOR_NOT_LOAKED
     designator: -2

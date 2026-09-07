@@ -1,4 +1,18 @@
-// Start one Burster resistance measurement after the press delay.
+// Recheck force at the start edge; a step transition is not a retained permit.
+IF ( _bursterStarted )
+THEN
+  // Also cover a single-step hold after the start request: do not retrigger.
+  _retVal := CheckPressForce(Phase := 3);
+  RETURN;
+END_IF
+_retVal := CheckPressForce(Phase := 2);
+IF ( _retVal <> OK )
+THEN
+  RETURN;
+END_IF
+_retVal := RUNNING;
+
+// Start one Burster resistance measurement after force qualification.
 IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
    ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos ) AND
    ( Peripherals.BinIo._000K913_Y32 ) AND

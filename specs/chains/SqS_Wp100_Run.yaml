@@ -77,10 +77,29 @@ input:
       required_false: [_100B601, _100B602]
 
 station_data:
-  PressDelayTime:
-    plc_path: Station.StationData.PressDelayTime
+  PressForceTimeout:
+    plc_path: Station.StationData.PressForceTimeout
     type: DINT
     unit: ms
+    validation: greater than 2000; zero must not disable monitoring
+    snapshot: at Kistler preflight for each position
+  PressDelayTime:
+    plc_path: Station.StationData.PressDelayTime
+    status: legacy generated field retained but no longer consumed by SqS_Run
+
+force_interlock:
+  source: Wp100A104Kistler.Unit.OutImm.ForceAct
+  threshold_n: 2500
+  stable_time_ms: 2000
+  comparison: strictly greater; equality is insufficient force
+  implementation: CheckPressForce method with VAR_INST state and the existing _pressDelay TON
+  waiting: independent total wait starts at confirmed press work position; force bounce resets only the stable TON
+  measurement: check force before start and before accepting completion; force loss wins over completion in the same scan
+  fault_event: Wp100.EVENT_PRESS_FORCE_INVALID
+  fault_class: SOFTERROR
+  fault_behavior: latched step hold, invalidate result, cancel Burster and end Kistler; do not command press-up
+  reset: explicit chain cancel/finish and new initialization; force recovery alone cannot resume
+  safety_priority: existing safety and ControlOn override the requested pressure hold
 
 type_data:
   source: Station.TypeData.Wp100
@@ -169,6 +188,7 @@ steps:
     branch: 1
     return_value: _retVal
     command: Wp100K102PressingCylinder.WRKPOS
+    start_requires: [Kistler started, Kistler MeasRunning, Kistler ExecState not ERROR]
   - id: N060
     comment: Wait press WRKPOS
     parallel_group: measurement_start
@@ -182,6 +202,8 @@ steps:
     return_value: _retVal2
     command: Wp100A104Kistler.MEASURE
     program: Station.TypeData.Wp100.KistlerProgramNo
+    preflight: CheckPressForce Phase 1 validates PressForceTimeout before START
+    watchdog: max of configured Kistler MeasuringTimeout and PressForceTimeout plus 30 s; overhead budget needs field acceptance
   - id: N061
     comment: Wait Kistler running
     parallel_group: measurement_start
@@ -191,11 +213,12 @@ steps:
   - parallel_convergence: measurement_start
     completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N070
-    comment: Wait press delay
-    duration: Station.StationData.PressDelayTime milliseconds
+    comment: Wait force >2500N for 2s
+    wait_for: CheckPressForce Phase 2; continuous force qualification within PressForceTimeout
   - id: N080
     comment: Start resistance test
     command: Wp100A103ResistantDetector.SINGLE_MEAS
+    force_guard: Phase 2 before first request; Phase 3 while a single-step hold retains an already started request
     parameters:
       - Station.TypeData.Wp100.Burster.UpperLimit
       - Station.TypeData.Wp100.Burster.LowerLimit
@@ -203,6 +226,7 @@ steps:
   - id: N090
     comment: Wait resistance result
     result: Result.Resistance
+    force_guard: Phase 3 before CheckUnitDone and before result acceptance
   - id: N095
     comment: Check release ready
     purpose: release both parallel finish branches after resistance measurement
@@ -278,6 +302,7 @@ cleanup:
   reset:
     - operator button Execute and _000P610
     - press-delay timer
+    - CheckPressForce timers and locked event at the explicit chain boundary
     - safety-door Execute
     - pressing-cylinder Execute
     - Burster program selector Execute and temporary TCP session
@@ -319,3 +344,17 @@ verification:
     before MEASURE. The mixed OnCheckData method retains generated checks and adds
     the application plausibility checks. All writes were transactional,
     declarations were preserved exactly and final PlanOnly had zero operations.
+
+force_interlock_verification:
+  date: 2026-09-07
+  build: 0 errors / 5 warnings
+  warning_scope: four existing C0351 OPC.UA.DA plus one existing C0373 SymbolConfig
+  build_channel: fresh F11 Generate Code in the existing offline PLE, observed via UI
+  mutation_channel: guarded official PLE REST with checkpoint, plan SHA, readback and Save
+  feature_plan_sha256: f096620fe8de579f780e996e986778b831ca59629abccb032313893e70f02376
+  compatibility_fix_plan_sha256: 5de98aabdedf65d373d8b66eb0289269ba4b8850d923243f3e6223861c98f833
+  no_change_plan_sha256: 51127069824e04aa967e33d23c5eb63c402b78ffa25619ce64acb79b1f2339eb
+  project_sha256: b07d57804111dde635c7331430756c0c3d0c7f2f8ddc953621fb042aa55febf3
+  parent_declaration_unchanged: true
+  downloaded: false
+  field_acceptance: pending

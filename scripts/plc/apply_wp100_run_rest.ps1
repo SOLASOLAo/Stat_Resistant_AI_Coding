@@ -16,6 +16,8 @@ $fbsPath = 'Application/Fbs'
 $bursterProgramSelectorPath = "$fbsPath/FB_Wp100BursterProgramSelect"
 $aiWp100Path = "$fbsPath/AiWp100"
 $typeDataCheckPath = 'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData'
+$forceTimeoutPath = 'Application/Station/_this/Structs/Data/StationDataStruct'
+$forceEventPath = 'Application/Station/Wp100/_this/Wp100'
 $typeDataCheckBaselineRegionSha = 'b7274856e45bfa71f04f32b6c4af907e6910ffbccab182c5af656a3fd0439f84'
 $autoInfoLineEnumPaths = @(
   'Application/Station/_this/Enums/AutoInfoLineEnum',
@@ -290,7 +292,8 @@ function Set-Action {
   )
 
   $implementation = Get-SourceText $SourceFile
-  $name = if ($Step -eq 'OnChainFinish') { 'OnChainFinish' } else { "_a${Step}_active" }
+  $isMethod = $Step -in @('OnChainFinish', 'CheckPressForce')
+  $name = if ($isMethod) { $Step } else { "_a${Step}_active" }
   $path = "$runPath/$name"
 
   if (-not (Test-NodeExists $path)) {
@@ -303,10 +306,21 @@ function Set-Action {
       language = 'ST'
       implementation = $implementation
     }
+    if ($isMethod) {
+      $methodParts = $implementation -split "`n`n", 2
+      if ($methodParts.Count -ne 2) { throw "Malformed method source: $Step" }
+      $body = [ordered]@{
+        name = $name
+        elementType = 'POUMethod'
+        language = 'ST'
+        declaration = $methodParts[0] + "`n"
+        implementation = $methodParts[1]
+      }
+    }
     Add-WriteRequest -Method Post `
       -Uri $runUri `
       -Path $path `
-      -Kind 'create-action' `
+      -Kind $(if ($isMethod) { 'create-ai-owned-method' } else { 'create-action' }) `
       -Body $body `
       -BeforeFingerprint 'missing' `
       -TargetSha256 (Get-Sha256 $implementation)
@@ -315,14 +329,14 @@ function Set-Action {
 
   $node = Get-Node $path
   $target = $implementation
-  if ($Step -eq 'OnChainFinish') {
+  if ($isMethod) {
     $split = $implementation -split "`n`n", 2
     if ($split.Count -ne 2) {
-      throw 'OnChainFinish source must contain declaration and implementation separated by one blank line.'
+      throw "$Step source must contain declaration and implementation separated by one blank line."
     }
     $targetDeclaration = $split[0] + "`n"
     if ((Get-Sha256 ([string]$node.declaration)) -ne (Get-Sha256 $targetDeclaration)) {
-      throw 'OnChainFinish declaration differs from the canonical CpStudio interface; refusing to write.'
+      throw "$Step declaration differs from the reviewed interface; refusing to write."
     }
     $script:PreservedDeclarations[$path] = [string]$node.declaration
     $current = [string]$node.declaration + "`n" + [string]$node.implementation
@@ -340,7 +354,7 @@ function Set-Action {
     throw "Existing object has unrecognized edits: $path"
   }
 
-  if ($Step -eq 'OnChainFinish') {
+  if ($isMethod) {
     $node.implementation = $split[1]
   }
   else {
@@ -349,7 +363,7 @@ function Set-Action {
   Add-WriteRequest -Method Put `
     -Uri (ConvertTo-ApiUri $path) `
     -Path $path `
-    -Kind $(if ($Step -eq 'OnChainFinish') { 'update-method-implementation' } else { 'update-action' }) `
+    -Kind $(if ($isMethod) { 'update-method-implementation' } else { 'update-action' }) `
     -Body $node `
     -BeforeFingerprint $script:PreflightObservations[$path].Fingerprint `
     -TargetSha256 $targetSha256
@@ -610,6 +624,8 @@ function Save-CurrentProject {
 function Assert-Wp100RunTargets {
   param([Parameter(Mandatory)][string]$Phase)
 
+  Assert-ForceInterfaces
+
   $null = Assert-RequiredEnumItems `
     -CandidatePaths @($autoInfoLineGate.Path) `
     -ExpectedItems $requiredAutoInfoLineItems `
@@ -651,6 +667,14 @@ function Assert-Wp100RunTargets {
     throw "SqS_Wp100_Run OnChainFinish implementation readback differs during $Phase."
   }
 
+  $forceNode = Get-Node "$runPath/CheckPressForce"
+  $forceParts = (Get-SourceText 'SqS_Wp100_Run\methods\CheckPressForce.st') -split "`n`n", 2
+  if (($forceNode.elementType -ne 'POUMethod') -or
+      ((Get-Sha256 ([string]$forceNode.declaration)) -ne (Get-Sha256 ($forceParts[0] + "`n"))) -or
+      ((Get-Sha256 ([string]$forceNode.implementation)) -ne (Get-Sha256 $forceParts[1]))) {
+    throw "CheckPressForce method readback differs during $Phase."
+  }
+
   foreach ($dutName in @('Wp100ResistanceResultStruct', 'Wp100KistlerResultStruct', 'Wp100RunResultStruct')) {
     $dutNode = Get-Node "$dataStructPath/$dutName"
     $dutSource = Get-SourceText "$dutName.st"
@@ -684,6 +708,17 @@ function Assert-Wp100RunTargets {
   }
 }
 
+function Assert-ForceInterfaces {
+  $dataNode = Get-Node $forceTimeoutPath
+  $eventNode = Get-Node $forceEventPath
+  if ([string]$dataNode.declaration -notmatch '(?m)^\s*PressForceTimeout\s*:\s*DINT\s*;') {
+    throw 'CpStudio must export StationDataStruct.PressForceTimeout : DINT before applying the force interlock.'
+  }
+  if ([string]$eventNode.declaration -notmatch '(?m)^\s*EVENT_PRESS_FORCE_INVALID\s*:\s*DINT\s*:=\s*-5\s*;') {
+    throw 'CpStudio must export the reviewed Wp100.EVENT_PRESS_FORCE_INVALID = -5 before applying the force interlock.'
+  }
+}
+
 $currentProject = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/current"
 $expectedResolved = [IO.Path]::GetFullPath($ExpectedProject)
 $currentResolved = [IO.Path]::GetFullPath($currentProject.path)
@@ -697,6 +732,7 @@ $autoInfoLineGate = Assert-RequiredEnumItems `
   -CandidatePaths $autoInfoLineEnumPaths `
   -ExpectedItems $requiredAutoInfoLineItems `
   -EnumName 'AutoInfoLineEnum'
+Assert-ForceInterfaces
 
 $steps = @(
   [pscustomobject]@{ Name = 'N000'; Comment = 'Initialize run' },
@@ -711,7 +747,7 @@ $steps = @(
   [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press WRKPOS' },
   [pscustomobject]@{ Name = 'N051'; Comment = 'Start Kistler MEASURE' },
   [pscustomobject]@{ Name = 'N061'; Comment = 'Wait Kistler running' },
-  [pscustomobject]@{ Name = 'N070'; Comment = 'Wait press delay' },
+  [pscustomobject]@{ Name = 'N070'; Comment = 'Wait force >2500N for 2s' },
   [pscustomobject]@{ Name = 'N080'; Comment = 'Start resistance test' },
   [pscustomobject]@{ Name = 'N090'; Comment = 'Wait resistance result' },
   [pscustomobject]@{ Name = 'N095'; Comment = 'Check release ready' },
@@ -729,6 +765,7 @@ $targetImplementation = New-Wp100RunSfcImplementation $steps
 $runNode = Get-Node $runPath
 $baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b9294834132e2d7cfd'
 $preTypeDataImplementationSha = '0352fb0535c1588373103c50638da3cccb2d01a091f4b40f0dad1b8274ba6681'
+$preForceImplementationSha = 'fc48810ed7ecf1372bcf7c1e32b495ab27950870126ea54882fb57efd8a925d5'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -740,12 +777,13 @@ if ($currentDeclarationSha -ne $targetDeclarationSha) {
 $preservedRunDeclaration = [string]$runNode.declaration
 $preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
 $script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
-if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN046_active', '_aN047_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
+$allowedChildren += 'CheckPressForce'
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
 if ($unknownChildren.Count -gt 0) {
   throw "SqS_Wp100_Run contains unrecognized child objects: $($unknownChildren -join ', ')"
@@ -889,6 +927,19 @@ $preProgramSelectActionSha256 = @{
   N045 = '325d9ec70dde05d472ad1946cbc0b6e4a3ee1ae7ad94e596c40c899c496b5416'
 }
 $preProgramSelectOnChainFinishSha256 = '5678238b38592f4517261d5f8a24885f958f4ea6c9f25120eb7713ac4e10533d'
+$preForceActionSha256 = @{
+  N000 = 'c64f37e00ba18157daca7099a88278e97a69f8581ca8393dbac7f1d9ac69eb96'
+  N050 = @(
+    'e1b158112f760cf041783dc2a6cfab92cd3630b2ed77b5d37b52dc33891e6fcf',
+    'ee4600f0765e76786e741cb13b47846a91e0b9e0aa30cf5242d3d4635cc38198'
+  )
+  N051 = 'fba209837a764133f6c9f635c50a1b66eb7eb6cb7232489b843a3ed7d568027d'
+  N060 = '13a215dfeded9025ec5ba48ff759815c64843a97cf08977e36214068ca6ea187'
+  N070 = 'b7edea840e3aa1b970b9f9c96bb3348565ce6abdca68da8913fd2886c4d86f97'
+  N080 = '704df10a2772632977819d4caf1c0ebd353dc81aea6af6cde7478961bd244f63'
+  N090 = '13c8639269cd87a46477899109c448c49a88095445e63ac4d8acae8d69ecd76f'
+  OnChainFinish = 'bbfbb5e00e4bfa144b7092243759711b8f427b559e380b5761e9da7603227de8'
+}
 
 $runGraphStatus = if ($runNeedsUpdate) {
   $runNode = Get-Node $runPath
@@ -905,6 +956,12 @@ $runGraphStatus = if ($runNeedsUpdate) {
 else {
   'verified'
 }
+
+# Update the existing graph before adding the method: PLE may reorder the
+# parent's child list on POST. Do not predict that order or weaken its hash gate.
+# VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
+$forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
+  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315')
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -930,9 +987,13 @@ foreach ($step in $steps) {
   if ($preProgramSelectActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preProgramSelectActionSha256[$step.Name]
   }
+  if ($preForceActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preForceActionSha256[$step.Name]
+  }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256)
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish)
+$actionStatus.CheckPressForce = $forceMethodStatus
 
 $plan = New-WriterPlan `
   -WriterName 'apply_wp100_run_rest.ps1' `

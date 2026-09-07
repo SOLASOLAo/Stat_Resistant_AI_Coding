@@ -211,6 +211,10 @@ objects:
     write_mode: implementation
     interface_owner: cpstudio
     interface_write: forbidden
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/CheckPressForce
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st
+    write_mode: full_object
   - path: Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData
     owner: mixed
     source: src/plc/project/Station010/TypeDataSetManagerAddon/OnCheckData.ApplicationChecks.st

@@ -13,4 +13,5 @@ _safetyDoorOpenStarted   := FALSE;
 _unitResult              := 0;
 _pressDelay(IN := FALSE, PT := T#0MS);
 
-_retVal := OK;
+// A new operator-requested execution is the only reset/retry boundary.
+_retVal := CheckPressForce(Phase := 0);

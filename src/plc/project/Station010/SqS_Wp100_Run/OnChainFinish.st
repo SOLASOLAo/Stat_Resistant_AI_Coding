@@ -17,6 +17,7 @@ _startButton(
 BinIo._000P610 := _startButton.LampOn;
 
 _pressDelay(IN := FALSE, PT := T#0MS);
+_unitResult := CheckPressForce(Phase := 0);
 
 AiWp100.BursterProgramSelect(
   Execute := FALSE,

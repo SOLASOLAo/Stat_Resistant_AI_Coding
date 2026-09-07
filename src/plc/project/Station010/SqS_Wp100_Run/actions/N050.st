@@ -1,4 +1,4 @@
-// Parallel branch 1: start pressing-cylinder WRKPOS.
+// Branch 1 waits for Kistler OPERATE/START before applying any press load.
 _retVal := RUNNING;
 
 IF ( _pressDownStarted )
@@ -8,6 +8,9 @@ THEN
 ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
       ( Peripherals.BinIo._000K913_Y32 ) AND
       ( Peripherals.BinIo._000K912_Y32 ) AND
+      ( _kistlerStarted ) AND
+      ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
+      ( Wp100A104Kistler.Unit.ExecState <> OpconExecState.ERROR ) AND
       ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos ) AND
       ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY )
 THEN

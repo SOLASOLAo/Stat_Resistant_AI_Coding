@@ -53,7 +53,7 @@ objects:
       N051: Start Kistler MEASURE
       N060: Wait press WRKPOS
       N061: Wait Kistler running
-      N070: Wait press delay
+      N070: Wait force >2500N for 2s
       N080: Start resistance test
       N090: Wait resistance result
       N095: Check release ready
