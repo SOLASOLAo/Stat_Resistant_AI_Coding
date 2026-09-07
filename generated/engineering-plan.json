@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "554106f3fa8d831ea227977188da19352a22810f7083df145d1a403f0eb21e03",
+  "contentId": "377721e4065d29c186c1b4ddae54d65ddd4ee07d30ad9a8812fcf70d328b873f",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -48,8 +48,8 @@
     },
     {
       "path": "specs/processes/SqC_Wp100_Run.process.json",
-      "length": 12179,
-      "sha256": "88cab22775d8789f35f5d43be538bb16dc0d8ea451f115c0506689cfe67ccf3e"
+      "length": 12315,
+      "sha256": "293fcebd2fcd6e63a4a879fb541bad4866dc33fad28b116f229ba2e2b6ea5412"
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
@@ -1343,7 +1343,7 @@
     {
       "processId": "wp100-run-command",
       "requirementId": "REQ-FIXTURE-ONE-HOT",
-      "text": "Release each fixture prompt only with the safety door open and press raised, then require exactly the requested position sensor.",
+      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. Keep subchain motion interlocks and Unit command completion unchanged.",
       "stepIds": [
         "N015",
         "N045",

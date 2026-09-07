@@ -36,7 +36,7 @@
     },
     {
       "id": "REQ-FIXTURE-ONE-HOT",
-      "text": "Release each fixture prompt only with the safety door open and press raised, then require exactly the requested position sensor."
+      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. Keep subchain motion interlocks and Unit command completion unchanged."
     },
     {
       "id": "REQ-COMMAND-GUIDANCE",

@@ -574,6 +574,10 @@ $preC0198ChildSha256 = @{
   'CheckPartPresent' = '208214e0b882d4816bcf6c86ce4fa5b39b50765bdc10e274cdd3dbcf083a6f54'
 }
 $preGuidanceChildSha256 = @{
+  # Verified guided waits before the 2026-09-07 input-feedback correction.
+  '_aN015_active' = '88331252b5bde1dd20d6f2baed1aee6acb6296935492ee7d0e3878e5006ef43a'
+  '_aN045_active' = 'f7f4a5d68a8efb76810b90978a8666ddd177cbdcde5015a8a772a2e6e486aa57'
+  '_aN075_active' = '2a4257521664be0c60a85931ef1b1a1a8ff2eb884bc07b121cc6fd1551b90493'
   # Current compiled Run sequence before operator guidance is added.
   '_aN000_active' = '5fb7bad100856aa9d5af35a2d1082cb2be913bd5b55ca20bb4633951111c95ec'
   '_aN010_active' = '303c4d44cd868150a051cb0ffefb36f487f8dca4d8a049c0161d75e4591acbe1'

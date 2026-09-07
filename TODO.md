@@ -2,6 +2,9 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **Fixture 提示实时原位反馈（2026-09-07）**：按用户确认，将 `SqC_Wp100_Run` N015/N045/N075 的安全门、压缸原位判断共六处改为 `IsInBasPosIn`；已通过现有 PLE REST 写入、保存和完整回读，静态/事务/Project Pack 检查通过。未改 SqS 动作联锁、标准 Unit 参数或生成接口，未下载。
+- [ ] **本次反馈修改的 PLE Build/现场复核**：用户在现有 PLE 按 F11，比较与此前 0 errors / 5 warnings 的结果；下载由用户操作。原位输入成立而输出关闭时应显示 fixture 提示；任一原位输入缺失仍等待。SqS_Run 的综合位置动作联锁仍独立生效，不把提示放行视为动作放行或安全认证。
+
 - [x] **Wp100 压紧力联锁离线实现（2026-09-07）**：已消费用户新增的 `PressForceTimeout`/`EVENT_PRESS_FORCE_INVALID`；同一 SqS_Run 完成 `>2500 N` 连续 2 s、总等待超时及测量期间掉力锁存；故障不自动升缸/重测。已通过 REST 写入、保存回读及 PLE Build（0 errors / 原有 5 warnings）；未下载。
 - [ ] 🔴 **Wp100 压紧力现场验收**：IPC 实际 StationData 设置并加载 `PressForceTimeout >2000 ms`；同步事件/数据定义、用户下载。验收左中右、2500 N 等号、2 s 中断、总超时、测量中掉力/数据异常、故障保持及取消后重启；确认 Kistler watchdog 余量足够。详见 HANDOVER 最新记录。
 

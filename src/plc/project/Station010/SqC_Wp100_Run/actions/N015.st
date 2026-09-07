@@ -1,8 +1,8 @@
-// Ask for the left fixture position only after both moving axes are safe.
+// Use current base-position inputs for the fixture prompt, not valve outputs.
 _retVal := RUNNING;
 
-IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos ) AND
-   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos )
+IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn ) AND
+   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn )
 THEN
   Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_MOVE_FIXTURE_LEFT;
 

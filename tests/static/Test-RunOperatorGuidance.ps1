@@ -85,8 +85,8 @@ $waitActions = [ordered]@{
 foreach ($entry in $waitActions.GetEnumerator()) {
   $relativePath = "src\plc\project\Station010\SqC_Wp100_Run\actions\$($entry.Key).st"
   foreach ($expected in @(
-      'Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos',
-      'Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos',
+      '( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn )',
+      '( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn )',
       "AutoInfoLineEnum.$($entry.Value.Prompt)",
       'AutoInfoLineEnum.USER_INFO_RETURN_SAFE_POSITION',
       'AutoInfoLineEnum.USER_INFO_LOAD_PART',
@@ -98,6 +98,7 @@ foreach ($entry in $waitActions.GetEnumerator()) {
   foreach ($falseSignal in $entry.Value.False) {
     Assert-ContainsText -RelativePath $relativePath -Expected "NOT Peripherals.BinIo.$falseSignal"
   }
+  Assert-DoesNotContainText -RelativePath $relativePath -Forbidden '.OutImm.IsInBasPos )'
 }
 
 foreach ($step in @('N010', 'N040', 'N070')) {

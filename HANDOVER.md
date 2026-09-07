@@ -1129,3 +1129,23 @@
   运行时 DAT 已有值。部署前同步新事件文本/数据定义；下载由用户操作或再次批准。
   现场还需验收三个位置、2500 N 等号、2 s 中断、总等待超时、测量中掉力、
   锁存不自恢复和取消后重新开始。本轮没有连接真机、下载、启停或写变量/FORCE。
+
+## 2026-09-07 · Fixture 提示改用实时原位输入（已保存，待用户 Build）
+
+- 用户确认截图条件要判断实时传感器，接受原位输出关闭时仍按输入显示位置。
+  本轮仅将 `SqC_Wp100_Run` 的 N015/N045/N075 内安全门和压缸共六处
+  `IsInBasPos` 改成 `IsInBasPosIn`。保留产品检测、位置 one-hot、
+  `CheckSubChainDone`、SqS_Run 动作联锁和全部标准 Unit 配置。
+  这不保证子链在输出不满足时继续放行动作；没有把输入反馈当作安全功能。
+- 现有唯一用户 PLE，profile `ctrlX PLC 2.6.8`，官方 REST Plan →
+  精确三项 Action PUT → Save → 全对象回读；父声明和 SFC 图未变，
+  最终 PlanOnly 为 0 项写入。起点 SHA `5cc808e6...0f792` 的本地
+  `.project` checkpoint 已回验；不改加密文件字节、不启动第二个 IDE。
+- 复用既有 REST writer，补入三个已核对旧 Action 的哈希；回归检查要求
+  完整的 `IsInBasPosIn` 条件并拒绝恢复旧综合状态判断。operator guidance、
+  REST PlanOnly/事务回退、框架静态检查及 Project Pack Build 均通过。
+  流程规格与生成计划已同步，无新框架/服务。
+- 当前 PLE 不是 MCP 所有，会话状态 stopped；本轮没有为编译另开 PLE，
+  也没有通过界面点击。**尚未运行本次 PLE Build**，用户按 F11 后核对。
+  此前 0 errors / 5 warnings 只作对比，不作为本次结果；没有下载、连接、
+  启停或 FORCE。证据：`data/reports/plc/fixture-input-feedback-20260907.json`。
