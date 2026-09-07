@@ -55,6 +55,8 @@
 - [ ] 🟢 P1.4c（有团队工位时执行）团队验收：固化最小兼容矩阵，在一台全新同事电脑完成包传递、安装、显式启动、升级、回滚、卸载和诊断复验；默认不自定义 ACL，签名按商业/IT 要求延期
 
 ## 项目工程待办
+- [x] 🟡 HMI IPC `not connected to service` 恢复记录：用户两轮 Export/Build 并下载后恢复；完成开发机到 `.50/.51` 的端口检查及 PLE 四个数据结构 Symbol 选择状态读取。接口不同步仅为候选原因，未验证 IPC 服务日志、运行时节点权限或故障根因（2026-09-07，见 [交接记录](HANDOVER.md#2026-09-07-hmi-ipc-service-connection-diagnosis)）
+- [ ] 🟡 补齐该服务报警的 IPC 证据：读取 HMI/DataSetAccess 服务及报警日志、比较实际部署配置与 PLC 会话；再次发作时优先保留故障时证据，不把端口开放视为服务验收，也不因改 DAT 参数值强制两轮 Export
 - [x] 🟡 DIDO 描述自动导入：零依赖 CSV→CpStudio/ePLAN ASC 生成器已通过 Station010 官方回环；固定 UTF-16LE/15列/模块内连续顺序，完整源为 `specs/station010-eplan-io.csv`（2026-08-31）
 - [x] 🔴 已确认 CpStudio 导入语义：非空 `IoDesignator` 激活通道；未使用点必须为空，否则占位 `_..._Channel_N` 会被误激活。Station010 最终保持 38 active / 18 inactive（2026-08-31）
 - [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；38 个 active 点均有英文及中文描述，18 个 unused 点保持空白，最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）

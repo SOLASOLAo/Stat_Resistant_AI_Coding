@@ -1005,3 +1005,43 @@
   workspace. Warning acceptance uses the formal signature baseline instead of
   contradictory historical counts. The new-PC restore and offline acceptance
   remain pending; no IDE or physical PLC operation is part of bundle creation.
+
+# 2026-09-07 HMI IPC service connection diagnosis
+
+- 用户现场反馈：打开 CpStudio/PLE 准备修改 StationData/TypeData 时，HMI IPC
+  持续提示 `not connected to service`；完成 `Export #1 → PLE Build →
+  Export #2 → final Build → 用户下载 PLC` 后恢复正常。本次未复现故障；
+  不能仅凭这次恢复顺序确定哪一步消除了故障。
+- 本机记录（Asia/Shanghai）：恢复阶段 Post-export request 分别为
+  `41db3731-bf93-47e0-a9a2-8e437c9742c0`（13:03:11）和
+  `f306b4ae-9c7c-4eef-b43e-f4bd1b03a056`（13:03:52）；Symbol XML 于
+  13:04:12 更新，编译/boot/同步文件于 13:04:24–26 更新。两份 request
+  在检查时仍为 pending，没有被本次诊断消费；文件时间不代替 Build
+  错误数、下载成功或运行时验收证据。
+- 恢复后的只读检查结果：
+
+  | 对象 | 已观察事实 | 证明范围 |
+  |---|---|---|
+  | HMI IPC `192.168.0.50` | Ping 成功；3389/445 可建立 TCP 连接；已有 RDP 连接 | 开发机到 IPC 的可达性；不证明 DataSetAccess 服务健康 |
+  | PLC `192.168.0.51` | Ping 成功；443/4840/11740/61863 可建立 TCP 连接 | 开发机到各监听端口的可达性；不证明 IPC→PLC 会话、授权状态或无 crash-loop |
+  | 本机 HMI 配置 | `Hmi/PlcHandlerL1.ini` 指向 `192.168.0.51` | 仅本机导出配置，尚未比较 IPC 已部署文件 |
+  | 当前 PLE Symbol Configuration | 官方 REST GET 200，`supportOPCUA=true`；StationData、StationDataNew、TypeData、TypeDataNew 均 selected | 工程端选择状态；返回 `accessRights=Void`、`maximalAccess=ReadWrite`，不能当作运行时读写已验证 |
+
+- 结论修正：接口/Symbol 与已下载应用未同步是候选原因；下载引起的应用
+  重新初始化或服务重连也可能解释恢复。未获得故障时 IPC 的 HMI/DataSetAccess
+  日志，也没有修改前后的运行时 Symbol 对比，根因保持未确认。相对
+  Station010 `42c373a`，本次可读模型差异只显示 Export ID 与连接凭据字段，
+  两份 Struct.json 只显示 ObjectGuid 变化，没有证据证明此次新增/删除了
+  StationData/TypeData 成员；`.project` 内未导出的差异仍未检查。
+- 操作约定保持精简：只在 HMI 修改现有 DAT 参数值时，沿用现有加载/应用
+  流程，不因改值而强制 Export/Build/下载；CpStudio 接口或 PLC 代码变化
+  则按工程流程同步。Export #2 仍由首次导出的 Symbol/OPC UA/PersistentVars
+  后处理错误或缺失目标决定，不把本次现象升级为“所有修改固定导出两次”。
+- 未完成项：RDP 窗口最小化且恢复失败，未读到实际 HMI 画面；开发机当前
+  身份未能访问 IPC 的 `OpconData$`，原因未判定，不能据此认定共享或 DAT
+  不存在。下一次可读取 IPC 时，优先核对服务/报警日志及已部署配置与 PLC
+  会话；若再发作，先取故障时证据再恢复，不为取证主动制造生产故障。
+- AI 仅执行网络探测、配置读取和现有 PLE 官方 REST GET；MCP 无 owner，
+  未启动另一套 PLE/MCP，也未 Build、保存工程、下载、启停、写变量、FORCE
+  或重启服务。本次 Git 提交限交接与待办记录；Station010 本地生成/运行
+  配置和加密 PLC 工程保留原样，未上传凭据、License、运行缓存或 `.project`。
