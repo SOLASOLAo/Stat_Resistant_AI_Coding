@@ -69,6 +69,8 @@
 - [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
 
 ## Backlog(以后再说)
+- [x] 🟡 开发电脑 OneDrive 迁移准备：最小脚本记录三个 Git 固定提交，打包当前加密 PLC 工程与 `Std`/技术资料，排除明文凭据、License、IDE 缓存和用户配置；旧电脑只负责生成并等待 OneDrive 同步（2026-09-07）
+- [ ] 🟡 新开发电脑验收：从 Git 固定提交 + OneDrive 资产包恢复，重新安装本机工具/配置，运行工作站体检和离线 Build；通过前保留旧电脑，不进行真机写入
 - [x] 🟢 自研 HMI Phase 1/1.1 离线实现：.NET 8 WPF + 官方 OPC UA Client；133 个只读 Symbol 节点，PublicEventList、9-Slave EtherCAT 拓扑、38 个命名 DI/DO、Kistler 语义值、StationData/TypeData 分页、keepalive 自动重连与 3 s 会话健康超时遮罩；Release Build 0 errors / 0 warnings，离线 UI smoke 通过（2026-08-25）
 - [x] 🟢 自研 HMI Phase 1.2 操作界面：增加 Auto/Home/Change-over Chain 启停、Auto 步进/下一步、Station/Wp100 Unit 与 16 个单动功能、真实 Release/Running 状态，以及 Master→EK1100→EL/Kistler 分层 EtherCAT 拓扑；所有新控制仅在 DEMO 可执行，真机写入保持锁定（2026-08-25）
 - [x] 🟢 自研 HMI Phase 1.3 Unit 详情：按 Nexeed SmartForms 补齐 Burster 5 个输入参数 + 4 个状态/结果，以及 Kistler 3 个输入参数 + 9 个状态 + 3 个结果；150 个只读 Symbol 路径校验、Release Build 和离线 Unit 切换 UI smoke 均通过，真机参数写入仍保持锁定（2026-08-25）

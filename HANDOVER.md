@@ -990,3 +990,18 @@
   the replayable AI-owned PLC sources remain in this repository.
 - The AI did not download, start/stop the runtime, write/FORCE a PLC variable or
   issue a Burster command during this check. `Std` was not modified.
+
+# 2026-09-07 Development-PC OneDrive migration preparation
+
+- Added one minimal setup script, `scripts/setup/New-DevelopmentPcMigrationBundle.ps1`.
+  It refuses to run while CpStudio/PLE/IOE is open, records the three Git refs,
+  archives the current encrypted PLC project, optionally packages `Std` and
+  `Technical Docs`, validates each 7z archive, and verifies the local OneDrive
+  copy by SHA-256.
+- Plaintext DataSetAccess/HMI/Target credentials, License workflow, IDE locks,
+  caches, Git metadata, personal Codex/Git configuration and runtime data are
+  deliberately excluded. The new PC must re-enter its machine-local settings.
+- `TEAM_SETUP.md` now defines OneDrive as transfer-only, not an active engineering
+  workspace. Warning acceptance uses the formal signature baseline instead of
+  contradictory historical counts. The new-PC restore and offline acceptance
+  remain pending; no IDE or physical PLC operation is part of bundle creation.

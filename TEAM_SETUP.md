@@ -208,18 +208,18 @@ Get-Help .\scripts\setup\Test-TeamWorkstation.ps1 -Detailed
 1. MCP `get_codesys_status`，等待状态为 ready；
 2. MCP 打开 `config/project.yaml` 指向的 PLC 工程；
 3. 执行一次完整 `compile_project`；
-4. 当前 Station010 正式离线验收基线为 **0 errors / 4 warnings**；
+4. 要求 **0 errors**，并按正式 warning 签名基线核对；不要只依赖历史数量；
 5. 回读一个 AI-owned POU，例如 `Application/Fbs/FB_OperatorButton`；
 6. 核对可读源 `src/plc/common/FB_OperatorButton.st`；
 7. 关闭/交接前确认两个 Git 工作树没有未知改动。
 
 首次验收不需要实体 PLC。禁止为了“测试环境”执行连接、下载、启动、停止或变量写入。
 
-### 8.1 可选 P1.3a Runner Host
+### 8.1 可选 Runner Host
 
-P1.3a Host 是当前用户交互会话中的状态/生命周期进程，可选注册为 AtLogOn Scheduled Task。
-它不会启动 Broker、MCP、PLE、Node 或在线 PLC 操作；同会话 Agent 不存在时显示
-`WAITING_FOR_AGENT`。自动 action 消费尚未实现，因此不应把它当作无人值守工程执行器。
+Runner Host 是当前用户交互会话中的状态/生命周期进程，可选注册为 AtLogOn Scheduled Task。
+它的安装与运行状态属于每台电脑的本机状态，不通过 Git 或 OneDrive 搬运；新电脑完成工作站
+离线验收后再执行一次正式安装。开发阶段不要求登录自动启动。
 
 ```powershell
 dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Host\CtrlX.OpCon.Runner.Host.csproj -c Release
@@ -231,7 +231,29 @@ dotnet build .\ctrlx-ai-coding\src\runner\CtrlX.OpCon.Runner.Host\CtrlX.OpCon.Ru
 Scheduled Task 启动。`-DevelopmentProcess` 仅供显式开发测试使用。安装是可选项，不影响手动运行
 既有 P1.1/P1.2 流程。
 
-## 9. 三套工程软件的边界
+## 9. 开发电脑通过公司 OneDrive 迁移
+
+OneDrive 只作为传输通道，不作为 CpStudio、PLE、IOE 或 Git 的活动工作区。旧电脑正常关闭三套
+工程软件后，在 `McpCoding` 根目录运行：
+
+```powershell
+.\scripts\setup\New-DevelopmentPcMigrationBundle.ps1 -WhatIf
+.\scripts\setup\New-DevelopmentPcMigrationBundle.ps1
+```
+
+默认输出到 `%OneDriveCommercial%\ProjectMigration\BPP_ResistantStation\<时间戳>`，包含：
+
+- 三个 Git 仓库的 origin、branch、commit 和当前 dirty 路径清单；
+- 当前加密 PLC `.project` 的独立归档与源文件 SHA-256；
+- `Std`、`Technical Docs` 和工作区根目录必要小文件的公司资产归档；
+- 新电脑恢复步骤、机器可读 manifest 和传输校验文件。
+
+明文 HMI/DataSetAccess/Target 凭据、License workflow、缓存、锁、个人 Codex/Git 配置和运行数据
+不会进入迁移包。新电脑先对 OneDrive 目录选择“始终保留在此设备上”，等待绿色对勾，再校验
+`SHA256SUMS.txt`；随后解压到普通本地目录，按 Git 固定提交恢复三个仓库，并在官方工具中重新
+填写本机连接配置。
+
+## 10. 三套工程软件的边界
 
 | 修改内容 | 唯一入口 |
 |---|---|
@@ -248,7 +270,7 @@ Scheduled Task 启动。`-DevelopmentProcess` 仅供显式开发测试使用。�
 - 同时开多个使用同一 PLE profile 的 MCP/Codex 会话；
 - 未经现场负责人批准连接、下载、启停或 FORCE 实体 PLC。
 
-## 10. 团队日常交接流程
+## 11. 团队日常交接流程
 
 由于 `.project` 是不可文本合并的加密容器，同一个 Station 同一时间只允许一名工程师作为写入者。
 
@@ -274,7 +296,7 @@ git -C <WorkspaceRoot>\Station010 pull --ff-only
 不要尝试手工合并两个不同版本的 `.project`。出现二进制冲突时停止写入，由项目负责人选择明确
 基线后重新应用另一批可读规格/源码。
 
-## 11. 常见问题
+## 12. 常见问题
 
 | 症状 | 处理 |
 |---|---|
@@ -288,7 +310,7 @@ git -C <WorkspaceRoot>\Station010 pull --ff-only
 | 工程提示 `already being edited` | 先确认是否有活的 PLE/IOE 进程；不得在活进程持锁时删除 `.~u` |
 | CpStudio 改名后出现旧 `bus_*` 错误 | 同时审计 I/O Mapping 与 Symbol Configuration，按既有工作流修复后重新编译 |
 
-## 12. 交接验收清单
+## 13. 交接验收清单
 
 - [ ] 三个 Git 仓库均克隆到标准相对位置；
 - [ ] 私有 Station 仓库可以 pull/push；
@@ -298,7 +320,7 @@ git -C <WorkspaceRoot>\Station010 pull --ff-only
 - [ ] ctrlX 兼容补丁最终 `-Check` 通过；
 - [ ] Codex 能看到 `codesys-persistent` MCP；
 - [ ] 工作站体检和目录静态测试通过；
-- [ ] Station010 离线编译达到 0 errors / 6 warnings；
+- [ ] Station010 离线编译达到 0 errors，warning 签名与正式基线一致；
 - [ ] ctrlX/OpCon Skill 安装后的 `-Check` 与 Post-export 队列自测通过；
 - [ ] 未进行任何未经批准的真机操作；
 - [ ] 新同事知道谁拥有当前 Station 写入权。
