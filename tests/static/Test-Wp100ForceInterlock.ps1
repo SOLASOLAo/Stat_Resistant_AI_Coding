@@ -18,7 +18,6 @@ foreach ($fragment in @(
   'Wp100A104Kistler.Unit.OutImm.MeasRunning', 'Wp100A104Kistler.Unit.ExecState = OpconExecState.ERROR',
   'NOT ( forceN = forceN )', 'ABS(forceN) > REAL#3.402823E38',
   'NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn',
-  'Wp100A104Kistler.Unit.ParImm.EndMeasurement := TRUE',
   'Wp100A103ResistantDetector.Unit.Execute := FALSE'
 )) {
   Assert-That ($source.Contains($fragment)) "Missing force contract: $fragment"
@@ -41,6 +40,36 @@ Assert-That ($press.IndexOf('OutImm.MeasRunning') -lt $press.IndexOf('BasMoveCmd
 $writer = [IO.File]::ReadAllText((Join-Path $root 'scripts\plc\apply_wp100_run_rest.ps1'))
 Assert-That ($writer.IndexOf('$runGraphStatus = if') -lt $writer.IndexOf('$forceMethodStatus = Set-Action')) 'Existing graph PUT must precede force-method POST; do not predict PLE child ordering.'
 Assert-That (-not ($source + $press).Contains('.ErrorSet')) 'Kistler V1.2 has no ErrorSet member; use its supported ExecState.'
+
+# END is a running-measurement request, not the chain's generic cancel signal.
+$stopAction = [IO.File]::ReadAllText((Join-Path $chain 'actions\N101.st'))
+$waitAction = [IO.File]::ReadAllText((Join-Path $chain 'actions\N120.st'))
+$chainFinish = [IO.File]::ReadAllText((Join-Path $chain 'OnChainFinish.st'))
+$endGate = 'Wp100A104Kistler.Unit.ParImm.EndMeasurement := ( _kistlerStarted ) AND ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND ( Wp100A104Kistler.Unit.ExecState = OpconExecState.RUNNING );'
+foreach ($body in @($source, $stopAction)) {
+  Assert-That (([regex]::Replace($body, '\s+', ' ')).Contains($endGate)) 'END must be owned, measuring and RUNNING, with FALSE on subsequent stopped scans.'
+}
+Assert-That ($stopAction.IndexOf('ParImm.EndMeasurement :=') -lt $stopAction.IndexOf('IF ( NOT _kistlerStarted )')) 'Single-step repetition must refresh/clear END outside the one-shot branch.'
+Assert-That ($waitAction -match '(?s)IF \( NOT Wp100A104Kistler.Unit.OutImm.MeasRunning \) OR\s+\( Wp100A104Kistler.Unit.ExecState <> OpconExecState.RUNNING \)\s+THEN\s+Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;') 'Result wait must clear END when measurement finishes or errors.'
+Assert-That ($chainFinish.Contains('Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;')) 'Chain finish must reset END, including pre-start errors.'
+Assert-That ($chainFinish.Contains('Wp100A104Kistler.Unit.Execute := FALSE;')) 'Chain finish must retain the standard falling-edge Cancel.'
+foreach ($body in @($source, $stopAction, $waitAction, $chainFinish)) {
+  Assert-That ($body -notmatch 'EndMeasurement\s*:=\s*TRUE') 'Unconditional END can create a second alarm before measurement starts.'
+}
+# Independent truth-table/lifecycle model, not a simulation of the vendor FB.
+foreach ($sample in @(
+  @($false,$false,'READY',$false), # Burster failure before Kistler start
+  @($true,$false,'RUNNING',$false), # START sent; no measuring acknowledgement
+  @($true,$true,'RUNNING',$true), # Normal stop or force fault while measuring
+  @($true,$false,'RUNNING',$false), # Instrument stopped; result pending
+  @($true,$false,'DONE',$false),
+  @($true,$true,'ERROR',$false), # Stale running indication on device error
+  @($true,$true,'CANCEL',$false),
+  @($false,$true,'RUNNING',$false) # Not owned by this chain
+)) {
+  $end = $sample[0] -and $sample[1] -and $sample[2] -eq 'RUNNING'
+  Assert-That ($end -eq $sample[3]) "END lifecycle case failed: $sample"
+}
 
 # Small independent process model. Source assertions above tie its threshold,
 # two timers, latched fault and call ordering to the implementation being built.

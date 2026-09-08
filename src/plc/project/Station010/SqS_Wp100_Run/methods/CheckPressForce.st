@@ -128,7 +128,12 @@ THEN
   // Finish/cancel instruments while holding the SFC; NEVER request BASPOS here.
   // Standard safety, ControlOn and device-error handling remain authoritative.
   Wp100A103ResistantDetector.Unit.Execute := FALSE;
-  Wp100A104Kistler.Unit.ParImm.EndMeasurement := TRUE;
+  // Clear the request once measurement stops, including during a fault hold.
+  // Preflight failures must not request END before START has been accepted.
+  Wp100A104Kistler.Unit.ParImm.EndMeasurement :=
+    ( _kistlerStarted ) AND
+    ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
+    ( Wp100A104Kistler.Unit.ExecState = OpconExecState.RUNNING );
   IF ( Wp100A104Kistler.Unit.ExecState = OpconExecState.DONE ) OR
      ( Wp100A104Kistler.Unit.ExecState = OpconExecState.ERROR ) OR
      ( Wp100A104Kistler.Unit.ExecState = OpconExecState.READY )

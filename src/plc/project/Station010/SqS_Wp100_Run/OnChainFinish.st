@@ -26,7 +26,9 @@ AiWp100.BursterProgramSelect(
 Wp100K101SafetyDoor.Unit.Execute       := FALSE;
 Wp100K102PressingCylinder.Unit.Execute := FALSE;
 Wp100A103ResistantDetector.Unit.Execute := FALSE;
-Wp100A104Kistler.Unit.ParImm.EndMeasurement := TRUE;
+// Execute's falling edge invokes the standard Unit Cancel. Do not issue an
+// EndMeasurement request here: a preflight failure may never have started it.
+Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;
 Wp100A104Kistler.Unit.Execute := FALSE;
 
 _positionValid          := FALSE;

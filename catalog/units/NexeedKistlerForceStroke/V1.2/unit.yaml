@@ -23,8 +23,12 @@ measure:
     - set Command to MEASURE
     - set Execute true
   stop:
-    - set ParImm.EndMeasurement true
+    - request ParImm.EndMeasurement only while the owning chain has started MEASURE, OutImm.MeasRunning is true and ExecState is RUNNING
+    - clear ParImm.EndMeasurement when measuring ends or the execution is no longer RUNNING
     - keep the command lifecycle under CheckUnitDone
+  cancel:
+    - clear ParImm.EndMeasurement, then set Execute false
+    - the standard OpconExecUnit Execute falling edge invokes Cancel; do not send END for a command that never started
   command_outputs:
     ok: OutCmd.OK
     nok: OutCmd.Nok

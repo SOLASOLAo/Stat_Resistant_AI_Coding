@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "d5f9423a04a7e9654932ce419028e2e14111661509d33f6b1105500c9ee645fc",
+  "contentId": "0b86c0c34c53ba16317740d6652847ae2d44ce8efa9256dfd5264322f18f9d79",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -83,8 +83,8 @@
     },
     {
       "path": "catalog/units/NexeedKistlerForceStroke/V1.2/unit.yaml",
-      "length": 1313,
-      "sha256": "e676ab1f088d5dd876ac74d07eaac4c7bbe429e0d39c35a00e5dbb709d57a7ed"
+      "length": 1692,
+      "sha256": "4dafc7a684dfa7f6d20d98f2f216e8edaf17ef6dffb5a2f309a1b1b5cef29e0f"
     },
     {
       "path": "ai/ownership.yaml",

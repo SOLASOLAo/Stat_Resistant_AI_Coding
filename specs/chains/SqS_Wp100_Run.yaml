@@ -99,7 +99,7 @@ force_interlock:
   measurement: check force before start and before accepting completion; force loss wins over completion in the same scan
   fault_event: Wp100.EVENT_PRESS_FORCE_INVALID
   fault_class: SOFTERROR
-  fault_behavior: latched step hold, invalidate result, cancel Burster and end Kistler; do not command press-up
+  fault_behavior: latched step hold, invalidate result, cancel Burster; request Kistler END only while owned, MeasRunning and ExecState RUNNING, then clear it; do not command press-up
   reset: explicit chain cancel/finish and new initialization; force recovery alone cannot resume
   safety_priority: existing safety and ControlOn override the requested pressure hold
 
@@ -257,7 +257,7 @@ steps:
       - Kistler program number
       - Kistler cyclic actual force
       - Kistler cyclic actual stroke
-    command: Wp100A104Kistler.ParImm.EndMeasurement := TRUE
+    command: Kistler END only while owned, MeasRunning and ExecState RUNNING; refresh the gate on repeated single-step calls
     timing: activated by the same simultaneous divergence as N100
   - id: N120
     comment: Wait Kistler result
@@ -309,7 +309,7 @@ cleanup:
     - pressing-cylinder Execute
     - Burster program selector Execute and temporary TCP session
     - Burster Execute
-    - Kistler EndMeasurement true and Execute false
+    - Kistler EndMeasurement false and Execute false; the falling Execute edge invokes standard Unit Cancel, never send END for pre-start failures
     - per-execution started flags
   retain:
     - Result until the next execution

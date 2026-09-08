@@ -2,6 +2,10 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；尚未 Build/下载/现场验收。
+- [ ] **Burster SET_RANGE 报警仍待确认处理方案**：用户上下量程均为 2 mΩ（枚举 0），既往只验证了手动 SINGLE_MEAS 有值，没有验证 SET_RANGE。现有自动在程序选择后执行 N046/N047 SET_RANGE，标准 Unit 报 invalid range；不能据此认定 0 非法，也不能未经确认改大档位或跳过检查。待确认是否改为量程跟随仪表程序；当前 ParCfg.UseAutoRange=true，固定程序方案还需用户通过 CpStudio 配置相应外围参数。TypeData/量程/标准库本次未修改。
+- [ ] **CpStudio 原位显示绑定修正 + 本轮 Build/现场复核**：PLE Wp100Unit.IsInHomePosition 已用两路 IsInBasPosIn，但生成 HMI config 的 Station/Wp100 条件仍有 4 处旧 IsInBasPos 引用。用户在 CpStudio 的 Wp100 → Conditions → IsInHomePosition 将两设备条件改为 IsInBasPosIn，再导出/刷新 IPC HMI；AI 不直接改模型 XML 或生成 HMI 配置。本轮 PLE F11 和安全现场验证待用户，不能宣称两个原始故障均已解决。
+
 - [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
 - [ ] **启动灯 Build/现场确认**：用户 F11 编译后自行下载，确认等待按钮时亮 500 ms / 灭 500 ms，按下或取消后熄灭。本次未执行 PLE Build、下载或设备操作，不需重新 CpStudio Export。
 

@@ -2,6 +2,12 @@
 // then request the end of MEASURE.
 _retVal2 := RUNNING;
 
+// This action can repeat in single-step mode; never leave END set after stop.
+Wp100A104Kistler.Unit.ParImm.EndMeasurement :=
+  ( _kistlerStarted ) AND
+  ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
+  ( Wp100A104Kistler.Unit.ExecState = OpconExecState.RUNNING );
+
 IF ( NOT _kistlerStarted )
 THEN
   _retVal2 := OK;
@@ -13,7 +19,6 @@ THEN
   Result.Kistler.Force     := Wp100A104Kistler.Unit.OutImm.ForceAct;
   Result.Kistler.Stroke    := Wp100A104Kistler.Unit.OutImm.StrokeAct;
 
-  Wp100A104Kistler.Unit.ParImm.EndMeasurement := TRUE;
   _kistlerStopRequested := TRUE;
   _retVal2 := OK;
 

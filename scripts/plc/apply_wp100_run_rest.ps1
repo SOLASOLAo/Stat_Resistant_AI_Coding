@@ -979,7 +979,7 @@ else {
 # parent's child list on POST. Do not predict that order or weaken its hash gate.
 # VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
 $forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
-  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7')
+  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc')
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -1018,9 +1018,12 @@ foreach ($step in $steps) {
     # Reviewed source before connecting the standard RootNode toggle (2026-09-08).
     $allowedSha256 += '9715b5f9da9eb401bf146aeccf7fb33fc7f05d13f3a295ae1407fc4177acaaca'
   }
+  # Reviewed source before the 2026-09-08 running-only Kistler END fix.
+  if ($step.Name -eq 'N101') { $allowedSha256 += 'aec5df547020d1614cb761a97080a87804237e53979c6285c2aa783657addb2f' }
+  if ($step.Name -eq 'N120') { $allowedSha256 += '11be31e548158ce44c000e5c15419a64da5135959f0b6cf0a1899274fb82b076' }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
-$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish)
+$actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish, 'eff44bc7003293235fadb356cf4f23dea1273c940de30f18190c2d31c4737abd')
 $actionStatus.CheckPressForce = $forceMethodStatus
 
 $plan = New-WriterPlan `

@@ -1,6 +1,13 @@
 // Parallel branch 2: wait for Kistler MEASURE and copy the final verdict.
 _retVal2 := RUNNING;
 
+// END belongs only to the running measurement, not to result collection.
+IF ( NOT Wp100A104Kistler.Unit.OutImm.MeasRunning ) OR
+   ( Wp100A104Kistler.Unit.ExecState <> OpconExecState.RUNNING )
+THEN
+  Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;
+END_IF
+
 IF ( NOT _kistlerStarted )
 THEN
   _retVal2 := OK;
