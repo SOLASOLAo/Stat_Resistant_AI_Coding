@@ -19,8 +19,8 @@ steps:
   - id: N110
     comment: Close safety door
     when: >-
-      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos AND
-      NOT Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos
+      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn AND
+      NOT Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn
     command: Wp100K101SafetyDoor.WRKPOS
   - id: N120
     comment: Wait door closed
@@ -31,8 +31,8 @@ steps:
   - id: N130
     comment: Raise press cylinder
     when: >-
-      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos AND
-      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos AND
+      NOT Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn AND
+      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn AND
       Peripherals.BinIo._000K913_Y32 AND
       Peripherals.BinIo._000K912_Y32
     command: Wp100K102PressingCylinder.BASPOS
@@ -41,7 +41,7 @@ steps:
     wait_for: Wp100K102PressingCylinder command started by N130
   - id: N150
     comment: Open safety door
-    when: NOT Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos
+    when: NOT Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn
     command: Wp100K101SafetyDoor.BASPOS
   - id: N160
     comment: Wait door open

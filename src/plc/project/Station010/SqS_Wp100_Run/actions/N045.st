@@ -18,10 +18,10 @@ CASE MeasurePos OF
     Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_TEXT_CLEAR;
 END_CASE
 
-IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
+IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
    ( Peripherals.BinIo._000K913_Y32 ) AND
    ( Peripherals.BinIo._000K912_Y32 ) AND
-   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos ) AND
+   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
    ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY ) AND
    ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY ) AND
    ( Wp100A104Kistler.Unit.ExecState = OpconExecState.READY ) AND

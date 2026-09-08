@@ -13,8 +13,8 @@ END_IF
 _retVal := RUNNING;
 
 // Start one Burster resistance measurement after force qualification.
-IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
-   ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos ) AND
+IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
+   ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn ) AND
    ( Peripherals.BinIo._000K913_Y32 ) AND
    ( Peripherals.BinIo._000K912_Y32 ) AND
    ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY )

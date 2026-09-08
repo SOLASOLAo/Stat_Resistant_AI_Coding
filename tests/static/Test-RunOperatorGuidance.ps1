@@ -68,6 +68,18 @@ $allRunSource = @(
   Get-ChildItem (Join-Path $repositoryRoot 'src\plc\project\Station010\SqS_Wp100_Run') -Recurse -File -Filter '*.st'
 ) | ForEach-Object { [IO.File]::ReadAllText($_.FullName, [Text.Encoding]::UTF8) }
 $allRunSource = $allRunSource -join "`n"
+# Physical-position decisions must not regress to valve-dependent feedback,
+# including Home and the force method, not only the three SqC prompt actions.
+foreach ($file in Get-ChildItem (Join-Path $repositoryRoot 'src\plc') -Recurse -File -Filter '*.st') {
+  if ([IO.File]::ReadAllText($file.FullName) -match '\.OutImm\.IsIn(?:Bas|Wrk)Pos\b') {
+    $failures.Add("Physical position must use input feedback: $($file.FullName)")
+  }
+}
+foreach ($relativePath in @('ai\hooks.yaml', 'specs\station.yaml', 'specs\units\Wp100.yaml', 'specs\chains\SqS_Wp100_Home.yaml')) {
+  if ((Read-RepositoryText $relativePath) -match '\.OutImm\.IsIn(?:Bas|Wrk)Pos\b') {
+    $failures.Add("Application position contract must use input feedback: $relativePath")
+  }
+}
 foreach ($name in $expectedEnumNames) {
   if (-not $enumSpec.Contains("name: $name")) {
     $failures.Add("Enum specification is missing $name")
@@ -81,6 +93,9 @@ $waitActions = [ordered]@{
   N015 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_LEFT'; True = '_100B603'; False = @('_100B601', '_100B602') }
   N045 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_MIDDLE'; True = '_100B602'; False = @('_100B601', '_100B603') }
   N075 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_RIGHT'; True = '_100B601'; False = @('_100B602', '_100B603') }
+}
+foreach ($unit in @('Wp100K101SafetyDoor', 'Wp100K102PressingCylinder')) {
+  Assert-ContainsText -RelativePath 'src\plc\project\Station010\SqS_Wp100_Run\actions\N010.st' -Expected "( $unit.Unit.OutImm.IsInBasPosIn )"
 }
 foreach ($entry in $waitActions.GetEnumerator()) {
   $relativePath = "src\plc\project\Station010\SqC_Wp100_Run\actions\$($entry.Key).st"

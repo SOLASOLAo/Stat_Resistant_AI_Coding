@@ -32,7 +32,7 @@ units:
       meaning: pressing cylinder lowered
     manual_release: >-
       CommonManRelease AND
-      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos AND
+      Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn AND
       Peripherals.BinIo._000K913_Y32 AND
       Peripherals.BinIo._000K912_Y32
   - instance: Wp100A103ResistantDetector
@@ -64,5 +64,5 @@ units:
 
 handler_home_condition:
   all:
-    - Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos
-    - Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+    - Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn
+    - Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn

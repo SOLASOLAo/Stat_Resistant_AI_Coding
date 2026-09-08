@@ -69,7 +69,7 @@ THEN
         ( ABS(forceN) > REAL#3.402823E38 )
   THEN
     _reason := 'FORCE_DATA_INVALID';
-  ELSIF ( NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos )
+  ELSIF ( NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn )
   THEN
     _reason := 'PRESS_POSITION_LOST';
   ELSIF ( Phase = 2 )

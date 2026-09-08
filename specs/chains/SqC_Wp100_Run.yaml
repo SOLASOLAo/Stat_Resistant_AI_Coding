@@ -19,8 +19,9 @@ operator_guidance_plan:
     It releases a move-fixture prompt only after the safety door is open and
     the pressing cylinder is raised according to their current IsInBasPosIn
     inputs, independently of valve output state. It does not write the display
-    while SqS_Wp100_Run is active. Unit command completion and the subchain's
-    motion interlocks are unchanged; input-only feedback is not a safety rating.
+    while SqS_Wp100_Run is active. SqS_Run also uses input feedback for actual
+    positions; Unit command completion and safety-relay interlocks remain
+    independent. Input-only feedback is not a safety rating.
   product_presence_release: >-
     CheckPartPresent is called once before each fixture request and again after
     the requested one-hot fixture position is reached. The second check is the

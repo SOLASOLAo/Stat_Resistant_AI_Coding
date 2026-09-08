@@ -36,7 +36,7 @@
     },
     {
       "id": "REQ-FIXTURE-ONE-HOT",
-      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. Keep subchain motion interlocks and Unit command completion unchanged."
+      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. The subchain also uses input feedback for physical positions; preserve Unit command completion and safety-relay interlocks."
     },
     {
       "id": "REQ-COMMAND-GUIDANCE",

@@ -15,7 +15,7 @@ THEN
   _retVal := _unitResult;
 END_IF
 
-IF ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos ) AND
+IF ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn ) AND
    ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY ) AND
    ( _kistlerStarted ) AND
    ( Wp100A104Kistler.Unit.OutImm.MeasRunning )

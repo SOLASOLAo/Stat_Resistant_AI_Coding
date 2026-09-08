@@ -931,6 +931,20 @@ $preFixtureSwapActionSha256 = @{
   # Reviewed source before correction to LEFT=603, RIGHT=601 on 2026-09-08.
   N010 = 'c43f77759d16b4a5268220011ecc7b2537d2e6cb8b7a67078b47a81f86a42f1a'
 }
+$prePositionInputActionSha256 = @{
+  # Reviewed application predicates before the 2026-09-08 input-only correction.
+  N010 = '7281b91a054edbdac00b38c84d95318f2ff4963bdb05f3cd797cefaea9ce6d22'
+  N030 = '1d80dc2ac89c670573c90a3c05b9e3518d2744eea04d8e2479ac2c1f606fba52'
+  N040 = '59474968e46263e889d5be9dd925320c3d5de7fe49941d6f96e6d75505475188'
+  N045 = 'c451ac3df29a7295026a57449ccc456c1d914fce5377b55d8010729f7cd8fa7c'
+  N050 = 'cecb041d2bc8ce79e628b37cd532c5d36eaac53e49efc95686f44af0fe76efc8'
+  N051 = 'd45651ab00d97453c67043a63ca093f62c00129015b60eb614315d25c7a46a2d'
+  N060 = 'f82f547209d462dbdb456f6c552e4c3565a284cf6746a448ddd858aacf320cb5'
+  N080 = '6a7ce2fd41f4b74e66b176b99b0ab4a5ba218729c314502236333c9a5186889f'
+  N095 = 'e850b3cfe5d528d80ba29e74d49d7420fd517fa340ce52e9f37c45eefe7e5d86'
+  N100 = 'aba43d6907465811ef1ad47f77f85ec1e2c6c25bc711b4cbb42d33936688824a'
+  N130 = 'fd539b3e3e844a126ad0ea0f1561108d3bc0e70e25cdb476e295a0ec21e1f0ac'
+}
 $preForceActionSha256 = @{
   N000 = 'c64f37e00ba18157daca7099a88278e97a69f8581ca8393dbac7f1d9ac69eb96'
   N050 = @(
@@ -965,7 +979,7 @@ else {
 # parent's child list on POST. Do not predict that order or weaken its hash gate.
 # VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
 $forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
-  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315')
+  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7')
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -996,6 +1010,9 @@ foreach ($step in $steps) {
   }
   if ($preFixtureSwapActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preFixtureSwapActionSha256[$step.Name]
+  }
+  if ($prePositionInputActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $prePositionInputActionSha256[$step.Name]
   }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }

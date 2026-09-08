@@ -48,6 +48,7 @@
   ```
 
   提交前由 `tests/static/Test-ProjectFramework.ps1` 扫描 `src/plc/**/*.st`。
+- **位置反馈约定**：应用层判断安全门/压缸实际原位、工作位时，统一使用 `OutImm.IsInBasPosIn` / `OutImm.IsInWrkPosIn`，不使用受输出状态影响的 `IsInBasPos` / `IsInWrkPos`。覆盖提示、Run/Home、手动放行、工位原位与力检测；保留 `CheckUnitDone`、`ExecState`、安全继电器和标准 Unit 内部诊断，不把普通位置输入当安全功能。
 
 ## 6. 当前状态快照
 - [x] 克隆 vibe-coding-templates + ctrlx-ai-coding,派生本仓库骨架(2026-08-17)

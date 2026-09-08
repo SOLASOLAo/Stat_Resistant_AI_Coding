@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "f0ceace788892d3fefa38ba82dc825a57ec9a57398a323e94e746c400a15cb73",
+  "contentId": "815882be67c90b8e49f1ea657a89cb983b215236f34f88b8df08af3fdeaa7f18",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -28,8 +28,8 @@
     },
     {
       "path": "specs/station.yaml",
-      "length": 3215,
-      "sha256": "7b5c1d956d6f2144603bbb9af2c183a223f4809d6829731a1da71a6b07e3d4ae"
+      "length": 3219,
+      "sha256": "e3ffbbea543f0be992c40864ecd50be61700667aed9db569c7b1ae14a82b843b"
     },
     {
       "path": "specs/io.yaml",
@@ -43,18 +43,18 @@
     },
     {
       "path": "specs/units/Wp100.yaml",
-      "length": 1808,
-      "sha256": "a9269325300c330aab68801fca0c3fdbcce547d07735b75cf5219e3876759ca6"
+      "length": 1814,
+      "sha256": "f8e3ff142d0e231564b1971d078095fe68bf90044f3410b047d9cdacae7dc163"
     },
     {
       "path": "specs/processes/SqC_Wp100_Run.process.json",
-      "length": 12315,
-      "sha256": "346ecec5420fed0ea8e044368762a59bb563d003ff938a8a4712f6326e1fd83a"
+      "length": 12368,
+      "sha256": "f6458a7d290625ae204628f5207e9d88d8bd550d974f95392a2c0f6d1c4bdebe"
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 22445,
-      "sha256": "19b02e4ac307cd32d20d5cd73d9b70539bd098380bb564d7de2f19ca0d296421"
+      "length": 22612,
+      "sha256": "dff89aead4ab58b5f2ff06af1c6439bbb10f37be0cdde6b45d06a88c18e90516"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -73,8 +73,8 @@
     },
     {
       "path": "catalog/units/NexeedBasMoveStandard/V2.1/unit.yaml",
-      "length": 612,
-      "sha256": "7a916bbf73465d354509fbdb787062d72781c33a02a3b0c2977c16221037692e"
+      "length": 923,
+      "sha256": "040aacf9d799d3f429f771bef83344f1f6bc8033b49fca2114ddc3a4c67365d3"
     },
     {
       "path": "catalog/units/NexeedBursterResis2316/V1.0/unit.yaml",
@@ -88,13 +88,13 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 14426,
-      "sha256": "809d415dc596535e8915ce6f1d66e04e918aa24f11ff4cab44d548c094c47731"
+      "length": 15024,
+      "sha256": "3b17190aaefda7967408d2f65c24c401bdb33d8811a46317d15eca7ab2469736"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 8699,
-      "sha256": "903d16b0378b8c7a62ffec9f82bb9843879d13c70a381979baa93f371edac295"
+      "length": 8705,
+      "sha256": "54ce8ac451d1810ec3dba36f6df4c78e78b2129422a1064feeb27497a4efd5f7"
     },
     {
       "path": "ai/graphical.yaml",
@@ -1343,7 +1343,7 @@
     {
       "processId": "wp100-run-command",
       "requirementId": "REQ-FIXTURE-ONE-HOT",
-      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. Keep subchain motion interlocks and Unit command completion unchanged.",
+      "text": "Require current IsInBasPosIn input feedback for safety-door open and press raised before each fixture prompt, independently of valve outputs; then require exactly the requested position sensor. The subchain also uses input feedback for physical positions; preserve Unit command completion and safety-relay interlocks.",
       "stepIds": [
         "N015",
         "N045",
@@ -1385,7 +1385,7 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-ATOMIC-INPUT",
-      "text": "Consume the CpStudio-owned MeasurePos VAR_INPUT once and require the selected LEFT, MIDDLE or RIGHT one-hot fixture position.",
+      "text": "Consume the CpStudio-owned MeasurePos VAR_INPUT once and require the selected LEFT, MIDDLE or RIGHT one-hot fixture position. Use IsInBasPosIn / IsInWrkPosIn for actual cylinder positions throughout the sequence and force monitoring; keep CheckUnitDone, ExecState and safety-relay conditions.",
       "stepIds": [
         "N000",
         "N010"

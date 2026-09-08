@@ -5,13 +5,13 @@ IF ( _pressDownStarted )
 THEN
   _retVal := OK;
 
-ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
+ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( Peripherals.BinIo._000K913_Y32 ) AND
       ( Peripherals.BinIo._000K912_Y32 ) AND
       ( _kistlerStarted ) AND
       ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
       ( Wp100A104Kistler.Unit.ExecState <> OpconExecState.ERROR ) AND
-      ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos ) AND
+      ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
       ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY )
 THEN
   Wp100K102PressingCylinder.Unit.ParCmd.PreStartCheck :=

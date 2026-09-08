@@ -84,6 +84,11 @@ station_data:
     validation: greater than 2000; zero must not disable monitoring
     snapshot: at Kistler preflight for each position
 
+position_feedback:
+  base: OutImm.IsInBasPosIn
+  work: OutImm.IsInWrkPosIn
+  rule: Physical-position predicates use inputs independently of valve outputs; retain CheckUnitDone, ExecState and all safety-relay conditions.
+
 force_interlock:
   source: Wp100A104Kistler.Unit.OutImm.ForceAct
   threshold_n: 2500

@@ -10,7 +10,7 @@ IF ( _kistlerStarted )
 THEN
   _retVal2 := OK;
 
-ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
+ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( Peripherals.BinIo._000K913_Y32 ) AND
       ( Peripherals.BinIo._000K912_Y32 ) AND
       ( Wp100A104Kistler.Unit.ExecState = OpconExecState.READY ) AND

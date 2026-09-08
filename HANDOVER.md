@@ -1169,3 +1169,32 @@
 - **本次 PLE Build 未运行**：MCP 未持有当前用户 PLE，REST 无已验证的应用
   Build 接口；请用户 F11 编译并自行下载。未连接真机、启停、下载或写变量/FORCE。
   本地证据：`data/reports/plc/fixture-bmk-swap-20260908.json`。
+
+## 2026-09-08 · 全应用位置反馈修正（已保存，待用户 Build）
+
+- 用户指出 SqS_Run N010 在传感器已到位时仍被综合状态阻塞；此前仅修改 SqC
+  三个提示动作，覆盖不足。本轮按确认的规则检查全部应用，不再只修截图。
+  标准对象 OOD 的 `PosEvalWithOutputs` 说明验证了不带 In 的状态会结合输出。
+- 当前用户 PLE 官方 REST 扫描 Application 307 个对象（不进入标准库），
+  发现 20 个位置相关对象，其中 17 个对象共 27 处仍使用综合位置状态。
+  已精确修正为 `IsInBasPosIn` / `IsInWrkPosIn`：
+  - SqS_Run：N010/N030/N040/N045/N050/N051/N060/N080/N095/N100/N130
+    以及 CheckPressForce，共 12 对象 / 18 处。
+  - SqS_Home：N110/N130/N150，共 3 对象 / 5 处；补齐可读实现源与归属记录。
+  - Wp100Unit.OnApplyOutputs 的 IsInHomePosition：2 处；IsEmpty 原样保留。
+  - 压缸 Extension.OnManRelease 的两个动作放行：2 处；CommonManRelease
+    与 `_000K913_Y32/_000K912_Y32` 原样保留。
+- 所有 CheckUnitDone、ExecState、StepPulse、Execute/Command、PreStartCheck、
+  OutputPulsing、安全继电器、>2500 N/2 s/PressForceTimeout 与故障锁存均保留。
+  Home 只额外采用仓库既定括号排版；未改生成声明、SFC 图、I/O 映射、Std。
+- 使用共享 REST 事务保护做单次离线迁移，Plan SHA `420481ce...78266`；
+  起点 checkpoint `e7377541...d076e` 已回验，17 项 PUT 后仅 Save 一次。
+  完整回读成功，再扫描 307 对象：旧引用 0，输入反馈引用 33（含此前正确的 6）。
+  两个现有 Run writer 与本地迁移 PlanOnly 均为 0 写入。
+- AGENTS/规格/hooks/catalog/Project Pack 同步；全源码禁止旧综合状态的检查、
+  SqS N010 双原位输入断言、力检测输入断言、框架、REST 事务、力时序模型及
+  Project Pack Build/Check 通过。未以静态模型冒充 PLC 仿真或现场验证。
+- 用户拔掉网线；AI 没有重新连接、下载、启停、写变量或 FORCE。MCP 未持有
+  当前 PLE，**本次 PLE Build 未运行**，请用户 F11 后再自行部署和现场核对。
+  本地证据：`data/reports/plc/basmove-input-feedback-20260908.json`；
+  修改前对象快照为同目录 `basmove-input-feedback-20260908-before.json`。

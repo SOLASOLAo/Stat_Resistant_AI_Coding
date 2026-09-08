@@ -9,7 +9,7 @@ THEN
   );
 
   IF ( _retVal = OK ) AND
-     ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos )
+     ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn )
   THEN
     // Start total force waiting at confirmed press-down; N070 waits for
     // qualification or holds the latched fault on the following step.

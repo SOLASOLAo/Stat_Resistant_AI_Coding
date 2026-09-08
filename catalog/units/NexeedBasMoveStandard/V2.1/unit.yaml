@@ -10,8 +10,11 @@ commands:
   - WRKPOS
 
 feedback:
-  base_position: Unit.OutImm.IsInBasPos
-  work_position: Unit.OutImm.IsInWrkPos
+  base_position: Unit.OutImm.IsInBasPosIn
+  work_position: Unit.OutImm.IsInWrkPosIn
+  composite_base_position: Unit.OutImm.IsInBasPos
+  composite_work_position: Unit.OutImm.IsInWrkPos
+  application_rule: Use input-suffix members for physical position predicates; composite members can include output state via PosEvalWithOutputs. Keep command completion and safety feedback checks separate.
 
 integration_protocol:
   start: Unit READY plus Chain StepPulse

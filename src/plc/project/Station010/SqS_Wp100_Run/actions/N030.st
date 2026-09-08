@@ -2,13 +2,13 @@
 // otherwise the maintenance-door safety relay must be healthy before motion.
 Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_CLOSING_SAFETY_DOOR;
 
-IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos )
+IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn )
 THEN
   _safetyDoorCloseStarted := FALSE;
   _retVal := OK;
 
 ELSIF ( Peripherals.BinIo._000K981_Y32 ) AND
-      ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos ) AND
+      ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
       ( Wp100K101SafetyDoor.Unit.ExecState = OpconExecState.READY )
 THEN
   Wp100K101SafetyDoor.Unit.ParCmd.PreStartCheck :=

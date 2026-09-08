@@ -13,7 +13,7 @@ END_IF
 IF ( _unitResult <> OK )
 THEN
   _retVal := _unitResult;
-ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPos ) AND
+ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( Peripherals.BinIo._000K913_Y32 ) AND
       ( Peripherals.BinIo._000K912_Y32 )
 THEN

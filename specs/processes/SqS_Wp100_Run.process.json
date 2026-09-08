@@ -33,7 +33,7 @@
   "requirements": [
     {
       "id": "REQ-ATOMIC-INPUT",
-      "text": "Consume the CpStudio-owned MeasurePos VAR_INPUT once and require the selected LEFT, MIDDLE or RIGHT one-hot fixture position."
+      "text": "Consume the CpStudio-owned MeasurePos VAR_INPUT once and require the selected LEFT, MIDDLE or RIGHT one-hot fixture position. Use IsInBasPosIn / IsInWrkPosIn for actual cylinder positions throughout the sequence and force monitoring; keep CheckUnitDone, ExecState and safety-relay conditions."
     },
     {
       "id": "REQ-OPERATOR-ACK",

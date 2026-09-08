@@ -95,5 +95,5 @@ mode_release:
 
 home_condition:
   expression: >-
-    Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos AND
-    Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos
+    Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn AND
+    Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn

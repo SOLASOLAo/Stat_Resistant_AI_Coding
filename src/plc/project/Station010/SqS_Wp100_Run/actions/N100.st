@@ -5,7 +5,7 @@ IF ( _pressUpStarted )
 THEN
   _retVal := OK;
 
-ELSIF ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPos ) AND
+ELSIF ( Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn ) AND
       ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY )
 THEN
   Wp100K102PressingCylinder.Unit.ParCmd.PreStartCheck :=

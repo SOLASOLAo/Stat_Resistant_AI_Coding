@@ -24,8 +24,8 @@ END_CASE
 
 Result.FixturePositionValid := _positionValid;
 
-IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPos ) AND
-   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPos )
+IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn ) AND
+   ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn )
 THEN
   CASE MeasurePos OF
     MeasurePsoEnum.LEFT:

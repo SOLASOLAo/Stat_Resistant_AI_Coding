@@ -17,6 +17,7 @@ foreach ($fragment in @(
   'Result.Resistance.Valid := FALSE', 'Result.Resistance.Ok := FALSE',
   'Wp100A104Kistler.Unit.OutImm.MeasRunning', 'Wp100A104Kistler.Unit.ExecState = OpconExecState.ERROR',
   'NOT ( forceN = forceN )', 'ABS(forceN) > REAL#3.402823E38',
+  'NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn',
   'Wp100A104Kistler.Unit.ParImm.EndMeasurement := TRUE',
   'Wp100A103ResistantDetector.Unit.Execute := FALSE'
 )) {
