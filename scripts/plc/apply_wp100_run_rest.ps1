@@ -927,6 +927,10 @@ $preProgramSelectActionSha256 = @{
   N045 = '325d9ec70dde05d472ad1946cbc0b6e4a3ee1ae7ad94e596c40c899c496b5416'
 }
 $preProgramSelectOnChainFinishSha256 = '5678238b38592f4517261d5f8a24885f958f4ea6c9f25120eb7713ac4e10533d'
+$preFixtureSwapActionSha256 = @{
+  # Reviewed source before correction to LEFT=603, RIGHT=601 on 2026-09-08.
+  N010 = 'c43f77759d16b4a5268220011ecc7b2537d2e6cb8b7a67078b47a81f86a42f1a'
+}
 $preForceActionSha256 = @{
   N000 = 'c64f37e00ba18157daca7099a88278e97a69f8581ca8393dbac7f1d9ac69eb96'
   N050 = @(
@@ -989,6 +993,9 @@ foreach ($step in $steps) {
   }
   if ($preForceActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $preForceActionSha256[$step.Name]
+  }
+  if ($preFixtureSwapActionSha256.ContainsKey($step.Name)) {
+    $allowedSha256 += $preFixtureSwapActionSha256[$step.Name]
   }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }

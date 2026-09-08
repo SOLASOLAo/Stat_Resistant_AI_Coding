@@ -6,9 +6,9 @@ IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInBasPosIn ) AND
 THEN
   Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_MOVE_FIXTURE_RIGHT;
 
-  IF ( NOT Peripherals.BinIo._100B601 ) AND
+  IF ( Peripherals.BinIo._100B601 ) AND
      ( NOT Peripherals.BinIo._100B602 ) AND
-     ( Peripherals.BinIo._100B603 )
+     ( NOT Peripherals.BinIo._100B603 )
   THEN
     // Recheck both product sensors after the operator has moved the fixture.
     // This is the final release immediately before starting SqS_Wp100_Run.

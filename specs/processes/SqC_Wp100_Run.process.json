@@ -89,7 +89,7 @@
       "kind": "wait",
       "comment": "Wait fixture LEFT",
       "operation": "Prompt for LEFT and wait for the LEFT one-hot fixture state, then recheck product presence.",
-      "transition": "Door is open, press is raised, _100B601 is TRUE, _100B602 and _100B603 are FALSE, and both product sensors are TRUE.",
+      "transition": "Door is open, press is raised, _100B603 is TRUE, _100B601 and _100B602 are FALSE, and both product sensors are TRUE.",
       "prompt": {
         "key": "USER_INFO_MOVE_FIXTURE_LEFT",
         "english": "Move the fixture to the left position",
@@ -222,7 +222,7 @@
       "kind": "wait",
       "comment": "Wait fixture RIGHT",
       "operation": "Prompt for RIGHT and wait for the RIGHT one-hot fixture state, then recheck product presence.",
-      "transition": "Door is open, press is raised, _100B603 is TRUE, _100B601 and _100B602 are FALSE, and both product sensors are TRUE.",
+      "transition": "Door is open, press is raised, _100B601 is TRUE, _100B602 and _100B603 are FALSE, and both product sensors are TRUE.",
       "prompt": {
         "key": "USER_INFO_MOVE_FIXTURE_RIGHT",
         "english": "Move the fixture to the right position",

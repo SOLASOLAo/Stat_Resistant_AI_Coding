@@ -78,9 +78,9 @@ foreach ($name in $expectedEnumNames) {
 }
 
 $waitActions = [ordered]@{
-  N015 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_LEFT'; True = '_100B601'; False = @('_100B602', '_100B603') }
+  N015 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_LEFT'; True = '_100B603'; False = @('_100B601', '_100B602') }
   N045 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_MIDDLE'; True = '_100B602'; False = @('_100B601', '_100B603') }
-  N075 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_RIGHT'; True = '_100B603'; False = @('_100B601', '_100B602') }
+  N075 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_RIGHT'; True = '_100B601'; False = @('_100B602', '_100B603') }
 }
 foreach ($entry in $waitActions.GetEnumerator()) {
   $relativePath = "src\plc\project\Station010\SqC_Wp100_Run\actions\$($entry.Key).st"
@@ -91,7 +91,7 @@ foreach ($entry in $waitActions.GetEnumerator()) {
       'AutoInfoLineEnum.USER_INFO_RETURN_SAFE_POSITION',
       'AutoInfoLineEnum.USER_INFO_LOAD_PART',
       '_retVal := CheckPartPresent();',
-      $entry.Value.True
+      "( Peripherals.BinIo.$($entry.Value.True) )"
     )) {
     Assert-ContainsText -RelativePath $relativePath -Expected $expected
   }
@@ -99,6 +99,32 @@ foreach ($entry in $waitActions.GetEnumerator()) {
     Assert-ContainsText -RelativePath $relativePath -Expected "NOT Peripherals.BinIo.$falseSignal"
   }
   Assert-DoesNotContainText -RelativePath $relativePath -Forbidden '.OutImm.IsInBasPos )'
+
+  # Evaluate the actual ST signal terms for all eight input combinations in
+  # both the caller wait and the atomic operation; do not model only the spec.
+  $position = $entry.Value.Prompt.Replace('USER_INFO_MOVE_FIXTURE_', '')
+  $atomic = Read-RepositoryText 'src\plc\project\Station010\SqS_Wp100_Run\actions\N010.st'
+  $branch = [regex]::Match($atomic, "(?s)MeasurePsoEnum\.${position}:\s*_positionValid := (?<predicate>.*?);")
+  foreach ($predicate in @((Read-RepositoryText $relativePath), $branch.Groups['predicate'].Value)) {
+    $terms = [regex]::Matches($predicate, '\(\s*(?<not>NOT\s+)?Peripherals\.BinIo\.(?<signal>_100B60[123])\s*\)')
+    if (($terms.Count -ne 3) -or (@($terms | ForEach-Object { $_.Groups['signal'].Value } | Sort-Object -Unique).Count -ne 3)) {
+      $failures.Add("$position must check all three fixture inputs exactly once in SqC and SqS.")
+      continue
+    }
+    for ($mask = 0; $mask -lt 8; $mask++) {
+      $actual = $true
+      foreach ($term in $terms) {
+        $bit = [int]::Parse($term.Groups['signal'].Value.Substring(7)) - 1
+        $value = ($mask -band (1 -shl $bit)) -ne 0
+        if ($term.Groups['not'].Success) { $value = -not $value }
+        $actual = $actual -and $value
+      }
+      $expectedBit = [int]::Parse($entry.Value.True.Substring(7)) - 1
+      if ($actual -ne ($mask -eq (1 -shl $expectedBit))) {
+        $failures.Add("$position fixture predicate is wrong for input mask $mask.")
+      }
+    }
+  }
 }
 
 foreach ($step in @('N010', 'N040', 'N070')) {

@@ -67,14 +67,14 @@ input:
     caller must not change it while the chain is running.
   values:
     LEFT:
-      required_true: [_100B601]
-      required_false: [_100B602, _100B603]
+      required_true: [_100B603]
+      required_false: [_100B601, _100B602]
     MIDDLE:
       required_true: [_100B602]
       required_false: [_100B601, _100B603]
     RIGHT:
-      required_true: [_100B603]
-      required_false: [_100B601, _100B602]
+      required_true: [_100B601]
+      required_false: [_100B602, _100B603]
 
 station_data:
   PressForceTimeout:
@@ -83,9 +83,6 @@ station_data:
     unit: ms
     validation: greater than 2000; zero must not disable monitoring
     snapshot: at Kistler preflight for each position
-  PressDelayTime:
-    plc_path: Station.StationData.PressDelayTime
-    status: legacy generated field retained but no longer consumed by SqS_Run
 
 force_interlock:
   source: Wp100A104Kistler.Unit.OutImm.ForceAct

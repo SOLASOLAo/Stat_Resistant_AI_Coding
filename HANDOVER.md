@@ -1149,3 +1149,23 @@
   也没有通过界面点击。**尚未运行本次 PLE Build**，用户按 F11 后核对。
   此前 0 errors / 5 warnings 只作对比，不作为本次结果；没有下载、连接、
   启停或 FORCE。证据：`data/reports/plc/fixture-input-feedback-20260907.json`。
+
+## 2026-09-08 · Fixture 左右 BMK 与 StationData 同步（已保存，待用户 Build）
+
+- 用户新导出的 BusConfig 与 PLE BinIo 一致：`_100B603` 左、`_100B602` 中、
+  `_100B601` 右。变量名/通道未互换，本次只修正方向语义，不再次交换 I/O 映射。
+- 经现有用户 PLE（`ctrlX PLC 2.6.8`）REST，精确修改 SqS_Run N010 与
+  SqC_Run N015/N075 三个 Action；Save 成功，完整回读后两个 writer 均为
+  0 项待写。父声明、SFC 图、BinIo 与 StationData 声明保留；不另开 PLE。
+- StationData 已由用户删除 `PressDelayTime`；现行程序无该字段引用，继续
+  消费 `PressForceTimeout`。不恢复旧字段，不改变 >2500 N 连续 2 s、掉力锁存、
+  IsInBasPosIn 提示条件或测量顺序。IPC 实际 DAT 值仍需用户加载确认。
+- ASC 源清单、流程规格及生成计划已同步。新 Export 请求
+  `31bfc591-c9fe-4227-a1d6-ab60599b6762` 的 Stage 1 已审计：56/56 点一致，
+  38 active / 18 inactive，0 mismatch；Stage 2 仅 WhatIf，没有执行 Runner action。
+- 一份起点 `.project` checkpoint（SHA `ce417fe0...376c4`）已本地回验。
+  三位置各八种输入组合（SqC/SqS 共 48 组）、力时序模型、REST PlanOnly/事务回退、
+  框架及 Project Pack 检查通过。这些不代替 PLC Build/现场验证。
+- **本次 PLE Build 未运行**：MCP 未持有当前用户 PLE，REST 无已验证的应用
+  Build 接口；请用户 F11 编译并自行下载。未连接真机、启停、下载或写变量/FORCE。
+  本地证据：`data/reports/plc/fixture-bmk-swap-20260908.json`。

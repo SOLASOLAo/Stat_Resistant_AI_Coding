@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "377721e4065d29c186c1b4ddae54d65ddd4ee07d30ad9a8812fcf70d328b873f",
+  "contentId": "f0ceace788892d3fefa38ba82dc825a57ec9a57398a323e94e746c400a15cb73",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -49,7 +49,7 @@
     {
       "path": "specs/processes/SqC_Wp100_Run.process.json",
       "length": 12315,
-      "sha256": "293fcebd2fcd6e63a4a879fb541bad4866dc33fad28b116f229ba2e2b6ea5412"
+      "sha256": "346ecec5420fed0ea8e044368762a59bb563d003ff938a8a4712f6326e1fd83a"
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
@@ -104,7 +104,7 @@
     {
       "path": "specs/station010-eplan-io.csv",
       "length": 3917,
-      "sha256": "bd7e1d160b2bd835c4c689cfc9abe17831ff9e9d13101646aad42cdde36d791a"
+      "sha256": "093e79fb137bcf06c8eb29ae7316076961195e68267e0038a02eb68166f25974"
     },
     {
       "path": "scripts/ioe/New-CpStudioEplanIoAsc.ps1",
@@ -187,7 +187,7 @@
           "kind": "wait",
           "comment": "Wait fixture LEFT",
           "operation": "Prompt for LEFT and wait for the LEFT one-hot fixture state, then recheck product presence.",
-          "transition": "Door is open, press is raised, _100B601 is TRUE, _100B602 and _100B603 are FALSE, and both product sensors are TRUE.",
+          "transition": "Door is open, press is raised, _100B603 is TRUE, _100B601 and _100B602 are FALSE, and both product sensors are TRUE.",
           "prompt": {
             "key": "USER_INFO_MOVE_FIXTURE_LEFT",
             "english": "Move the fixture to the left position",
@@ -340,7 +340,7 @@
           "kind": "wait",
           "comment": "Wait fixture RIGHT",
           "operation": "Prompt for RIGHT and wait for the RIGHT one-hot fixture state, then recheck product presence.",
-          "transition": "Door is open, press is raised, _100B603 is TRUE, _100B601 and _100B602 are FALSE, and both product sensors are TRUE.",
+          "transition": "Door is open, press is raised, _100B601 is TRUE, _100B602 and _100B603 are FALSE, and both product sensors are TRUE.",
           "prompt": {
             "key": "USER_INFO_MOVE_FIXTURE_RIGHT",
             "english": "Move the fixture to the right position",
@@ -1510,14 +1510,14 @@
   ],
   "ioDesignators": {
     "sourcePath": "specs/station010-eplan-io.csv",
-    "sourceSha256": "bd7e1d160b2bd835c4c689cfc9abe17831ff9e9d13101646aad42cdde36d791a",
+    "sourceSha256": "093e79fb137bcf06c8eb29ae7316076961195e68267e0038a02eb68166f25974",
     "generatorPath": "scripts/ioe/New-CpStudioEplanIoAsc.ps1",
     "generatorSha256": "073b5109abb13c208e9d9d79ecef0f19645fe7b4e1f09f3d801bf05ff7441e53",
     "checkerPath": "scripts/ioe/Test-CpStudioEplanIoExport.ps1",
     "checkerSha256": "f91fe3991945fc9cd4a4258aa48bc3abbc6a094e8079db5691c13429ed0a7d93",
     "artifactPath": "generated/cpstudio-io-designators.asc",
     "artifactLength": 6570,
-    "artifactSha256": "25f85082e85013b02ea933ac094697ac1ede5869152387468b4fb6f9a88d29a1",
+    "artifactSha256": "bdc7759f86d09860a4cc74756c4fe1f1f80c4c3c37df605d02c3002cdb26120e",
     "rowCount": 56,
     "digitalInputs": 32,
     "digitalOutputs": 24,

@@ -4,9 +4,9 @@ _retVal := RUNNING;
 
 CASE MeasurePos OF
   MeasurePsoEnum.LEFT:
-    _positionValid := ( Peripherals.BinIo._100B601 ) AND
+    _positionValid := ( NOT Peripherals.BinIo._100B601 ) AND
                       ( NOT Peripherals.BinIo._100B602 ) AND
-                      ( NOT Peripherals.BinIo._100B603 );
+                      ( Peripherals.BinIo._100B603 );
 
   MeasurePsoEnum.MIDDLE:
     _positionValid := ( NOT Peripherals.BinIo._100B601 ) AND
@@ -14,9 +14,9 @@ CASE MeasurePos OF
                       ( NOT Peripherals.BinIo._100B603 );
 
   MeasurePsoEnum.RIGHT:
-    _positionValid := ( NOT Peripherals.BinIo._100B601 ) AND
+    _positionValid := ( Peripherals.BinIo._100B601 ) AND
                       ( NOT Peripherals.BinIo._100B602 ) AND
-                      ( Peripherals.BinIo._100B603 );
+                      ( NOT Peripherals.BinIo._100B603 );
 
   ELSE
     _positionValid := FALSE;

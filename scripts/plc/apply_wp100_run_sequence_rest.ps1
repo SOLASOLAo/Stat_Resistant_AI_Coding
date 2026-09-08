@@ -586,6 +586,11 @@ $preGuidanceChildSha256 = @{
   '_aN999_active' = '5623553c37c8b509e93ec6e910aa2abde1e8d07c76fe21fb1312f48243b80dd8'
   'OnChainFinish' = '52599c4bd83965909566669bb79cbc9a29fa17269da17c4416e85c305cb3f8d2'
 }
+$preFixtureSwapChildSha256 = @{
+  # Reviewed input-feedback version before the user's 2026-09-08 BMK correction.
+  '_aN015_active' = '3bd3e40e4e2feb6f8deb868f06ca2cb99d566d8084f8b880c4aeebd9f11a2625'
+  '_aN075_active' = '5e012bd7b94194c77721997a662fab0ab0e3da3ab6e37f12a4937dfc214b1396'
+}
 $knownChildren = @($targetChildren + $generatedChildSha256.Keys | Sort-Object -Unique)
 $unknownChildren = @($sequenceNode.children | Where-Object { $_ -notin $knownChildren })
 if ($unknownChildren.Count -gt 0) {
@@ -614,12 +619,15 @@ foreach ($childName in $sequenceNode.children) {
                        ($childSha256 -eq $preC0198ChildSha256[$childName])
     $matchesPreGuidance = $preGuidanceChildSha256.ContainsKey($childName) -and
                           ($childSha256 -eq $preGuidanceChildSha256[$childName])
+    $matchesPreFixtureSwap = $preFixtureSwapChildSha256.ContainsKey($childName) -and
+                            ($childSha256 -eq $preFixtureSwapChildSha256[$childName])
     if (($childSha256 -ne $targetChildSha256) -and
         (-not $matchesGenerated) -and
         (-not $matchesPreStyle) -and
         (-not $matchesPreInnerSpace) -and
         (-not $matchesPreC0198) -and
-        (-not $matchesPreGuidance)) {
+        (-not $matchesPreGuidance) -and
+        (-not $matchesPreFixtureSwap)) {
       throw "SqC_Wp100_Run child changed after audit: $childName"
     }
   }
@@ -644,6 +652,9 @@ foreach ($step in $steps) {
   }
   if ($preGuidanceChildSha256.ContainsKey($name)) {
     $baseline += $preGuidanceChildSha256[$name]
+  }
+  if ($preFixtureSwapChildSha256.ContainsKey($name)) {
+    $baseline += $preFixtureSwapChildSha256[$name]
   }
   $childStatus[$step.Name] = Set-CodeChild -Name $name -ElementType Action -SourceFile "SqC_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $baseline
 }

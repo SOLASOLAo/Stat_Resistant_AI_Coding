@@ -2,8 +2,9 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **Fixture 左右 BMK 修正（2026-09-08）**：按用户新导出，左=`_100B603`、中=`_100B602`、右=`_100B601`；已通过现有 PLE REST 修改 SqS N010、SqC N015/N075，保存和全目标回读通过。StationData 删除 `PressDelayTime` 的改动保留，继续使用 `PressForceTimeout`。ASC 清单/流程计划同步；56 点与 BusConfig 一致，未调整硬件映射、未下载。
 - [x] **Fixture 提示实时原位反馈（2026-09-07）**：按用户确认，将 `SqC_Wp100_Run` N015/N045/N075 的安全门、压缸原位判断共六处改为 `IsInBasPosIn`；已通过现有 PLE REST 写入、保存和完整回读，静态/事务/Project Pack 检查通过。未改 SqS 动作联锁、标准 Unit 参数或生成接口，未下载。
-- [ ] **本次反馈修改的 PLE Build/现场复核**：用户在现有 PLE 按 F11，比较与此前 0 errors / 5 warnings 的结果；下载由用户操作。原位输入成立而输出关闭时应显示 fixture 提示；任一原位输入缺失仍等待。SqS_Run 的综合位置动作联锁仍独立生效，不把提示放行视为动作放行或安全认证。
+- [ ] **当前左右修正的 PLE Build/现场复核**：用户在现有 PLE 按 F11，本次尚未取得 Build 结果；下载由用户操作，现场核对左 603 / 中 602 / 右 601 与提示/结果位置一致。原位输入成立而输出关闭时应显示 fixture 提示；任一原位输入缺失仍等待。SqS_Run 的综合位置动作联锁仍独立生效，不把提示放行视为动作放行或安全认证。
 
 - [x] **Wp100 压紧力联锁离线实现（2026-09-07）**：已消费用户新增的 `PressForceTimeout`/`EVENT_PRESS_FORCE_INVALID`；同一 SqS_Run 完成 `>2500 N` 连续 2 s、总等待超时及测量期间掉力锁存；故障不自动升缸/重测。已通过 REST 写入、保存回读及 PLE Build（0 errors / 原有 5 warnings）；未下载。
 - [ ] 🔴 **Wp100 压紧力现场验收**：IPC 实际 StationData 设置并加载 `PressForceTimeout >2000 ms`；同步事件/数据定义、用户下载。验收左中右、2500 N 等号、2 s 中断、总超时、测量中掉力/数据异常、故障保持及取消后重启；确认 Kistler watchdog 余量足够。详见 HANDOVER 最新记录。
@@ -164,7 +165,7 @@
 - [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成
 - [ ] 🔴 真机专项验证主气压时序：两路物理压力输入已取消接线；确认 `_000K085A` 最终命令变化后 1 s 虚拟 HIGH/LOW 切换、5 s 诊断及故障恢复；覆盖维修门放行延迟、正常 Control On/Off 和联锁中途撤销；补充两个事件的中文文本
 - [ ] 🔴 真机专项验证 Home 原子操作：覆盖压缸已/未在原位、安全门已/未在原位四种分支，确认 `_000S610/_000P610`、WRKPOS/BASPOS 顺序、Unit 超时/报错和模式切换 CANCEL 后所有输出复位
-- [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressDelayTime、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
+- [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressForceTimeout、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
 - [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
 - [x] 🟡 P1.1 `ProcessOne` 已把 Post-export 请求、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成受控入口；CpStudio hook 继续只发 signal，不自动启动 Broker/PLE/MCP，也不直接改写 `Engineering_Data.xml`（2026-08-27）
 - [x] 🔴 Burster HostName 与标准连接已由用户现场调通，Nexeed HMI 无设备错误且 Control On 恢复；`SetRange/StartMeas` 手动放行已由 CpStudio 正式导出（2026-09-04）
