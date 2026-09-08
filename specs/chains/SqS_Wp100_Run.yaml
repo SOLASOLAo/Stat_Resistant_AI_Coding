@@ -148,7 +148,7 @@ steps:
     action: FB_OperatorButton
     input: _000S610
     lamp: _000P610
-    blink: Station.FlashBits.Pulse500ms
+    blink: Root.RootNode.FlashBits.Toggle500ms
   - id: N030
     comment: Close safety door
     command: Wp100K101SafetyDoor.WRKPOS

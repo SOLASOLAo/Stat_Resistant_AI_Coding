@@ -1198,3 +1198,10 @@
   当前 PLE，**本次 PLE Build 未运行**，请用户 F11 后再自行部署和现场核对。
   本地证据：`data/reports/plc/basmove-input-feedback-20260908.json`；
   修改前对象快照为同目录 `basmove-input-feedback-20260908-before.json`。
+
+## 2026-09-08 · 启动按钮灯使用标准 Toggle
+
+- 只读扫描确认 `Station.FlashBits : OpconUnitRootDataFlashBits` 只有声明、没有周期赋值；Run N020 和 Home N010 均引用其中的 `Pulse500ms`。本机 NxBase 官方框架手册还确认 Pulse 仅维持一个 PLC 扫描周期，Toggle 才按指定间隔翻转。
+- 两处调用已改为 `Root.RootNode.FlashBits.Toggle500ms`；MAIN 本来就周期调用 RootNode，无需增加定时器或复制全局变量。`FB_OperatorButton` 只更正注释示例，接口、算法、按键完成与取消熄灯不变。Home N010 补齐可读源；Run/Home 规格、ownership 与回归断言同步。
+- 用户当前 PLE `isOnline=false`，工程/profile 精确核对；复用 checkpoint `cea2d22a...b798`。两处 Action 与一处注释经官方 REST 写入、仅保存一次，完整回读与根对象/SFC 图不变检查通过。保存后工程 SHA `81dda38c...5ba0`；证据：`data/reports/plc/operator-lamp-toggle-20260908.json`，同目录 `-before.json` 保存对象快照。
+- MCP 未持有该用户打开的 PLE，本次没有启动第二实例，**没有执行 PLE Build**；错误数与 warning 对比待本次新 Build，不引用截图旧结果。用户 F11 后自行下载并核对自动/回原位等待闪灯及按下/取消熄灯；不需 CpStudio Export。无连接、下载、启停、写变量或 FORCE。

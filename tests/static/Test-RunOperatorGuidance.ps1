@@ -94,6 +94,17 @@ $waitActions = [ordered]@{
   N045 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_MIDDLE'; True = '_100B602'; False = @('_100B601', '_100B603') }
   N075 = [ordered]@{ Prompt = 'USER_INFO_MOVE_FIXTURE_RIGHT'; True = '_100B601'; False = @('_100B602', '_100B603') }
 }
+# Both operator-request lamps use the cyclic standard toggle, never a detached
+# structure or a one-scan pulse. Keep their existing reset/output handshake.
+foreach ($relativePath in @(
+    'src\plc\project\Station010\SqS_Wp100_Run\actions\N020.st',
+    'src\plc\project\Station010\SqS_Wp100_Home\actions\N010.st'
+  )) {
+  Assert-ContainsText -RelativePath $relativePath -Expected 'Blink500ms    := Root.RootNode.FlashBits.Toggle500ms'
+  Assert-DoesNotContainText -RelativePath $relativePath -Forbidden 'FlashBits.Pulse500ms'
+  Assert-ContainsText -RelativePath $relativePath -Expected 'Execute       := FALSE'
+  Assert-ContainsText -RelativePath $relativePath -Expected 'BinIo._000P610 := _startButton.LampOn;'
+}
 foreach ($unit in @('Wp100K101SafetyDoor', 'Wp100K102PressingCylinder')) {
   Assert-ContainsText -RelativePath 'src\plc\project\Station010\SqS_Wp100_Run\actions\N010.st' -Expected "( $unit.Unit.OutImm.IsInBasPosIn )"
 }

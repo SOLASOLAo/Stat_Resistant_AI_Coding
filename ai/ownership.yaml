@@ -75,6 +75,7 @@ objects:
     write_mode: graphical_attributes
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN010_active
     owner: ai_implementation
+    source: src/plc/project/Station010/SqS_Wp100_Home/actions/N010.st
     specification: specs/chains/SqS_Wp100_Home.yaml
     write_mode: implementation
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home/_aN120_active

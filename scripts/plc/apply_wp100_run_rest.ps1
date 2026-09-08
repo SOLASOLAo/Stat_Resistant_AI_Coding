@@ -1014,6 +1014,10 @@ foreach ($step in $steps) {
   if ($prePositionInputActionSha256.ContainsKey($step.Name)) {
     $allowedSha256 += $prePositionInputActionSha256[$step.Name]
   }
+  if ($step.Name -eq 'N020') {
+    # Reviewed source before connecting the standard RootNode toggle (2026-09-08).
+    $allowedSha256 += '9715b5f9da9eb401bf146aeccf7fb33fc7f05d13f3a295ae1407fc4177acaaca'
+  }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
 $actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish)

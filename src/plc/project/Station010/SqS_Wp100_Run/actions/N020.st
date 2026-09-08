@@ -16,7 +16,7 @@ END_CASE
 _startButton(
   Execute       := TRUE,
   ButtonPressed := BinIo._000S610,
-  Blink500ms    := FlashBits.Pulse500ms
+  Blink500ms    := Root.RootNode.FlashBits.Toggle500ms
 );
 
 IF ( _startButton.Done )

@@ -11,7 +11,7 @@ VAR_INPUT
   Execute       : BOOL;
   /// Physical push-button signal
   ButtonPressed : BOOL;
-  /// Shared 500 ms flash pulse, for example Station.FlashBits.Pulse500ms
+  /// 500 ms toggle, for example Root.RootNode.FlashBits.Toggle500ms (not Pulse500ms)
   Blink500ms    : BOOL;
 END_VAR
 VAR_OUTPUT

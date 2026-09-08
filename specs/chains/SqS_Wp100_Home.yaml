@@ -15,7 +15,7 @@ steps:
     action: FB_OperatorButton
     input: _000S610
     lamp: _000P610
-    blink: Station.FlashBits.Pulse500ms
+    blink: Root.RootNode.FlashBits.Toggle500ms
   - id: N110
     comment: Close safety door
     when: >-

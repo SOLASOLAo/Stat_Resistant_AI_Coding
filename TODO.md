@@ -2,6 +2,9 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
+- [ ] **启动灯 Build/现场确认**：用户 F11 编译后自行下载，确认等待按钮时亮 500 ms / 灭 500 ms，按下或取消后熄灭。本次未执行 PLE Build、下载或设备操作，不需重新 CpStudio Export。
+
 - [x] **全部应用位置判断改用输入反馈（2026-09-08）**：扫描当前 PLE Application 307 个对象，修正 Run/Home、手动放行、工位原位与力检测中的 17 个对象 / 27 处；REST 一次保存、精确回读并全量复扫，旧 `IsInBasPos/IsInWrkPos` 应用引用为 0。保留命令完成握手、所有安全继电器、生成声明及 SFC 图；规则已写入 AGENTS、规格和回归检查。未下载。
 - [x] **Fixture 左右 BMK 修正（2026-09-08）**：按用户新导出，左=`_100B603`、中=`_100B602`、右=`_100B601`；已通过现有 PLE REST 修改 SqS N010、SqC N015/N075，保存和全目标回读通过。StationData 删除 `PressDelayTime` 的改动保留，继续使用 `PressForceTimeout`。ASC 清单/流程计划同步；56 点与 BusConfig 一致，未调整硬件映射、未下载。
 - [x] **Fixture 提示实时原位反馈（2026-09-07）**：按用户确认，将 `SqC_Wp100_Run` N015/N045/N075 的安全门、压缸原位判断共六处改为 `IsInBasPosIn`；已通过现有 PLE REST 写入、保存和完整回读，静态/事务/Project Pack 检查通过。未改 SqS 动作联锁、标准 Unit 参数或生成接口，未下载。
