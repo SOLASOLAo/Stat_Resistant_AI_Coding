@@ -4,8 +4,9 @@
 
 - [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；尚未 Build/下载/现场验收。
 - [x] **Burster 自动量程跟随仪表程序（2026-09-08，09-09 收尾）**：用户已确认。保留 N045 的 TypeData ProgramNo → RCL ACK；取消自动 SET_RANGE 与上下量程写入。N046 检查 Peripheral UseAutoRange=false，N047 检查标准 Unit READY 且 Execute=false，不再等待未发送命令的 DONE。保留结果上下限、温度选择、程序号校验及力/运动联锁；仅移除 AI 对未使用量程字段的大小关系校验，生成接口/枚举校验不变。4 个对象已通过现有 PLE REST 保存并完整回读，09-09 磁盘 SHA 与保存报告一致；代码/规格/计划和回归测试同步。
-- [ ] **Burster 配置、Build 与现场验收**：用户在 CpStudio → Peripherals → Wp100A103ResistantInterface → Parameters → Measure → Auto Range 设为 False，保存并 Export，再做 PLE F11 Build。09-08 最后回读仍为 True；未改好时新程序会停在 N046，不进入压缸/Kistler 启动分支。09-09 PLE 本地 REST 未开启，本次尚无新 Build/下载/现场结果。验收仪表实际程序/量程、SINGLE_MEAS、结果上下限判定与驱动重连；不得用静态检查宣称原报警已在现场消除。
-- [ ] **CpStudio 原位显示绑定修正 + 本轮 Build/现场复核**：PLE Wp100Unit.IsInHomePosition 已用两路 IsInBasPosIn，但生成 HMI config 的 Station/Wp100 条件仍有 4 处旧 IsInBasPos 引用。用户在 CpStudio 的 Wp100 → Conditions → IsInHomePosition 将两设备条件改为 IsInBasPosIn，再导出/刷新 IPC HMI；AI 不直接改模型 XML 或生成 HMI 配置。本轮 PLE F11 和安全现场验证待用户，不能宣称两个原始故障均已解决。
+- [x] **Burster Auto Range 配置与导出核对（2026-09-09）**：用户已完成配置/Export/F11；新 request `04500e24-28c7-4157-a8cd-9fbfa80af5b0` 已审计。现有 PLE REST 回读 `UseAutoRange := False`，Run/SqC 全目标 PlanOnly 均为 0 操作，量程/Kistler 修复未被覆盖；56/56 designator 匹配、38 active / 18 inactive、0 mismatch。本次不重写 PLC。
+- [ ] **Burster Build 数量确认与现场验收**：用户报告已完成 F11，具体 errors/warnings 待回复；本次未独立执行 Build，不把缓存当新编译。之后受控验收仪表实际程序/量程、SINGLE_MEAS、结果上下限判定与驱动重连；尚未下载/现场验证，不宣称原报警已在现场消除。
+- [ ] **CpStudio 原位显示绑定修正与现场复核**：09-09 新导出仍在 HMI config 的 Station/Wp100 原位条件内保留 4 处旧 IsInBasPos 叶绑定；PLE Wp100Unit、Home 和手动放行的输入反馈修改经本轮 REST 复核仍保留。用户在 CpStudio 的 Wp100 → Conditions → IsInHomePosition 将两设备条件改为 IsInBasPosIn，再导出/刷新 IPC HMI；AI 不直接改模型 XML 或生成 HMI 配置。现场显示未验收，不能宣称两个原始故障均已解决。
 
 - [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
 - [ ] **启动灯 Build/现场确认**：用户 F11 编译后自行下载，确认等待按钮时亮 500 ms / 灭 500 ms，按下或取消后熄灭。本次未执行 PLE Build、下载或设备操作，不需重新 CpStudio Export。

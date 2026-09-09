@@ -1224,3 +1224,11 @@
 - 使用原有 REST 事务 writer，在精确工程/profile 且离线时只写 OnCheckData 语义区、SqS_Run 两条步骤注释和 N046/N047，保存一次、完整回读，最终 PlanOnly 0 操作。Plan SHA `a471cc242744ba9c58cb8142f53e9f559c9fffe4b27412997790cb4c6ee9e8fd`；内容寻址 checkpoint `bbf386ee61b9e2f5d94dd64c4476aecbb8cc190c262cf04b350dca579c8d8a31`；保存后 `.project` SHA `c5cc88c07045ed0f90ec4e0b99b64dc20e4910ac3af8726fbb508b25165ab1d3`。生成 Peripheral 参数及 CpStudio 模型 SHA 未变。本地证据：`data/reports/plc/burster-program-range-20260908.json` 与同目录 `-before.json`。
 - 09-09 续做时磁盘 SHA 仍与该保存报告一致；本地 PLE REST 已拒绝连接，没有重开 PLE 或重复 Apply。Burster 源码合同、框架/位置规范、operator guidance、力联锁、REST PlanOnly/事务与 Project Pack 检查通过；这些不代表 PLC 编译或仪表现场验证。**本批尚未取得 PLE Build 结果，无连接、下载、启停、写变量/FORCE**。用户完成 Auto Range 配置/Export 后做 F11，新编译通过后再受控部署，核对真实程序/量程、测量与判定。
 - CpStudio 原位条件显示的 IsInBasPosIn 修改仍由用户完成，可与上述 Auto Range 配置合并为一次人工配置/导出流程；AI 不直接补丁生成 HMI。TODO 已将代码完成与配置/现场待验分别列出，不宣称所有原报警已闭环。
+
+## 2026-09-09 · Auto Range=False 新 Export 核对（无 PLC 写入）
+
+- 用户确认已完成 Auto Range=False、保存/Export/F11。新请求 `04500e24-28c7-4157-a8cd-9fbfa80af5b0`（10:50:22 本地）经指定 request 的 WhatIf → Stage 1 审计；56/56 designator 一致，38 active / 18 inactive，0 mismatch。20 个 Station010 脏生成文件保留，未暂存/上传工程配置或二进制。Stage 1 的 `done` 仅指该审计队列已处理，不是工程或现场验收 DONE。
+- 现有用户 PLE 官方 REST：精确 Station010 路径/profile `ctrlX PLC 2.6.8`、Application offline；生成 `Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange := False`。Run 与 SqC 两个 writer 的 PlanOnly 均为 0 操作，程序号握手、无 SET_RANGE、量程模式/READY 检查、上下限判定、力联锁及 Kistler END 修复均保留，不必重复 Apply。
+- 补查 Wp100Unit.OnApplyOutputs、压缸 OnManRelease、Home N010/N110/N130/N150：位置判断仍用 In，Home 灯仍用 Root Toggle500ms。HMI XML 的 Station/Wp100 `IsInHomePosition` 条件却各有两条旧 IsInBasPos 叶绑定，仍需用户在 CpStudio 改条件定义；未修改生成 HMI。源代码/力时序模型/框架/Project Pack 检查通过。
+- 本轮 PLE 工程 SHA 前后同为 `3c5909da508533c743f83848f0d327142d7ccb098532513017b752d22c4bbd73`；没有工程 PUT/Save/Build、物理连接、下载、启停、变量写入/FORCE。MCP stopped/无 owner，未另开 PLE。用户报告 F11 完成，但具体 errors/warnings 尚待确认；不以缓存代替新 Build。Stage 2 仅 WhatIf，未执行/提交 immutable action 的 DONE evidence。
+- 本地机器可读核对记录：`data/reports/plc/burster-program-range-export-20260909.json`；Stage 1：`data/reports/cpstudio/04500e24-28c7-4157-a8cd-9fbfa80af5b0.json`。下一步确认编译数量，完成 CpStudio 原位条件及受控现场测试；不再要求重复设置 Auto Range。
