@@ -1214,7 +1214,7 @@
 - 已修正 4 个 AI 实现：OnChainFinish 将 END 清 FALSE，Execute 清 FALSE（NxBase 2025-02-24 官方手册 Execute/OpconExecUnit 明确下降沿触发 Cancel）；N101 和 CheckPressForce 的 END 门控为本链已启动 + MeasRunning + ExecState RUNNING，每次执行重新求值；N120 在停止/非 RUNNING 时清 END。正常完成仍用 CheckUnitDone 收取结果，故障锁存不自动恢复、不请求压缸 BASPOS。无需新增 FB、接口、配置或周期钩子。
 - 采用现有受控 Run writer，只执行四项实施体 PUT，声明/SFC 图均未改。Plan SHA `c050c83adcb2c58229c310567c71626ef76330fe7ca6198d17efa2bab27b5e55`；checkpoint `81dda38c99fab44b5a9da2c1293e65af5da50ecb4705f949fea0ce61ce8d5ba0`；一次保存后 `.project` SHA `bbf386ee61b9e2f5d94dd64c4476aecbb8cc190c262cf04b350dca579c8d8a31`。完整回读成功，保存后 Run PlanOnly 为 0 操作。证据 `data/reports/plc/kistler-end-20260908.json` 及同目录 `-before.json`（本地，不提交二进制）。
 - 框架/位置规范、operator guidance、force 时序及 END 门控/单步/前置失败检查、REST PlanOnly/事务回归、Project Pack Build/Check 通过；这是离线源代码/模型验证，不是标准库运行仿真。当前 PLE 不归 MCP 所有，未启动第二实例，**本轮未 Build、未连接、未下载、未启停、未写变量/FORCE**。F11 新 Build 与真机取消时仪表停止行为仍需用户复核。
-- 原位问题另属 CpStudio HMI 模型：当前 PLE `Wp100Unit.OnApplyOutputs` 已使用两路 IsInBasPosIn，Station 使用 Wp100.Unit.IsInHomePosition；但 `Station010/Hmi/config.xml` 的 Station/Wp100 条件各仍含两路不带 In 的绑定（总计 4 处）。需要用户在 **Wp100 → Conditions → IsInHomePosition** 改两个操作数为 IsInBasPosIn，经官方 Export/IPC HMI 更新；不得直接改 Engineering_Data.xml 或生成 config.xml 作为假修复。此项和 Burster 未闭环，TODO 明确保留。
+- 当时原位显示仍不一致：PLE `Wp100Unit.OnApplyOutputs` 已使用两路 IsInBasPosIn，Station 使用 Wp100.Unit.IsInHomePosition；但 `Station010/Hmi/config.xml` 的 Station/Wp100 条件各仍含两路不带 In 的绑定（总计 4 处）。**09-09 更正处理方式**：这是解析树未同步，应在 PLE 保存后执行 CpStudio **Parse PLC code**，再保存/导出并更新 IPC HMI；不手动重建操作数，也不直接修改 Engineering_Data.xml 或生成 config.xml。见文末完成核对记录。
 
 ## 2026-09-08 / 09-09 · Burster 自动量程由仪表程序决定（PLC 已保存，配置/Build 待办）
 
@@ -1223,13 +1223,13 @@
 - **必须由用户在 CpStudio 配套修改**：Peripherals → Wp100A103ResistantInterface → Parameters → Measure → **Auto Range=False**，保存并 Export。本机 OOD 的显示名为 `Auto Range`，内部参数名 `AutRange`；生成目标为 `ParCfg.UseAutoRange`。09-08 修改后最后回读仍是 True，AI 未改标准外围参数或模型 XML。False 仅阻止标准驱动强制切入自动量程，实际量程由所选仪表程序保存的设置决定；不是在 PLC 内指定 2 mΩ。未改好时 N046 保持等待，压缸/Kistler 启动分支不放行。TypeData 两个旧量程字段保留兼容，标准手动 SET_RANGE 未改。
 - 使用原有 REST 事务 writer，在精确工程/profile 且离线时只写 OnCheckData 语义区、SqS_Run 两条步骤注释和 N046/N047，保存一次、完整回读，最终 PlanOnly 0 操作。Plan SHA `a471cc242744ba9c58cb8142f53e9f559c9fffe4b27412997790cb4c6ee9e8fd`；内容寻址 checkpoint `bbf386ee61b9e2f5d94dd64c4476aecbb8cc190c262cf04b350dca579c8d8a31`；保存后 `.project` SHA `c5cc88c07045ed0f90ec4e0b99b64dc20e4910ac3af8726fbb508b25165ab1d3`。生成 Peripheral 参数及 CpStudio 模型 SHA 未变。本地证据：`data/reports/plc/burster-program-range-20260908.json` 与同目录 `-before.json`。
 - 09-09 续做时磁盘 SHA 仍与该保存报告一致；本地 PLE REST 已拒绝连接，没有重开 PLE 或重复 Apply。Burster 源码合同、框架/位置规范、operator guidance、力联锁、REST PlanOnly/事务与 Project Pack 检查通过；这些不代表 PLC 编译或仪表现场验证。**本批尚未取得 PLE Build 结果，无连接、下载、启停、写变量/FORCE**。用户完成 Auto Range 配置/Export 后做 F11，新编译通过后再受控部署，核对真实程序/量程、测量与判定。
-- CpStudio 原位条件显示的 IsInBasPosIn 修改仍由用户完成，可与上述 Auto Range 配置合并为一次人工配置/导出流程；AI 不直接补丁生成 HMI。TODO 已将代码完成与配置/现场待验分别列出，不宣称所有原报警已闭环。
+- 当时 CpStudio 原位显示仍待同步；**09-09 更正**：PLC 实现已经正确，用户需执行 **Parse PLC code** 刷新解析树，不是在 CpStudio 手改表达式。AI 不直接补丁生成 HMI。代码、配置同步与现场验收分别记录。
 
 ## 2026-09-09 · Auto Range=False 新 Export 核对（无 PLC 写入）
 
 - 用户确认已完成 Auto Range=False、保存/Export/F11。新请求 `04500e24-28c7-4157-a8cd-9fbfa80af5b0`（10:50:22 本地）经指定 request 的 WhatIf → Stage 1 审计；56/56 designator 一致，38 active / 18 inactive，0 mismatch。20 个 Station010 脏生成文件保留，未暂存/上传工程配置或二进制。Stage 1 的 `done` 仅指该审计队列已处理，不是工程或现场验收 DONE。
 - 现有用户 PLE 官方 REST：精确 Station010 路径/profile `ctrlX PLC 2.6.8`、Application offline；生成 `Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange := False`。Run 与 SqC 两个 writer 的 PlanOnly 均为 0 操作，程序号握手、无 SET_RANGE、量程模式/READY 检查、上下限判定、力联锁及 Kistler END 修复均保留，不必重复 Apply。
-- 补查 Wp100Unit.OnApplyOutputs、压缸 OnManRelease、Home N010/N110/N130/N150：位置判断仍用 In，Home 灯仍用 Root Toggle500ms。HMI XML 的 Station/Wp100 `IsInHomePosition` 条件却各有两条旧 IsInBasPos 叶绑定，仍需用户在 CpStudio 改条件定义；未修改生成 HMI。源代码/力时序模型/框架/Project Pack 检查通过。
+- 补查 Wp100Unit.OnApplyOutputs、压缸 OnManRelease、Home N010/N110/N130/N150：位置判断仍用 In，Home 灯仍用 Root Toggle500ms。该批 HMI XML 的 Station/Wp100 `IsInHomePosition` 条件各有两条旧 IsInBasPos 叶绑定，随后确认需在 CpStudio **Parse PLC code** 同步，而非手改条件定义；未修改生成 HMI。源代码/力时序模型/框架/Project Pack 检查通过。
 - 本轮 PLE 工程 SHA 前后同为 `3c5909da508533c743f83848f0d327142d7ccb098532513017b752d22c4bbd73`；没有工程 PUT/Save/Build、物理连接、下载、启停、变量写入/FORCE。MCP stopped/无 owner，未另开 PLE。用户报告 F11 完成，但具体 errors/warnings 尚待确认；不以缓存代替新 Build。Stage 2 仅 WhatIf，未执行/提交 immutable action 的 DONE evidence。
 - 本地机器可读核对记录：`data/reports/plc/burster-program-range-export-20260909.json`；Stage 1：`data/reports/cpstudio/04500e24-28c7-4157-a8cd-9fbfa80af5b0.json`。下一步确认编译数量，完成 CpStudio 原位条件及受控现场测试；不再要求重复设置 Auto Range。
 
@@ -1238,3 +1238,13 @@
 - 用户提供 PLE Build 截图：`Build complete -- 0 errors, 5 warnings : Ready for download`，同时显示 94 条 messages。本批编译通过；该证据来自用户截图，不是 AI 执行的新 Build，也不能替代 Stage 2 所需的结构化 immutable action evidence。
 - 截图未展开五条 warning，签名/内容尚未核对；不因数量与旧记录相同就认定全是旧警告。TODO 已完成编译数量项，保留警告明细、CpStudio 原位显示条件和真机验收待办。本轮只更新记录，没有改 PLC/IO/HMI、下载或操作真机。
 - 单独保存补充记录 `data/reports/plc/burster-build-user-confirmation-20260909.json`，不覆盖原始导出审计。先前本地提交 `b8bd098` 的 GitHub 推送因 3128 代理不可达而未完成；推送成功前不得当作远端备份。
+
+## 2026-09-09 · Parse 后导出核对与昨日离线修改收尾
+
+- 用户确认 Parse 操作完成并继续现场测试。按最新请求 `2a246abf-94bb-4ecd-9f87-d2d77ad55d30`（11:08:00 本地）完成 WhatIf → Stage 1 审计：56/56 designator 匹配、38 active / 18 inactive、0 mismatch。审计唯一 finding 是 20 个受保留的 Station010 生成文件变更；未暂存这些配置、凭据或工程二进制。队列 `done` 不等于 Stage 2/真机验收 DONE。
+- 新 HMI config 的 Station/Wp100 原位条件树均为 AND，4 个叶绑定全部为 `OutImm.IsInBasPosIn`，旧位置叶绑定为 0。现有 PLE REST 复核 Station 委托、Wp100 两路输入 AND 及压缸手动放行安全继电器均保留。**正确闭环是 PLE 条件代码 → Parse PLC code → HMI 导出/部署**；已更正 TODO 和工作流中的旧建议，不增加解析器或手工补丁。
+- 精确工程 `Station010/Plc/Stat010_V5.11_CtrlX_PLC.project` / profile `ctrlX PLC 2.6.8`，单个用户 PLE PID 3112、Application offline；MCP stopped/无 owner。Run PlanOnly SHA `ec8c839d01d0b31872ed854a5e46d72e540e4d3dddcaabfeb1edd217ee5aecac`、SqC PlanOnly SHA `0a73597aa5cf58774735ee1fd0af0538af38083ee54fe7a69bf1799b8d11157f`，均为 0 操作；Home N010/N110/N130/N150 与可读源一致。生成 `UseAutoRange := False` 确认保留，无需重复 Apply。
+- 六组回归通过：Burster 程序量程、force 联锁/时序模型、框架/位置规范、operator guidance、REST PlanOnly、REST 事务；Project Pack Check 为 VALID，contentId `81af8d7326c9314118474bcc5b39008e11ab2fc7f628b1aaea4ba138ba688dc2`。这些检查不冒充 PLE 编译、标准库仿真或现场测试。
+- 工程核对前后 SHA 同为 `aac3e08e7e61afb08e7fbb25fd9f90811c172eee9d4f4678aef7254ba0d6d849`；HMI SHA `0336153f012c08cd76ee8529d10c9a1a48932012b48fb5a7614edce56500814a`。本轮没有 PLC PUT/Save/Build、第二 PLE、连接、下载、启停或变量写入/FORCE。此前用户的 0 errors / 5 warnings 截图早于这次 Parse/Export；本次新 Build 和 5 条 warning 明细尚未取得，不能移用为当前工程的 fresh Build evidence。
+- 现场测试仍由用户操作：先核对原位显示与启动/回原位等待闪灯，再跑左 603 → 中 602 → 右 601 的正常完整流程，确认压下后力 >2500 N 连续 2 s 才启动 Burster、结果完成再回升。诊断超时/测量中掉力/无效数据/取消的受控故障测试单列，确认故障保持下压且不自动重试；不要求在运行中拔传感器或强制物理 I/O。
+- 本地汇总证据 `data/reports/plc/engineering-closeout-20260909.json`，最新 Stage 1 报告 `data/reports/cpstudio/2a246abf-94bb-4ecd-9f87-d2d77ad55d30.json`。本轮只完成离线核对与文档收尾，不把未执行的现场项目勾选为完成。

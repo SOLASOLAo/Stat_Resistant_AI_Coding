@@ -7,7 +7,8 @@
 - [x] **Burster Auto Range 配置与导出核对（2026-09-09）**：用户已完成配置/Export/F11；新 request `04500e24-28c7-4157-a8cd-9fbfa80af5b0` 已审计。现有 PLE REST 回读 `UseAutoRange := False`，Run/SqC 全目标 PlanOnly 均为 0 操作，量程/Kistler 修复未被覆盖；56/56 designator 匹配、38 active / 18 inactive、0 mismatch。本次不重写 PLC。
 - [x] **本批 F11 Build 数量确认（2026-09-09）**：用户截图显示 `Build complete -- 0 errors, 5 warnings : Ready for download`，94 条 messages。作为用户提供的本次编译结果登记，不冒充 AI fresh Build/Runner evidence；5 条 warning 未展开，不能认定与旧基线同签名。
 - [ ] **Burster 警告明细与现场验收**：核对 5 条 warning；之后受控验收仪表实际程序/量程、SINGLE_MEAS、结果上下限判定与驱动重连。尚无本批下载/现场结果，不宣称原报警已在现场消除。
-- [ ] **CpStudio 原位显示绑定修正与现场复核**：09-09 新导出仍在 HMI config 的 Station/Wp100 原位条件内保留 4 处旧 IsInBasPos 叶绑定；PLE Wp100Unit、Home 和手动放行的输入反馈修改经本轮 REST 复核仍保留。用户在 CpStudio 的 Wp100 → Conditions → IsInHomePosition 将两设备条件改为 IsInBasPosIn，再导出/刷新 IPC HMI；AI 不直接改模型 XML 或生成 HMI 配置。现场显示未验收，不能宣称两个原始故障均已解决。
+- [x] **CpStudio 原位条件解析同步（2026-09-09）**：用户执行 Parse PLC code 后的新 Export `2a246abf-94bb-4ecd-9f87-d2d77ad55d30` 已核对：Station/Wp100 两棵原位条件树的 4 个叶绑定均为 IsInBasPosIn，AND 关系及 Station → Wp100 委托不变。正确入口是 **PLE 保存 → CpStudio Parse PLC code → 保存/导出 HMI → 更新 IPC**，不是手动重建条件树；不修改模型 XML/生成配置。这里只确认工程绑定，IPC 实际显示仍随现场测试核对。
+- [x] **昨天修改的导出后回归收尾（2026-09-09）**：上述最新 request 的 Stage 1 审计完成，56/56 designator 一致；Run/SqC PlanOnly 均为 0 操作，Home 四个已维护 Action 与源码一致，Auto Range=False、原位输入、Root Toggle 与测量逻辑修复保留。六组静态/事务回归及 Project Pack Check 通过。本轮没有 PLC PUT/Save/Build/下载，工程 SHA 前后不变；此前 0 errors / 5 warnings 截图不冒充这次 Export 后的新 Build。详情见 HANDOVER 最新记录。
 
 - [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
 - [ ] **启动灯现场确认**：09-09 用户截图已确认本批 Build 0 errors / 5 warnings；受控下载后确认等待按钮时亮 500 ms / 灭 500 ms，按下或取消后熄灭。尚无现场结果，AI 未下载或操作设备。
@@ -15,7 +16,7 @@
 - [x] **全部应用位置判断改用输入反馈（2026-09-08）**：扫描当前 PLE Application 307 个对象，修正 Run/Home、手动放行、工位原位与力检测中的 17 个对象 / 27 处；REST 一次保存、精确回读并全量复扫，旧 `IsInBasPos/IsInWrkPos` 应用引用为 0。保留命令完成握手、所有安全继电器、生成声明及 SFC 图；规则已写入 AGENTS、规格和回归检查。未下载。
 - [x] **Fixture 左右 BMK 修正（2026-09-08）**：按用户新导出，左=`_100B603`、中=`_100B602`、右=`_100B601`；已通过现有 PLE REST 修改 SqS N010、SqC N015/N075，保存和全目标回读通过。StationData 删除 `PressDelayTime` 的改动保留，继续使用 `PressForceTimeout`。ASC 清单/流程计划同步；56 点与 BusConfig 一致，未调整硬件映射、未下载。
 - [x] **Fixture 提示实时原位反馈（2026-09-07）**：按用户确认，将 `SqC_Wp100_Run` N015/N045/N075 的安全门、压缸原位判断共六处改为 `IsInBasPosIn`；已通过现有 PLE REST 写入、保存和完整回读，静态/事务/Project Pack 检查通过。未改 SqS 动作联锁、标准 Unit 参数或生成接口，未下载。
-- [ ] **当前输入反馈修改的现场复核**：09-09 用户截图已确认本批 Build 0 errors / 5 warnings；下载由用户操作。现场核对原位输入 TRUE 而阀输出 FALSE 时 SqC/SqS N010 均按输入判断；任一必要位置输入缺失仍等待/报警，手动安全继电器和命令完成握手不被绕过。再确认左 603 / 中 602 / 右 601 的提示及结果归属。
+- [ ] **当前输入反馈修改的现场复核**：下载由用户操作；最新 Parse/Export 后的 Build 尚未取得新结果，保留此前用户截图 0 errors / 5 warnings 记录。现场核对 IPC 原位条件显示、原位输入 TRUE 而阀输出 FALSE 时 SqC/SqS N010 按输入判断；任一必要位置输入缺失仍等待/报警，手动安全继电器和命令完成握手不被绕过。再确认左 603 / 中 602 / 右 601 的提示及结果归属。
 
 - [x] **Wp100 压紧力联锁离线实现（2026-09-07）**：已消费用户新增的 `PressForceTimeout`/`EVENT_PRESS_FORCE_INVALID`；同一 SqS_Run 完成 `>2500 N` 连续 2 s、总等待超时及测量期间掉力锁存；故障不自动升缸/重测。已通过 REST 写入、保存回读及 PLE Build（0 errors / 原有 5 warnings）；未下载。
 - [ ] 🔴 **Wp100 压紧力现场验收**：IPC 实际 StationData 设置并加载 `PressForceTimeout >2000 ms`；同步事件/数据定义、用户下载。验收左中右、2500 N 等号、2 s 中断、总超时、测量中掉力/数据异常、故障保持及取消后重启；确认 Kistler watchdog 余量足够。详见 HANDOVER 最新记录。

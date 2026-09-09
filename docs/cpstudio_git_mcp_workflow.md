@@ -75,6 +75,19 @@ CpStudio Export 期间不得并发读取、打开或更新 Symbol Configuration�
 
 “界面无红字”不足以作为成功标准；必须核对完整 Output、I/O 映射、mixed 引用、Symbol 后处理和最终 Build。普通变量的条件二次 Export 与失效签名处理见 `docs/symbol_configuration_export_cycle.md`。
 
+### PLC 条件与 HMI ConditionView 同步（2026-09-09 实测）
+
+条件的 PLC 表达式在相应 Unit 的 `OnApplyOutputs` 中维护；CpStudio 的条件树由 **Parse PLC code** 解析，HMI `ConditionView` 仍绑定原来的条件名称。
+
+`PLE 修改并保存条件 → CpStudio Parse PLC code → 检查 Conditions → 保存并导出/部署 HMI`
+
+- 本工位 `Station.IsInHomePosition` 委托给 `Wp100.Unit.IsInHomePosition`；Wp100 的表达式为安全门、压缸两路 `OutImm.IsInBasPosIn` 的 AND。
+- PLC 已改而 HMI 条件树仍显示旧信号时，先 Parse，不手动重建条件树、不改生成的 `Hmi/config.xml`，也不必重新绑定 ConditionView。
+- Parse 读取本地 PLE 工程代码，不是从物理 PLC 上传程序，也不执行 PLC 下载。单纯刷新解析树不要求机械地重复两次 PLC Export；PLC 代码确有改动时仍需编译和受控下载。
+- 本次导出已确认 Station/Wp100 两棵原位条件树共 4 个叶绑定均为 `IsInBasPosIn`。XML 中的条件状态配置不是在线传感器读数，IPC 显示和实际动作仍须现场验证。
+
+依据：本机 CpStudio 5.11 官方帮助 **Creating Conditions**（`Control_plus_Studio_English.chm`），以及本工位官方 REST 回读和 Parse 后 HMI 导出；不是通过补丁生成文件实现。
+
 ### 断网时的本地检查
 
 断网但仍需继续 CpStudio 工作时，先完成 Export，再保存并关闭所有 PLE 以及
