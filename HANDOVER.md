@@ -1232,3 +1232,9 @@
 - 补查 Wp100Unit.OnApplyOutputs、压缸 OnManRelease、Home N010/N110/N130/N150：位置判断仍用 In，Home 灯仍用 Root Toggle500ms。HMI XML 的 Station/Wp100 `IsInHomePosition` 条件却各有两条旧 IsInBasPos 叶绑定，仍需用户在 CpStudio 改条件定义；未修改生成 HMI。源代码/力时序模型/框架/Project Pack 检查通过。
 - 本轮 PLE 工程 SHA 前后同为 `3c5909da508533c743f83848f0d327142d7ccb098532513017b752d22c4bbd73`；没有工程 PUT/Save/Build、物理连接、下载、启停、变量写入/FORCE。MCP stopped/无 owner，未另开 PLE。用户报告 F11 完成，但具体 errors/warnings 尚待确认；不以缓存代替新 Build。Stage 2 仅 WhatIf，未执行/提交 immutable action 的 DONE evidence。
 - 本地机器可读核对记录：`data/reports/plc/burster-program-range-export-20260909.json`；Stage 1：`data/reports/cpstudio/04500e24-28c7-4157-a8cd-9fbfa80af5b0.json`。下一步确认编译数量，完成 CpStudio 原位条件及受控现场测试；不再要求重复设置 Auto Range。
+
+### 2026-09-09 · 用户截图补齐本批 Build 数量
+
+- 用户提供 PLE Build 截图：`Build complete -- 0 errors, 5 warnings : Ready for download`，同时显示 94 条 messages。本批编译通过；该证据来自用户截图，不是 AI 执行的新 Build，也不能替代 Stage 2 所需的结构化 immutable action evidence。
+- 截图未展开五条 warning，签名/内容尚未核对；不因数量与旧记录相同就认定全是旧警告。TODO 已完成编译数量项，保留警告明细、CpStudio 原位显示条件和真机验收待办。本轮只更新记录，没有改 PLC/IO/HMI、下载或操作真机。
+- 单独保存补充记录 `data/reports/plc/burster-build-user-confirmation-20260909.json`，不覆盖原始导出审计。先前本地提交 `b8bd098` 的 GitHub 推送因 3128 代理不可达而未完成；推送成功前不得当作远端备份。
