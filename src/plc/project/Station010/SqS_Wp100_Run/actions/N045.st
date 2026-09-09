@@ -38,6 +38,8 @@ THEN
     _retVal2 := OK;
   ELSIF ( AiWp100.BursterProgramSelect.Error )
   THEN
+    // A rejected setup is not an active measurement. Keep both branches blocked.
+    Station._AutoInfoline := AutoInfoLineEnum.USER_INFO_TEXT_CLEAR;
     _retVal  := HAS_ERROR;
     _retVal2 := HAS_ERROR;
   END_IF

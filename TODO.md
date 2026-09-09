@@ -2,8 +2,12 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **N045 Burster 程序选择 NAK 修复（2026-09-09）**：现场只读确认为 ProgramNo=0、ErrorCode=6、响应 NAK+CR；修正错误报文 `*RCL P0` 为 `*RCL 0`（手册 P1 是 0..15 数值占位符）。只改共享 FB 实现和 N045 失败时清空误导提示，保留 ACK 后才放行压缸及全部力/运动联锁。现有离线 REST 两个 PUT/一次 Save/全目标回读，最终 PlanOnly 0 操作；新 F11 0 errors / 5 warnings，明细为 4 × C0351、1 × C0373。七组回归及 Project Pack 检查通过。详见 `docs/reviews/station010-burster-rcl-20260909.md`。
+- [ ] **N045 修复现场验收**：确认安全后由用户下载并重新发起自动，验证程序 0 ACK、N045 放行、压缸/Kistler 启动、压下到位后力稳定、电阻测量和回升，再验中/右；本次无需 CpStudio Export。AI 未下载，尚无纠正报文的真机 ACK/完整循环结果。
+- [ ] **程序选择失败的 HMI 专用事件**：当前 CpStudio 没有对应事件；本次仅清空“正在测量”误导提示，保留选择器 ErrorCode 和两个分支 HAS_ERROR。若需明确红色报警，由用户在 CpStudio 添加事件并导出后接入，不借用压力/缺料事件号或强改生成接口。
+
 - [x] **N000 旧力报警复位卡住修复（2026-09-09）**：只改 CheckPressForce Phase 0，不再把 UnlockEvent/ClearEvent 的 FALSE 当成永久等待；释放旧执行句柄并读取 active StationData。用户退出在线后，经原 PLE REST 单对象保存/39 目标回读；最终 PlanOnly 0 操作。AI 本轮新 F11：0 errors / 5 warnings，已逐条读取 4 × C0351 OPC.UA.DA、1 × C0373 ErrorCodes/DWord；不扩大正式 warning 基线。规格与七组回归/Project Pack 已同步。详见 `docs/reviews/station010-force-reset-20260909.md`。
-- [ ] **N000 修复现场复测**：用户安全下载后核对 active PressForceTimeout=10000 ms，发起新自动，先确认 N000 → N010，再测左中右；2500 N/2 s、故障保持和人工取消规则不变。只改 PLC 方法，无需 CpStudio Export；AI 未下载。
+- [x] **N000 修复的单点现场复核**：用户下载运行后的 PLE 只读观察已到 N045，CheckPressForce `_fault=FALSE`、`_eventIndex=0`、active/内部 timeout 均为 10000 ms，原 N000 卡住已解除。只确认这个复位问题；完整左中右及力故障恢复验收仍待完成，AI 未下载或执行动作。
 
 - [x] **SFC 空步骤与并行汇合修复（2026-09-09）**：全量检查 12 条应用 Chain。删除 `SqM_Station_Home.N110` 空步骤，保留 N100 的 ExecuteSubChain 完成握手后直达 N999；Run 两组并行分支新增 N065/N066、N115/N125，分别保持本分支 `_retVal` / `_retVal2 := OK`。两张图、四个 Action 经唯一用户 PLE 的离线 REST 保存/回读，所有既有业务代码和声明不变，3 个 writer 最终 PlanOnly 均为 0 操作。用户已确认本批新 F11：0 errors / 5 warnings。见 `docs/reviews/station010-sfc-completion-20260909.md`。
 - [ ] **SFC 现场复测**：用户在安全条件下下载，确认回原位 N100 → N999 正常结束；自动 LEFT/MIDDLE/RIGHT 两组并行汇合不再反复消费已完成分支的 DONE。最新五条 warning 已在 N000 修复编译中核对，现场结果仍待确认，AI 未下载。

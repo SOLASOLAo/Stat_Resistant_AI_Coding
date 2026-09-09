@@ -144,7 +144,8 @@ function Get-FunctionBlockSourceParts {
 function Add-OrVerify-FunctionBlock {
   param(
     [Parameter(Mandatory)][string]$Name,
-    [Parameter(Mandatory)][string]$SourceFile
+    [Parameter(Mandatory)][string]$SourceFile,
+    [AllowNull()][string[]]$AllowedBaselineImplementationSha256
   )
 
   $parts = Get-FunctionBlockSourceParts $SourceFile
@@ -153,11 +154,27 @@ function Add-OrVerify-FunctionBlock {
     $existing = Get-Node $path
     if (($existing.elementType -ne 'POU') -or
         ($existing.language -ne 'ST') -or
-        ((Get-Sha256 ([string]$existing.declaration)) -ne (Get-Sha256 $parts.Declaration)) -or
-        ((Get-Sha256 ([string]$existing.implementation)) -ne (Get-Sha256 $parts.Implementation))) {
+        ((Get-Sha256 ([string]$existing.declaration)) -ne (Get-Sha256 $parts.Declaration))) {
       throw "Existing AI-owned Function Block differs from canonical source: $path"
     }
-    return 'verified'
+    $script:PreservedDeclarations[$path] = [string]$existing.declaration
+    $currentImplementationSha = Get-Sha256 ([string]$existing.implementation)
+    if ($currentImplementationSha -eq (Get-Sha256 $parts.Implementation)) {
+      return 'verified'
+    }
+    if ($null -eq $AllowedBaselineImplementationSha256 -or
+        $currentImplementationSha -notin $AllowedBaselineImplementationSha256) {
+      throw "Existing AI-owned Function Block has unrecognized implementation edits: $path"
+    }
+    $existing.implementation = $parts.Implementation
+    Add-WriteRequest -Method Put `
+      -Uri (ConvertTo-ApiUri $path) `
+      -Path $path `
+      -Kind 'update-ai-owned-function-block-implementation' `
+      -Body $existing `
+      -BeforeFingerprint $script:PreflightObservations[$path].Fingerprint `
+      -TargetSha256 (Get-Sha256 ($parts.Declaration + "`n" + $parts.Implementation))
+    return 'planned-update'
   }
 
   $null = Get-Node $fbsPath
@@ -815,7 +832,8 @@ $aiWp100Declaration = Get-SourceText 'AiWp100.gvl.st'
 $supportObjectStatus = [ordered]@{}
 $supportObjectStatus.FB_Wp100BursterProgramSelect = Add-OrVerify-FunctionBlock `
   -Name 'FB_Wp100BursterProgramSelect' `
-  -SourceFile 'FB_Wp100BursterProgramSelect.st'
+  -SourceFile 'FB_Wp100BursterProgramSelect.st' `
+  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1')
 $supportObjectStatus.AiWp100 = Add-OrVerify-Gvl `
   -Name 'AiWp100' `
   -SourceFile 'AiWp100.gvl.st'
@@ -939,8 +957,11 @@ $preTypeDataActionSha256 = @{
   )
 }
 $preProgramSelectActionSha256 = @{
-  # Compiled TypeData version immediately before Burster *RCL program selection.
-  N045 = '325d9ec70dde05d472ad1946cbc0b6e4a3ee1ae7ad94e596c40c899c496b5416'
+  # Reviewed N045 versions before program selection and before failure-prompt cleanup.
+  N045 = @(
+    '325d9ec70dde05d472ad1946cbc0b6e4a3ee1ae7ad94e596c40c899c496b5416',
+    '9724dbc88205fd2f592673d69315d8ce10a50aeb53800f27d39cf96352ad5f16'
+  )
 }
 $preProgramSelectOnChainFinishSha256 = '5678238b38592f4517261d5f8a24885f958f4ea6c9f25120eb7713ac4e10533d'
 $preFixtureSwapActionSha256 = @{

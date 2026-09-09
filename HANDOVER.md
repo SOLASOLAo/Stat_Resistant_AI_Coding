@@ -1265,3 +1265,13 @@
 - 现有 writer：Plan `b8899e08...74b03`，一个 implementation PUT/一次 Save/39 目标回读；checkpoint `c5d5ec1c...6356`，保存后 SHA `3b43f791...100e2`。新 F11 后 SHA 不变，最终 PlanOnly 0 操作；未另起 MCP/PLE。七组回归与 Project Pack Build/Check 通过，不冒充库仿真。
 - **AI 已在当前 PLE 完成本轮新 F11：0 errors / 5 warnings**，观察到 Build started 和完成结果。五条明细为 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord；附加代码检查 0 errors。记录当前 UI 编译证据，不擅自修改正式 warning baseline，也不替代现场 Symbol 验收。
 - **未下载、未启停、未写变量/FORCE**。用户下一步安全下载，核对 active PressForceTimeout=10000，重新发起自动，验证 N000 → N010；本次方法实现修改无需 CpStudio Export。左中右及故障恢复现场测试仍未完成。详细证据、库说明及测试边界见 `docs/reviews/station010-force-reset-20260909.md`；本地报告 `data/reports/plc/force-reset-20260909-{plan,apply,verification}.json`。
+
+## 2026-09-09 · N045 Burster 程序选择 NAK 修复（当前交接）
+
+- 用户报告安全门已下、压缸未下而黄色提示“正在测量”。现有 PLE 只读定位 N045：位置 In / 继电器 / 标准 Unit READY 条件满足，active ProgramNo=0，选择器 ErrorCode=6/state=200。实际发出 `*RCL P0`（完整帧 18 字节），接收 `[21,13]` 即 NAK+CR，错误清理后 socket 已关闭。N000 旧力复位已通过，当前 `_fault=FALSE`、`_eventIndex=0`、active/内部 timeout=10000；不能把这次 N045 故障当成原 N000 问题。
+- 官方 2316 手册 §8.15.11/P113 明确 P1 为 0..15 数值占位符。用户说“改吧”后，按最小修改将共享 FB 报文前缀改为 `*RCL `，程序 0 完整帧变为 17 字节；N045 失败时清掉误导测量提示，仍用 HAS_ERROR 阻止两分支。没改 ProgramNo、接口、SFC 图、连接交接、ACK/EOT、测量命令、位置/力/运动联锁或 CpStudio 生成内容。
+- 当前模型没有专用“Burster 程序选择失败”事件，**HMI 专用红字报警尚未实现**；保留 ErrorCode，不复用压紧力/缺料事件。若用户需要，由用户在 CpStudio 新建事件并 Export 后再接入。未为此增设 FB、服务、运行依赖或直接改生成声明。
+- 写前 REST 确认精确 Station010/profile `ctrlX PLC 2.6.8` 且 offline；checkpoint `3b43f791...100e2` 校验一致。复用事务 writer，新增只接受已审阅 FB 实现 SHA 的升级入口；未知声明/实现、hash 漂移、保存后损坏仍拒绝或回滚。实际 Plan `e5003063...02f72`，两个 implementation PUT/一次 Save/全目标回读；最终 PlanOnly **0 操作**，SHA `c7746be7...4f648`。保存工程 SHA `36081bfc...1d83c3`。
+- **本批 AI 新 F11：0 errors / 5 warnings**。观察到 Build started 和完成；逐条读取 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，附加检查 0 errors；不把同数量旧 Build 当本次结果，也未扩大正式 warning baseline。七组回归通过（含全部 0..15 报文字节、NAK 不放行、已存在 FB 升级/回滚/幂等）；Project Pack Build/Check VALID，内容 ID `4f0eaab9...2ace` 未变。
+- **未下载、未启停、未写变量/FORCE、未发送修正报文给仪表**。本次无需 CpStudio Export；用户确认现场安全后自行下载并重新发起自动，验证 ProgramNo=0 ACK → N045 放行 → 压缸/Kistler → 到位后力稳定 → 电阻测量 → 回升，再完成中/右及故障验收。未宣称现场已通过。
+- 详细说明 `docs/reviews/station010-burster-rcl-20260909.md`；本地证据 `data/reports/plc/burster-rcl-numeric-20260909-{before,plan,apply,verification}.json`。Station010 原生成脏改保留，未暂存二进制、配置或凭据。

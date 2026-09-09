@@ -87,8 +87,10 @@ CASE _state OF
 
     IF ( _closeResult = OK )
     THEN
+      // Manual section 8.15.11: P1 is a numeric placeholder (0..15),
+      // not a literal P prefix. Program zero is sent as *RCL 0.
       _sendFrame := CONCAT(
-        '$040000sr$02*RCL P',
+        '$040000sr$02*RCL ',
         INT_TO_STRING(_requestedProgramNo)
       );
       _sendFrame  := CONCAT(_sendFrame, '$0A$03$0D');

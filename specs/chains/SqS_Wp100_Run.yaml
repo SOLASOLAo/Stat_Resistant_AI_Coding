@@ -124,7 +124,7 @@ type_data:
       command: SINGLE_MEAS
     Burster.ProgramNo:
       target: Burster 2316 active measuring program before the first measurement
-      command: "*RCL Pn through FB_Wp100BursterProgramSelect"
+      command: "*RCL <programNo> through FB_Wp100BursterProgramSelect; numeric 0..15, no P prefix"
       transport: close standard Nexeed socket, use one short TCP 5555 session, send EOT, close
     KistlerProgramNo:
       target: Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo
@@ -173,7 +173,8 @@ steps:
       - Kistler READY and device ready
     program_selection:
       source: Station.TypeData.Wp100.Burster.ProgramNo
-      protocol: RESISTOMAT 2316 *RCL Pn over TCP 5555
+      protocol: RESISTOMAT 2316 *RCL <programNo> over TCP 5555; numeric 0..15, no P prefix
+      failure_display: clear the measuring prompt; retain selector ErrorCode and block both branches. A dedicated HMI alarm requires a CpStudio-owned event.
       completion: instrument ACK received, EOT sent, temporary socket closed
   - id: N046
     comment: Check program range mode

@@ -554,6 +554,74 @@ if ($postSaveGetSet.Count -lt 28) {
   throw "Authorized Apply post-Save verification was not full-target (unique GET count=$($postSaveGetSet.Count))."
 }
 
+# Upgrade only the reviewed Burster implementation, preserving its declaration.
+# Reconstruct the historical literal bug; arbitrary edits remain rejected.
+$selectorPath = 'Application/Fbs/FB_Wp100BursterProgramSelect'
+$selectorBefore = Copy-JsonValue $global:SfcWriterTestNodes[$selectorPath]
+$legacySelector = Copy-JsonValue $selectorBefore
+$legacySelector.implementation = $legacySelector.implementation.Replace(
+  "      // Manual section 8.15.11: P1 is a numeric placeholder (0..15),`n" +
+  "      // not a literal P prefix. Program zero is sent as *RCL 0.`n", ''
+).Replace('*RCL ', '*RCL P')
+$global:SfcWriterTestMutations.Clear()
+foreach ($changedField in @('implementation', 'declaration')) {
+  $unreviewedSelector = Copy-JsonValue $legacySelector
+  $unreviewedSelector.$changedField += "`n// unreviewed edit`n"
+  $global:SfcWriterTestNodes[$selectorPath] = $unreviewedSelector
+  $unreviewedRejected = $false
+  try {
+    $null = Invoke-Writer -Writer $runWriter -Arguments @{
+      BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+    }
+  }
+  catch { $unreviewedRejected = $_.Exception.Message.Contains('Existing AI-owned Function Block') }
+  if ((-not $unreviewedRejected) -or ($global:SfcWriterTestMutations.Count -ne 0)) {
+    throw "Unreviewed Function Block $changedField was not rejected before mutation."
+  }
+}
+$global:SfcWriterTestNodes[$selectorPath] = Copy-JsonValue $legacySelector
+$selectorPlan = Invoke-Writer -Writer $runWriter -Arguments @{
+  BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+}
+if ((@($selectorPlan.plan.operations).Count -ne 1) -or
+    ($selectorPlan.plan.operations[0].kind -ne 'update-ai-owned-function-block-implementation') -or
+    ($global:SfcWriterTestMutations.Count -ne 0)) {
+  throw 'Reviewed Burster baseline did not produce one mutation-free implementation update plan.'
+}
+$global:SfcWriterTestCorruptAfterSavePath = $selectorPath
+$selectorRollbackSeen = $false
+try {
+  $null = Invoke-Writer -Writer $runWriter -Arguments @{
+    BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+    Mode = 'Apply'; ExpectedPlanSha256 = $selectorPlan.planSha256
+  }
+}
+catch { $selectorRollbackSeen = $_.Exception.Message.Contains('Rollback succeeded') }
+if ((-not $selectorRollbackSeen) -or
+    ($global:SfcWriterTestNodes[$selectorPath].implementation -cne $legacySelector.implementation) -or
+    ($global:SfcWriterTestNodes[$selectorPath].declaration -cne $legacySelector.declaration)) {
+  throw 'Burster persistence-time corruption did not roll back to the exact existing Function Block.'
+}
+$global:SfcWriterTestMutations.Clear()
+$selectorApply = Invoke-Writer -Writer $runWriter -Arguments @{
+  BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+  Mode = 'Apply'; ExpectedPlanSha256 = $selectorPlan.planSha256
+}
+if (($global:SfcWriterTestMutations.Count -ne 2) -or
+    ($global:SfcWriterTestMutations[0].path -ne $selectorPath) -or
+    ($global:SfcWriterTestMutations[0].method -ne 'Put') -or
+    ($global:SfcWriterTestMutations[1].path -ne 'ProjectJob/Save') -or
+    ($global:SfcWriterTestNodes[$selectorPath].implementation -cne $selectorBefore.implementation) -or
+    ($global:SfcWriterTestNodes[$selectorPath].declaration -cne $selectorBefore.declaration)) {
+  throw 'Burster update did not use one implementation PUT + Save with an unchanged declaration.'
+}
+$selectorNoChange = Invoke-Writer -Writer $runWriter -Arguments @{
+  BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+}
+if (@($selectorNoChange.plan.operations).Count -ne 0) {
+  throw 'Burster implementation upgrade was not idempotent.'
+}
+
 # A persistence-time rewrite after the Save job reports Done must fail the
 # Apply and trigger the same exact rollback path as an ordinary REST failure.
 $global:SfcWriterTestNodes = @{}
@@ -630,4 +698,4 @@ if ($global:SfcWriterTestMutations.Count -ne 0) {
   throw 'Sequence no-change Apply performed a REST mutation or Save.'
 }
 
-Write-Output 'SFC REST writer PlanOnly coverage OK: default mode, SHA/drift rejection, support-object POSTs, Action PUT, exact declaration preservation, post-Save full readback/fault rollback, and no-change sequence plan'
+Write-Output 'SFC REST writer PlanOnly coverage OK: default mode, SHA/drift rejection, support-object POSTs, guarded existing FB update/rollback/idempotence, Action PUT, exact declaration preservation, post-Save full readback/fault rollback, and no-change sequence plan'
