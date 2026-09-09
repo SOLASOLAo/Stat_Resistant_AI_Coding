@@ -995,7 +995,7 @@ else {
 # parent's child list on POST. Do not predict that order or weaken its hash gate.
 # VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
 $forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
-  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc')
+  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc', 'c25d2775cc7cc19a2de83d83244fbb72cbc53d9ccd2c4946c34dbe8726a04c18')
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {

@@ -102,6 +102,7 @@ force_interlock:
   fault_class: SOFTERROR
   fault_behavior: latched step hold, invalidate result, cancel Burster; request Kistler END only while owned, MeasRunning and ExecState RUNNING, then clear it; do not command press-up
   reset: explicit chain cancel/finish and new initialization; force recovery alone cannot resume
+  reset_event_cleanup: attempt UnlockEvent then ClearEvent once for the owned nonzero handle, then invalidate it; their BOOL results must not strand N000, and any unlocked pending event remains acknowledgeable
   safety_priority: existing safety and ControlOn override the requested pressure hold
 
 type_data:

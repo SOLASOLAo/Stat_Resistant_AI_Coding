@@ -2,8 +2,11 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **N000 旧力报警复位卡住修复（2026-09-09）**：只改 CheckPressForce Phase 0，不再把 UnlockEvent/ClearEvent 的 FALSE 当成永久等待；释放旧执行句柄并读取 active StationData。用户退出在线后，经原 PLE REST 单对象保存/39 目标回读；最终 PlanOnly 0 操作。AI 本轮新 F11：0 errors / 5 warnings，已逐条读取 4 × C0351 OPC.UA.DA、1 × C0373 ErrorCodes/DWord；不扩大正式 warning 基线。规格与七组回归/Project Pack 已同步。详见 `docs/reviews/station010-force-reset-20260909.md`。
+- [ ] **N000 修复现场复测**：用户安全下载后核对 active PressForceTimeout=10000 ms，发起新自动，先确认 N000 → N010，再测左中右；2500 N/2 s、故障保持和人工取消规则不变。只改 PLC 方法，无需 CpStudio Export；AI 未下载。
+
 - [x] **SFC 空步骤与并行汇合修复（2026-09-09）**：全量检查 12 条应用 Chain。删除 `SqM_Station_Home.N110` 空步骤，保留 N100 的 ExecuteSubChain 完成握手后直达 N999；Run 两组并行分支新增 N065/N066、N115/N125，分别保持本分支 `_retVal` / `_retVal2 := OK`。两张图、四个 Action 经唯一用户 PLE 的离线 REST 保存/回读，所有既有业务代码和声明不变，3 个 writer 最终 PlanOnly 均为 0 操作。用户已确认本批新 F11：0 errors / 5 warnings。见 `docs/reviews/station010-sfc-completion-20260909.md`。
-- [ ] **本批现场复测**：用户在安全条件下下载，确认回原位 N100 → N999 正常结束；自动 LEFT/MIDDLE/RIGHT 两组并行汇合不再反复消费已完成分支的 DONE。五条 warning 的明细、现场结果待核对，AI 未下载。
+- [ ] **SFC 现场复测**：用户在安全条件下下载，确认回原位 N100 → N999 正常结束；自动 LEFT/MIDDLE/RIGHT 两组并行汇合不再反复消费已完成分支的 DONE。最新五条 warning 已在 N000 修复编译中核对，现场结果仍待确认，AI 未下载。
 - [ ] **DeleteWpcData 模板清理待用户确认**：`SqC_Wp100_DeleteWpcData.N110/N120/N130/N140` 只有注释中的示例，无清数据实现。已询问该命令不用还是要清哪些具体数据；暂未修改，不能删光后把未执行的清数据命令报成功。
 
 - [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；09-09 用户截图确认本批 Build 0 errors / 5 warnings，警告明细和现场验收仍待核对。

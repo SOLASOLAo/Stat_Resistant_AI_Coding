@@ -25,14 +25,11 @@ THEN
   _pressDelay(IN := FALSE, PT := T#0MS);
   IF ( _eventIndex <> 0 )
   THEN
-    IF ( NOT UnlockEvent(Class := OpconEventClass.SOFTERROR, Index := _eventIndex) )
-    THEN
-      RETURN;
-    END_IF
-    IF ( NOT ClearEvent(Class := OpconEventClass.SOFTERROR, Index := _eventIndex) )
-    THEN
-      RETURN;
-    END_IF
+    // Cleanup is not a command-completion handshake: FALSE can mean an old
+    // handle is already invalid. Always attempt both operations, then release
+    // this execution's handle. An unlocked pending event remains acknowledgeable.
+    UnlockEvent(Class := OpconEventClass.SOFTERROR, Index := _eventIndex);
+    ClearEvent(Class := OpconEventClass.SOFTERROR, Index := _eventIndex);
   END_IF
   _eventIndex := 0;
   _fault := FALSE;

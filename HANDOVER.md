@@ -1257,3 +1257,11 @@
 - 最终扫描 367 个可读 Application 对象、12 条 Chain；所有既有 33 个 Home/Run 目标的差异仅两张图。Home 3 步、Run 27 步，汇合输入 N065/N066 与 N115/N125；三个 writer PlanOnly 均为 0 操作。保存工程 SHA `c5d5ec1c67b9a1bedf78a0228edc2c71fa28ca024062ffc207d2716c26306356`，写前 checkpoint `aac3e08e7e61afb08e7fbb25fd9f90811c172eee9d4f4678aef7254ba0d6d849`。
 - **本批新编译已由用户 F11 确认：0 errors / 5 warnings**，不是旧截图或 MCP 缓存。警告明细仍未提供；现场回原位结束、LEFT/MIDDLE/RIGHT 两组分支汇合待用户受控下载验证。
 - **仍需用户选择**：`SqC_Wp100_DeleteWpcData` 的 N110/N120/N130/N140 只有注释中的模板代码，没有清数据实现。已询问是否不用或需要清哪些数据，未擅自改成无动作成功；其余 11 条 Chain 未发现残留同类空步/未引用子 Action。详细检查表、执行 SHA 与验证范围见 `docs/reviews/station010-sfc-completion-20260909.md`，本地证据为 `data/reports/plc/sfc-completion-*-20260909.json`。
+
+## 2026-09-09 · 自动 N000 被旧力报警复位卡住（当前交接）
+
+- 修改前在线只读证据：SqS_Run.N000 长时间 RUNNING；CheckPressForce 保留 `_fault=TRUE`、`_eventIndex=2`、`INVALID_TIMEOUT_MS` 和旧 `_timeoutMs=2000`，但 active StationData 已为 10000。Phase 0 的事件 cleanup FALSE 提前返回，阻止释放旧状态及读取新参数；未单独捕获是哪一个 cleanup 返回 FALSE。HMI 无红字不代表内部句柄已复位。
+- 用户说“直接改”并确认已退出在线后，REST 再验 offline；仅修改 CheckPressForce Phase 0：对自己的非零句柄依次 Unlock/Clear 后释放，不把 BOOL 当链完成握手。依据本机 NxBase 官方 ClearEvent/UnlockEvent 手册，保留当前两参数接口。显式链边界复位、2500 N/2 s、掉力/无效数据、故障保持及全部运动逻辑不变，无新 FB/接口。
+- 现有 writer：Plan `b8899e08...74b03`，一个 implementation PUT/一次 Save/39 目标回读；checkpoint `c5d5ec1c...6356`，保存后 SHA `3b43f791...100e2`。新 F11 后 SHA 不变，最终 PlanOnly 0 操作；未另起 MCP/PLE。七组回归与 Project Pack Build/Check 通过，不冒充库仿真。
+- **AI 已在当前 PLE 完成本轮新 F11：0 errors / 5 warnings**，观察到 Build started 和完成结果。五条明细为 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord；附加代码检查 0 errors。记录当前 UI 编译证据，不擅自修改正式 warning baseline，也不替代现场 Symbol 验收。
+- **未下载、未启停、未写变量/FORCE**。用户下一步安全下载，核对 active PressForceTimeout=10000，重新发起自动，验证 N000 → N010；本次方法实现修改无需 CpStudio Export。左中右及故障恢复现场测试仍未完成。详细证据、库说明及测试边界见 `docs/reviews/station010-force-reset-20260909.md`；本地报告 `data/reports/plc/force-reset-20260909-{plan,apply,verification}.json`。

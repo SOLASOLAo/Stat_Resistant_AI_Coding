@@ -24,6 +24,37 @@ foreach ($fragment in @(
 }
 Assert-That ($source -notmatch 'BasMoveCmd\.BASPOS|PressingCylinder\.Unit\.(Command|Execute)\s*:=') 'Force fault must not command cylinder movement.'
 Assert-That ($source.IndexOf('_fault := FALSE') -lt $source.IndexOf('forceN :=')) 'Latch reset must remain in the explicit reset branch.'
+
+# Regression: an acknowledged/invalid event handle must not strand N000 in
+# RUNNING. The two BOOL returns describe event operations, not SFC completion.
+$reset = $source.Substring($source.IndexOf('IF ( Phase = 0 )'), $source.IndexOf('forceN :=') - $source.IndexOf('IF ( Phase = 0 )'))
+$resetWithoutComments = [regex]::Replace($reset, '//[^\r\n]*', '')
+Assert-That ($resetWithoutComments -match '(?s)IF \( _eventIndex <> 0 \)\s+THEN\s+UnlockEvent\(Class := OpconEventClass.SOFTERROR, Index := _eventIndex\);\s+ClearEvent\(Class := OpconEventClass.SOFTERROR, Index := _eventIndex\);\s+END_IF') 'Reset must attempt unlock AND clear without waiting on either BOOL.'
+Assert-That ($reset.IndexOf('RETURN;') -gt $reset.IndexOf('CheckPressForce := OK;')) 'Reset may not return RUNNING before releasing its old handle.'
+foreach ($fragment in @('_eventIndex := 0;', '_fault := FALSE;', "_reason := '';", "_additionalInfo := '';", '_timeoutMs := Station.StationData.PressForceTimeout;')) {
+  Assert-That ($reset.Contains($fragment)) "Reset lost state cleanup: $fragment"
+}
+# Independent reset lifecycle model, not an implementation of the vendor API.
+function Invoke-ForceResetModel($State, [bool]$UnlockResult, [bool]$ClearResult, [int]$ActiveTimeout) {
+  if ($State.EventIndex -ne 0) {
+    $State.Calls += @('UnlockEvent', 'ClearEvent')
+    $State.EventResults = @($UnlockResult, $ClearResult)
+  }
+  $State.EventIndex=0; $State.Fault=$false; $State.Reason=''; $State.Timeout=$ActiveTimeout
+  return 0
+}
+foreach ($unlockResult in @($false,$true)) {
+  foreach ($clearResult in @($false,$true)) {
+    $resetState=@{ EventIndex=2; Fault=$true; Reason='INVALID_TIMEOUT_MS'; Timeout=2000; Calls=@() }
+    Assert-That ((Invoke-ForceResetModel $resetState $unlockResult $clearResult 10000) -eq 0) 'Old event cleanup stranded N000.'
+    Assert-That (($resetState.Calls -join ',') -eq 'UnlockEvent,ClearEvent') 'Both cleanup calls must run in order.'
+    Assert-That ($resetState.EventIndex -eq 0 -and -not $resetState.Fault -and $resetState.Reason -eq '' -and $resetState.Timeout -eq 10000) 'New execution retained the old fault or timeout.'
+    $null=Invoke-ForceResetModel $resetState $unlockResult $clearResult 10000
+    Assert-That ($resetState.Calls.Count -eq 2) 'Repeated reset reused a released event handle.'
+  }
+}
+$init = [IO.File]::ReadAllText((Join-Path $chain 'actions\N000.st'))
+Assert-That ($init.Contains('_retVal := CheckPressForce(Phase := 0);')) 'N000 must finish through the shared reset boundary.'
 foreach ($step in @('N070','N080','N090')) {
   $action = [IO.File]::ReadAllText((Join-Path $chain "actions\$step.st"))
   Assert-That ($action.Contains('CheckPressForce(')) "$step lost its force check."
@@ -45,6 +76,7 @@ Assert-That (-not ($source + $press).Contains('.ErrorSet')) 'Kistler V1.2 has no
 $stopAction = [IO.File]::ReadAllText((Join-Path $chain 'actions\N101.st'))
 $waitAction = [IO.File]::ReadAllText((Join-Path $chain 'actions\N120.st'))
 $chainFinish = [IO.File]::ReadAllText((Join-Path $chain 'OnChainFinish.st'))
+Assert-That ($chainFinish.Contains('_unitResult := CheckPressForce(Phase := 0);')) 'Chain finish must use the same non-blocking event cleanup.'
 $endGate = 'Wp100A104Kistler.Unit.ParImm.EndMeasurement := ( _kistlerStarted ) AND ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND ( Wp100A104Kistler.Unit.ExecState = OpconExecState.RUNNING );'
 foreach ($body in @($source, $stopAction)) {
   Assert-That (([regex]::Replace($body, '\s+', ' ')).Contains($endGate)) 'END must be owned, measuring and RUNNING, with FALSE on subsequent stopped scans.'
