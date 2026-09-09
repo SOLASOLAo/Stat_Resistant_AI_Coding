@@ -4,6 +4,11 @@
   ScriptEngine and exports deterministic Application text objects.
 - `verify_plc_snapshot.ps1` validates the snapshot manifest and optional source
   project hash.
+- `apply_station_home_rest.ps1` removes only the reviewed empty N110 from
+  `SqM_Station_Home`. N100 already starts and waits for the homing subchain via
+  ExecuteSubChain. The generated declaration and all child code are preserved;
+  current graph/Action hashes, offline state, Plan SHA, Save and full readback
+  are checked. Take a content-addressed project checkpoint before Apply.
 - `apply_wp100_run_rest.ps1` plans or applies the AI-owned
   `SqS_Wp100_Run` parallel SFC graph, Action/cleanup implementations and result
   DUTs through the active PLC Engineering official REST extension. It also
@@ -16,7 +21,7 @@
   three-position result DUT. Obsolete CpStudio example actions are reported but
   retained; deletion is disabled until it has its own reviewed migration.
 
-Both writers default to `PlanOnly`. A plan performs source/interface and
+All three writers default to `PlanOnly`. A plan performs source/interface and
 existing-object checks but sends no POST/PUT/Save request. The shared
 `SfcRestWriter.Transaction.ps1` guard freezes every POST/PUT body as canonical
 JSON, includes the complete JSON plus the Save request in the deterministic
@@ -27,7 +32,7 @@ Every POST parent (including `Structs/Data` for a new DUT) must also have an
 immutable snapshot, so indirect `children`/metadata changes are covered by the
 plan and rollback verification. After a successful Save, both writers repeat
 the complete graph/Action/Method/DUT readback and declaration/hash checks.
-Before either PlanOnly or Apply can finish, the writer also resolves the
+Before either Run writer's PlanOnly or Apply can finish, it also resolves the
 CpStudio-generated `AutoInfoLineEnum` DUT through read-only PLE REST and checks
 that append-only symbols 4..16 exist in order. Explicit numeric assignments are
 checked when exposed by the REST declaration; otherwise the gate records the
@@ -62,6 +67,14 @@ PLE REST has an asymmetric normalization rule: PUT must contain the transition
 `VariableName` is valid. The writers therefore hash both the named desired XML
 and the normalized REST readback XML; this keeps reruns idempotent without
 dropping the name from writes.
+
+PLE also renumbers native SFC localIds on readback. After deleting a step,
+emit contiguous localIds and update every connection. The Home regression
+`Test-SfcCompletionContracts.ps1` checks this and the N100-to-N999 completion
+gate. Run's two parallel groups end in N065/N066 and N115/N125; these Actions
+hold only their own return value at OK after the real completion transitions.
+`Test-SfcRestWriterPlanOnly.ps1` checks the actual generated graph and branch
+completion order, including a peer that never completes.
 
 OpCon `SetEvent` accepts `AdditionalInfo : STRING(63)`. Canonical PLC sources
 must keep a literal third argument at 63 characters or fewer; the static test

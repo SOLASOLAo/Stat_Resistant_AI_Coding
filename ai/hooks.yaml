@@ -147,7 +147,7 @@ hooks:
       - pressing-cylinder Execute false
       - Burster program selector Execute false
       - Burster Execute false
-      - Kistler EndMeasurement true and Execute false
+      - Kistler EndMeasurement false and Execute false; use standard Unit Cancel on the falling Execute edge
       - all per-execution flags false
   - id: wp100_run_command_sequence
     object: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run

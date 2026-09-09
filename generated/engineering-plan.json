@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "81af8d7326c9314118474bcc5b39008e11ab2fc7f628b1aaea4ba138ba688dc2",
+  "contentId": "4f0eaab92c8f3f7657180c669d4a84d3c1804f6ffb567f5dcf7a2c514cff2ace",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 23174,
-      "sha256": "913156ba8e2afce92bed029856ad0a237416fd9f40597ace0cb56f1265894281"
+      "length": 25561,
+      "sha256": "e30c3853c92d3d39dafe3766a4d74501eae31e4b51268b4783f43f417e5592cf"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -68,8 +68,8 @@
     },
     {
       "path": "catalog/framework/OpconSfcChain/V1.0/chain.yaml",
-      "length": 1302,
-      "sha256": "7ca0b62f280b7d3ba51086d0a651c517930f859ed050d341de8888ebfd25a8ba"
+      "length": 1599,
+      "sha256": "6f254ae5123fb0a31bad0a9717f045b87bb7aeb84c7eeb85e547c0dbdf432f1f"
     },
     {
       "path": "catalog/units/NexeedBasMoveStandard/V2.1/unit.yaml",
@@ -88,18 +88,18 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 15094,
-      "sha256": "2ecf73c3ded9e2921fab0fef9912f570098ed9bccf25f138d8bbb7b8a6dfaa81"
+      "length": 16321,
+      "sha256": "d49e47ee8502f10a2c975aee499fba27d40118159b27cc58b8b70385f38e8206"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 8908,
-      "sha256": "adfd26a6ac896444c00359e131a4d37e64467e2a26c8989feb7bd9e59f0430d8"
+      "length": 8963,
+      "sha256": "ad7cfae99d29c737c421ef7c295929b028626038b4f1ebef45f7fa79c5746412"
     },
     {
       "path": "ai/graphical.yaml",
-      "length": 5294,
-      "sha256": "11e5a371cec8ccb424fd9819b01b070b3467e2485286ab77265bc6ce03aa2471"
+      "length": 6423,
+      "sha256": "5abf6d76265ed427bcfb478826a69574db11dd1ddd17f50cbe28ee84561b0732"
     },
     {
       "path": "specs/station010-eplan-io.csv",
@@ -729,6 +729,44 @@
           }
         },
         {
+          "id": "N065",
+          "kind": "wait",
+          "comment": "Press start branch complete",
+          "operation": "After N060 returns OK, hold only _retVal := OK at the parallel join; do not repeat the completed device check.",
+          "transition": "Both start branches have reached their completion-hold steps.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-MEASUREMENT-START"
+          ],
+          "acceptance": [
+            "The branch cannot enter this step before its real completion check succeeds."
+          ],
+          "parallel": {
+            "group": "measurement_start",
+            "branch": 1
+          }
+        },
+        {
+          "id": "N066",
+          "kind": "wait",
+          "comment": "Kistler start branch complete",
+          "operation": "After N061 returns OK, hold only _retVal2 := OK while the pressing-cylinder branch completes.",
+          "transition": "Both start branches have reached their completion-hold steps.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-MEASUREMENT-START"
+          ],
+          "acceptance": [
+            "No other branch return value or device request is written in this hold step."
+          ],
+          "parallel": {
+            "group": "measurement_start",
+            "branch": 2
+          }
+        },
+        {
           "id": "N070",
           "kind": "delay",
           "comment": "Wait force >2500N for 2s",
@@ -870,6 +908,44 @@
           ],
           "acceptance": [
             "The finish convergence cannot pass before the Kistler result is final."
+          ],
+          "parallel": {
+            "group": "measurement_finish",
+            "branch": 2
+          }
+        },
+        {
+          "id": "N115",
+          "kind": "wait",
+          "comment": "Press return branch complete",
+          "operation": "After N110 returns OK, hold only _retVal := OK without consuming the press completion again.",
+          "transition": "Both finish branches have reached their completion-hold steps.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-MEASUREMENT-FINISH"
+          ],
+          "acceptance": [
+            "Press completion remains acknowledged if the Kistler branch finishes later."
+          ],
+          "parallel": {
+            "group": "measurement_finish",
+            "branch": 1
+          }
+        },
+        {
+          "id": "N125",
+          "kind": "wait",
+          "comment": "Kistler result branch complete",
+          "operation": "After N120 has captured the completed result and returned OK, hold only _retVal2 := OK.",
+          "transition": "Both finish branches have reached their completion-hold steps.",
+          "prompt": null,
+          "promptVariants": null,
+          "requirements": [
+            "REQ-MEASUREMENT-FINISH"
+          ],
+          "acceptance": [
+            "Kistler completion remains acknowledged if the press branch finishes later; result capture is not repeated."
           ],
           "parallel": {
             "group": "measurement_finish",
@@ -1268,10 +1344,15 @@
         "N100",
         "N101",
         "N110",
-        "N120"
+        "N120",
+        "N065",
+        "N066",
+        "N115",
+        "N125"
       ],
       "expected": [
         "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
+        "For either branch finishing first, its own completion-hold Action keeps OK until its peer completes. A pending/error branch cannot be bypassed and no completed device check is consumed twice.",
         "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
         "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
         "The Burster acknowledges the active TypeData program; its saved range is preserved with Peripheral AutoRange false. No SET_RANGE is issued. Grading limits, temperature selection and Kistler program still come from active TypeData.",
@@ -1427,7 +1508,9 @@
         "N050",
         "N051",
         "N060",
-        "N061"
+        "N061",
+        "N065",
+        "N066"
       ],
       "testIds": [
         "TEST-ATOMIC-MEASUREMENT"
@@ -1470,7 +1553,9 @@
         "N100",
         "N101",
         "N110",
-        "N120"
+        "N115",
+        "N120",
+        "N125"
       ],
       "testIds": [
         "TEST-ATOMIC-MEASUREMENT"

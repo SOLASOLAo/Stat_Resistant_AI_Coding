@@ -20,6 +20,8 @@ project_style:
   - put a common release/check step before the simultaneous divergence
   - give every device a separate Start step and Wait step
   - use the matching branch return value in Actions and transitions
+  - after the real completion check, enter a separate final step that assigns only its branch return value to OK while waiting at a simultaneous convergence
+  - never leave a step without executable logic behind a return-value transition; preserve actual waits and the framework init/finish steps
   - converge only after every branch return value is OK
   - keep SFC step comments short and searchable
   - keep interlock, parameter and result explanations in the ST Action

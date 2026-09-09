@@ -320,6 +320,26 @@
       ]
     },
     {
+      "id": "N065",
+      "kind": "wait",
+      "comment": "Press start branch complete",
+      "operation": "After N060 returns OK, hold only _retVal := OK at the parallel join; do not repeat the completed device check.",
+      "transition": "Both start branches have reached their completion-hold steps.",
+      "requirements": ["REQ-MEASUREMENT-START"],
+      "parallel": {"group": "measurement_start", "branch": 1},
+      "acceptance": ["The branch cannot enter this step before its real completion check succeeds."]
+    },
+    {
+      "id": "N066",
+      "kind": "wait",
+      "comment": "Kistler start branch complete",
+      "operation": "After N061 returns OK, hold only _retVal2 := OK while the pressing-cylinder branch completes.",
+      "transition": "Both start branches have reached their completion-hold steps.",
+      "requirements": ["REQ-MEASUREMENT-START"],
+      "parallel": {"group": "measurement_start", "branch": 2},
+      "acceptance": ["No other branch return value or device request is written in this hold step."]
+    },
+    {
       "id": "N070",
       "kind": "delay",
       "comment": "Wait force >2500N for 2s",
@@ -449,6 +469,26 @@
       ]
     },
     {
+      "id": "N115",
+      "kind": "wait",
+      "comment": "Press return branch complete",
+      "operation": "After N110 returns OK, hold only _retVal := OK without consuming the press completion again.",
+      "transition": "Both finish branches have reached their completion-hold steps.",
+      "requirements": ["REQ-MEASUREMENT-FINISH"],
+      "parallel": {"group": "measurement_finish", "branch": 1},
+      "acceptance": ["Press completion remains acknowledged if the Kistler branch finishes later."]
+    },
+    {
+      "id": "N125",
+      "kind": "wait",
+      "comment": "Kistler result branch complete",
+      "operation": "After N120 has captured the completed result and returned OK, hold only _retVal2 := OK.",
+      "transition": "Both finish branches have reached their completion-hold steps.",
+      "requirements": ["REQ-MEASUREMENT-FINISH"],
+      "parallel": {"group": "measurement_finish", "branch": 2},
+      "acceptance": ["Kistler completion remains acknowledged if the press branch finishes later; result capture is not repeated."]
+    },
+    {
       "id": "N130",
       "kind": "command",
       "comment": "Open safety door",
@@ -572,10 +612,15 @@
         "N100",
         "N101",
         "N110",
-        "N120"
+        "N120",
+        "N065",
+        "N066",
+        "N115",
+        "N125"
       ],
       "expected": [
         "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
+        "For either branch finishing first, its own completion-hold Action keeps OK until its peer completes. A pending/error branch cannot be bypassed and no completed device check is consumed twice.",
         "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
         "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
         "The Burster acknowledges the active TypeData program; its saved range is preserved with Peripheral AutoRange false. No SET_RANGE is issued. Grading limits, temperature selection and Kistler program still come from active TypeData.",

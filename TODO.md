@@ -2,6 +2,10 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **SFC 空步骤与并行汇合修复（2026-09-09）**：全量检查 12 条应用 Chain。删除 `SqM_Station_Home.N110` 空步骤，保留 N100 的 ExecuteSubChain 完成握手后直达 N999；Run 两组并行分支新增 N065/N066、N115/N125，分别保持本分支 `_retVal` / `_retVal2 := OK`。两张图、四个 Action 经唯一用户 PLE 的离线 REST 保存/回读，所有既有业务代码和声明不变，3 个 writer 最终 PlanOnly 均为 0 操作。用户已确认本批新 F11：0 errors / 5 warnings。见 `docs/reviews/station010-sfc-completion-20260909.md`。
+- [ ] **本批现场复测**：用户在安全条件下下载，确认回原位 N100 → N999 正常结束；自动 LEFT/MIDDLE/RIGHT 两组并行汇合不再反复消费已完成分支的 DONE。五条 warning 的明细、现场结果待核对，AI 未下载。
+- [ ] **DeleteWpcData 模板清理待用户确认**：`SqC_Wp100_DeleteWpcData.N110/N120/N130/N140` 只有注释中的示例，无清数据实现。已询问该命令不用还是要清哪些具体数据；暂未修改，不能删光后把未执行的清数据命令报成功。
+
 - [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；09-09 用户截图确认本批 Build 0 errors / 5 warnings，警告明细和现场验收仍待核对。
 - [x] **Burster 自动量程跟随仪表程序（2026-09-08，09-09 收尾）**：用户已确认。保留 N045 的 TypeData ProgramNo → RCL ACK；取消自动 SET_RANGE 与上下量程写入。N046 检查 Peripheral UseAutoRange=false，N047 检查标准 Unit READY 且 Execute=false，不再等待未发送命令的 DONE。保留结果上下限、温度选择、程序号校验及力/运动联锁；仅移除 AI 对未使用量程字段的大小关系校验，生成接口/枚举校验不变。4 个对象已通过现有 PLE REST 保存并完整回读，09-09 磁盘 SHA 与保存报告一致；代码/规格/计划和回归测试同步。
 - [x] **Burster Auto Range 配置与导出核对（2026-09-09）**：用户已完成配置/Export/F11；新 request `04500e24-28c7-4157-a8cd-9fbfa80af5b0` 已审计。现有 PLE REST 回读 `UseAutoRange := False`，Run/SqC 全目标 PlanOnly 均为 0 操作，量程/Kistler 修复未被覆盖；56/56 designator 匹配、38 active / 18 inactive、0 mismatch。本次不重写 PLC。

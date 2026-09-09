@@ -1248,3 +1248,12 @@
 - 工程核对前后 SHA 同为 `aac3e08e7e61afb08e7fbb25fd9f90811c172eee9d4f4678aef7254ba0d6d849`；HMI SHA `0336153f012c08cd76ee8529d10c9a1a48932012b48fb5a7614edce56500814a`。本轮没有 PLC PUT/Save/Build、第二 PLE、连接、下载、启停或变量写入/FORCE。此前用户的 0 errors / 5 warnings 截图早于这次 Parse/Export；本次新 Build 和 5 条 warning 明细尚未取得，不能移用为当前工程的 fresh Build evidence。
 - 现场测试仍由用户操作：先核对原位显示与启动/回原位等待闪灯，再跑左 603 → 中 602 → 右 601 的正常完整流程，确认压下后力 >2500 N 连续 2 s 才启动 Burster、结果完成再回升。诊断超时/测量中掉力/无效数据/取消的受控故障测试单列，确认故障保持下压且不自动重试；不要求在运行中拔传感器或强制物理 I/O。
 - 本地汇总证据 `data/reports/plc/engineering-closeout-20260909.json`，最新 Stage 1 报告 `data/reports/cpstudio/2a246abf-94bb-4ecd-9f87-d2d77ad55d30.json`。本轮只完成离线核对与文档收尾，不把未执行的现场项目勾选为完成。
+
+## 2026-09-09 · 回原位空步骤与并行分支完成保持
+
+- 用户截图定位 `SqM_Station_Home.N110` 无 Action 而等待 `_retVal = OK`。全量检查 12 条应用 SFC 后，删除该空步，保留 N100 的 `ExecuteSubChain` 真实完成握手并直达 N999。不要误删其他链中有 `CheckSubChainDone` 的 N110。
+- 按用户约定，Run 两组并行分支新增末尾 N065/N066、N115/N125；只赋本分支 `_retVal := OK;` / `_retVal2 := OK;`，到达前仍须实际完成。仅修改两张图和新建四个 Action，既有 ST、全部声明、运动/力/安全和仪表协议不变。规范进入 AGENTS/框架目录/链规格，Project Pack 同步。
+- 单个原有 PLE PID 3112/profile `ctrlX PLC 2.6.8`，REST 确认 offline；按 checkpoint → Plan → Apply → Save → readback 执行。Home 一次因 native localId 重编号导致严格回读失败，自动回滚核验后，使用连续 ID 重新执行成功；新增回归防止重现。MCP 未另开工程，无物理连接/下载/启停/FORCE。
+- 最终扫描 367 个可读 Application 对象、12 条 Chain；所有既有 33 个 Home/Run 目标的差异仅两张图。Home 3 步、Run 27 步，汇合输入 N065/N066 与 N115/N125；三个 writer PlanOnly 均为 0 操作。保存工程 SHA `c5d5ec1c67b9a1bedf78a0228edc2c71fa28ca024062ffc207d2716c26306356`，写前 checkpoint `aac3e08e7e61afb08e7fbb25fd9f90811c172eee9d4f4678aef7254ba0d6d849`。
+- **本批新编译已由用户 F11 确认：0 errors / 5 warnings**，不是旧截图或 MCP 缓存。警告明细仍未提供；现场回原位结束、LEFT/MIDDLE/RIGHT 两组分支汇合待用户受控下载验证。
+- **仍需用户选择**：`SqC_Wp100_DeleteWpcData` 的 N110/N120/N130/N140 只有注释中的模板代码，没有清数据实现。已询问是否不用或需要清哪些数据，未擅自改成无动作成功；其余 11 条 Chain 未发现残留同类空步/未引用子 Action。详细检查表、执行 SHA 与验证范围见 `docs/reviews/station010-sfc-completion-20260909.md`，本地证据为 `data/reports/plc/sfc-completion-*-20260909.json`。

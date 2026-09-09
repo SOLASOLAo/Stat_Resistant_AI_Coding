@@ -1,0 +1,37 @@
+schema_version: 1
+chain:
+  name: SqM_Station_Home
+  kind: mode
+  instance: Station.SqM_Home
+  status: implemented_readback_verified
+  unit_reference: StationUnit
+steps:
+  - id: N000
+    comment: Init step
+    purpose: initialize the chain return value
+  - id: N100
+    comment: Start sub chain SqS_Home
+    purpose: ExecuteSubChain starts Station.SqS_Homing and returns OK only on DONE
+  - id: N999
+    comment: Finish step
+    purpose: set OpconChainControl.DONE
+removed_step:
+  id: N110
+  reason: no Action, no business wait, but its transition requires _retVal = OK
+  replacement: connect the existing N100 completion transition directly to N999
+preserve:
+  - exact generated declaration and every child Action/Method
+  - ExecuteSubChain step sensitivity, completion and error handling
+  - all physical homing logic in Station.SqS_Homing and Wp100.SqS_Home
+manual_reference:
+  file: ../Std/Objects/NxBase/V1.0/Documentation/Control_plus_Framework_TechnicalManual_EN.chm
+  topic: ExecuteSubChain (OpconBaseChain)
+  topic_id: 80ed78a0-4fb9-424c-97ec-a3fb437d3a1a.htm
+verification:
+  date: 2026-09-09
+  apply_plan_sha256: 1f6e59a60587f3b6e36f8bbff1f6de57b575f8f601253429ab1dab6b815da12f
+  final_plan_operations: 0
+  build: 0 errors / 5 warnings
+  build_source: user reports fresh F11 after this Apply; warning details not supplied
+  warning_baseline_status: pending_detail_review
+  field_acceptance: pending

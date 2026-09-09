@@ -69,6 +69,14 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [pressing_cylinder_manual_release]
+  - path: Application/Station/_this/Chains/Mode/SqM_Station_Home
+    owner: mixed
+    source: src/plc/project/Station010/SqM_Station_Home/implementation.sfc.xml
+    specification: specs/chains/SqM_Station_Home.yaml
+    apply_script: scripts/plc/apply_station_home_rest.ps1
+    write_mode: graphical_attributes
+    interface_owner: cpstudio
+    interface_write: forbidden
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
     owner: mixed
     specification: specs/chains/SqS_Wp100_Home.yaml
@@ -123,8 +131,8 @@ objects:
     interface_owner: cpstudio
     interface_write: forbidden
     apply_status: applied_offline_verified
-    source_state: type_data_applied_and_readback_verified
-    last_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
+    source_state: parallel_completion_holds_applied_and_readback_verified
+    last_plan_sha256: 346bebd3cf1291e37c29858c7debebecedc3531c96ae47f464a95e3fc0f2c44a
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st
@@ -173,6 +181,22 @@ objects:
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N061.st
     write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN065_active
+    owner: ai_implementation
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N065.st
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN066_active
+    owner: ai_implementation
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N066.st
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN115_active
+    owner: ai_implementation
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N115.st
+    write_mode: implementation
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN125_active
+    owner: ai_implementation
+    source: src/plc/project/Station010/SqS_Wp100_Run/actions/N125.st
+    write_mode: implementation
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN070_active
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st

@@ -159,7 +159,7 @@ foreach ($step in @('N010', 'N040', 'N070')) {
     -Expected 'AutoInfoLineEnum.USER_INFO_LOAD_PART'
 }
 
-foreach ($parallelAction in @('N050', 'N051', 'N060', 'N061', 'N100', 'N101', 'N110', 'N120')) {
+foreach ($parallelAction in @('N050', 'N051', 'N060', 'N061', 'N065', 'N066', 'N100', 'N101', 'N110', 'N115', 'N120', 'N125')) {
   Assert-DoesNotContainText `
     -RelativePath "src\plc\project\Station010\SqS_Wp100_Run\actions\$parallelAction.st" `
     -Forbidden '_AutoInfoline'

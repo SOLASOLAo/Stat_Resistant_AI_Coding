@@ -14,6 +14,7 @@ $global:SfcWriterTestSaveCompleted = $false
 $global:SfcWriterTestPostSaveGets = [Collections.Generic.List[string]]::new()
 $global:SfcWriterTestCorruptAfterSavePath = ''
 $global:SfcWriterTestOmitEnumSymbol = ''
+$global:SfcWriterTestOnline = $false
 
 function Copy-JsonValue {
   param([Parameter(Mandatory)]$Value)
@@ -69,6 +70,9 @@ function ConvertFrom-MockDeviceUri {
 
 function New-MockNode {
   param([Parameter(Mandatory)][string]$Path)
+  if ($Path -eq 'Application') {
+    return [pscustomobject]@{ name = 'Application'; isOnline = $global:SfcWriterTestOnline }
+  }
 
   $activeChainPath = if ($null -ne $runPath) { $runPath } else { $sequencePath }
   if ($Path -eq $activeChainPath) {
@@ -375,6 +379,66 @@ if ((@($defaultPlan.plan.operations.kind) -join ',') -ne
 }
 
 $missingHashRejected = $false
+# Validate the generated graph, not just the writer's source strings. Each
+# business completion must have its own guarded transition into a branch hold.
+$mockRunPath = 'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run'
+[xml]$runGraph = $global:SfcWriterTestNodes[$mockRunPath].implementation
+$sfc = $runGraph.body.SFC
+if (@($sfc.step).Count -ne 27) { throw 'Run graph must contain 27 reviewed steps.' }
+$branchTails = @(
+  @{ Wait = 'N060'; Hold = 'N065'; Ret = '_retVal' },
+  @{ Wait = 'N061'; Hold = 'N066'; Ret = '_retVal2' },
+  @{ Wait = 'N110'; Hold = 'N115'; Ret = '_retVal' },
+  @{ Wait = 'N120'; Hold = 'N125'; Ret = '_retVal2' }
+)
+foreach ($tail in $branchTails) {
+  $holdStep = $sfc.SelectSingleNode("step[@name='$($tail.Hold)']")
+  $waitStep = $sfc.SelectSingleNode("step[@name='$($tail.Wait)']")
+  $transitionId = $holdStep.connectionPointIn.connection.refLocalId
+  $transition = $sfc.SelectSingleNode("transition[@localId='$transitionId']")
+  $conditionId = $transition.condition.connectionPointIn.connection.refLocalId
+  $expression = $sfc.SelectSingleNode("inVariable[@localId='$conditionId']/expression").InnerText
+  if (($transition.connectionPointIn.connection.refLocalId -ne $waitStep.localId) -or
+      ($expression -cne "$($tail.Ret) = OK")) {
+    throw "Branch hold bypasses its real completion check: $($tail.Hold)"
+  }
+  $actionName = $holdStep.SelectSingleNode(".//attribute[@guid='700a583f-b4d4-43e4-8c14-629c7cd3bec8']").InnerText
+  if ($actionName -cne "_a$($tail.Hold)_active") { throw 'Hold Action is not bound to its step.' }
+  $body = $global:SfcWriterTestNodes["$mockRunPath/$actionName"].implementation
+  if (($body -replace '(?m)//.*$', '').Trim() -cne "$($tail.Ret) := OK;") {
+    throw "Hold Action must only write its own return value: $actionName"
+  }
+}
+$joinSources = @($sfc.simultaneousConvergence | ForEach-Object {
+    (@($_.connectionPointIn.connection | ForEach-Object {
+      $id = $_.refLocalId
+      $sfc.SelectSingleNode("step[@localId='$id']").name
+    }) -join ',')
+  })
+if (($joinSources -join ';') -cne 'N065,N066;N115,N125') { throw 'Convergences must be fed by the four completion-hold steps.' }
+foreach ($join in $sfc.simultaneousConvergence) {
+  $transition = @($sfc.transition | Where-Object { $_.connectionPointIn.connection.refLocalId -eq $join.localId })
+  $conditionId = $transition[0].condition.connectionPointIn.connection.refLocalId
+  if (($transition.Count -ne 1) -or
+      ($sfc.SelectSingleNode("inVariable[@localId='$conditionId']/expression").InnerText -cne '(_retVal = OK) AND (_retVal2 = OK)')) {
+    throw 'Parallel convergence must still require both return values.'
+  }
+}
+
+# Small scan model: DONE can be a one-scan result. Either branch may finish
+# first; a pending or erroring peer must never release the common transition.
+foreach ($readyAt in @(@(1, 4), @(4, 1), @(2, 2), @(1, 99))) {
+  $held = @($false, $false)
+  for ($scan = 1; $scan -le 6; $scan++) {
+    for ($branch = 0; $branch -lt 2; $branch++) {
+      if ((-not $held[$branch]) -and ($scan -eq $readyAt[$branch])) { $held[$branch] = $true }
+    }
+    $released = $held[0] -and $held[1]
+    $expected = $scan -ge [Math]::Max($readyAt[0], $readyAt[1])
+    if ($released -ne $expected) { throw 'Branch completion was lost or a pending peer was bypassed.' }
+  }
+}
+
 try {
   $null = Invoke-Writer -Writer $runWriter -Arguments @{
     BaseUri = $mockBaseUri
@@ -410,6 +474,22 @@ if (-not $rejected) {
 if ($global:SfcWriterTestMutations.Count -ne 0) {
   throw 'Rejected Apply performed a REST mutation.'
 }
+
+$global:SfcWriterTestOnline = $true
+$null = $global:SfcWriterTestNodes.Remove('Application')
+$onlineRejected = $false
+try {
+  $null = Invoke-Writer -Writer $runWriter -Arguments @{
+    BaseUri = $mockBaseUri; ExpectedProject = $mockProject
+    Mode = 'Apply'; ExpectedPlanSha256 = $defaultPlan.planSha256
+  }
+}
+catch { $onlineRejected = $_.Exception.Message.Contains('explicitly offline Application') }
+if ((-not $onlineRejected) -or ($global:SfcWriterTestMutations.Count -ne 0)) {
+  throw 'An online Application was not rejected before every mutation.'
+}
+$global:SfcWriterTestOnline = $false
+$null = $global:SfcWriterTestNodes.Remove('Application')
 
 $global:SfcWriterTestDriftBeforeSecondRead = $true
 $driftRejected = $false

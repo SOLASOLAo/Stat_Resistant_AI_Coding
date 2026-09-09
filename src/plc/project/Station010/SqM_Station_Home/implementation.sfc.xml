@@ -1,0 +1,158 @@
+<body>
+  <SFC>
+    <step localId="0" initialStep="true" name="N000">
+      <position x="0" y="0" />
+      <connectionPointIn />
+      <connectionPointOut formalParameter="sfc" />
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">N000</attribute>
+            <attribute guid="7d894980-aeea-405c-a0f6-e2b26429c58f">Init step</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="6844a48e-46c2-4cc8-a185-a478f3b99cc0">TRUE</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">TRUE</attribute>
+            <attribute guid="700a583f-b4d4-43e4-8c14-629c7cd3bec8">_aN000_active</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </step>
+    <inVariable localId="1">
+      <position x="0" y="0" />
+      <connectionPointOut />
+      <expression>_retVal = OK</expression>
+    </inVariable>
+    <transition localId="2" name="N000__to__N100">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="0" formalParameter="sfc" />
+      </connectionPointIn>
+      <condition>
+        <connectionPointIn>
+          <connection refLocalId="1" />
+        </connectionPointIn>
+      </condition>
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">_retVal = OK</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">FALSE</attribute>
+            <attribute guid="8294df19-5962-4dee-a874-1051dabb0e3e">0</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </transition>
+    <step localId="3" name="N100">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="2" />
+      </connectionPointIn>
+      <connectionPointOut formalParameter="sfc" />
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">N100</attribute>
+            <attribute guid="7d894980-aeea-405c-a0f6-e2b26429c58f">Start sub chain SqS_Home</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="6844a48e-46c2-4cc8-a185-a478f3b99cc0">FALSE</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">FALSE</attribute>
+            <attribute guid="700a583f-b4d4-43e4-8c14-629c7cd3bec8">_aN100_active</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </step>
+    <inVariable localId="4">
+      <position x="0" y="0" />
+      <connectionPointOut />
+      <expression>_retVal = OK</expression>
+    </inVariable>
+    <transition localId="5" name="N100__to__N999">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="3" formalParameter="sfc" />
+      </connectionPointIn>
+      <condition>
+        <connectionPointIn>
+          <connection refLocalId="4" />
+        </connectionPointIn>
+      </condition>
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">_retVal = OK</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">FALSE</attribute>
+            <attribute guid="8294df19-5962-4dee-a874-1051dabb0e3e">0</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </transition>
+    <step localId="6" name="N999">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="5" />
+      </connectionPointIn>
+      <connectionPointOut formalParameter="sfc" />
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">N999</attribute>
+            <attribute guid="7d894980-aeea-405c-a0f6-e2b26429c58f">Finish step</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="6844a48e-46c2-4cc8-a185-a478f3b99cc0">FALSE</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">TRUE</attribute>
+            <attribute guid="700a583f-b4d4-43e4-8c14-629c7cd3bec8">_aN999_active</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </step>
+    <inVariable localId="7">
+      <position x="0" y="0" />
+      <connectionPointOut />
+      <expression>_retVal = JUMP9</expression>
+    </inVariable>
+    <transition localId="8" name="N999__to__N999">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="6" formalParameter="sfc" />
+      </connectionPointIn>
+      <condition>
+        <connectionPointIn>
+          <connection refLocalId="7" />
+        </connectionPointIn>
+      </condition>
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">_retVal = JUMP9</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+            <attribute guid="bc882c11-1e91-4dd8-a6b8-2075724ed18b">0</attribute>
+            <attribute guid="62e1754b-7629-4e63-9cec-10ae0c536f1f">FALSE</attribute>
+            <attribute guid="8294df19-5962-4dee-a874-1051dabb0e3e">0</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </transition>
+    <jumpStep localId="9" targetName="N999">
+      <position x="0" y="0" />
+      <connectionPointIn>
+        <connection refLocalId="8" />
+      </connectionPointIn>
+      <addData>
+        <data name="http://www.3s-software.com/plcopenxml/sfc/element" handleUnknown="implementation">
+          <attributes>
+            <attribute guid="38391c6d-6d4a-42f8-8ee7-9f45e5adafa8">N999</attribute>
+            <attribute guid="7d894980-aeea-405c-a0f6-e2b26429c58f">Not used</attribute>
+            <attribute guid="01580b27-6378-448b-8ecb-0e4b795b58d6">FALSE</attribute>
+          </attributes>
+        </data>
+      </addData>
+    </jumpStep>
+  </SFC>
+</body>

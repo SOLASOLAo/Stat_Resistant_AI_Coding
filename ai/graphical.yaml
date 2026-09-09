@@ -1,6 +1,24 @@
 schema_version: 1
 
 objects:
+  - path: Application/Station/_this/Chains/Mode/SqM_Station_Home
+    api_path: /devices/Device/Plc%20Logic/Application/Station/_this/Chains/Mode/SqM_Station_Home
+    language: SFC
+    apply_script: scripts/plc/apply_station_home_rest.ps1
+    apply_status: applied_offline_verified
+    last_plan_sha256: 1f6e59a60587f3b6e36f8bbff1f6de57b575f8f601253429ab1dab6b815da12f
+    write_strategy:
+      - checkpoint the project before Apply
+      - preserve the declaration and all child code exactly
+      - verify the graph and N000/N100/N999 Action hashes
+      - remove only empty N110 and its outgoing return-value transition
+      - connect N100 completion directly to N999
+      - require a fresh PlanOnly hash, second GET pass, Save and exact readback
+    step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
+    step_comments:
+      N000: Init step
+      N100: Start sub chain SqS_Home
+      N999: Finish step
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
     api_path: /devices/Device/Plc%20Logic/Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Home
     language: SFC
@@ -26,8 +44,8 @@ objects:
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
     apply_status: applied_offline_verified
-    source_state: type_data_applied_and_readback_verified
-    last_plan_sha256: 35d70b6c2f1b8fea8aab9ef32300bc3b197566610108e447d02d56db3fef0ec7
+    source_state: parallel_completion_holds_applied_and_readback_verified
+    last_plan_sha256: 346bebd3cf1291e37c29858c7debebecedc3531c96ae47f464a95e3fc0f2c44a
     write_strategy:
       - default to PlanOnly and require explicit Apply plus the fresh deterministic plan SHA-256
       - GET the complete object and every child before any mutation
@@ -53,6 +71,8 @@ objects:
       N051: Start Kistler MEASURE
       N060: Wait press WRKPOS
       N061: Wait Kistler running
+      N065: Press start branch complete
+      N066: Kistler start branch complete
       N070: Wait force >2500N for 2s
       N080: Start resistance test
       N090: Wait resistance result
@@ -61,18 +81,20 @@ objects:
       N101: Stop Kistler MEASURE
       N110: Wait press BASPOS
       N120: Wait Kistler result
+      N115: Press return branch complete
+      N125: Kistler result branch complete
       N130: Open safety door
       N140: Wait door open
       N999: Finish run
     parallel_groups:
       measurement_start:
         branches:
-          - [N050, N060]
-          - [N051, N061]
+          - [N050, N060, N065]
+          - [N051, N061, N066]
       measurement_finish:
         branches:
-          - [N100, N110]
-          - [N101, N120]
+          - [N100, N110, N115]
+          - [N101, N120, N125]
     branch_return_values: [_retVal, _retVal2]
     sequential_prerequisite: [N045, N046, N047]
   - path: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run

@@ -561,13 +561,17 @@ function New-Wp100RunSfcImplementation {
   $pressStartId = Add-SfcStep -Context $ctx -Step $stepByName.N050 -SourceId $startSplitId
   $pressStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressStartId -Name 'N050__to__N060' -Expression '_retVal = OK'
   $pressDownWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N060 -SourceId $pressStartTransitionId
+  $pressDownDoneId = Add-SfcTransition -Context $ctx -SourceId $pressDownWaitId -Name 'N060__to__N065' -Expression '_retVal = OK'
+  $pressStartHoldId = Add-SfcStep -Context $ctx -Step $stepByName.N065 -SourceId $pressDownDoneId
 
   $kistlerStartId = Add-SfcStep -Context $ctx -Step $stepByName.N051 -SourceId $startSplitId
   $kistlerStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStartId -Name 'N051__to__N061' -Expression '_retVal2 = OK'
   $kistlerRunningWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N061 -SourceId $kistlerStartTransitionId
+  $kistlerRunningDoneId = Add-SfcTransition -Context $ctx -SourceId $kistlerRunningWaitId -Name 'N061__to__N066' -Expression '_retVal2 = OK'
+  $kistlerStartHoldId = Add-SfcStep -Context $ctx -Step $stepByName.N066 -SourceId $kistlerRunningDoneId
 
-  $startJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressDownWaitId, $kistlerRunningWaitId)
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $startJoinId -Name 'N060__to__N070' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+  $startJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressStartHoldId, $kistlerStartHoldId)
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $startJoinId -Name 'N065__to__N070' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
 
   foreach ($name in @('N070', 'N080', 'N090', 'N095')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
@@ -580,13 +584,17 @@ function New-Wp100RunSfcImplementation {
   $pressUpStartId = Add-SfcStep -Context $ctx -Step $stepByName.N100 -SourceId $finishSplitId
   $pressUpStartTransitionId = Add-SfcTransition -Context $ctx -SourceId $pressUpStartId -Name 'N100__to__N110' -Expression '_retVal = OK'
   $pressUpWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N110 -SourceId $pressUpStartTransitionId
+  $pressUpDoneId = Add-SfcTransition -Context $ctx -SourceId $pressUpWaitId -Name 'N110__to__N115' -Expression '_retVal = OK'
+  $pressFinishHoldId = Add-SfcStep -Context $ctx -Step $stepByName.N115 -SourceId $pressUpDoneId
 
   $kistlerStopId = Add-SfcStep -Context $ctx -Step $stepByName.N101 -SourceId $finishSplitId
   $kistlerStopTransitionId = Add-SfcTransition -Context $ctx -SourceId $kistlerStopId -Name 'N101__to__N120' -Expression '_retVal2 = OK'
   $kistlerResultWaitId = Add-SfcStep -Context $ctx -Step $stepByName.N120 -SourceId $kistlerStopTransitionId
+  $kistlerResultDoneId = Add-SfcTransition -Context $ctx -SourceId $kistlerResultWaitId -Name 'N120__to__N125' -Expression '_retVal2 = OK'
+  $kistlerFinishHoldId = Add-SfcStep -Context $ctx -Step $stepByName.N125 -SourceId $kistlerResultDoneId
 
-  $finishJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressUpWaitId, $kistlerResultWaitId)
-  $sourceId = Add-SfcTransition -Context $ctx -SourceId $finishJoinId -Name 'N110__to__N130' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
+  $finishJoinId = Add-SfcSimultaneousConvergence -Context $ctx -SourceIds @($pressFinishHoldId, $kistlerFinishHoldId)
+  $sourceId = Add-SfcTransition -Context $ctx -SourceId $finishJoinId -Name 'N115__to__N130' -Expression '(_retVal = OK) AND (_retVal2 = OK)'
 
   foreach ($name in @('N130', 'N140')) {
     $stepId = Add-SfcStep -Context $ctx -Step $stepByName[$name] -SourceId $sourceId
@@ -748,6 +756,8 @@ $steps = @(
   [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press WRKPOS' },
   [pscustomobject]@{ Name = 'N051'; Comment = 'Start Kistler MEASURE' },
   [pscustomobject]@{ Name = 'N061'; Comment = 'Wait Kistler running' },
+  [pscustomobject]@{ Name = 'N065'; Comment = 'Press start branch complete' },
+  [pscustomobject]@{ Name = 'N066'; Comment = 'Kistler start branch complete' },
   [pscustomobject]@{ Name = 'N070'; Comment = 'Wait force >2500N for 2s' },
   [pscustomobject]@{ Name = 'N080'; Comment = 'Start resistance test' },
   [pscustomobject]@{ Name = 'N090'; Comment = 'Wait resistance result' },
@@ -756,6 +766,8 @@ $steps = @(
   [pscustomobject]@{ Name = 'N110'; Comment = 'Wait press BASPOS' },
   [pscustomobject]@{ Name = 'N101'; Comment = 'Stop Kistler MEASURE' },
   [pscustomobject]@{ Name = 'N120'; Comment = 'Wait Kistler result' },
+  [pscustomobject]@{ Name = 'N115'; Comment = 'Press return branch complete' },
+  [pscustomobject]@{ Name = 'N125'; Comment = 'Kistler result branch complete' },
   [pscustomobject]@{ Name = 'N130'; Comment = 'Open safety door' },
   [pscustomobject]@{ Name = 'N140'; Comment = 'Wait door open' },
   [pscustomobject]@{ Name = 'N999'; Comment = 'Finish run' }
@@ -768,6 +780,7 @@ $baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b929
 $preTypeDataImplementationSha = '0352fb0535c1588373103c50638da3cccb2d01a091f4b40f0dad1b8274ba6681'
 $preForceImplementationSha = 'fc48810ed7ecf1372bcf7c1e32b495ab27950870126ea54882fb57efd8a925d5'
 $preProgramRangeImplementationSha = 'cd41ae0232adab90612334eca8cbec0ec64b53324a257c8d3a05ce1248497cd8'
+$preBranchCompletionImplementationSha = '958647ca286c35b1f23114706b792c8279437ca32e383a1075145b7491d9f4ca'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -779,13 +792,14 @@ if ($currentDeclarationSha -ne $targetDeclarationSha) {
 $preservedRunDeclaration = [string]$runNode.declaration
 $preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
 $script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
-if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $preProgramRangeImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $preProgramRangeImplementationSha, $preBranchCompletionImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN046_active', '_aN047_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
 $allowedChildren += 'CheckPressForce'
+$allowedChildren += @('_aN065_active', '_aN066_active', '_aN115_active', '_aN125_active')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
 if ($unknownChildren.Count -gt 0) {
   throw "SqS_Wp100_Run contains unrecognized child objects: $($unknownChildren -join ', ')"
@@ -1059,6 +1073,10 @@ $projectBeforeWrite = Invoke-RestMethod -Method Get -Uri "$BaseUri/projects/curr
 if ((-not ([IO.Path]::GetFullPath($projectBeforeWrite.path)).Equals($expectedResolved, [StringComparison]::OrdinalIgnoreCase)) -or
     ($projectBeforeWrite.profileName -ne 'ctrlX PLC 2.6.8')) {
   throw 'Active PLC project/profile changed between PlanOnly preflight and Apply.'
+}
+$applicationBeforeWrite = Invoke-RestMethod -Method Get -Uri (ConvertTo-ApiUri 'Application')
+if ($applicationBeforeWrite.isOnline -cne $false) {
+  throw 'Apply requires an explicitly offline Application.'
 }
 Assert-PreflightSnapshotCurrent
 

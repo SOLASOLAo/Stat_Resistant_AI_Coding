@@ -28,7 +28,7 @@ operator_guidance_plan:
   source_files:
     state: applied_and_readback_verified
     root: src/plc/project/Station010/SqS_Wp100_Run
-    note: parallel branch Actions N050/N051/N060/N061/N100/N101/N110/N120 remain display-write free
+    note: all parallel branch Actions, including final completion-hold steps, remain display-write free
   completed_prerequisites:
     - CpStudio AutoInfoLineEnum items 4 through 16 saved and exported
     - REST writer transactional safety blockers closed and offline tests passed
@@ -50,6 +50,7 @@ sfc_conventions:
   branch_2_return: _retVal2
   source: OpconSfcChain and NxBase framework technical manual
   diagnostic_rule: each device owns separate Start and Wait steps
+  completion_hold: after the real Wait succeeds, a separate final Action holds only its branch return value at OK until convergence
 
 input:
   name: MeasurePos
@@ -213,6 +214,20 @@ steps:
     branch: 2
     return_value: _retVal2
     wait_for: Wp100A104Kistler.Unit.OutImm.MeasRunning
+  - id: N065
+    comment: Press start branch complete
+    parallel_group: measurement_start
+    branch: 1
+    return_value: _retVal
+    entry_requires: N060 returns OK
+    action: _retVal := OK;
+  - id: N066
+    comment: Kistler start branch complete
+    parallel_group: measurement_start
+    branch: 2
+    return_value: _retVal2
+    entry_requires: N061 returns OK
+    action: _retVal2 := OK;
   - parallel_convergence: measurement_start
     completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N070
@@ -267,6 +282,20 @@ steps:
     return_value: _retVal2
     result: Result.Kistler
     note: adds the final verdict; force/stroke were latched at press-up start and full READ_DATA curve is not requested
+  - id: N115
+    comment: Press return branch complete
+    parallel_group: measurement_finish
+    branch: 1
+    return_value: _retVal
+    entry_requires: N110 returns OK
+    action: _retVal := OK;
+  - id: N125
+    comment: Kistler result branch complete
+    parallel_group: measurement_finish
+    branch: 2
+    return_value: _retVal2
+    entry_requires: N120 returns OK after result capture
+    action: _retVal2 := OK;
   - parallel_convergence: measurement_finish
     completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N130
@@ -360,4 +389,16 @@ force_interlock_verification:
   project_sha256: b07d57804111dde635c7331430756c0c3d0c7f2f8ddc953621fb042aa55febf3
   parent_declaration_unchanged: true
   downloaded: false
+  field_acceptance: pending
+
+parallel_completion_verification:
+  date: 2026-09-09
+  steps: 27
+  start_join_inputs: [N065, N066]
+  finish_join_inputs: [N115, N125]
+  apply_plan_sha256: 346bebd3cf1291e37c29858c7debebecedc3531c96ae47f464a95e3fc0f2c44a
+  final_plan_operations: 0
+  existing_action_and_method_code: unchanged
+  build: 0 errors / 5 warnings
+  build_source: user reports fresh F11 after this Apply; warning details not supplied
   field_acceptance: pending
