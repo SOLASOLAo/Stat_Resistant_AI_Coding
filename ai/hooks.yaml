@@ -123,11 +123,12 @@ hooks:
       - Wp100A103ResistantDetector
       - Wp100K102PressingCylinder
     invariants:
-      - Burster ProgramNo is validated as 0 through 15 and acknowledged through *RCL before SET_RANGE
+      - Burster ProgramNo is validated as 0 through 15 and acknowledged through *RCL before measurement
       - the standard Nexeed Burster socket is closed before the short program-selection TCP session
       - the program-selection TCP session sends EOT and closes before the standard Unit continues
-      - Burster SET_RANGE completes before the pressing-cylinder and Kistler start branches
-      - Burster range, limits and temperature selection come from the active Wp100 TypeData
+      - the instrument program owns the Burster range; automatic chains never issue SET_RANGE or copy TypeData UpperRange/LowerRange
+      - N046 requires Peripheral UseAutoRange false and N047 requires Burster READY with Execute false before the pressing-cylinder and Kistler start branches
+      - Burster grading limits and temperature selection come from the active Wp100 TypeData
       - Kistler measurement program comes from the active Wp100 TypeData
       - Kistler MEASURE and pressing-cylinder WRKPOS use one simultaneous SFC divergence
       - branch 1 uses _retVal and branch 2 uses _retVal2

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "0b86c0c34c53ba16317740d6652847ae2d44ce8efa9256dfd5264322f18f9d79",
+  "contentId": "81af8d7326c9314118474bcc5b39008e11ab2fc7f628b1aaea4ba138ba688dc2",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 22612,
-      "sha256": "dff89aead4ab58b5f2ff06af1c6439bbb10f37be0cdde6b45d06a88c18e90516"
+      "length": 23174,
+      "sha256": "913156ba8e2afce92bed029856ad0a237416fd9f40597ace0cb56f1265894281"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -78,8 +78,8 @@
     },
     {
       "path": "catalog/units/NexeedBursterResis2316/V1.0/unit.yaml",
-      "length": 568,
-      "sha256": "238a6a5fdac5182641bcf93a7f7d0231c51c0469ba71e2cada27900c6c7b102b"
+      "length": 1170,
+      "sha256": "1c15e92a99dca9b2f272dda8bcd56e9dbc4adda24b6ed2aaf2bcd62e1df2649b"
     },
     {
       "path": "catalog/units/NexeedKistlerForceStroke/V1.2/unit.yaml",
@@ -93,13 +93,13 @@
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 8705,
-      "sha256": "54ce8ac451d1810ec3dba36f6df4c78e78b2129422a1064feeb27497a4efd5f7"
+      "length": 8908,
+      "sha256": "adfd26a6ac896444c00359e131a4d37e64467e2a26c8989feb7bd9e59f0430d8"
     },
     {
       "path": "ai/graphical.yaml",
-      "length": 5287,
-      "sha256": "fee3779b7a3e3e21fefb00749e5f0fa992e3981c967648e622e2a732ada36c59"
+      "length": 5294,
+      "sha256": "11e5a371cec8ccb424fd9819b01b070b3467e2485286ab77265bc6ce03aa2471"
     },
     {
       "path": "specs/station010-eplan-io.csv",
@@ -620,33 +620,34 @@
         },
         {
           "id": "N046",
-          "kind": "start",
-          "comment": "Set Burster range",
-          "operation": "Copy the active TypeData upper/lower range into the Burster parameters and start SET_RANGE.",
-          "transition": "The SET_RANGE command is accepted.",
+          "kind": "wait",
+          "comment": "Check program range mode",
+          "operation": "Keep the range loaded by the acknowledged instrument program. Check that the CpStudio-generated Peripheral UseAutoRange override is disabled; never write it from the chain.",
+          "transition": "Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange is false.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
             "REQ-TYPE-DATA"
           ],
           "acceptance": [
-            "The values come from Station.TypeData.Wp100 and are converted explicitly to the standard Burster enum."
+            "No automatic SET_RANGE or ParCmd UpperRange/LowerRange write occurs, including legacy TypeData values 0/0 (2 mOhm).",
+            "If CpStudio AutoRange is still true, the chain waits at N046 before starting Kistler or lowering the press."
           ],
           "parallel": null
         },
         {
           "id": "N047",
           "kind": "wait",
-          "comment": "Wait Burster range",
-          "operation": "Wait for SET_RANGE and release Unit.Execute before any later Burster command.",
-          "transition": "SET_RANGE completes; command ERROR is propagated.",
+          "comment": "Wait Burster ready",
+          "operation": "Verify the standard Burster Unit is idle before releasing either start branch. No SET_RANGE was issued, so do not wait for its DONE or call CheckUnitDone here.",
+          "transition": "Burster Unit is READY and Execute is false.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
             "REQ-TYPE-DATA"
           ],
           "acceptance": [
-            "Press-down and Kistler measurement cannot start before the Burster range is applied."
+            "Burster RUNNING, DONE, ERROR or an active Execute request cannot pass this readiness step."
           ],
           "parallel": null
         },
@@ -1273,7 +1274,7 @@
         "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
         "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
         "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
-        "The Burster acknowledges the active TypeData program before SET_RANGE; range, limits, temperature selection and Kistler program then come from the same active TypeData.",
+        "The Burster acknowledges the active TypeData program; its saved range is preserved with Peripheral AutoRange false. No SET_RANGE is issued. Grading limits, temperature selection and Kistler program still come from active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },
@@ -1435,7 +1436,7 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-TYPE-DATA",
-      "text": "Use the active Wp100 TypeData for the Burster program, range, limits and temperature selection and for the Kistler measurement program.",
+      "text": "Use active Wp100 TypeData for the Burster program number, grading limits and temperature selection and for the Kistler measurement program. The selected instrument program owns the Burster range: no automatic SET_RANGE or legacy TypeData range override; CpStudio Peripheral AutoRange must be false.",
       "stepIds": [
         "N045",
         "N046",

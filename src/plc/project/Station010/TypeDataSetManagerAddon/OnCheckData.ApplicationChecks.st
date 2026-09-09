@@ -1,12 +1,7 @@
 // Application-specific Wp100 product-data checks.
 // CpStudio owns the generated 0..8 enum checks below this merge area.
-IF ( Station.TypeDataNew.Wp100.Burster.LowerRange >
-     Station.TypeDataNew.Wp100.Burster.UpperRange )
-THEN
-  _onCheckDataMessage :=
-    'Station.TypeDataNew.Wp100.Burster.LowerRange > Burster.UpperRange';
-  RETURN;
-END_IF
+// Legacy range fields stay in the generated dataset, but automatic measurement
+// uses the instrument program's range. Validate grading limits and program below.
 
 IF ( Station.TypeDataNew.Wp100.Burster.LowerLimit >
      Station.TypeDataNew.Wp100.Burster.UpperLimit )

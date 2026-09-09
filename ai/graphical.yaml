@@ -47,8 +47,8 @@ objects:
       N030: Close safety door
       N040: Wait safety feedback
       N045: Check measure release
-      N046: Set Burster range
-      N047: Wait Burster range
+      N046: Check program range mode
+      N047: Wait Burster ready
       N050: Start press WRKPOS
       N051: Start Kistler MEASURE
       N060: Wait press WRKPOS

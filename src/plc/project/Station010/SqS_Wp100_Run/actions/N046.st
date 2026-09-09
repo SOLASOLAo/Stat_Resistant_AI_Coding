@@ -1,20 +1,9 @@
-// Apply the active product's Burster range before motion starts.
+// N045 selected the instrument program; that program owns the measuring range.
+// CpStudio Peripheral AutoRange must be FALSE so SINGLE_MEAS preserves it.
+// Wait here if the generated configuration still enables the driver override.
 _retVal := RUNNING;
 
-IF ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY )
+IF ( NOT Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange )
 THEN
-  Wp100A103ResistantDetector.Unit.ParCmd.UpperRange :=
-    TO_INT(
-      Station.TypeData.Wp100.Burster.UpperRange
-    );
-  Wp100A103ResistantDetector.Unit.ParCmd.LowerRange :=
-    TO_INT(
-      Station.TypeData.Wp100.Burster.LowerRange
-    );
-
-  Wp100A103ResistantDetector.Unit.Command :=
-    BursterResis2316Cmd.SET_RANGE;
-  Wp100A103ResistantDetector.Unit.Execute := TRUE;
-
   _retVal := OK;
 END_IF

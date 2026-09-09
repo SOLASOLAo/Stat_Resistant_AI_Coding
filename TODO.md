@@ -3,7 +3,8 @@
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
 - [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；尚未 Build/下载/现场验收。
-- [ ] **Burster SET_RANGE 报警仍待确认处理方案**：用户上下量程均为 2 mΩ（枚举 0），既往只验证了手动 SINGLE_MEAS 有值，没有验证 SET_RANGE。现有自动在程序选择后执行 N046/N047 SET_RANGE，标准 Unit 报 invalid range；不能据此认定 0 非法，也不能未经确认改大档位或跳过检查。待确认是否改为量程跟随仪表程序；当前 ParCfg.UseAutoRange=true，固定程序方案还需用户通过 CpStudio 配置相应外围参数。TypeData/量程/标准库本次未修改。
+- [x] **Burster 自动量程跟随仪表程序（2026-09-08，09-09 收尾）**：用户已确认。保留 N045 的 TypeData ProgramNo → RCL ACK；取消自动 SET_RANGE 与上下量程写入。N046 检查 Peripheral UseAutoRange=false，N047 检查标准 Unit READY 且 Execute=false，不再等待未发送命令的 DONE。保留结果上下限、温度选择、程序号校验及力/运动联锁；仅移除 AI 对未使用量程字段的大小关系校验，生成接口/枚举校验不变。4 个对象已通过现有 PLE REST 保存并完整回读，09-09 磁盘 SHA 与保存报告一致；代码/规格/计划和回归测试同步。
+- [ ] **Burster 配置、Build 与现场验收**：用户在 CpStudio → Peripherals → Wp100A103ResistantInterface → Parameters → Measure → Auto Range 设为 False，保存并 Export，再做 PLE F11 Build。09-08 最后回读仍为 True；未改好时新程序会停在 N046，不进入压缸/Kistler 启动分支。09-09 PLE 本地 REST 未开启，本次尚无新 Build/下载/现场结果。验收仪表实际程序/量程、SINGLE_MEAS、结果上下限判定与驱动重连；不得用静态检查宣称原报警已在现场消除。
 - [ ] **CpStudio 原位显示绑定修正 + 本轮 Build/现场复核**：PLE Wp100Unit.IsInHomePosition 已用两路 IsInBasPosIn，但生成 HMI config 的 Station/Wp100 条件仍有 4 处旧 IsInBasPos 引用。用户在 CpStudio 的 Wp100 → Conditions → IsInHomePosition 将两设备条件改为 IsInBasPosIn，再导出/刷新 IPC HMI；AI 不直接改模型 XML 或生成 HMI 配置。本轮 PLE F11 和安全现场验证待用户，不能宣称两个原始故障均已解决。
 
 - [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
@@ -162,7 +163,7 @@
 - [x] 🔴 产品参数来源：CpStudio 生成 Wp100 TypeData/量程枚举；PLE 在 N046/N047 先应用 Burster 量程，在 N051/N080 应用 Kistler 程序号及 Burster 上下限/温度开关，并在 OnCheckData 补充上下量程/上下限关系校验；离线 Build 0 errors / 5 条既有生成告警（2026-08-31）
 - [x] 🔴 Burster 程序号离线集成：不修改 CpStudio 接口；新增 AI-owned `FB_Wp100BursterProgramSelect`/`AiWp100`，N045 在标准 Unit READY 时短暂释放其 socket，以 2316 `*RCL Pn` 选择 TypeData `ProgramNo`（0..15），ACK 后发送 EOT 并关闭，再进入 SET_RANGE；事务 Apply、完整读回及真实 Clean Build 0 errors / 4 条既有 warning（2026-09-04）
 - [x] 🔴 Burster 现场手动功能：用户完成下载/运行并确认 Nexeed HMI 中 Burster 手动测试正常；量程枚举保持 9 个真实量程（0..8），不包含无效的 `NONE/0 Ω`（2026-09-04）
-- [ ] 🔴 Burster 程序号真机验收：另行确认下载/运行后，用一个已知安全程序号验证 `Done/Error/ErrorCode`、2316 当前程序、标准 Nexeed driver 重连、SET_RANGE 与 SINGLE_MEAS；禁止用独立 TCP 探针和 PLC driver 同时占用 5555
+- [ ] 🔴 Burster 程序号真机验收：另行确认下载/运行后，用一个已知安全程序号验证 `Done/Error/ErrorCode`、2316 当前程序及其保存的量程、标准 Nexeed driver 重连与 SINGLE_MEAS；自动不再使用 SET_RANGE，CpStudio Auto Range 必须为 False。禁止用独立 TCP 探针和 PLC driver 同时占用 5555
 - [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
 - [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
 - [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)

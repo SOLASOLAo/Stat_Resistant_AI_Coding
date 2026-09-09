@@ -1,11 +1,9 @@
-// Wait for SET_RANGE and release Execute before the next Burster command.
-_unitResult := CheckUnitDone(
-  Wp100A103ResistantDetector.Unit,
-  RepeatOnError := FALSE
-);
-_retVal := _unitResult;
+// No range command was issued. Do not wait for a nonexistent command's DONE.
+// Keep the existing step number and verify readiness before either start branch.
+_retVal := RUNNING;
 
-IF ( _unitResult = OK )
+IF ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY ) AND
+   ( NOT Wp100A103ResistantDetector.Unit.Execute )
 THEN
-  Wp100A103ResistantDetector.Unit.Execute := FALSE;
+  _retVal := OK;
 END_IF

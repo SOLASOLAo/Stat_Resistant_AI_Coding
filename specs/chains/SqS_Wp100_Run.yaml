@@ -108,11 +108,9 @@ type_data:
   apply_boundary: current TypeData after Change-over ApplyData
   fields:
     Burster.UpperRange:
-      target: Wp100A103ResistantDetector.Unit.ParCmd.UpperRange
-      command: SET_RANGE
+      automatic_use: none; retained only for generated dataset compatibility
     Burster.LowerRange:
-      target: Wp100A103ResistantDetector.Unit.ParCmd.LowerRange
-      command: SET_RANGE
+      automatic_use: none; retained only for generated dataset compatibility
     Burster.UpperLimit:
       target: Wp100A103ResistantDetector.Unit.ParCmd.UpperLimit
       command: SINGLE_MEAS
@@ -131,7 +129,7 @@ type_data:
       command: MEASURE
   validation:
     - CpStudio generated range checks keep both range values within 0 through 8
-    - Burster.LowerRange is not greater than Burster.UpperRange
+    - no application ordering check is needed for the unused legacy range fields
     - Burster.LowerLimit is not greater than Burster.UpperLimit
     - Burster.ProgramNo is within the instrument range 0 through 15
     - no narrower Kistler program-number range is assumed beyond BYTE
@@ -176,14 +174,17 @@ steps:
       protocol: RESISTOMAT 2316 *RCL Pn over TCP 5555
       completion: instrument ACK received, EOT sent, temporary socket closed
   - id: N046
-    comment: Set Burster range
-    command: Wp100A103ResistantDetector.SET_RANGE
-    parameters:
-      - Station.TypeData.Wp100.Burster.UpperRange
-      - Station.TypeData.Wp100.Burster.LowerRange
+    comment: Check program range mode
+    purpose: retain the range loaded by the instrument program; do not issue SET_RANGE
+    completion_requires:
+      - Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange is false
+    configuration_owner: user changes AutoRange in CpStudio Peripheral and exports; AI never overrides generated parameters
   - id: N047
-    comment: Wait Burster range
-    wait_for: Wp100A103ResistantDetector SET_RANGE started by N046
+    comment: Wait Burster ready
+    completion_requires:
+      - Wp100A103ResistantDetector Unit is READY
+      - Wp100A103ResistantDetector Unit Execute is false
+    rule: no CheckUnitDone for SET_RANGE because that command is no longer issued
   - id: N050
     comment: Start press WRKPOS
     parallel_group: measurement_start

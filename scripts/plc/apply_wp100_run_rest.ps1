@@ -235,7 +235,8 @@ function Get-TypeDataCheckTarget {
   $targetRegion = "// Application specific data checks`n$checks`n"
   $currentRegionSha = Get-Sha256 $matches[0].Value
   $targetRegionSha = Get-Sha256 $targetRegion
-  if ($currentRegionSha -notin @($typeDataCheckBaselineRegionSha, $targetRegionSha)) {
+  # Reviewed application checks before program-owned ranges (2026-09-08).
+  if ($currentRegionSha -notin @($typeDataCheckBaselineRegionSha, $targetRegionSha, '60fb1000ec217c661463e1f5561ca79e84c3533f21adadaeffc93535d48430f3')) {
     throw 'TypeData OnCheckData contains unrecognized application-specific edits.'
   }
 
@@ -741,8 +742,8 @@ $steps = @(
   [pscustomobject]@{ Name = 'N030'; Comment = 'Close safety door' },
   [pscustomobject]@{ Name = 'N040'; Comment = 'Wait safety feedback' },
   [pscustomobject]@{ Name = 'N045'; Comment = 'Check measure release' },
-  [pscustomobject]@{ Name = 'N046'; Comment = 'Set Burster range' },
-  [pscustomobject]@{ Name = 'N047'; Comment = 'Wait Burster range' },
+  [pscustomobject]@{ Name = 'N046'; Comment = 'Check program range mode' },
+  [pscustomobject]@{ Name = 'N047'; Comment = 'Wait Burster ready' },
   [pscustomobject]@{ Name = 'N050'; Comment = 'Start press WRKPOS' },
   [pscustomobject]@{ Name = 'N060'; Comment = 'Wait press WRKPOS' },
   [pscustomobject]@{ Name = 'N051'; Comment = 'Start Kistler MEASURE' },
@@ -766,6 +767,7 @@ $runNode = Get-Node $runPath
 $baselineImplementationSha = '8cf66075d60284a01c457a4b5d9d876ef8fcc7deef7361b9294834132e2d7cfd'
 $preTypeDataImplementationSha = '0352fb0535c1588373103c50638da3cccb2d01a091f4b40f0dad1b8274ba6681'
 $preForceImplementationSha = 'fc48810ed7ecf1372bcf7c1e32b495ab27950870126ea54882fb57efd8a925d5'
+$preProgramRangeImplementationSha = 'cd41ae0232adab90612334eca8cbec0ec64b53324a257c8d3a05ce1248497cd8'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -777,7 +779,7 @@ if ($currentDeclarationSha -ne $targetDeclarationSha) {
 $preservedRunDeclaration = [string]$runNode.declaration
 $preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
 $script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
-if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $preProgramRangeImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
@@ -1021,6 +1023,9 @@ foreach ($step in $steps) {
   # Reviewed source before the 2026-09-08 running-only Kistler END fix.
   if ($step.Name -eq 'N101') { $allowedSha256 += 'aec5df547020d1614cb761a97080a87804237e53979c6285c2aa783657addb2f' }
   if ($step.Name -eq 'N120') { $allowedSha256 += '11be31e548158ce44c000e5c15419a64da5135959f0b6cf0a1899274fb82b076' }
+  # Reviewed range start/wait actions before using the selected program's range.
+  if ($step.Name -eq 'N046') { $allowedSha256 += '6ae3fcf338a5b3261cb93886e64deac3b3e268d8fb98413cef3ed0203b1a346f' }
+  if ($step.Name -eq 'N047') { $allowedSha256 += 'f3b9bf9ff6acc3c1e70d6b05d0cd3d32dc9d32c5d8bbf8f5d6020f04426f8774' }
   $actionStatus[$step.Name] = Set-Action -Step $step.Name -SourceFile "SqS_Wp100_Run\actions\$($step.Name).st" -AllowedBaselineSha256 $allowedSha256
 }
 $actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish, 'eff44bc7003293235fadb356cf4f23dea1273c940de30f18190c2d31c4737abd')

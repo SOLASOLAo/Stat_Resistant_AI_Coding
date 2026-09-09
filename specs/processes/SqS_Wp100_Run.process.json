@@ -49,7 +49,7 @@
     },
     {
       "id": "REQ-TYPE-DATA",
-      "text": "Use the active Wp100 TypeData for the Burster program, range, limits and temperature selection and for the Kistler measurement program."
+      "text": "Use active Wp100 TypeData for the Burster program number, grading limits and temperature selection and for the Kistler measurement program. The selected instrument program owns the Burster range: no automatic SET_RANGE or legacy TypeData range override; CpStudio Peripheral AutoRange must be false."
     },
     {
       "id": "REQ-RESISTANCE",
@@ -225,28 +225,29 @@
     },
     {
       "id": "N046",
-      "kind": "start",
-      "comment": "Set Burster range",
-      "operation": "Copy the active TypeData upper/lower range into the Burster parameters and start SET_RANGE.",
-      "transition": "The SET_RANGE command is accepted.",
+      "kind": "wait",
+      "comment": "Check program range mode",
+      "operation": "Keep the range loaded by the acknowledged instrument program. Check that the CpStudio-generated Peripheral UseAutoRange override is disabled; never write it from the chain.",
+      "transition": "Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange is false.",
       "requirements": [
         "REQ-TYPE-DATA"
       ],
       "acceptance": [
-        "The values come from Station.TypeData.Wp100 and are converted explicitly to the standard Burster enum."
+        "No automatic SET_RANGE or ParCmd UpperRange/LowerRange write occurs, including legacy TypeData values 0/0 (2 mOhm).",
+        "If CpStudio AutoRange is still true, the chain waits at N046 before starting Kistler or lowering the press."
       ]
     },
     {
       "id": "N047",
       "kind": "wait",
-      "comment": "Wait Burster range",
-      "operation": "Wait for SET_RANGE and release Unit.Execute before any later Burster command.",
-      "transition": "SET_RANGE completes; command ERROR is propagated.",
+      "comment": "Wait Burster ready",
+      "operation": "Verify the standard Burster Unit is idle before releasing either start branch. No SET_RANGE was issued, so do not wait for its DONE or call CheckUnitDone here.",
+      "transition": "Burster Unit is READY and Execute is false.",
       "requirements": [
         "REQ-TYPE-DATA"
       ],
       "acceptance": [
-        "Press-down and Kistler measurement cannot start before the Burster range is applied."
+        "Burster RUNNING, DONE, ERROR or an active Execute request cannot pass this readiness step."
       ]
     },
     {
@@ -577,7 +578,7 @@
         "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
         "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
         "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
-        "The Burster acknowledges the active TypeData program before SET_RANGE; range, limits, temperature selection and Kistler program then come from the same active TypeData.",
+        "The Burster acknowledges the active TypeData program; its saved range is preserved with Peripheral AutoRange false. No SET_RANGE is issued. Grading limits, temperature selection and Kistler program still come from active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
       ]
     },
