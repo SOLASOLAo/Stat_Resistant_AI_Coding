@@ -15,6 +15,7 @@ $dataStructPath = 'Application/Station/Wp100/_this/Structs/Data'
 $fbsPath = 'Application/Fbs'
 $bursterProgramSelectorPath = "$fbsPath/FB_Wp100BursterProgramSelect"
 $aiWp100Path = "$fbsPath/AiWp100"
+$stationCyclicPath = 'Application/Station/_this/StationUnit/OnCall'
 $typeDataCheckPath = 'Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData'
 $forceTimeoutPath = 'Application/Station/_this/Structs/Data/StationDataStruct'
 $forceEventPath = 'Application/Station/Wp100/_this/Wp100'
@@ -263,6 +264,27 @@ function Get-TypeDataCheckTarget {
     [Text.RegularExpressions.MatchEvaluator]{ param($match) $targetRegion },
     1
   )
+}
+
+function Get-BursterCleanupHookTarget {
+  param([Parameter(Mandatory)][string]$CurrentImplementation)
+
+  $hook = (Get-SourceText 'StationUnit\OnCall.BursterCleanup.st').TrimEnd("`n")
+  $pattern = '(?s)// AI_BURSTER_CANCEL_CLEANUP_BEGIN.*?// AI_BURSTER_CANCEL_CLEANUP_END'
+  $matches = [regex]::Matches($CurrentImplementation, $pattern)
+  if ($matches.Count -gt 1) { throw 'Duplicate Burster cancellation cleanup hooks.' }
+  if ($matches.Count -eq 1) {
+    if ((Get-Sha256 $matches[0].Value) -ne (Get-Sha256 $hook)) {
+      throw 'Unrecognized Burster cancellation cleanup hook edits.'
+    }
+    return $CurrentImplementation
+  }
+  if ($CurrentImplementation.Contains('AiWp100.BursterProgramSelect') -or
+      $CurrentImplementation.Contains('AI_BURSTER_CANCEL_CLEANUP')) {
+    throw 'Unrecognized existing Burster selector call/marker in Station OnCall.'
+  }
+  # Semantic append only: preserve all generated regions and existing controls.
+  return $CurrentImplementation.TrimEnd("`r", "`n") + "`n`n" + $hook + "`n"
 }
 
 function Add-OrVerify-Dut {
@@ -650,6 +672,12 @@ function Save-CurrentProject {
 function Assert-Wp100RunTargets {
   param([Parameter(Mandatory)][string]$Phase)
 
+  $cyclicReadback = Get-Node $stationCyclicPath
+  if (([string]$cyclicReadback.declaration -cne $preservedStationCyclicDeclaration) -or
+      ((Get-Sha256 ([string]$cyclicReadback.implementation)) -ne (Get-Sha256 $targetStationCyclicImplementation))) {
+    throw "Station OnCall cancellation hook or preserved code differs during $Phase."
+  }
+
   Assert-ForceInterfaces
 
   $null = Assert-RequiredEnumItems `
@@ -833,10 +861,28 @@ $supportObjectStatus = [ordered]@{}
 $supportObjectStatus.FB_Wp100BursterProgramSelect = Add-OrVerify-FunctionBlock `
   -Name 'FB_Wp100BursterProgramSelect' `
   -SourceFile 'FB_Wp100BursterProgramSelect.st' `
-  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1')
+  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1', 'f50e1a965bc105c677f06458985f187d481e943a4361323f772cf9fb168fd186')
 $supportObjectStatus.AiWp100 = Add-OrVerify-Gvl `
   -Name 'AiWp100' `
   -SourceFile 'AiWp100.gvl.st'
+
+$stationCyclicNode = Get-Node $stationCyclicPath
+if (($stationCyclicNode.elementType -ne 'POUMethod') -or
+    ($stationCyclicNode.language -ne 'ST') -or
+    ([string]$stationCyclicNode.declaration -notmatch 'METHOD PROTECTED OnCall') -or
+    ([string]$stationCyclicNode.implementation -notmatch '<OES_CODE MergeId="CyclicCall">')) {
+  throw 'Expected CpStudio Station OnCall method/merge region is missing.'
+}
+$preservedStationCyclicDeclaration = [string]$stationCyclicNode.declaration
+$script:PreservedDeclarations[$stationCyclicPath] = $preservedStationCyclicDeclaration
+$targetStationCyclicImplementation = Get-BursterCleanupHookTarget ([string]$stationCyclicNode.implementation)
+if ($targetStationCyclicImplementation -cne [string]$stationCyclicNode.implementation) {
+  $stationCyclicNode.implementation = $targetStationCyclicImplementation
+  Add-WriteRequest -Method Put -Uri (ConvertTo-ApiUri $stationCyclicPath) `
+    -Path $stationCyclicPath -Kind 'append-burster-cancellation-hook' `
+    -Body $stationCyclicNode -BeforeFingerprint $script:PreflightObservations[$stationCyclicPath].Fingerprint `
+    -TargetSha256 (Get-Sha256 $targetStationCyclicImplementation)
+}
 
 $typeDataCheckNode = Get-Node $typeDataCheckPath
 $preservedTypeDataCheckDeclaration = [string]$typeDataCheckNode.declaration

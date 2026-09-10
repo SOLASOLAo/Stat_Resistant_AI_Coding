@@ -44,8 +44,50 @@ foreach ($programNo in 0..15) {
   Assert-That ([Convert]::ToHexString($actual) -ceq [Convert]::ToHexString($expected)) "Invalid program $programNo frame; manual P1 is a numeric placeholder."
 }
 Assert-That ($selector.Contains('( ProgramNo < 0 )') -and $selector.Contains('( ProgramNo > 15 )')) 'Keep 0..15 program validation.'
-Assert-That ($selector -match '(?s)ELSIF \( _readBuffer\[0\] = 21 \)\s+THEN\s+ErrorCode := 6;\s+_state := 190;') 'NAK must take error cleanup, not release the press.'
+Assert-That ($selector -match '(?s)ELSIF \( _readBuffer\[0\] = 21 \)\s+THEN\s+ErrorCode := 6;\s+_timer\(IN := FALSE, PT := T#0S\);\s+_state := 190;') 'NAK must take error cleanup, not release the press.'
 Assert-That ($selector -match '(?s)IF \( _readBuffer\[0\] = 6 \)\s+THEN\s+_timer\(IN := FALSE, PT := T#0S\);\s+_state := 50;') 'ACK must pass through EOT and close before Done.'
+
+# These assertions inspect the deployed ST source, not a duplicate state-machine
+# model. They protect async call ownership but do not simulate the OpCon library.
+function Read-SelectorState([int]$State) {
+  $block = [regex]::Match($selector, "(?ms)^  ${State}:\r?\n(?<body>.*?)(?=^  (?:[0-9]+:|ELSE)|^END_CASE)")
+  Assert-That $block.Success "Missing selector state $State."
+  $block.Groups['body'].Value
+}
+$initial = Read-SelectorState 0
+foreach ($counter in @('_sendOffset', '_bytesWritten', '_bytesRead', '_readBuffer[0]', '_readBuffer[1]')) {
+  Assert-That ($initial.Contains("$counter := 0;")) "New request retains stale $counter."
+}
+Assert-That ($initial.Contains('ErrorCode := 0;') -and $initial.Contains('OpconMemSet(ADR(LastSocketError)')) 'New explicit request must reset its own diagnostics.'
+$open = Read-SelectorState 20
+Assert-That ($open -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _socket.IsOpen \).*?_state := 30;') 'Open requires both completed OK and IsOpen.'
+Assert-That ($open -match '(?s)ELSIF \( _socketResult <> RUNNING \) OR\s+\( _timer.Q \).*?ErrorCode := 3;.*?_state := 195;') 'Pending or inconsistent Open must enter Reset, even when IsOpen is false.'
+$write = Read-SelectorState 30
+Assert-That ($write -match '(?s)ELSIF \( _socketResult = OK \).*?_sendOffset := _sendOffset \+ _bytesWritten;') 'Only a completed Write may advance its buffer.'
+Assert-That ([regex]::Matches($write, '_sendOffset\s*:=').Count -eq 1) 'Write buffer must remain stable while RUNNING.'
+$read = Read-SelectorState 40
+Assert-That ($read -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesRead > 0 \).*?IF \( _readBuffer\[0\] = 6 \)') 'Bytes arriving before Read completes must not release ACK.'
+$eot = Read-SelectorState 50
+Assert-That ($eot -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesWritten = 1 \).*?_state := 60;') 'One EOT byte with Write still RUNNING must not start Close.'
+$close = Read-SelectorState 60
+Assert-That ($close -match '(?s)IF \( _socketResult = OK \) AND\s+\( NOT _socket.IsOpen \).*?Done\s*:= TRUE;') 'IsOpen false alone must never mean Close completed.'
+Assert-That ($close -match '(?s)ELSIF \( _socketResult <> RUNNING \) OR\s+\( _timer.Q \).*?ErrorCode := 9;.*?_state := 195;') 'Failed, inconsistent or timed-out Close must not release Done.'
+$reset = Read-SelectorState 195
+Assert-That ($reset -match '(?s)_socketResult := _socket.Reset\(\);.*?IF \( _socketResult <> RUNNING \).*?Busy\s*:= FALSE;') 'Reset must be polled until its return value completes, irrespective of IsOpen.'
+Assert-That ($reset -notmatch '_socket\.IsOpen|Done\s*:= TRUE') 'Reset must not skip pending Open cleanup or report selection success.'
+$resetTimeout = [regex]::Match($reset, '(?s)ELSIF \( _timer.Q \).*').Value
+Assert-That ($resetTimeout -and $resetTimeout -notmatch 'Busy\s*:= FALSE|_state\s*:=') 'Pending Reset timeout must retain Busy and keep polling.'
+foreach ($state in @(185, 190, 191, 195)) {
+  $cleanup = Read-SelectorState $state
+  $captures = [regex]::Matches($cleanup, 'LastSocketError\s*:=')
+  $guarded = [regex]::Matches($cleanup, '(?s)\( ErrorCode = 0 \)\s+THEN\s+LastSocketError\s*:=')
+  Assert-That ($captures.Count -eq $guarded.Count) "Cleanup $state must preserve the first error snapshot."
+}
+$cancel = $selector.Substring($selector.IndexOf('IF ( NOT Execute )'), $selector.IndexOf('CASE _state OF') - $selector.IndexOf('IF ( NOT Execute )'))
+Assert-That ($cancel -match '(?s)\( _state = 60 \).*?_state := 191;.*?\( _socketResult = RUNNING \) OR\s+\( NOT _socket.IsOpen \).*?_state := 195;') 'Cancellation must continue pending Close or reset abandoned I/O, not start a conflicting method.'
+$pump = [IO.File]::ReadAllText((Join-Path $plc 'StationUnit/OnCall.BursterCleanup.st'))
+Assert-That ($pump -match '(?s)IF \( NOT AiWp100.BursterProgramSelect.Execute \) AND\s+\( AiWp100.BursterProgramSelect.Busy \)\s+THEN\s+AiWp100.BursterProgramSelect\(\);\s+END_IF') 'One-cycle OnChainFinish needs a guarded cyclic cancellation pump.'
+Assert-That ($pump -notmatch ':=|SINGLE_MEAS|MOVE_WRKPOS') 'Cancellation hook must not start selection, measurement or motion.'
 Assert-That ($range -match '(?s)_retVal := RUNNING;\s+IF \( NOT Peripherals\._Wp100A103ResistantInterface\.ParCfg\.UseAutoRange \)\s+THEN\s+_retVal := OK;\s+END_IF') 'AutoRange override must block at the preparation step.'
 Assert-That ($ready -match '(?s)_retVal := RUNNING;\s+IF \( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY \) AND\s+\( NOT Wp100A103ResistantDetector.Unit.Execute \)\s+THEN\s+_retVal := OK;\s+END_IF') 'An idle standard Unit is required before the start branches.'
 Assert-That ($ready -notmatch 'CheckUnitDone\s*\(') 'Do not wait for DONE of an unissued command.'
@@ -64,4 +106,4 @@ foreach ($step in @('N046','N047')) {
   $comment = ($process.steps | Where-Object id -eq $step).comment
   Assert-That ($comment -and $writer.Contains("Name = '$step'; Comment = '$comment'")) 'Process and SFC step descriptions differ.'
 }
-Write-Output 'Burster source checks OK: numeric RCL frames 0..15, NAK blocks both branches and clears measuring prompt, ACK first, no SET_RANGE/range writes, AutoRange-off gate, idle readiness, preserved grading/temperature/force checks and generated ownership. Build and field acceptance remain required.'
+Write-Output 'Burster source checks OK: numeric RCL frames 0..15, return-value async gates, pending-call Reset, first-error retention, cyclic cancellation cleanup, NAK/ACK interlocks, no range override, preserved grading/temperature/force checks and generated ownership. Source contracts only; Build and field acceptance remain required.'

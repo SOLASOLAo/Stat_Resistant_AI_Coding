@@ -9,10 +9,12 @@ hooks:
       MaintenanceDoorControl: FB_MaintenanceDoorControl
   - id: station_cyclic_controls
     object: Application/Station/_this/StationUnit/OnCall
+    cancellation_cleanup_source: src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st
     required_calls:
       - Station.MaintenanceDoorControl
       - Station.PressureFeedbackSimulation
       - Station.MainPressureControl
+      - AiWp100.BursterProgramSelect
     invariants:
       - Station not OPERATIONAL or bus not OK drives controlled outputs to safe state
       - maintenance-door release gates the main-pressure valve
@@ -22,6 +24,7 @@ hooks:
       - maintenance relay feedback is required within T#1S after both doors close
       - maintenance-door event AdditionalInfo identifies the failed BMK
       - pressure faults use the generated Station event constants
+      - Burster selector is called here only with Execute false and Busy true to finish cancellation cleanup; this hook never starts selection or motion
   - id: station_output_wiring
     object: Application/Station/_this/StationUnit/OnApplyOutputs
     required_outputs:

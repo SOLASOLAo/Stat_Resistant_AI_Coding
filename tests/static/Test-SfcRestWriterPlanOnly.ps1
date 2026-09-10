@@ -103,6 +103,14 @@ function New-MockNode {
     }
   }
 
+  if ($Path -eq 'Application/Station/_this/StationUnit/OnCall') {
+    return [pscustomobject]@{
+      name = 'OnCall'; elementType = 'POUMethod'; language = 'ST'; children = @()
+      declaration = "METHOD PROTECTED OnCall`n"
+      implementation = "////<OES_CODE MergeId=`"CyclicCall`">{{{`n////<END_OES_CODE>}}}`n// Existing user control remains untouched.`n"
+    }
+  }
+
   if ($Path -eq $forceTimeoutPath) {
     return [pscustomobject]@{
       name = 'StationDataStruct'; elementType = 'DUT'; children = @()
@@ -370,11 +378,11 @@ if ($defaultPlan.mode -ne 'PlanOnly') {
 if ($global:SfcWriterTestMutations.Count -ne 0) {
   throw 'Default PlanOnly performed a REST mutation.'
 }
-if (@($defaultPlan.plan.operations).Count -ne 3) {
-  throw 'Mock PlanOnly did not report the two support-object creates and single Action update.'
+if (@($defaultPlan.plan.operations).Count -ne 4) {
+  throw 'Mock PlanOnly did not report support-object creates, cancellation hook and Action update.'
 }
 if ((@($defaultPlan.plan.operations.kind) -join ',') -ne
-    'create-ai-owned-function-block,create-ai-owned-gvl,update-action') {
+    'create-ai-owned-function-block,create-ai-owned-gvl,append-burster-cancellation-hook,update-action') {
   throw 'Mock PlanOnly reported unexpected operation kinds.'
 }
 
@@ -522,7 +530,7 @@ $apply = Invoke-Writer -Writer $runWriter -Arguments @{
 if (($apply.mode -ne 'Apply') -or (-not $apply.declarationTextUnchanged)) {
   throw 'Authorized Apply did not report exact declaration preservation.'
 }
-if ($global:SfcWriterTestMutations.Count -ne 4) {
+if ($global:SfcWriterTestMutations.Count -ne 5) {
   throw "Authorized Apply produced an unexpected mutation count: $($global:SfcWriterTestMutations.Count)"
 }
 if (($global:SfcWriterTestMutations[0].method -ne 'Post') -or
@@ -530,12 +538,14 @@ if (($global:SfcWriterTestMutations[0].method -ne 'Post') -or
     ($global:SfcWriterTestMutations[1].method -ne 'Post') -or
     ($global:SfcWriterTestMutations[1].path -ne 'Application/Fbs/AiWp100') -or
     ($global:SfcWriterTestMutations[2].method -ne 'Put') -or
-    (-not $global:SfcWriterTestMutations[2].path.EndsWith('/_aN000_active', [StringComparison]::Ordinal)) -or
-    ($global:SfcWriterTestMutations[3].path -ne 'ProjectJob/Save')) {
-  throw 'Authorized Apply did not create both support objects, update the Action, then Save.'
+    ($global:SfcWriterTestMutations[2].path -ne 'Application/Station/_this/StationUnit/OnCall') -or
+    (-not $global:SfcWriterTestMutations[3].path.EndsWith('/_aN000_active', [StringComparison]::Ordinal)) -or
+    ($global:SfcWriterTestMutations[4].path -ne 'ProjectJob/Save')) {
+  throw 'Authorized Apply did not create support objects, append cleanup, update the Action, then Save.'
 }
 $postSaveGetSet = @($global:SfcWriterTestPostSaveGets | Sort-Object -Unique)
 foreach ($requiredPostSavePath in @(
+    'Application/Station/_this/StationUnit/OnCall',
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run',
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/_aN000_active',
     'Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/OnChainFinish',
@@ -555,14 +565,38 @@ if ($postSaveGetSet.Count -lt 28) {
 }
 
 # Upgrade only the reviewed Burster implementation, preserving its declaration.
-# Reconstruct the historical literal bug; arbitrary edits remain rejected.
+# Use the exact reviewed pre-async-fix implementation; arbitrary edits stay rejected.
+$cyclicPath = 'Application/Station/_this/StationUnit/OnCall'
+$cyclicApplied = Copy-JsonValue $global:SfcWriterTestNodes[$cyclicPath]
+$cyclicOriginal = New-MockNode -Path $cyclicPath
+if (-not $cyclicApplied.implementation.StartsWith($cyclicOriginal.implementation, [StringComparison]::Ordinal)) {
+  throw 'Cancellation hook changed pre-existing Station OnCall code.'
+}
+$hookSource = [IO.File]::ReadAllText((Join-Path $repositoryRoot 'src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st')).Replace("`r`n", "`n").TrimEnd("`n")
+foreach ($invalidHook in @(
+    $cyclicApplied.implementation.Replace('AiWp100.BursterProgramSelect();', 'AiWp100.BursterProgramSelect(Execute := TRUE);'),
+    ($cyclicApplied.implementation + "`n" + $hookSource),
+    ($cyclicOriginal.implementation + '// AI_BURSTER_CANCEL_CLEANUP_BEGIN')
+  )) {
+  $global:SfcWriterTestMutations.Clear()
+  $global:SfcWriterTestNodes[$cyclicPath].implementation = $invalidHook
+  $rejectedHook = $false
+  try {
+    $null = Invoke-Writer -Writer $runWriter -Arguments @{ BaseUri = $mockBaseUri; ExpectedProject = $mockProject }
+  }
+  catch { $rejectedHook = $_.Exception.Message -match 'Burster.*(hook|marker)' }
+  if ((-not $rejectedHook) -or ($global:SfcWriterTestMutations.Count -ne 0)) {
+    throw 'Unknown, duplicate or incomplete cancellation hook was not rejected before mutation.'
+  }
+}
+$global:SfcWriterTestNodes[$cyclicPath] = Copy-JsonValue $cyclicApplied
+
 $selectorPath = 'Application/Fbs/FB_Wp100BursterProgramSelect'
 $selectorBefore = Copy-JsonValue $global:SfcWriterTestNodes[$selectorPath]
 $legacySelector = Copy-JsonValue $selectorBefore
-$legacySelector.implementation = $legacySelector.implementation.Replace(
-  "      // Manual section 8.15.11: P1 is a numeric placeholder (0..15),`n" +
-  "      // not a literal P prefix. Program zero is sent as *RCL 0.`n", ''
-).Replace('*RCL ', '*RCL P')
+$legacyParts = Split-CanonicalFunctionBlock ([IO.File]::ReadAllText(
+  (Join-Path $repositoryRoot 'tests/fixtures/burster-program-select-pre-async-fix.st')))
+$legacySelector.implementation = $legacyParts.Implementation
 $global:SfcWriterTestMutations.Clear()
 foreach ($changedField in @('implementation', 'declaration')) {
   $unreviewedSelector = Copy-JsonValue $legacySelector

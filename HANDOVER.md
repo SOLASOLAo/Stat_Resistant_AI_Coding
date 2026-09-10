@@ -1275,3 +1275,13 @@
 - **本批 AI 新 F11：0 errors / 5 warnings**。观察到 Build started 和完成；逐条读取 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，附加检查 0 errors；不把同数量旧 Build 当本次结果，也未扩大正式 warning baseline。七组回归通过（含全部 0..15 报文字节、NAK 不放行、已存在 FB 升级/回滚/幂等）；Project Pack Build/Check VALID，内容 ID `4f0eaab9...2ace` 未变。
 - **未下载、未启停、未写变量/FORCE、未发送修正报文给仪表**。本次无需 CpStudio Export；用户确认现场安全后自行下载并重新发起自动，验证 ProgramNo=0 ACK → N045 放行 → 压缸/Kistler → 到位后力稳定 → 电阻测量 → 回升，再完成中/右及故障验收。未宣称现场已通过。
 - 详细说明 `docs/reviews/station010-burster-rcl-20260909.md`；本地证据 `data/reports/plc/burster-rcl-numeric-20260909-{before,plan,apply,verification}.json`。Station010 原生成脏改保留，未暂存二进制、配置或凭据。
+
+## 2026-09-10 · Burster 异步清理与取消续跑（当前交接）
+
+- **先纠正待办：Auto Range 早已关闭并 Export。** 用户本次指出重复提醒，本轮现有 PLE REST 再次确认 `UseAutoRange := False`，保持不动，不再要求配置或导出。用户授权继续离线修改，不包含设备下载/启停/试测。
+- 昨天最后现场记录已是正确 `*RCL 0`（17 字节），但 N045 仍因 ErrorCode=3/Open 超时退出；当时两个连接均 CLOSED，旧收发计数不是本次响应。初始 TCP 超时原因仍未证实，不能断言被标准驱动/厂家软件占用。此次修复的是可确认的异步生命周期缺陷。
+- 只改 `FB_Wp100BursterProgramSelect` 实现与 StationUnit.OnCall 的取消清理片段：以方法返回值完成 Open/Write/Read/EOT/Close；放弃 pending 调用后持续 Reset，即使 IsOpen 已 FALSE；保留首次错误，新显式请求清旧计数；OnChainFinish 单次取消后由 OnCall 在 Execute=false/Busy=true 时继续清理。不启动程序选择、测量或运动，不自动重试。声明、SFC/Action、TypeData/StationData、BMK、量程、力和运动联锁不变。
+- 唯一用户 PLE PID 19976、profile `ctrlX PLC 2.6.8`，REST 确认 offline。先保存用户当前工程并验证 checkpoint `1fdd8c7b...8b4f`；Plan `4e75350a...9f551`，两个 implementation PUT/一次 Save/40 目标回读成功。保存工程 SHA `6a1c0637...7a75d`，编译后不变；最终 PlanOnly 0 操作，SHA `4a1481ef...34ff`。MCP 未接管，不另起 PLE。
+- **本批新 F11：0 errors / 5 warnings / 158 messages**，实际看见启动/完成和五条明细（4 × C0351 OPC.UA.DA，1 × C0373 SymbolConfig ErrorCodes/DWord）。打开工程时显示的 336 条 Symbol 旧警告不是本次编译结果；未清 Symbol 或改正式 warning baseline。七组离线回归、Project Pack Build/Check 通过，内容 ID `821ac91c...3270`；均不是运行库仿真/现场验收。
+- **未下载、未连接实体 PLC、未发送仪表命令、未启停/FORCE。** 本次无需 CpStudio Export；用户确认现场安全后自行下载，验程序 0 ACK/标准驱动测量、取消恢复和完整左中右流程。如再失败，读取并保留首次 ErrorCode/LastSocketError/Busy/state。专用程序选择失败 HMI 事件仍需 CpStudio 建模，未借用压紧力事件。
+- 详细可追溯记录：`docs/reviews/station010-burster-async-cleanup-20260910.md`。源码、语义合并 hook、writer、离线回归和计划同步；未暂存 Station010 二进制、标准库或连接凭据。

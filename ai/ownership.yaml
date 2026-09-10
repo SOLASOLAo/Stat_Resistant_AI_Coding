@@ -39,6 +39,8 @@ objects:
     hook_ids: [station_application_instances]
   - path: Application/Station/_this/StationUnit/OnCall
     owner: mixed
+    source: src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st
+    source_role: cancellation_cleanup_fragment_only
     write_mode: semantic_merge
     hook_ids: [station_cyclic_controls]
   - path: Application/Station/_this/StationUnit/OnApplyOutputs

@@ -2,6 +2,10 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **Burster 异步清理与首次错误保留（2026-09-10）**：已按用户“继续修改”完成选择器实现和 Station OnCall 取消清理片段两个离线 PUT；等待中的方法按返回值完成/Reset，不能以 IsOpen 或字节数假报成功。保留首次错误，取消后继续周期清理，无自动重试或分支放行。checkpoint、40 目标回读、零操作 PlanOnly、七组回归及 Project Pack 通过；本次新 F11 为 **0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373。未下载。详见 `docs/reviews/station010-burster-async-cleanup-20260910.md`。
+- [x] **Auto Range 状态纠正（2026-09-10）**：用户此前已关闭并导出；本次再次回读 `UseAutoRange := False`。不得继续列为用户待办，也不为本批 PLC 实现修改要求 CpStudio Export。
+- [ ] **最新 Burster 修复现场验收**：用户安全下载后验证程序 0 ACK、标准驱动重连测量、取消/Reset 完成及左中右完整循环。原始 TCP Open 超时原因仍未证实；若仍失败保留首次 ErrorCode/LastSocketError/Busy/state，不以此次离线编译替代现场结论。该项承接下面旧 N045 批次的未完成验收。
+
 - [x] **N045 Burster 程序选择 NAK 修复（2026-09-09）**：现场只读确认为 ProgramNo=0、ErrorCode=6、响应 NAK+CR；修正错误报文 `*RCL P0` 为 `*RCL 0`（手册 P1 是 0..15 数值占位符）。只改共享 FB 实现和 N045 失败时清空误导提示，保留 ACK 后才放行压缸及全部力/运动联锁。现有离线 REST 两个 PUT/一次 Save/全目标回读，最终 PlanOnly 0 操作；新 F11 0 errors / 5 warnings，明细为 4 × C0351、1 × C0373。七组回归及 Project Pack 检查通过。详见 `docs/reviews/station010-burster-rcl-20260909.md`。
 - [ ] **N045 修复现场验收**：确认安全后由用户下载并重新发起自动，验证程序 0 ACK、N045 放行、压缸/Kistler 启动、压下到位后力稳定、电阻测量和回升，再验中/右；本次无需 CpStudio Export。AI 未下载，尚无纠正报文的真机 ACK/完整循环结果。
 - [ ] **程序选择失败的 HMI 专用事件**：当前 CpStudio 没有对应事件；本次仅清空“正在测量”误导提示，保留选择器 ErrorCode 和两个分支 HAS_ERROR。若需明确红色报警，由用户在 CpStudio 添加事件并导出后接入，不借用压力/缺料事件号或强改生成接口。

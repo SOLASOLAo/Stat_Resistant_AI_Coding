@@ -176,6 +176,10 @@ steps:
       protocol: RESISTOMAT 2316 *RCL <programNo> over TCP 5555; numeric 0..15, no P prefix
       failure_display: clear the measuring prompt; retain selector ErrorCode and block both branches. A dedicated HMI alarm requires a CpStudio-owned event.
       completion: instrument ACK received, EOT sent, temporary socket closed
+      asynchronous_contract: each socket method completes by return value, not IsOpen or byte count; abandoned pending methods use Reset
+      cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup after the single-cycle OnChainFinish callback
+      diagnostics: retain the first failure through cleanup; clear stale byte counters only at an explicit new request
+      retry: no automatic retry or branch release after failure; a new operator-requested chain run is required
   - id: N046
     comment: Check program range mode
     purpose: retain the range loaded by the instrument program; do not issue SET_RANGE
