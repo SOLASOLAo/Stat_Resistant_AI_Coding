@@ -65,6 +65,22 @@ hooks:
     required_releases:
       - ReleaseSetRange
       - ReleaseStartMeas
+    invariants:
+      - ReleaseSetRange is CommonManRelease AND FALSE because the instrument program owns range/compensation
+      - ReleaseStartMeas retains CommonManRelease and invokes the standard Unit SINGLE_MEAS through the single owner
+  - id: burster_single_owner_binding
+    object: Application/Station/Wp100/_this/Wp100Unit/OnApplyParameters
+    required_binding: Wp100A103ResistantDetector.Unit.ParCfg.iBursterResis2316 := AiWp100.Burster
+    invariants:
+      - CpStudio optional channel is unassigned and old Peripheral removed before this hook is applied
+      - binding is outside OES regions; all generated declarations and parameter regions are preserved
+      - STARTUP, CONFIGURATION and ONLINE_CHANGE bind the same instance, with no network method calls
+      - instrument endpoint is 192.168.0.103 port 5555 and driver measurement deadline is 30 seconds
+  - id: burster_single_owner_configuration
+    object: Application/Station/Wp100/_this/Wp100Unit/OnCall
+    invariants:
+      - only RequestedProgramNo is copied from active Station.TypeData.Wp100.Burster.ProgramNo
+      - no network method or measurement is invoked by this cyclic configuration hook
   - id: kistler_manual_release
     object: Application/Station/Wp100/Wp100A104Kistler/Wp100A104KistlerExtension/OnManRelease
     required_release_prefix: CommonManRelease
@@ -127,15 +143,17 @@ hooks:
       - Wp100K102PressingCylinder
     invariants:
       - Burster ProgramNo is validated as 0 through 15 and acknowledged through *RCL before measurement
-      - the standard Nexeed Burster socket is closed before the short program-selection TCP session
-      - the program-selection TCP session sends EOT and closes before the standard Unit continues
-      - after the temporary Close completes, selector Done additionally requires the public standard IpBurster2316.Open to return OK; Unit READY alone is not evidence of a restored measuring connection
-      - every standard reconnect completes public Reset then ClearError then Open after temporary EOT/Close; this same path applies to every position, without cached readiness
-      - standard reconnect is bounded before Kistler or press-down start; cancellation completes standard Reset without a second Close because Reset closes the stream; no measurement or retry is triggered
+      - AiWp100.Burster is the only TCP owner; the selector has no socket and delegates Open and SelectProgram to it
+      - selector Done requires IDN-checked Open, RCL ACK, program readback and no instrument error; no Close/Open handoff between owners
+      - manual SINGLE_MEAS uses the same owner and active TypeData program; initial selection is not dependent on automatic N045
+      - every measurement checks fresh RCL readback, rejects a changed program, starts INIT only once and never accepts a stale EOC result
+      - cancellation finishes pending I/O through the same owner Reset; clearing the selector after Done never resets a subsequent Unit measurement
       - the instrument program owns the Burster range; automatic chains never issue SET_RANGE or copy TypeData UpperRange/LowerRange
-      - N046 requires Peripheral UseAutoRange false and N047 requires Burster READY with Execute false before the pressing-cylinder and Kistler start branches
+      - N046 requires Connected, SelectionVerified, matching SelectedProgram, idle Operation and no driver ErrorCode; N047 retains Burster READY with Execute false
       - Burster grading limits and temperature selection come from the active Wp100 TypeData
       - Kistler measurement program comes from the active Wp100 TypeData
+      - N045 issues one standard Kistler SET_PROGRAM before requiring measuring Ready; completion requires matching program feedback, Ready, no Alarm and no running measurement
+      - N050 and N051 retain all safety gates and require matching Kistler program feedback and no device Alarm before their start requests
       - Kistler MEASURE and pressing-cylinder WRKPOS use one simultaneous SFC divergence
       - branch 1 uses _retVal and branch 2 uses _retVal2
       - each device has a separate Start step and Wait step for diagnostics
@@ -154,6 +172,7 @@ hooks:
       - Burster program selector Execute false
       - Burster Execute false
       - Kistler EndMeasurement false and Execute false; use standard Unit Cancel on the falling Execute edge
+      - CheckKistlerProgram state reset in N000 and OnChainFinish; no direct device alarm reset
       - all per-execution flags false
   - id: wp100_run_command_sequence
     object: Application/Station/Wp100/_this/Chains/Cmd/SqC_Wp100_Run
@@ -179,6 +198,6 @@ hooks:
     interface_owner: cpstudio
     invariants:
       - generated range checks remain present
-      - Wp100 Burster lower range is not greater than upper range
+      - legacy Burster range fields retain generated bounds but do not drive automatic range or application ordering checks
       - Wp100 Burster lower limit is not greater than upper limit
       - the application-specific placeholder warning is absent after review

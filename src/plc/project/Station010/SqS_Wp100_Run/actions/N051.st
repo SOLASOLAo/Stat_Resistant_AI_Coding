@@ -14,7 +14,9 @@ ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( Peripherals.BinIo._000K913_Y32 ) AND
       ( Peripherals.BinIo._000K912_Y32 ) AND
       ( Wp100A104Kistler.Unit.ExecState = OpconExecState.READY ) AND
-      ( Wp100A104Kistler.Unit.OutImm.Ready )
+      ( Wp100A104Kistler.Unit.OutImm.Ready ) AND
+      ( NOT Wp100A104Kistler.Unit.OutImm.Alarm ) AND
+      ( Wp100A104Kistler.Unit.OutImm.ProgNo = Station.TypeData.Wp100.KistlerProgramNo )
 THEN
   Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;
   Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo :=

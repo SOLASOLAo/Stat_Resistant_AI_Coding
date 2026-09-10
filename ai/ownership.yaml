@@ -8,6 +8,14 @@ write_modes:
   rest_composite: preserve CpStudio-owned declaration/interface and use hash-guarded official REST only for explicitly AI-owned graph and children
 
 objects:
+  - path: Application/Fbs/FB_Wp100BursterSingleOwner
+    owner: ai
+    source: src/plc/project/Station010/FB_Wp100BursterSingleOwner.st
+    specification: specs/common/FB_Wp100BursterSingleOwner.yaml
+    apply_script: scripts/plc/apply_burster_single_owner_rest.ps1
+    write_mode: full_object
+    children_owner: ai
+    deployment_status: integrated_offline_candidate
   - path: Application/Fbs/FB_OperatorButton
     owner: ai
     source: src/plc/common/FB_OperatorButton.st
@@ -55,8 +63,21 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [wp100_home_output]
+  - path: Application/Station/Wp100/_this/Wp100Unit/OnApplyParameters
+    owner: mixed
+    source: src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st
+    source_role: non_generated_binding_fragment_only
+    write_mode: semantic_merge
+    hook_ids: [burster_single_owner_binding]
+  - path: Application/Station/Wp100/_this/Wp100Unit/OnCall
+    owner: mixed
+    source: src/plc/project/Station010/Wp100Unit/OnCall.BursterConfiguration.st
+    source_role: non_generated_configuration_fragment_only
+    write_mode: semantic_merge
+    hook_ids: [burster_single_owner_configuration]
   - path: Application/Station/Wp100/Wp100A103ResistantDetector/Wp100A103ResistantDetectorExtension/OnManRelease
     owner: mixed
+    source: src/plc/project/Station010/Wp100A103ResistantDetectorExtension/OnManRelease.st
     write_mode: semantic_merge
     hook_ids: [burster_manual_release]
   - path: Application/Station/Wp100/Wp100A104Kistler/Wp100A104KistlerExtension/OnManRelease
@@ -252,6 +273,10 @@ objects:
   - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/CheckPressForce
     owner: ai
     source: src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st
+    write_mode: full_object
+  - path: Application/Station/Wp100/_this/Chains/Sub/SqS_Wp100_Run/CheckKistlerProgram
+    owner: ai
+    source: src/plc/project/Station010/SqS_Wp100_Run/methods/CheckKistlerProgram.st
     write_mode: full_object
   - path: Application/Station/_this/Addons/TypeDataSetManagerAddon/OnCheckData
     owner: mixed

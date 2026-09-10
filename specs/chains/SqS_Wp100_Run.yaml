@@ -125,10 +125,10 @@ type_data:
     Burster.ProgramNo:
       target: Burster 2316 active measuring program before the first measurement
       command: "*RCL <programNo> through FB_Wp100BursterProgramSelect; numeric 0..15, no P prefix"
-      transport: close standard Nexeed socket, use one short TCP 5555 session, send EOT, close
+      transport: same AiWp100.Burster TCP 5555 owner for program selection and all standard Unit measurements
     KistlerProgramNo:
-      target: Wp100A104Kistler.Unit.ParCmd.Measure.ProgNo
-      command: MEASURE
+      target: Wp100A104Kistler.Unit.ParCmd.SetProgram.ProgNo and ParCmd.Measure.ProgNo
+      command: stage both command program fields at N045; SET_PROGRAM only if the actual MP is not already matching, ready and alarm-free
   validation:
     - CpStudio generated range checks keep both range values within 0 through 8
     - no application ordering check is needed for the unused legacy range fields
@@ -163,30 +163,39 @@ steps:
       - Peripherals.BinIo._000K912_Y32
   - id: N045
     comment: Check measure release
-    purpose: select and acknowledge the TypeData Burster program before releasing both parallel start branches
+    purpose: select and acknowledge the TypeData Kistler program, then the Burster program, before releasing both parallel start branches
     start_requires:
       - safety door in work position
       - Peripherals.BinIo._000K913_Y32
       - Peripherals.BinIo._000K912_Y32
       - pressing cylinder in base position and READY
       - Burster Unit READY
-      - Kistler READY and device ready
+      - Kistler Unit READY, Execute false and no running measurement to issue SET_PROGRAM; measuring Ready is a completion condition, not a prerequisite for selecting an inactive current MP
+    kistler_program_selection:
+      source: Station.TypeData.Wp100.KistlerProgramNo
+      implementation: CheckKistlerProgram with VAR_INST lifecycle state; parent declaration and SFC graph unchanged
+      command: stage SetProgram.ProgNo and Measure.ProgNo together; skip SET_PROGRAM only for an already matching, ready, alarm-free MP; otherwise standard SET_PROGRAM then CheckUnitDone with RepeatOnError false
+      completion: matching healthy MP verified or command acknowledged; Unit READY with Execute false; matching captured and active TypeData program; device Ready; no Alarm or MeasRunning
+      lifecycle: at most one request per execution; latch confirmation/DONE so CheckUnitDone cannot reissue in READY; reset in N000 and OnChainFinish
+      field_boundary: inactive-MP alarm recovery by standard SET_PROGRAM remains to be tested; never auto-clear instrument alarms or enable empty MP 0
     program_selection:
       source: Station.TypeData.Wp100.Burster.ProgramNo
       protocol: RESISTOMAT 2316 *RCL <programNo> over TCP 5555; numeric 0..15, no P prefix
       failure_display: clear the measuring prompt; retain selector ErrorCode and block both branches. A dedicated HMI alarm requires a CpStudio-owned event.
-      completion: instrument ACK received, EOT sent, temporary socket Close completed, standard IpBurster2316.Reset then ClearError then Open each completed with OK
-      measuring_driver_handoff: every position takes the same fresh lifecycle; Reset and ClearError each have a 3 s watchdog, Open has a 35 s watchdog, all before motion; no concurrent temporary socket or SINGLE_MEAS and no cached readiness
-      asynchronous_contract: each socket method completes by return value, not IsOpen or byte count; abandoned pending methods use Reset
-      cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup after the single-cycle OnChainFinish callback; pending standard Reset/ClearError/Open completes standard Reset without a second Close because Reset already closes the stream; never substitute temporary-socket Reset
-      diagnostics: retain the first failure through cleanup; clear stale byte counters only at an explicit new request
+      completion: same-owner Open succeeds, RCL is acknowledged and read back, SYST:ERR is zero
+      measuring_driver_handoff: none; selector is a socket-free delegator to AiWp100.Burster, also used by the standard Unit
+      asynchronous_contract: driver Open is bounded at 5 seconds and selection at 10 seconds; each I/O completes by return value, with stable buffers until terminal
+      cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup; only pending selector calls use same-owner Reset; clearing Done never cancels a later Unit measurement
+      diagnostics: preserve first driver ErrorCode and LastSocketError through cleanup; no automatic error clearing or reconnect after failure
       retry: no automatic retry or branch release after failure; a new operator-requested chain run is required
   - id: N046
     comment: Check program range mode
     purpose: retain the range loaded by the instrument program; do not issue SET_RANGE
     completion_requires:
-      - Peripherals._Wp100A103ResistantInterface.ParCfg.UseAutoRange is false
-    configuration_owner: user changes AutoRange in CpStudio Peripheral and exports; AI never overrides generated parameters
+      - AiWp100.Burster Connected and SelectionVerified are true
+      - SelectedProgram matches active TypeData ProgramNo
+      - Operation is idle and ErrorCode is zero
+    configuration_owner: instrument program owns range; CpStudio optional channel remains empty, AI non-generated hook binds the single owner
   - id: N047
     comment: Wait Burster ready
     completion_requires:
@@ -199,7 +208,7 @@ steps:
     branch: 1
     return_value: _retVal
     command: Wp100K102PressingCylinder.WRKPOS
-    start_requires: [Kistler started, Kistler MeasRunning, Kistler ExecState not ERROR]
+    start_requires: [Kistler started, Kistler MeasRunning, Kistler ExecState not ERROR, no Kistler Alarm, matching active TypeData Kistler program]
   - id: N060
     comment: Wait press WRKPOS
     parallel_group: measurement_start
@@ -213,6 +222,7 @@ steps:
     return_value: _retVal2
     command: Wp100A104Kistler.MEASURE
     program: Station.TypeData.Wp100.KistlerProgramNo
+    start_requires: [Kistler Unit READY, device Ready, no Kistler Alarm, matching active TypeData Kistler program]
     preflight: CheckPressForce Phase 1 validates PressForceTimeout before START
     watchdog: max of configured Kistler MeasuringTimeout and PressForceTimeout plus 30 s; overhead budget needs field acceptance
   - id: N061
@@ -347,6 +357,7 @@ cleanup:
     - Burster program selector Execute and temporary TCP session
     - Burster Execute
     - Kistler EndMeasurement false and Execute false; the falling Execute edge invokes standard Unit Cancel, never send END for pre-start failures
+    - CheckKistlerProgram per-execution state after clearing Kistler Execute
     - per-execution started flags
   retain:
     - Result until the next execution

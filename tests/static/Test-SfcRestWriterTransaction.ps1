@@ -509,4 +509,31 @@ foreach ($writer in @(
   Assert-True -Condition $writerText.Contains('Assert-PreflightSnapshotCurrent') -Message "$writer lost its second full GET/hash pass."
 }
 
-Write-Output 'SFC REST writer transaction coverage OK: canonical payload hash, immutable child/parent preflight, exact graph/method/Action/DUT requests, second GET, reverse rollback, mid-POST failure and rollback-failure reporting'
+# Full-object writes are opt-in and still restore the exact immutable snapshot.
+$global:SfcTxNodes = Copy-NodeMap $initialNodes
+$global:SfcTxCalls.Clear()
+$global:SfcTxFailMutationNumber = 0
+$global:SfcTxFailAfterApply = $false
+$script:PreflightObservations = [ordered]@{}
+$script:WriteRequests = [Collections.Generic.List[object]]::new()
+$script:CapturePreflight = $true
+Register-PreflightObservation -Path $parentPath -Node $global:SfcTxNodes[$parentPath]
+Register-PreflightObservation -Path $methodPath -Node $global:SfcTxNodes[$methodPath]
+$fullBody = Copy-JsonValue $global:SfcTxNodes[$methodPath]
+$fullBody.declaration = 'METHOD OnChainFinish : BOOL'
+$fullBody.implementation = 'OnChainFinish := TRUE;'
+Add-WriteRequest -Method Put -Uri (ConvertTo-ApiUri $methodPath) -Path $methodPath `
+  -Kind 'update-ai-owned-full-object' -Body $fullBody -BeforeFingerprint $script:PreflightObservations[$methodPath].Fingerprint `
+  -TargetSha256 (Get-Sha256 ($fullBody.declaration + $fullBody.implementation))
+$script:CapturePreflight = $false
+Assert-PreflightSnapshotCurrent
+Invoke-WriteRequests
+Assert-True -Condition ($global:SfcTxNodes[$methodPath].declaration -ceq $fullBody.declaration) -Message 'Opt-in declaration was not applied.'
+Assert-True -Condition ($global:SfcTxNodes[$methodPath].implementation -ceq $fullBody.implementation) -Message 'Opt-in implementation was not applied.'
+$global:SfcTxRollbackMode = $true
+$fullRollback = Invoke-WriteRollback
+$global:SfcTxRollbackMode = $false
+Assert-True -Condition $fullRollback.Succeeded -Message 'Full-object rollback failed.'
+Assert-True -Condition ((ConvertTo-CanonicalJson $global:SfcTxNodes[$methodPath]) -ceq (ConvertTo-CanonicalJson $initialNodes[$methodPath])) -Message 'Full-object rollback did not restore the exact snapshot.'
+
+Write-Output 'SFC REST writer transaction coverage OK: canonical payload hash, immutable child/parent preflight, exact graph/method/Action/DUT requests, second GET, reverse rollback, mid-POST failure, full-object opt-in and rollback-failure reporting'

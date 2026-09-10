@@ -22,7 +22,8 @@ public_connection_methods:
   Close: no arguments; returns DINT
   Reset: no arguments; returns DINT
   ClearError: no arguments; returns DINT
-  application_handoff: after external program selection, complete standard Reset then ClearError then Open before Done or SINGLE_MEAS; apply on every position
+  application_handoff: after external program selection, complete standard Reset then Open before Done or SINGLE_MEAS; apply on every position
+  field_correction_20260910: unsolicited standard ClearError after successful Reset failed with selector ErrorCode 13 and OpconTcpClientIpV4Stream.Close; remove it from normal handoff, never ignore a failed Reset or Open
   reset_contract: NxBase IOpconAsyncCall.Reset closes the stream and must complete by return value; no additional Close after Reset
   boundary: public API only; no changes to the standard library or private driver fields
 

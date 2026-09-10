@@ -1,0 +1,48 @@
+schema_version: 1
+name: FB_Wp100BursterSingleOwner
+status: integrated_offline_candidate
+purpose: Replace the failed two-socket program-selection handoff with one IBursterResis2316 implementation.
+authority:
+  protocol: ../Technical Docs/BA_2316_EN.pdf sections 7.3, 8.10, 8.11.4, 8.12, 8.13.3, 8.15.11
+  interface: PLE Library Manager NexeedBursterResis2316Base 1.0.0.0, IBursterResis2316 EXTENDS IOpconAsyncCall
+  verified_methods: [Open, Close, Reset, ClearError, MeasCmd, SetRangeCmd]
+ownership:
+  plc_path: Application/Fbs/FB_Wp100BursterSingleOwner
+  source: src/plc/project/Station010/FB_Wp100BursterSingleOwner.st
+  owner: ai
+  standard_libraries: read_only
+  generated_bindings: CpStudio optional channel unassigned; AI hook binds outside OES regions
+  instance: AiWp100.Burster
+contract:
+  - One OpconTcpClientIpV4 instance owns all commands; no calls to the old IpBurster2316.
+  - No network operation from the FB body. Only an explicit public method advances an operation.
+  - Method arguments and I/O buffers remain fixed while the underlying return is RUNNING.
+  - An operation is never replayed or reconnected automatically after a fault.
+  - Program 0 through 15 is acknowledged and read back before SelectionVerified.
+  - SYST:ERR? accepts only the four complete zero / NO ERROR forms, with optional description quotes and optional single space after the comma; nonzero and malformed replies remain E1106.
+  - Manual SINGLE_MEAS opens and selects the active TypeData program on the same owner if required; it does not require a prior automatic run.
+  - MeasCmd snapshots RequestedProgramNo and rejects changes mid-command. Fresh RCL readback detects instrument-side changes before INIT.
+  - SelectionVerified is invalidated on disconnect, reset, failure, and a new selection.
+  - SINGLE_MEAS sets single-shot mode, drains a stale EOC result, starts once, polls EOC, checks questionable status, and fetches one validated result.
+  - Resistance is strictly parsed in OHM, MOHM or KOHM and converted to Ohm. No malformed value becomes zero or a good result.
+  - Temperature is read only if requested and must have CEL units.
+  - Query response consumes STX through ETX and final EOT/CR, including fragmented TCP frames.
+  - Cleanup drains pending I/O, attempts ABOR only if a measurement may be active, then sends EOT and closes at most once.
+  - A stuck cleanup remains blocked with the first fault retained; no reopen is allowed while an I/O call is pending.
+  - All automatic force/safety interlocks and standard Unit grading remain unchanged; only the obsolete N046 AutoRange guard is replaced by verified single-owner readiness.
+limits:
+  - Ethernet fast-selection protocol only, TCP 5555, address 0000, no BCC (manual 7.3).
+  - SET_RANGE is explicitly rejected: the selected instrument program owns ranges and compensation. It is not silently acknowledged.
+  - No instrument tests, deployment, download, or field-success claim from offline checks.
+  - Manual SET_RANGE release is disabled; the program-owned range policy is shared by manual and automatic measurement.
+  - Firmware EOC clearing after FETC and actual formatting/lifecycle must be field-verified; stale-result rejection fails closed.
+  - Error-status parsing is a finite whitelist, not permissive numeric conversion; unexpected text/case/spacing still fails closed for review.
+validation:
+  offline_test: tests/offline/test_burster_single_owner_protocol.py
+  scope: Protocol reference models and source contracts only, not compiled ST execution or field acceptance.
+  fresh_build: Integrated candidate fresh F11 0 errors / 5 existing warnings (4 C0351, 1 C0373), 2026-09-10; not runtime or Symbol-sync acceptance.
+integration_gate:
+  - Compile and read back the staged adapter without an instance or binding change.
+  - User clears the standard Unit optional Burster 2316 Channel in CpStudio and disables/removes the old Peripheral.
+  - After Export, add the AI-owned instance and reviewed non-generated binding hook, replace the old selector with a delegator, and recompile.
+  - Verify exactly one registered/used TCP owner before any separately approved download.

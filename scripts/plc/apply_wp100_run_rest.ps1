@@ -332,7 +332,7 @@ function Set-Action {
   )
 
   $implementation = Get-SourceText $SourceFile
-  $isMethod = $Step -in @('OnChainFinish', 'CheckPressForce')
+  $isMethod = $Step -in @('OnChainFinish', 'CheckPressForce', 'CheckKistlerProgram')
   $name = if ($isMethod) { $Step } else { "_a${Step}_active" }
   $path = "$runPath/$name"
 
@@ -721,12 +721,14 @@ function Assert-Wp100RunTargets {
     throw "SqS_Wp100_Run OnChainFinish implementation readback differs during $Phase."
   }
 
-  $forceNode = Get-Node "$runPath/CheckPressForce"
-  $forceParts = (Get-SourceText 'SqS_Wp100_Run\methods\CheckPressForce.st') -split "`n`n", 2
-  if (($forceNode.elementType -ne 'POUMethod') -or
-      ((Get-Sha256 ([string]$forceNode.declaration)) -ne (Get-Sha256 ($forceParts[0] + "`n"))) -or
-      ((Get-Sha256 ([string]$forceNode.implementation)) -ne (Get-Sha256 $forceParts[1]))) {
-    throw "CheckPressForce method readback differs during $Phase."
+  foreach ($methodName in @('CheckPressForce', 'CheckKistlerProgram')) {
+    $methodNode = Get-Node "$runPath/$methodName"
+    $methodParts = (Get-SourceText "SqS_Wp100_Run\methods\$methodName.st") -split "`n`n", 2
+    if (($methodNode.elementType -ne 'POUMethod') -or
+        ((Get-Sha256 ([string]$methodNode.declaration)) -ne (Get-Sha256 ($methodParts[0] + "`n"))) -or
+        ((Get-Sha256 ([string]$methodNode.implementation)) -ne (Get-Sha256 $methodParts[1]))) {
+      throw "$methodName method readback differs during $Phase."
+    }
   }
 
   foreach ($dutName in @('Wp100ResistanceResultStruct', 'Wp100KistlerResultStruct', 'Wp100RunResultStruct')) {
@@ -843,7 +845,7 @@ if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataI
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
 
 $allowedChildren = @('_aN000_active', '_aN010_active', '_aN020_active', '_aN030_active', '_aN040_active', '_aN045_active', '_aN046_active', '_aN047_active', '_aN050_active', '_aN051_active', '_aN060_active', '_aN061_active', '_aN070_active', '_aN080_active', '_aN090_active', '_aN095_active', '_aN100_active', '_aN101_active', '_aN110_active', '_aN120_active', '_aN130_active', '_aN140_active', '_aN999_active', 'OnChainFinish')
-$allowedChildren += 'CheckPressForce'
+$allowedChildren += @('CheckPressForce', 'CheckKistlerProgram')
 $allowedChildren += @('_aN065_active', '_aN066_active', '_aN115_active', '_aN125_active')
 $unknownChildren = @($runNode.children | Where-Object { $_ -notin $allowedChildren })
 if ($unknownChildren.Count -gt 0) {
@@ -861,7 +863,7 @@ $supportObjectStatus = [ordered]@{}
 $supportObjectStatus.FB_Wp100BursterProgramSelect = Add-OrVerify-FunctionBlock `
   -Name 'FB_Wp100BursterProgramSelect' `
   -SourceFile 'FB_Wp100BursterProgramSelect.st' `
-  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1', 'f50e1a965bc105c677f06458985f187d481e943a4361323f772cf9fb168fd186', '2a718290fe56f6418973188e6c36709cf9a65c05309f875d4a77504c33dc6fea', '333bbff542217cb21464ceb405a0d04b6b6a871d1100d98313390891ef4e9292')
+  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1', 'f50e1a965bc105c677f06458985f187d481e943a4361323f772cf9fb168fd186', '2a718290fe56f6418973188e6c36709cf9a65c05309f875d4a77504c33dc6fea', '333bbff542217cb21464ceb405a0d04b6b6a871d1100d98313390891ef4e9292', 'cae05d7f9d5bff516623fbd2f97340062e2c18aa7d60716c6015cb5c6fa373e2')
 $supportObjectStatus.AiWp100 = Add-OrVerify-Gvl `
   -Name 'AiWp100' `
   -SourceFile 'AiWp100.gvl.st'
@@ -1063,6 +1065,8 @@ else {
 # VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
 $forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
   -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc', 'c25d2775cc7cc19a2de83d83244fbb72cbc53d9ccd2c4946c34dbe8726a04c18')
+$kistlerProgramMethodStatus = Set-Action -Step 'CheckKistlerProgram' -SourceFile 'SqS_Wp100_Run\methods\CheckKistlerProgram.st' `
+  -AllowedBaselineSha256 @()
 
 $actionStatus = [ordered]@{}
 foreach ($step in $steps) {
@@ -1111,6 +1115,7 @@ foreach ($step in $steps) {
 }
 $actionStatus.OnChainFinish = Set-Action -Step 'OnChainFinish' -SourceFile 'SqS_Wp100_Run\OnChainFinish.st' -AllowedBaselineSha256 @((Get-Sha256 $baselineActions.OnChainFinish), $previousOnChainFinishSha256, $preGuidanceActionSha256.OnChainFinish, $preProgramSelectOnChainFinishSha256, $preForceActionSha256.OnChainFinish, 'eff44bc7003293235fadb356cf4f23dea1273c940de30f18190c2d31c4737abd')
 $actionStatus.CheckPressForce = $forceMethodStatus
+$actionStatus.CheckKistlerProgram = $kistlerProgramMethodStatus
 
 $plan = New-WriterPlan `
   -WriterName 'apply_wp100_run_rest.ps1' `

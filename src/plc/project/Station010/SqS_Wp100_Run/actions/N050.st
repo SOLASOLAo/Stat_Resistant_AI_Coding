@@ -11,6 +11,8 @@ ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( _kistlerStarted ) AND
       ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
       ( Wp100A104Kistler.Unit.ExecState <> OpconExecState.ERROR ) AND
+      ( NOT Wp100A104Kistler.Unit.OutImm.Alarm ) AND
+      ( Wp100A104Kistler.Unit.OutImm.ProgNo = Station.TypeData.Wp100.KistlerProgramNo ) AND
       ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
       ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY )
 THEN

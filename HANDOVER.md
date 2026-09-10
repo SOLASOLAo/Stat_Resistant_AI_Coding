@@ -2,6 +2,34 @@
 
 > 目的:让下一个 AI 会话(或人)3 分钟接手。**每次会话结束前更新本文件**。
 
+> **2026-09-10 本轮发布范围**：用户在一轮自动完成后明确要求“先上传GitHub”，因此本轮将当前AI可读源码、规格/归属清单、应用脚本、离线测试及现场记录提交至现有`feat/self-hmi-poc-20260824`分支，不标记正式稳定版。发布前Kistler/Burster源码契约、SFC事务、工程框架检查及18项离线协议测试通过；工程计划发现过期，使用现有Project Pack Build刷新后Check通过。仅本地生成清单变化，无新PLC编译/下载/动作。旁级Station010集成仓库的21项模型/配置/加密工程改动不在这次源码发布范围，保留本地，未把凭据候选配置或`.project`混入此仓库。是否已推送以Git远端核验为准。
+
+> **2026-09-10 16:59 最新：一轮左/中/右自动流程完成**。用户明确要求“直接跑自动过程”，AI确认当前MP001/Ready正常/无红色报警后，选择自动并于16:57:18.420只点击一次HMI Start。16:57:28提示等待左侧实体启动按钮；fixture移动和实体按钮由现场操作，AI未模拟/强制输入。16:58:27观察安全门打开提示，16:58:51进入右侧测量，16:59:12显示“测量完成”、Station in home position绿色、Start恢复可用/Stop禁用。抽样观察未见红色报警，仅余既有PartCounter服务read timeout。结合父链完成入口，确认本轮完整流程结束；未逐项读取Left/Middle/Right数值及OK/NOK，也没有连续力趋势、第二轮或重启稳定性验证，不等于产品质量及长期稳定性验收。本轮无PLC代码修改/下载、无消警强行续跑、未额外启动第二轮、未推送GitHub。保留用户仅勾选MP000 Active后的0/1勾选及生产TypeData程序1。下方“完整自动仍未测试”是历史状态，已被本条取代；下一步只核对三位置结果及后续稳定性。
+
+> **2026-09-10 16:54 最新：仅勾选 MP000 Active 后手动选程恢复**。用户明确未配置/复制/修改0号程序内容，只把MP000也勾选Active（现0/1均勾选），报告HMI Set program=0和1均正常。AI于16:54:06只读复核IPC：实际Program number=1、目标1、Ready绿、Alarm灭、力12.91N，Manual，End measure禁用；仅余PartCounter警告。用户对两次切程的报告与AI此刻状态读取需区分，AI本轮未重复命令。这是当前组合下Active设置影响选程的有效对比结果，先保留0/1勾选，不再要求配置或复制MP0，TypeData及生产测量程序仍1。准确内部AUTO/MP时序未抓取，不能推广为全部maXYmos必须双激活。该项不需要新增PLC修改、Export、编译或下载；未推送。下一步是MP001手动Start/End及完整左中右/第二轮验收，目前只确认手动选程恢复，不能称全部自动已通过。下方“MP000未激活/需要本体恢复”的旧状态已被本条取代。
+
+> **2026-09-10 16:39 最新现场确证：正常 MP1 经标准手动 Set program=1 后变回 MP0**。用户恢复本体 PROCESS MP001 后，AI 实读 HMI 实际1/Ready绿/Alarm灭/力值更新；随后 Manual 已选，按用户说明点击右下操作放行，16:39:05.493 仅一次 Set program=1，未测量/去皮/气缸/自动。16:39:19.785 PLE 驱动首错 `-5 / SetProg`，HMI随后实际0/Ready=false/Alarm=true。稍后展开 Unit 证实 SetProgram.ProgNo=1、Measure.ProgNo=1，实际OutImm.ProgNo=0；未发现应用Extension自定义参数复制（只有OnManRelease）。这次确有1→0操作前后对比，区别于16:16那次初始已0的-1测试；但不是扫描周期级AUTO/MP波形，不能声称闭源内部顺序已被证实。未新增PLC修改/编译/下载/推送。下一项：本体再恢复MP001后，单独受控验证MEASURE/End（不动缸），判断既有“相同程序跳过SET_PROGRAM”能否维持采力；当前未通过自动验收。用户授权的修复/下载/测试仍有效。另：用户要求延长锁屏时间，本机当前用户安全屏保通过Windows配置API由900秒改为1800秒，API与保存回读均1800，启用/恢复登录均仍1；未改Policies、睡眠或关闭安全锁定，若公司后续回写不得对抗。
+
+> **2026-09-10 最新授权与阻点（取代下方旧的一次命令限制）**：用户已明确授权本轮修复后直接下载测试，并说明右下锁是正常手动操作放行。无需再次询问同一下载/手动测试授权；先刷新安全状态，测试先限程序选择。当前尚无经证据支持的新代码修复：公开 OOD/OSD 未找到 BL/TL 模式参数，BL 手册 AUTO=byte1.bit4、MP=byte2.bit0..3 与现场 C 照片一致，不支持直接认定报文布局错。REST 确认仍为正确 Station010 / ctrlX PLC 2.6.8；现有生成参数没有新增 Kistler 兼容项。窗口刷新后 RDP 激活连续两次失败 `failed to activate captured window`，已停止 UI 输入并请用户恢复 PLE/RDP。该轮未 Logout、改 PLC、编译、下载、发送设备命令或推送。下一项有效验证：用户安全退出自动，在仪表本体蓝色 PROCESS 页选择现有 MP001（不是打开 Setup 参数页），然后读取实际 ProgNo/Ready/Alarm；C 手册此入口要求 I-AUTO=0，但未保证本固件报警下能否成功，不宣称已修好。保持 TypeData=1，不强写 Ready/PDO，不猜测性启用/复制 MP0。详见 Kistler review 最新节。
+
+> **MP Manager Active 语义更正**：用户追问0/1是否都应激活后，厂家5867C_012-118e-05.25手册§4.13.3/p76将Active明确描述为显示/隐藏MP。不能仅凭MP0未勾选就称它是空程序/配置无效；之前该推断撤回。仪表照片里的Inactive MP selected仍是已观察报警，但其固件行为与此勾选的关系尚未验证。不要要求0/1都勾上或改程序内容来代替根因排查。本次单次测试首错-1/SetProg有效，TypeData仍1，没有后续设备命令或配置修改。详见Kistler review最上方。
+
+> **2026-09-10 16:16:45 单次测试已执行，首错为 -1/SetProg**：用户纠正右下锁是HMI操作放行；刷新时已放行、Manual、目标1/实际0/Alarm红。AI只点击一次Set program=1，没有再点锁/登录、没有测量或动作。16:16:59现有PLE读取 Peripheral._lastError.Number=-1、AddText=SetProg、NativeErrCode=0；不是旧-5 AUTO超时。事后SendData.Auto=false/MeasProgNo=0/Start=false，采样距命令约13s，不冒称完整时序或从未发送AUTO。只读从站状态DeviceState=8、LinkState=0、PdStatus=0、LastPdStatusError=0，力值持续更新；标准库公开文档不暴露-1的精确内部门禁。用户问0/1是否都需激活：之前照片0未激活、1已激活，无依据认定必须两者均激活，不启用空0。未改PLC/仪表配置、未编译/下载/推送。本次一次命令授权已消耗，不再重复触发。
+
+> **2026-09-10 单次 SET_PROGRAM 测试获准但尚未触发**：用户回复“可以”，授权范围仅安全手动执行一次 Set program=1，不测量、不动气缸、不跑自动。现有 RDP 的 Kistler 页面仍显示目标1/实际0/Alarm红，Manual已选，但 Set program 灰色带锁，顶部显示登录入口；未点击灰色按钮，未绕过 HMI 放行或代操作认证。请用户完成正常登录/操作放行，让按钮可用，先不要点击。Watch3已就绪显示标准 Peripheral._lastError、_sendData.Auto及MeasProgNo；基线 Number=0、Auto=false、MeasProgNo=0、Start=false，仅为空闲基线。下一轮刷新放行和目标值后再消耗这一次命令授权，不重复索取同一授权、不重复触发。未PLC写入/编译/下载/推送。
+
+> **2026-09-10 16:07 最新只读复核：Kistler 实际仍为 MP0，不能认定手动选程序成功**。当前在线 Station010 已包含上一轮候选修正，PLE 显示 Program unchanged；SetProgram.ProgNo=1、Measure.ProgNo=1，但 OutImm.ProgNo=0 / Ready=false / Alarm=true / ScreenLocked=false / MeasRunning=false，PlcLockActive=false。撤回“手动 HMI 消警等于成功切 MP1”的推断。稍后读取 Peripheral._lastError 已为0/附加文本空，RDP 显示 Manual、Home position No，仅 PartCounter 警告；不是故障瞬间记录或安全确认，不沿用旧 -5 当作新首错。本轮未改 PLC、编译、下载或推送。下一步须确认现场安全并获准后，仅执行一次标准 Set program=1，观察请求 MP/AUTO/实际反馈，不跑整套自动、不启用空 MP0、不强写 PDO。见 Kistler review 顶部。
+
+> **2026-09-10 15:49 当前：Kistler 候选修正已离线编译，现场根因未闭环**。用户再次确认实际 MP000 未启用；在线读取 ProgNo=0 / Ready=false / Alarm=true / ScreenLocked=false / MeasRunning=false，Peripheral 首错 -5、AddText=SetProg；SetProgram.ProgNo=1、Measure.ProgNo=0、PlcLockActive=false。不要据默认 DeviceUnlock=true 认定持续解锁冲突；也不要把 OOD 2.0.7.0 与 PLC 库 2.0.1.0 当错版，供应包的 Library.osd 本来就要求 2.0.1.0。本次只改 CheckKistlerProgram：N045 提前把两个命令程序号都从同一 TypeData 赋值；已匹配/就绪/无报警且 Unit 空闲时不再重复 SET_PROGRAM，其他情况仍走标准命令及错误反馈，所有下压/力联锁保留。1 PUT/Save/回读通过，父声明和 SFC 未改；本次新 F11 **0 errors / 原 5 warnings**（4×C0351、1×C0373 line2378），四组相关静态/模型检查通过。副本/证据 `data/reports/plc/kistler-program-guard-20260910-154618/`；未做工程哈希、下载、运行写入或推送。用户新图 `IMG_20260910_154614.jpg` 是仪表 Fieldbus info：AUTO=byte1.bit4；MP bits=byte2.bit0..3；拍照时全0，只能证明空闲状态，不能证明故障时序。需要在安全取消自动后受控手动验证 Set program=1 及其请求/反馈，不能宣称 MP0 故障已经修好，不能启用空 MP0 或强改 PDO。详见 `docs/reviews/station010-kistler-program-20260910.md` 顶部。
+
+> **2026-09-10 最新离线修复：Burster E1106 零错误响应误判已修，待用户现场复测**。先前只读确认 HMI `B2316 E=1106 CMD=SYST:ERR?`，仪表实际回复 `0,"NO ERROR"`，MeasurementStarts=0；旧判断仅接受不带引号格式。用户“改啊”后，经现有 PLE Logout 并确认离线，仅修改共享 SelectProgram 的完整字符串判断：保留原两种格式，补充带引号、逗号后可有一个空格的两种格式；严格只接受这四种完整零错误响应，非0/残缺/未知格式仍阻断，不做宽松数值转换。1 个实现 PUT、Save/回读通过，18 项协议/源码测试与 Burster 静态检查通过；**本次新 F11：0 errors / 原 5 warnings**（4×C0351 OPC.UA.DA、1×C0373 SymbolConfig ErrorCodes/DWord）。生成声明、socket/程序号/量程、力和运动联锁未改。只保留一份普通工程副本，未做哈希；证据 `data/reports/plc/burster-error-response-20260910-151220/`，说明 `docs/reviews/station010-burster-error-response-20260910.md`。未下载/运行写入/设备命令/提交/推送；本次无需 CpStudio Export。用户安全结束旧自动后再下载复测。Kistler 初始 Device not ready 仍需手动选 MP001 的现场限制另案保留，不能当作自动恢复已通过。
+
+> **2026-09-10 最新离线修复：Kistler 在检查 measuring Ready 之前先选择 TypeData 程序**。新照片 `IMG20260910143803.jpg` 明确 MP000 Active 未勾选、MP001 已勾选；保留 TypeData.KistlerProgramNo=1，不启用空 MP0。此前 N045 的 `Ready=FALSE / Alarm=TRUE / ProgNo=0` 与仪表 `Inactive MP selected` 相符，原流程却把目标程序赋值放在 N051，形成程序选择前的 Ready 等待。新增 AI-owned `CheckKistlerProgram`，N045 先执行标准 SET_PROGRAM，再经 CheckUnitDone 完成握手，最后确认实际程序号、Ready、无 Alarm/MeasRunning，才进入 Burster 选程序和两条启动分支；N050/N051 另保留无 Alarm/程序号匹配门禁。N000/OnChainFinish 清理该方法状态。正确 Station010 的官方 REST 确认离线后，6 个对象已保存/回读，原 SFC 图和生成声明原样保留；本轮 AI 新 F11 **0 errors / 5 warnings**（4×C0351 OPC.UA.DA、1×C0373 SymbolConfig ErrorCodes/DWord）。只做一份工程副本和目标文本回读；未下载、未运行写入、未推送 GitHub。详见 `docs/reviews/station010-kistler-program-20260910.md`，备份/回读目录 `data/reports/plc/kistler-program-20260910-145115/`。
+
+> **下一步仍是用户受控现场验收**：先安全结束旧自动循环，再下载本轮离线程序；验证 SET_PROGRAM 将 MP0 切到已启用的 MP1，Ready/Alarm 恢复后才启动采力/下压，再完成左中右及第二轮。标准命令能否在当前硬件 inactive-MP 锁存报警下完成切换尚未实测，不自动消警、不绕过反馈；若拒绝，保留标准事件并在安全退出自动后处理仪表。不要在仍等待的自动中手动切程序/清报警，Ready 恢复可能继续下压。本次没有 CpStudio 生成接口变化，无需常规追加 Export。
+
+> **2026-09-10 上一批离线结果**：单连接 Burster 已接入，用户 Export #2 已完成并复核；本批新 F11 **0 errors / 5 原 warnings**，CpStudio PLC Export 输出为空，21 个驱动/绑定目标及 40 个 Run 目标零差异，56/56 I/O 匹配。尚无单连接完整现场验收；AI 未下载/动作，现场稳定后才提交/推送。不要再要求常规 Export #3、关闭已删除 Peripheral 的 AutoRange，或回退到双连接方案。独立 REST/UI 检查不等于正式 Runner 完成；详情见文末最新节。
+
 ## 最近会话(2026-08-17)
 - 做了什么:
   1. 克隆 vibe-coding-templates;派生仓库骨架到 McpCoding;填写四文档 + .gitignore;git init。
@@ -1303,3 +1331,58 @@
 - **本批新 F11：0 errors / 5 warnings**，已观察 Build started/complete 并实际核对 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，和上一批一致，没有调整正式 warning 基线。七组源码/时序/事务回归通过，Project Pack VALID（contentId `7e3cef46...bc558`）；不把源码合同或编译当运行库仿真/现场验收。
 - 最终 Build 后 PlanOnly **0 操作 / 40 目标**（SHA `4d8fded0...6195e`）；工程 SHA `11c428eb...42bf` 与保存后相同，selector 实现 SHA `cae05d7f...373e2`。完整证据见 `docs/reviews/station010-burster-repeat-lifecycle-20260910.md` 和本地 `data/reports/plc/burster-repeat-lifecycle-20260910-verification.json`。
 - **未下载、未执行在线变量写入/FORCE、复位或仪表命令。** 用户安全下载后验证左中右及下一完整件；本批无需 CpStudio Export。LEFT 是用户对上一批的报告，MIDDLE/RIGHT 和重复循环尚未验收。
+
+## 2026-09-10 · MIDDLE 再次报错（解锁前中间记录，后续见下一节）
+
+- 用户新截图 `codex-clipboard-6585f5d2-883b-40e9-855a-316c44117a69.png` 仍显示中间位置 `ETHERNET_TABLE General : Socket handle invalid or closed`。上一批 88f0980 的离线编译仍有效，但现场未通过；不能声称 Reset/ClearError/Open 顺序已经解决问题。
+- 正确 PLE 项目/profile 与源码均确认；selector 实现 SHA `cae05d7f...373e2`，工程 SHA `11c428eb...42bf` 未变。GUI 激活失败并按恢复流程刷新后仍失败，未继续发输入；本轮没有读到新的 selector 首错，不复用旧 ErrorCode=11。
+- 用户明确允许 AI 自行 Logout。使用安装目录官方 OpenAPI 定义的 ApplicationJob/Logout，job `9e9be36a1136bcab` 完成，Application.isOnline=false；无 Stop、Login、下载、运行变量写入/FORCE或仪表命令。
+- 已只读复查全部 selector 调用点和标准对象/版本/公共 Reset/ClearError 文档；现有 Burster 技术手册未公开驱动内部连接实现，不能据此确认初始失败行。本轮未修改 PLC 源码或工程，未新 Build。请求用户保持开发桌面解锁，后续先取得新首错阶段再修复。细节见 `docs/reviews/station010-burster-repeat-followup-20260910.md`。
+- **用户最新 GitHub 规则已写入 AGENTS**：现场版本稳定后再统一提交推送；调试期间只保留本地备份、源码和记录。本轮未提交/推送。
+
+## 2026-09-10 · 新首错 13：移除正常交接的多余 ClearError（最新，离线完成）
+
+- 用户解锁并允许只读 Login；实际未发送 Login POST，现有正确 PLE 已在线。只读 Watch 3 得到保留首错 **ErrorCode=13 / Number=-1 / NativeErrCode=32766 / AddText=OpconTcpClientIpV4Stream.Close**；该版本只在 state66 标准 ClearError 失败时设置 13，前序 Reset 已返回 OK。不是上一轮的 Open=11；供应商内部具体失败行未公开，不声称完成库内根因证明。
+- 按用户授权自行 Logout，job `2ec66403b1e39302` Done，确认 offline 后修改。只删除共享 selector 的 state66 和相应取消入口，标准 Reset65 OK → Open70 OK 才 Done；不缓存位置间 Ready，不吞掉 Reset/Open 失败，临时 socket 的独立初始 ClearError 不变。保留声明、27 步 SFC、生成配置、量程、2500 N/2 s 和全部运动/安全联锁。
+- 原 PLE/profile `ctrlX PLC 2.6.8` / compiler `3.5.19.70`。先 Save 用户当前状态，再校验唯一 checkpoint `f1e10d49ec955c6454f85a39b6ce97251858dda6ebed0b764e2d48be5b3ab630`。Plan `0b72cb2c...7f739`，**1 实现 PUT/一次 Save，40 目标回读，另 39 目标指纹不变**；未另起 PLE/MCP。
+- 新增回归先对旧实现失败，修后七组源码/事务检查全通过；Project Pack VALID，contentId `95a44cc9...dd0ba`。用户恢复最小化窗口后，本批 AI 新 F11 实际启动/完成：**0 errors / 5 warnings / 155 Build messages**，4 × C0351 OPC.UA.DA、1 × C0373 ErrorCodes/DWord，与上一批同签名，未更改正式 warning 基线。不是 Clean Build/库仿真/现场验收。
+- 编译后再次确认 offline，最终 PlanOnly **0 操作 / 40 目标**，SHA `d73ca73e...e0e3a5`；工程 SHA `80ccdf667c50c13960387506172cc2bc9799dd231098899cec4c4befc0112b14` 与 Save 后一致；selector 实现 SHA `4e10703b...ec38c8e`。完整记录在 `docs/reviews/station010-burster-repeat-followup-20260910.md`，机器可读证据 `data/reports/plc/burster-clearerror-20260910-*.json`。
+- **未下载、未 Stop/Start、未写变量/FORCE或发送仪表命令；未提交/推送 GitHub**。无需 CpStudio Export。用户安全下载后复测左中右和下一完整件；本修复移除了已观察的新增 ClearError 失败点，但此前 Open=11 尚需现场重复验证，不能把离线通过标成全部现场问题解决。
+
+## 2026-09-10 · 12:45:42 再复现（最新：诊断完成，通讯方案待确认）
+
+- 用户 MIDDLE 新报警仍为 `OpconTcpClientIpV4Stream.Close` 无效句柄。现有在线 PLE 只读 Watch 新首错 **ErrorCode=11**（标准 Open），Number=-1，AddText Close；标准 socket 在取消后 ConnState=ERROR。Program loaded/unchanged、当前实现 SHA `4e10703b...ec38c8e` 与删除 ClearError 候选一致，工程 SHA `80ccdf66...112b14` 未变。不能归因于旧代码没下载，也不能把取消后状态当初始故障行。
+- 按用户此前明确授权自行 Logout，job `9549bc2bf0ad72b5` Done，REST offline。未 Login、Stop/Start、写运行变量/FORCE、探测仪表、下载或动作；本次没有新的 PLC 实现修改或 Build，前批 0/5 仍只是历史离线结果。
+- 完整复查共享选择器及所有调用点，并在当前 Library Manager 重验公开 API：NexeedIpBurster2316 1.0.1.0 只有测量/量程/生命周期方法，没有程序号或原始报文接口。当前双连接交接方案仍在标准 Open 边界失败；供应商内部原因尚未证明。OOD 的 CXA NotTested 只是支持状态，不作为库有 Bug 的证明。
+- 下一步需确定通讯层方向：获取 Nexeed 支持的程序选择/连接接口；否则由用户批准单连接通讯适配（程序选择和测量同一 owner），保留 CpStudio/HMI、运动/力判定，涉及 CpStudio 绑定需按生成接口归属处理。未绕过程序确认、未永久缓存 Ready、未改私有句柄/标准库，未实现未经确认的替代驱动。详细新证据继续记入 `docs/reviews/station010-burster-repeat-followup-20260910.md`。**版本尚未现场稳定，不提交/推送 GitHub。**
+
+## 2026-09-10 · 单连接驱动离线暂存（最新：待 CpStudio 解绑，不可下载）
+
+- 用户“改吧”批准单连接方向。新增 `Application/Fbs/FB_Wp100BursterSingleOwner`，一个 OpconTcpClientIpV4 承担 RCL/readback/单次测量/取值/清理；实现公开 IBursterResis2316 与 LastError。标准库、生成接口/绑定、旧 selector、SFC/力/运动联锁均未修改。无实例，FB body 惰性，当前运行逻辑仍是旧方案。
+- 使用现有唯一离线 PLE REST，checkpoint/冻结 Plan SHA/前置哈希/回滚/Save 后15对象回读。PLE 自动生成接口方法，首次创建冲突已成功回滚，之后分 shell + methods 两步写入；修正 reserved `r`、属性返回结构取成员和索引警告。最终 PlanOnly 0 操作，project SHA `ed7f11a5e71af70977d150b5e225e80e9b69145f652a93218cbfa426784a6e94`。
+- AI 本轮 fresh F11 **0 errors / 5 warnings**（4×C0351、1×C0373 ErrorCodes/DWord），没有新签名；15 项协议参考模型/源码测试、七组现有回归及 Project Pack VALID，contentId `2374350e...2e5f7658`。这些不证明实际 TCP/EOC/仪表行为；未下载/测试设备/动作/提交/推送。最后 REST offline、旧 selector implementation SHA `4e10703b...ec38c8e`。
+- 下一步用户在 CpStudio：Model/Station/Wp100/Wp100A103ResistantDetector → Parameters → Burster 2316 Channel 清空旧绑定；仅移除 Peripherals 下 `Wp100A103ResistantInterface`，保留 Model 的 Detector Unit 与 HMI。只读 UI 已确认旧通道 Active 灰色，右键仅 Remove，无 Disable。AI 没改 CpStudio；已复制其磁盘 Engineering 五文件至 `data/checkpoints/cpstudio/20260910-single-owner-before-unbind` 并校验源/副本 SHA，排除锁文件。
+- Export 后必须由 AI 添加实例和非生成绑定 hook，将 selector 改为同 owner 委托并更新 N046 的已移除 Peripheral 引用；手动 Start 也要先按 active TypeData 程序选择（当前候选仅有显式 SelectProgram 方法，未接入手动前置）。SET_RANGE 明确不支持，不得假成功。接入后重新 Build/读回/检查 Symbol，再另行现场下载与完整重复循环验收。
+- 详情、回滚证据、当前限制和接入步骤：`docs/reviews/station010-burster-single-owner-20260910.md`。**这是已编译的暂存通讯层，不是已接入或现场修好的版本。**
+
+## 2026-09-10 · CpStudio 解绑后单连接接入（最新，待 Export #2 同步）
+
+- 用户“已导出”，新 request `47c44845-dae8-4d94-a25c-006feee0d90e`。Stage 1 review 仅生成变更待审，56/56 I/O 完全匹配；REST 确认旧 Peripheral 实例、注册/任务/参数调用和 Unit 生成绑定全部移除，新驱动 15 对象原样保留。导出后新 F11 确认 **50 errors / 5 warnings**，错误来自旧 selector/N046 的已删除 Peripheral 引用。
+- 按已批准单连接方向：新增 `AiWp100.Burster` 唯一实例；Wp100Unit.OnApplyParameters 在 OES 外 STARTUP/CONFIGURATION/ONLINE_CHANGE 绑定标准 Detector Unit，192.168.0.103:5555、30 s 测量上限；OnCall 仅复制 active TypeData.ProgramNo，不调用网络/测量。CpStudio 的可选通道必须保持未分配，不能再次绑定旧 Peripheral。
+- selector 改为无 socket 的同 owner Open/SelectProgram 委托；取消未完成 Open/Select 走同 owner Reset 并由现有 Station OnCall 续跑，Done 后落 Execute 不会重置后续 Unit 测量。N046 改查 Connected/SelectionVerified/ProgramNo/idle/ErrorCode，不假置 OK。N045/N047、全部运动/位置/力判定和标准 Unit SINGLE_MEAS/结果上下限保留。
+- 手动 SINGLE_MEAS 同样由 owner 按 active TypeData 程序准备；必要时 Open/RCL，同一程序的已验证选择不重复 RCL，但每次 INIT 前重新 RCL? 核验。命令中 TypeData 程序变化拒绝；错误不自动重试。手动 SET_RANGE 明确禁用而非假成功，量程/补偿随仪表程序；温度读取仍按 CmdSetting.ReadTemperature。
+- 原 PLE/profile `ctrlX PLC 2.6.8` 全程 offline；写前 checkpoint `3f4736fd9f99924e7a956ba24d81476e2d8bd2d895ff01ddb4621cc81afb2e95`；9 个对象 PUT/Save 后 21 目标回读一致，工程 SHA `fbd91124bea48c8e3aefa3dad14429f9e8b90a19dd702d65a5a94f56c109e328`。writer `apply_burster_single_owner_rest.ps1 -Integrate`：Plan SHA `325df1dc...d2928fb`；Build 后 final PlanOnly SHA `e2a59a12...5bf1615`、0 修改；Run writer 40 目标也 0 修改，SHA `68e943a7...d48003f`。
+- **本轮 fresh F11：0 errors / 5 warnings / 189 Build messages**（Messages 总 190）。界面完整显示 4×C0351 OPC.UA.DA、1×C0373 SymbolConfig ErrorCodes/DWord（line2378），原签名，无新告警。17 项协议参考模型/源码检查、七组现有静态/时序/事务回归与 Project Pack Build/Check 通过；不是运行库仿真/仪表验收。
+- **必须再 Export #2**：只读打开 CpStudio Output/PLC Export，仍显示 `Error getting the symbol configuration! ... Build has error(s). You need error free build to proceed`。它对应新驱动接入前的失败导出；新 Build 并不会补做该 Symbol 步骤。已请用户再导出、先不下载，之后重新 Stage 1/钩子与绑定回读/新 Build。未自改 Symbol 或 formal warning/semantic baseline。
+- Stage 2 ledger `cpstudio-stage2-47c44845-dae8-4d94-a25c-006feee0d90e-00d3cfed` 仍 WAITING_FOR_RUNNER；当前 MCP 未持有这个 PLE，不能把 REST/UI 独立证据冒充 Runner typed-evidence/DONE，且接入修改后其原 manifests 已旧。不要启动第二个 MCP PLE，不要重用旧 immutable action；后续新 Export 创建新动作。
+- **无 Login/下载/PLC启停/变量写入/FORCE/仪表连接，无 Git 提交推送。** 后续现场至少验手动、左中右及下一整轮、程序变化、取消/故障恢复、无重复 INIT/旧结果，以及原压紧力联锁。EOC/FETC 清零、设备格式和库真实生命周期仍需现场验证，不宣称重复位置故障已被现场解决。
+
+## 2026-09-10 · Export #2 复核完成（最新，交用户现场测试）
+
+- 用户新导出 request `c5beb205-8e88-4657-a986-a3faa2342de3`（05:58:18 UTC）。Stage 1 预演后仅消费此请求；21 个历史生成变更待审，I/O 56/56 匹配、38 active / 18 inactive、0 mismatch。没有改动任何 PLC/CpStudio 源码或工程。
+- 当前唯一 PLE REST 确认正确 Station010 / ctrlX PLC 2.6.8 / compiler 3.5.19.70，检查前后 `isOnline=false`。单连接 writer `-PlanOnly -Integrate` 21 目标、0 修改，SHA `e2a59a12...5bf1615`；Run writer 40 目标、0 修改，SHA `68e943a7...d48003f`。旧 Peripheral 仍移除，新实例、非 OES 绑定和手动/自动入口完整保留。
+- 实际 CpStudio Output / PLC Export 为空，无上次 Symbol 报错。随后 AI 在同一离线 PLE 新按 F11，看到 Build started → Build complete：**0 errors / 5 warnings / 189 Build messages**（总 190），4×C0351 OPC.UA.DA、1×C0373 ErrorCodes/DWord，原签名。不能用旧 Build 代替本轮结果。
+- 本轮 Symbol XML 于 06:03:42.5637583 UTC 重新生成，SHA `0455ce88...590ef8c`；StationData、TypeData、Burster.ProgramNo 及 Detector Extension 的 HMI 命令/状态读写字段存在，旧 Peripheral 名称 0 次。REST symbol-config HTTP 200，但 payload 的 JSON 解析仍失败；未改 Symbol/未打印原文，以实际干净 Export + 新 Build + XML 做本轮局部核对，不声称完整 Runner semantic baseline 通过。
+- 导出后/Build 后工程 SHA 相同：`077eebed69481d90e6f07ff5a4eccc2ec4eeaab3712d7ed704e2cfb2caf2c886`。17 项协议/源码测试及程序量程、力联锁、SFC 完成契约三组回归重新通过；不是 PLC 运行时或仪表实测。
+- Stage 2 新 ledger `cpstudio-stage2-c5beb205-8e88-4657-a986-a3faa2342de3-7064637d` 仍 `WAITING_FOR_RUNNER`，独立证据见 `data/reports/plc/burster-single-owner-export2-verification.json`。没有启动第二个 MCP/PLE，没有伪造 typed evidence/DONE。
+- **无需再常规 Export。** 下一步用户安全下载，并按本次工程同步 IPC HMI/DataSetAccess（尚未核验部署），先手动 SINGLE_MEAS，再 LEFT → MIDDLE → RIGHT，至少重复下一整轮。取消/故障恢复、程序切换和原力联锁另行安全验收；出现首错保留诊断，不反复自动重试。AI 无在线写入/仪表请求/动作，无 Git 提交推送。

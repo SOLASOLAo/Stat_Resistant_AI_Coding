@@ -180,10 +180,14 @@ function New-FrozenPutBody {
     throw "PUT target was missing during preflight: $Path"
   }
 
-  # Every current writer mutation changes implementation only.  Start from the
-  # immutable full snapshot so a later GET can never leak an unreviewed field
-  # into the request body.
+  # Default to implementation-only. Start from the immutable full snapshot so
+  # a later GET cannot leak an unreviewed field into the request body.
   Set-JsonProperty -Object $snapshot -Name implementation -Value ([string]$RequestedBody.implementation)
+  if ($Kind -eq 'update-ai-owned-full-object') {
+    # Explicitly opted-in only by the AI-owned adapter writer, after its
+    # declaration baseline check. Existing mixed/SFC writers stay impl-only.
+    Set-JsonProperty -Object $snapshot -Name declaration -Value ([string]$RequestedBody.declaration)
+  }
 
   $expectedBeforeWrite = Get-PreflightSnapshotNode $Path
   if ($Kind -eq 'update-sfc-graph') {

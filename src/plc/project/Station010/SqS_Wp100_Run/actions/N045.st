@@ -1,5 +1,5 @@
-// Release both parallel start branches only after the selected Burster program
-// has been acknowledged by the instrument.
+// Select/confirm the Kistler MP before requiring measuring readiness, then
+// select/confirm the Burster program before releasing both start branches.
 // _retVal2 belongs to the second SFC branch defined by OpconSfcChain.
 _retVal  := RUNNING;
 _retVal2 := RUNNING;
@@ -23,10 +23,20 @@ IF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
    ( Peripherals.BinIo._000K912_Y32 ) AND
    ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
    ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY ) AND
-   ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY ) AND
-   ( Wp100A104Kistler.Unit.ExecState = OpconExecState.READY ) AND
-   ( Wp100A104Kistler.Unit.OutImm.Ready )
+   ( Wp100A103ResistantDetector.Unit.ExecState = OpconExecState.READY )
 THEN
+  _retVal := CheckKistlerProgram(Reset := FALSE);
+  _retVal2 := _retVal;
+  IF ( _retVal <> OK )
+  THEN
+    AiWp100.BursterProgramSelect(Execute := FALSE, ProgramNo := 0);
+    RETURN;
+  END_IF
+
+  // Program selection alone never releases motion: the helper also requires
+  // the acknowledged MP, Ready, no device alarm and no running measurement.
+  _retVal := RUNNING;
+  _retVal2 := RUNNING;
   AiWp100.BursterProgramSelect(
     Execute := TRUE,
     ProgramNo := Station.TypeData.Wp100.Burster.ProgramNo

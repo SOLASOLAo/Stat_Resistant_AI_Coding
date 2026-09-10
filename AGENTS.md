@@ -36,7 +36,7 @@
 
 ## 5. 文档与提交约定
 - 事实源:README(是什么)/ TEAM_SETUP.md(同事工作站部署)/ `config/`(路径与门禁)/ `specs/`(确认需求)/ `ai/`(对象归属与钩子)/ `src/plc/`(AI-owned 源码)/ `catalog/`(已验证标准对象接口)/ docs(技术细节)/ HANDOVER.md(当前状态)/ TODO.md(下一步);权威方法论 = ctrlx-ai-coding/docs/ctrlX_AI_project_baseline.md
-- 会话循环:进场读 AGENTS → HANDOVER → TODO;收场更新 HANDOVER + TODO 勾选 + 提交推送
+- 会话循环:进场读 AGENTS → HANDOVER → TODO;收场更新本地 HANDOVER + TODO。按用户 2026-09-10 最新要求，现场调试期间保留本地备份/源码/诊断记录，**不逐轮推送 GitHub**；现场版本验证稳定后再统一提交推送，或按用户单独明确要求执行。离线 Build 通过不等于现场版本稳定。
 - 提交前缀:`feat:` `fix:` `docs:` `test:` `tools:` `refactor:`
 - **开发辅助 Skill 边界**:个人安装的 `ponytail`/`ponytail-review`/`ponytail-audit` 仅在开发期按需做“减法审查”；不进入产品代码、Runner、HMI、安装包、客户环境、运行依赖、产品路线或交付要求。每个 Phase 完成后可执行一次 Review/Audit，但 `ctrlx-opcon-engineering` 的安全规则和工程门禁始终优先。
 - PLC ST 条件格式:每个独立条件都用括号包裹，括号内侧各留一个空格；复合条件换行时 `AND`/`OR` 放在上一行末尾，禁止把逻辑运算符放在续行开头。示例：

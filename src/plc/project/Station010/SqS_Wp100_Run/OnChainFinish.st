@@ -30,6 +30,7 @@ Wp100A103ResistantDetector.Unit.Execute := FALSE;
 // EndMeasurement request here: a preflight failure may never have started it.
 Wp100A104Kistler.Unit.ParImm.EndMeasurement := FALSE;
 Wp100A104Kistler.Unit.Execute := FALSE;
+_unitResult := CheckKistlerProgram(Reset := TRUE);
 
 _positionValid          := FALSE;
 _safetyDoorCloseStarted := FALSE;

@@ -2,8 +2,47 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **本轮源码发布检查**：用户明确要求先上传；Kistler/Burster契约、SFC事务、工程框架和18项离线协议测试通过，Project Pack重新生成后Check通过。发布范围为McpCoding当前源码/脚本/规格/记录，不含旁级Station010的加密工程和待脱敏配置；一轮完成不提升为长期稳定性验收。
+- [x] **16:59 一轮左中右自动流程完成**：按用户最新要求，AI于16:57:18只点击一次正常HMI Start；实体按钮/fixture由现场操作，未代写输入。依次观察左侧等待按钮、安全门打开、右侧测量，16:59:12显示“测量完成”、原位绿灯、Start恢复/Stop禁用，未见红色报警，仅余既有PartCounter警告。无新增PLC修改/下载，不再启动第二轮。完整自动尚未测试的下方旧记录已被本结果取代。
+- [x] **16:54 Active勾选对比：手动选程恢复**：用户仅勾选MP000 Active，保留其内容不变，现0/1均勾选，报告Set program=0/1均正常。AI只读确认实际1/Ready绿/Alarm灭/力值可见。保留当前勾选，不再要求配置或复制MP0，TypeData及实际生产测量仍用1；本项无新增PLC修改/下载。
+- [ ] **当前剩余验收**：核对`Wp100.SqC_Run.Result.Left/Middle/Right`保存的电阻数值、Valid及OK/NOK，另验证第二轮/重启和力故障保持。16:59已确认一轮完整自动结束，但未逐项读取结果、未采连续力趋势，不等于质量及长期稳定性验收。独立手动Start/End未单测，用户本轮选择直接自动；不再作为首次自动的前置阻点。既有PartCounter服务警告另待处理，稳定后统一推送GitHub。
+
+- [x] **16:39 正常MP1状态下复现标准选程序导致1→0**：本体恢复后实读1/Ready绿/无Alarm，Manual放行后单次Set program=1；首错-5/SetProg，实际降为0/Readyfalse/Alarmtrue，事后Unit两处目标参数均1。未测量/动作/改PLC/编译/下载；该证据将标准选程路径与自动SFC分开，内部时序仍未获得周期级跟踪。
+- [ ] **下一步：本体再次恢复MP001，再单独验证采力启动/停止**。自动流程已有匹配MP时跳过重复SET_PROGRAM的候选逻辑，但MEASURE是否也触发同一选程故障还未证实。仅手动受控Start/End、不动缸、不跑自动；保留故障首错和实际ProgNo。若也失败，需正式5867C适配/厂商握手方案，不强写私有发送结构或屏蔽Ready。
+- [x] **用户要求的本机屏保等待时间**：安全屏保900→1800秒；Windows API和用户保存值回读均1800，ScreenSaveActive/ScreenSaverSecure均保持1。未改公司Policies、未关闭锁屏、未改PLC/IPC设置。不得把该设置解释为已排除所有公司锁定策略，也不得对抗后续策略回写。
+
+- [ ] **最新：恢复可操作窗口及 Kistler 受控恢复验证**：用户已授权本轮改后直接下载测试，右下锁为正常手动放行；下方旧的一次命令授权限制不再是当前门禁。RDP 刷新窗口后仍连续两次无法激活，已请用户恢复 PLE/RDP，未继续输入。本轮无新的 PLC 修复/编译/下载/设备命令。公开供应参数无 BL/TL 模式，未证实位布局错误。请用户安全退出自动后在本体蓝色 PROCESS 页选现有 MP001，再读实际 ProgNo/Ready/Alarm；保持 TypeData=1，不用启用/复制 MP0 或强写 PDO 替代根因。窗口和仪表恢复后再基于实际证据决定必要代码改动、编译和已授权的下载测试。
+
+- [ ] **核实固件对Inactive MP与MP Manager Active的具体含义**：厂家5867C手册§4.13.3/p76说Active用于显示/隐藏；仅凭MP0未勾选不能推断MP0空白或配置无效。撤回此前这一推断，不要求0/1都勾选，不擅自改程序。保留TypeData=1及已验证的单次-1/SetProg错误作为下一步依据。
+
+- [x] **16:16:45 单次手动 Set program=1 已执行并保留新首错**：按钮正常放行后只点击一次，实际仍0；16:16:59驱动Number=-1/AddText=SetProg/NativeErrCode=0。不是旧-5；事后发送全0不等于完整时序。从站DeviceState=8/PdStatus=0/LastPdStatusError=0，力值仍更新。没有测量/气缸动作/改PLC/下载/推送；单次命令授权已消耗，后续不重复点击。
+- [ ] **当前Kistler阻点：标准SetProg返回设备/总线未就绪**。核对当前有效MP/报警与标准驱动正式恢复路径；公开说明没有-1内部精确条件，也未列专用ACK/ResetAlarm命令。之前照片MP0未启用、MP1有效，不能断言两者都必须启用，不能激活未配置MP0或强写Ready/PDO掩盖问题。详见Kistler review最新节。
+
+- [ ] **单次 MP1 测试已获授权，等待 HMI 正常放行**：用户已同意安全手动 Set program=1 一次；实际尚未触发，因为当前按钮仍灰色带锁。用户手动登录/取得操作权限后，刷新 Manual/目标1/按钮可用，再执行一次并读取实际MP、AUTO及首错；不绕过HMI权限、不测量/动作/跑自动。Watch3诊断发送数据和错误已准备，基线 Auto=false、MeasProgNo=0、Number=0。
+
+- [ ] **最新优先：抓取一次安全、受控的 Kistler SET_PROGRAM=1 请求/反馈（2026-09-10 16:07）**：在线两个 ParCmd 程序号现均为1，但实际 ProgNo=0、Ready=false、Alarm=true；补参数候选版未闭环。用户纠正后撤回“手动点击消警证明切程序成功”的推断。后来 _lastError=0 且 HMI 已手动，不能把旧 -5 当作此次首错。需现场安全确认/单次命令授权后观察 AUTO 与 MP 请求/确认，不需要跑自动；本轮只读、未编译/下载/推送。详见 Kistler review 顶部。
+
+- [x] **Kistler 重复切程序/参数一致性候选修正（2026-09-10 15:49）**：N045 同时赋值 SetProgram/Measure.ProgNo；已匹配、就绪、无报警且空闲时跳过重复 SET_PROGRAM，其他情况保留标准命令握手。1 个方法离线 PUT/Save/回读，生成声明/SFC/运动与力联锁未改；新 F11 0 errors / 原 5 warnings，四组相关检查通过。未下载、未推送，详见 Kistler review 顶部。
+- [ ] **当前优先：Kistler MP000 首因和候选版现场验证**：当前首错 -5/SetProg，仪表 MP000 未激活。新照片确认 AUTO=byte1.bit4、MP=byte2.bit0..3，但全0是空闲截图，不证明失败过程。安全取消自动后，受控手动验证 SET_PROGRAM=1 的实际请求与反馈，再决定能否自动验收；不启用空 MP0、不直接写私有发送结构或 PDO。OOD 2.0.7 与库 2.0.1 是供应包自身编号，不能因此盲目升级。现阶段不得称设备故障已彻底修复。
+
+- [x] **Burster E1106 根因只读确认（2026-09-10 15:03）**：HMI `B2316 E=1106 CMD=SYST:ERR?`，在线驱动 LastResponse 实际为 `0,"NO ERROR"`，MeasurementStarts=0。SelectProgram 字符串整段比较漏掉引号，误把零错误响应当故障；不是本次 socket Close 失败或真实的仪表非0错误。未改代码/编译/下载，详见 `docs/reviews/station010-burster-error-response-20260910.md`。
+- [x] **Burster E1106 最小离线修复（2026-09-10）**：共享 SelectProgram 保留原两种零错误格式，增加 `0,"NO ERROR"` / `0, "NO ERROR"`；只接受四种完整字符串，非0/空响应/异常格式仍阻断，不引入宽松解析器。已自行 Logout、确认离线、保留一份普通副本，1 个实现 PUT/Save/回读通过；18 项协议/源码测试、Burster 静态检查通过。**本次新 F11：0 errors / 原 5 warnings**（4×C0351、1×C0373），未改生成声明、量程、程序号、socket或力/运动联锁。未下载/设备动作/提交/推送。详见 `docs/reviews/station010-burster-error-response-20260910.md`。
+- [ ] **当前优先：E1106 修复现场复测**：用户安全结束旧自动后下载，确认带引号零错误响应不再误报，程序确认后正常开始测量，再完成左中右和第二轮。只编译通过，不宣称已现场修好；本次不需要 CpStudio Export，稳定后再统一上传 GitHub。
+- [ ] **Kistler 启动就绪仍有现场限制**：用户报告本轮初始 Device not ready 仍需手动选择 MP001 才解除；当前 Watch ProgNo=1、Ready=true、Alarm=false。上一轮 SET_PROGRAM 离线通过并不等于能从 inactive-MP 报警自动恢复，后续单独核对仪表上电/远程选择条件，不在自动等待中切MP或消警。
+
+- [x] **Kistler 程序选择顺序离线修复（2026-09-10）**：MP Manager 新照片证实 000 未启用、001 已启用，TypeData 保持 1。N045 新增标准 SET_PROGRAM→完成握手→程序号/Ready/Alarm/MeasRunning 确认，再进入 Burster 选程序；N050/N051 增加匹配程序和无报警检查，保留全部运动/力门禁。AI-owned 方法使用 VAR_INST，不改生成声明/SFC 图；6 对象保存回读通过，本轮 AI 新 F11 **0 errors / 原 5 warnings**。程序选择/力联锁/Burster/SFC 静态检查通过；未下载/设备动作/推送。详见 `docs/reviews/station010-kistler-program-20260910.md`。
+- [ ] **当前优先：Kistler 修复现场验证**：用户先安全结束旧自动循环后下载；检查 N045 标准 SET_PROGRAM 对当前 inactive-MP 报警是否被仪表接受、实际 ProgNo=1、Ready=true/Alarm=false，之后 Kistler MeasRunning 才允许压缸下降。不要在等待自动中手动选程序或消警。如仪表拒绝切换，保留标准事件后按现场安全流程处理，不启用空 MP0、不绕过 Ready。再验左中右和第二轮；本次无需额外 CpStudio Export，现场稳定后再统一推送 GitHub。
+
+- [x] **单连接 Burster 驱动离线暂存（2026-09-10，最新）**：用户批准后新增 `FB_Wp100BursterSingleOwner`，程序选择/测量/读值统一一个 socket，公开 IBursterResis2316/LastError 接口已核对；15 个对象保存回读一致，fresh F11 **0 errors / 原 5 warnings**，15 项协议模型/源码检查、七组回归与 Project Pack VALID。未实例化/绑定，原链、力联锁、旧 selector 均未改，未下载/动作/推送。详见 `docs/reviews/station010-burster-single-owner-20260910.md`。
+- [x] **单连接驱动已接入离线 PLE（2026-09-10，最新）**：用户 Export `47c44845` 已移除旧 Peripheral/绑定；AI 写入 `AiWp100.Burster` 唯一实例、非 OES 绑定/配置钩子、socket-free selector、N046 实际就绪检查和手动测量入口。9 个对象 PUT/一次 Save，21 目标回读通过；Run writer 40 目标零变更。新 F11 **0 errors / 5 原有 warnings**；17 项协议/源码检查和七组回归通过。生成接口、力/运动联锁、标准 Unit 判定保持，手动 SET_RANGE 禁用。未下载/动作/推送，仍非现场验收。
+- [x] **Export #2 完成并复核（2026-09-10，最新）**：request `c5beb205`，CpStudio PLC Export 输出为空；本批新 F11 **0 errors / 5 原 warnings**；21 个驱动/绑定和 40 个 Run 目标均 0 修改，56/56 I/O 匹配。新生成 Symbol XML 含 StationData/TypeData/ProgramNo 与 Detector Extension HMI 字段，旧 Peripheral 名称 0 次。工程 SHA `077eebed...af2c886`。独立 REST/UI 证据已记录，正式 Runner ledger 仍 WAITING_FOR_RUNNER，不假标 DONE；无需常规 Export #3。
+- [ ] **当前下一步：单连接版本现场验收**：由用户按现场安全流程下载，并同步本次 IPC HMI/DataSetAccess；先手动 SINGLE_MEAS，后 LEFT → MIDDLE → RIGHT，至少再重复一整轮。另验程序切换、取消/故障恢复、无重复 INIT/旧结果、压紧力联锁。AI 未下载/设备动作，尚不能称现场修好；稳定后才统一上传 GitHub。详见 `docs/reviews/station010-burster-single-owner-20260910.md` 最新节。
+
+- [x] **最新离线修复：删除引入 ErrorCode=13 的标准 ClearError 步骤（2026-09-10）**：解锁后只读现有在线 Watch，首错 13/NativeErrCode 32766/AddText Close，定位上一批额外 ClearError 阶段，不沿用旧 Open=11。授权 Logout 后，只改共享 selector 实现为标准 Reset OK → Open OK → Done，保留失败阻断、首错和全部力/运动联锁；checkpoint、1 PUT/一次 Save、40 目标回读、Build 后 0 操作 PlanOnly、七组回归和 Project Pack VALID。本次 AI 新 F11 **0 errors / 5 warnings**，逐项为 4 × C0351、1 × C0373，无新增签名。未下载、未提交/推送。详见 `docs/reviews/station010-burster-repeat-followup-20260910.md`。
+- [x] **12:45:42 复现后的通讯方向已确认**：新首错仍为 ErrorCode=11（标准 Open）/LastSocketError Close 无效句柄；用户已批准单连接通讯适配，实施及未完成接入门禁见顶部。旧 ClearError 删除版的现场失败结论保留，不再盲改 Reset/ClearError，不跳过程序确认。
+
 - [x] **Burster 第二位置重连生命周期离线修复（2026-09-10）**：用户已验证上一批 LEFT 正常；MIDDLE 压下前首错为 selector ErrorCode=11、NativeErrCode=32766、AddText=OpconTcpClientIpV4Stream.Close，发生于标准 Open 阶段。已在用户 Logout 后补齐每次 standard Reset/ClearError/Open，并删除 Reset 后多余 Close；仅一个 FB 实现 PUT/一次 Save，checkpoint 校验、40 目标回读、最终 0 操作 PlanOnly、七组回归与 Project Pack VALID。**本批新 F11：0 errors / 5 warnings**，逐项核对 4 × C0351、1 × C0373；未改正式 warning 基线。未下载。见 `docs/reviews/station010-burster-repeat-lifecycle-20260910.md`。
-- [ ] **当前优先：重复位置/完整周期现场验收**：用户安全下载后验证 LEFT → MIDDLE → RIGHT，再做下一完整件。标准驱动生命周期复用是当前工作诊断，不能把后续多余 Close 当成首个 Open 错误的全部已证实内因；若再报错，保留首个 ErrorCode 11/12/13、LastSocketError 和阶段。压缸/力检测顺序未改，本批无需 CpStudio Export。
+- [ ] **重复位置/完整周期现场验收（由顶部单连接接入工作承接）**：88f0980 以及后续删除 ClearError 的双连接候选均已现场失败。保留历史首错 11/13 记录，不把旧候选当作现场稳定版本。
 
 - [x] **Burster 测量连接交接修复写入/编译（2026-09-10）**：现场程序 0 选择 Done、`_bursterStarted=TRUE`，首个力诊断 `LEFT FORCE_DATA_INVALID F=2637.033 N`，不是力低于 2500 N。用户 Logout 并恢复操作后，已在正确离线 PLE 写入 selector 临时 Close → 标准 Open 完成才 Done，以及标准 pending Reset/Close 清理；仅 1 个实现 PUT/一次 Save，checkpoint 校验、40 目标回读、最终 0 操作 PlanOnly、七组离线回归和 Project Pack 通过。**本批新 F11：0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373，与上一批一致。**未下载/现场验收**；下一步用户安全下载，验证标准测量连接及 SINGLE_MEAS 完成，再做中/右位置。无需 CpStudio Export。见 `docs/reviews/station010-burster-measuring-handoff-20260910.md`；完整初始因果仍需现场结果确认。
 

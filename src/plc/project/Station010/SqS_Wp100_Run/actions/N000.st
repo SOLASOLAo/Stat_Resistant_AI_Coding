@@ -14,4 +14,5 @@ _unitResult              := 0;
 _pressDelay(IN := FALSE, PT := T#0MS);
 
 // A new operator-requested execution is the only reset/retry boundary.
+_unitResult := CheckKistlerProgram(Reset := TRUE);
 _retVal := CheckPressForce(Phase := 0);
