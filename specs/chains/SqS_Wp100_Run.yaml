@@ -175,9 +175,10 @@ steps:
       source: Station.TypeData.Wp100.Burster.ProgramNo
       protocol: RESISTOMAT 2316 *RCL <programNo> over TCP 5555; numeric 0..15, no P prefix
       failure_display: clear the measuring prompt; retain selector ErrorCode and block both branches. A dedicated HMI alarm requires a CpStudio-owned event.
-      completion: instrument ACK received, EOT sent, temporary socket closed
+      completion: instrument ACK received, EOT sent, temporary socket Close completed, standard IpBurster2316.Open completed with OK
+      measuring_driver_handoff: Unit READY alone is insufficient after the selector closes the standard connection; Open has a 35 s pre-motion watchdog and never runs concurrently with the temporary socket or SINGLE_MEAS
       asynchronous_contract: each socket method completes by return value, not IsOpen or byte count; abandoned pending methods use Reset
-      cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup after the single-cycle OnChainFinish callback
+      cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup after the single-cycle OnChainFinish callback; pending standard Open uses standard Reset then Close, never temporary-socket Reset as a substitute
       diagnostics: retain the first failure through cleanup; clear stale byte counters only at an explicit new request
       retry: no automatic retry or branch release after failure; a new operator-requested chain run is required
   - id: N046

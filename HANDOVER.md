@@ -1285,3 +1285,12 @@
 - **本批新 F11：0 errors / 5 warnings / 158 messages**，实际看见启动/完成和五条明细（4 × C0351 OPC.UA.DA，1 × C0373 SymbolConfig ErrorCodes/DWord）。打开工程时显示的 336 条 Symbol 旧警告不是本次编译结果；未清 Symbol 或改正式 warning baseline。七组离线回归、Project Pack Build/Check 通过，内容 ID `821ac91c...3270`；均不是运行库仿真/现场验收。
 - **未下载、未连接实体 PLC、未发送仪表命令、未启停/FORCE。** 本次无需 CpStudio Export；用户确认现场安全后自行下载，验程序 0 ACK/标准驱动测量、取消恢复和完整左中右流程。如再失败，读取并保留首次 ErrorCode/LastSocketError/Busy/state。专用程序选择失败 HMI 事件仍需 CpStudio 建模，未借用压紧力事件。
 - 详细可追溯记录：`docs/reviews/station010-burster-async-cleanup-20260910.md`。源码、语义合并 hook、writer、离线回归和计划同步；未暂存 Station010 二进制、标准库或连接凭据。
+
+## 2026-09-10 · 自动压下后 N090 / Kistler 超时（最新，离线修复已完成）
+
+- 用户本次自动已完成安全门/压缸下降。只读现有正确 Station010 PLE：程序选择 ProgramNo=0、Done TRUE、Error FALSE；N090 `_bursterStarted=TRUE`、结果未有效。锁存首个力诊断 `LEFT FORCE_DATA_INVALID F=2637.033 N`，不是 2500 N 阈值不足。Kistler 测量结束超时与状态失效相关；Burster 故障后标准 socket CLOSED 是取消后的快照，不能直接当成初始故障证据。PartCounter 服务超时另外保留。
+- 确认源码交接缺口：selector 为选程序关闭标准连接，却在临时 Close 后直接 Done；N047 仅 Unit READY，没有显式标准 Open。已修复并写入：临时 Close → 标准公共 Open 完成才 Done，35 s 前置 watchdog，ErrorCode 11；取消/失败先标准 Reset → Close，异步未完成仍 Busy，保留首错。接口通过当前 PLE Library Manager 核对，没有改标准库、生成声明、量程、力/运动条件或增加自动重试。
+- 用户确认 Logout 后先保存并校验 checkpoint `fefa4e5e...c170f`；Esc 暂停后，用户明确“继续”，再验 exact Station010/profile `ctrlX PLC 2.6.8`、offline、checkpoint 和 Plan。Plan `31d33db1...c6ed3`，**1 个 selector 实现 PUT/一次 Save，40 目标回读通过**；Run 27 步与声明不变。保存工程 SHA `ea870727...a5919`，编译后不变；最终 PlanOnly 0 操作，SHA `d8280461...625d`。未另起 PLE/MCP。
+- **本批 AI 新 F11：0 errors / 5 warnings**，观察 Build started/complete，并实际读到 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，与上一批一致，没有新增或变更正式 warning baseline。七组离线检查和 Project Pack VALID，contentId `945a1a26...90257e`。源码、事务和编译证据不等于运行库/仪表仿真或现场验收。
+- 下一步由用户安全下载，验证标准 Open、SINGLE_MEAS 完成及左中右；若仍卡 N090，抓 Kistler 超时前的 Burster 接受/通信/完成状态。完整原因仍需新现场结果确认。无需再关 AutoRange 或 CpStudio Export。PartCounter 服务问题未处理，不冒充已解决。
+- 记录：`docs/reviews/station010-burster-measuring-handoff-20260910.md`。本轮未执行任何 PLC/仪表命令、变量写入、FORCE、下载或动作；仅增加两个表达式监视项。

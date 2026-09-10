@@ -2,6 +2,8 @@
 
 > 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
 
+- [x] **Burster 测量连接交接修复写入/编译（2026-09-10）**：现场程序 0 选择 Done、`_bursterStarted=TRUE`，首个力诊断 `LEFT FORCE_DATA_INVALID F=2637.033 N`，不是力低于 2500 N。用户 Logout 并恢复操作后，已在正确离线 PLE 写入 selector 临时 Close → 标准 Open 完成才 Done，以及标准 pending Reset/Close 清理；仅 1 个实现 PUT/一次 Save，checkpoint 校验、40 目标回读、最终 0 操作 PlanOnly、七组离线回归和 Project Pack 通过。**本批新 F11：0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373，与上一批一致。**未下载/现场验收**；下一步用户安全下载，验证标准测量连接及 SINGLE_MEAS 完成，再做中/右位置。无需 CpStudio Export。见 `docs/reviews/station010-burster-measuring-handoff-20260910.md`；完整初始因果仍需现场结果确认。
+
 - [x] **Burster 异步清理与首次错误保留（2026-09-10）**：已按用户“继续修改”完成选择器实现和 Station OnCall 取消清理片段两个离线 PUT；等待中的方法按返回值完成/Reset，不能以 IsOpen 或字节数假报成功。保留首次错误，取消后继续周期清理，无自动重试或分支放行。checkpoint、40 目标回读、零操作 PlanOnly、七组回归及 Project Pack 通过；本次新 F11 为 **0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373。未下载。详见 `docs/reviews/station010-burster-async-cleanup-20260910.md`。
 - [x] **Auto Range 状态纠正（2026-09-10）**：用户此前已关闭并导出；本次再次回读 `UseAutoRange := False`。不得继续列为用户待办，也不为本批 PLC 实现修改要求 CpStudio Export。
 - [ ] **最新 Burster 修复现场验收**：用户安全下载后验证程序 0 ACK、标准驱动重连测量、取消/Reset 完成及左中右完整循环。原始 TCP Open 超时原因仍未证实；若仍失败保留首次 ErrorCode/LastSocketError/Busy/state，不以此次离线编译替代现场结论。该项承接下面旧 N045 批次的未完成验收。

@@ -129,6 +129,8 @@ hooks:
       - Burster ProgramNo is validated as 0 through 15 and acknowledged through *RCL before measurement
       - the standard Nexeed Burster socket is closed before the short program-selection TCP session
       - the program-selection TCP session sends EOT and closes before the standard Unit continues
+      - after the temporary Close completes, selector Done additionally requires the public standard IpBurster2316.Open to return OK; Unit READY alone is not evidence of a restored measuring connection
+      - standard reconnect is bounded before Kistler or press-down start; cancellation completes standard Reset then Close without triggering measurement or retry
       - the instrument program owns the Burster range; automatic chains never issue SET_RANGE or copy TypeData UpperRange/LowerRange
       - N046 requires Peripheral UseAutoRange false and N047 requires Burster READY with Execute false before the pressing-cylinder and Kistler start branches
       - Burster grading limits and temperature selection come from the active Wp100 TypeData

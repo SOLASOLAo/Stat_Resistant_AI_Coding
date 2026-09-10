@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "821ac91ce1727a6fc95d641df9f66ca0a0723e599d755ffd9c8ea6c500223270",
+  "contentId": "945a1a267e632c0f629b6cbe2291e07ec1c4fba9b3b8b0c8d2c730c45390257e",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -93,8 +93,8 @@
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 9250,
-      "sha256": "81a16b1f30961a773e0f89459968424e0a1e56cd4c1525699bd99ca6deab6d53"
+      "length": 9615,
+      "sha256": "633e3396b9e9ce83b93bba05e04d04961987e42bd99414ef2f6cdc42b3b5d978"
     },
     {
       "path": "ai/graphical.yaml",

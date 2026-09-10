@@ -40,7 +40,8 @@ END_VAR
 // ErrorCode: 1=invalid program, 2=standard driver close failed,
 // 3=open failed/timeout, 4=write failed/timeout, 5=read failed/timeout,
 // 6=NAK, 7=invalid response, 8=EOT failed/timeout,
-// 9=close failed/timeout, 10=reset/clear-error failed/timeout.
+// 9=close failed/timeout, 10=reset/clear-error failed/timeout,
+// 11=standard driver reopen failed/timeout, 12=standard driver reset failed.
 // OpCon methods remain pending until their RETURN VALUE leaves RUNNING.
 // StationUnit.OnCall continues cancellation cleanup while Execute=FALSE/Busy.
 IF ( NOT Execute )
@@ -65,6 +66,9 @@ THEN
     ELSIF ( _state = 60 )
     THEN
       _state := 191; // Continue Close even if IsOpen is already FALSE.
+    ELSIF ( _state = 70 )
+    THEN
+      _state := 187; // Abort standard Open before cleanup can close it.
     ELSIF ( _socketResult = RUNNING ) OR
           ( NOT _socket.IsOpen )
     THEN
@@ -323,10 +327,7 @@ CASE _state OF
        ( NOT _socket.IsOpen )
     THEN
       _timer(IN := FALSE, PT := T#0S);
-      Busy  := FALSE;
-      Done  := TRUE;
-      Error := FALSE;
-      _state := 100;
+      _state := 70;
     ELSIF ( _socketResult <> RUNNING ) OR
           ( _timer.Q )
     THEN
@@ -334,6 +335,29 @@ CASE _state OF
       ErrorCode := 9;
       _timer(IN := FALSE, PT := T#0S);
       _state := 195;
+    END_IF
+
+  70:
+    // Closing the temporary socket does NOT reopen the standard measuring
+    // driver. Its Unit can still report READY while that driver is CLOSED.
+    // Complete the public peripheral Open before handing ownership back.
+    // Neither Unit Execute nor MeasCmd may start during this handoff.
+    _closeResult := Peripherals._Wp100A103ResistantInterface.Open();
+    _timer(IN := TRUE, PT := T#35S);
+    IF ( _closeResult = OK )
+    THEN
+      _timer(IN := FALSE, PT := T#0S);
+      Busy  := FALSE;
+      Done  := TRUE;
+      Error := FALSE;
+      _state := 100;
+    ELSIF ( _closeResult <> RUNNING ) OR
+          ( _timer.Q )
+    THEN
+      LastSocketError := Peripherals._Wp100A103ResistantInterface.LastError;
+      ErrorCode := 11;
+      _timer(IN := FALSE, PT := T#0S);
+      _state := 187;
     END_IF
 
   100:
@@ -361,6 +385,29 @@ CASE _state OF
     THEN
       LastSocketError := Peripherals._Wp100A103ResistantInterface.LastError;
       ErrorCode := 2;
+    END_IF
+
+  187:
+    // The standard peripheral, not the temporary socket, owns pending Open.
+    // Reset it to completion before calling Close; never retry selection.
+    _closeResult := Peripherals._Wp100A103ResistantInterface.Reset();
+    _timer(IN := TRUE, PT := T#3S);
+    IF ( _closeResult <> RUNNING )
+    THEN
+      IF ( _closeResult < OK ) AND
+         ( ErrorCode = 0 )
+      THEN
+        LastSocketError := Peripherals._Wp100A103ResistantInterface.LastError;
+        ErrorCode := 12;
+      END_IF
+      _timer(IN := FALSE, PT := T#0S);
+      _state := 185;
+    ELSIF ( _timer.Q ) AND
+          ( ErrorCode = 0 )
+    THEN
+      LastSocketError := Peripherals._Wp100A103ResistantInterface.LastError;
+      ErrorCode := 12;
+      // Stay Busy and keep polling the same pending Reset.
     END_IF
 
   190:

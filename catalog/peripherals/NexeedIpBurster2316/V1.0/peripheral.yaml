@@ -10,10 +10,19 @@ transport:
   remote_role: Burster 2316 server
 
 station010_binding:
-  instance: _Wp100K103ResistantInterface
+  instance: _Wp100A103ResistantInterface
   host_name: Station.StationData.BursterSetting.HostName
-  use_auto_range: true
+  use_auto_range: false
+  range_authority: TypeData-selected instrument program; user already disabled AutoRange in CpStudio and exported
   generic_port_field_consumed: false
+
+public_connection_methods:
+  verified_from: existing PLE Library Manager, NexeedIpBurster2316 1.0.1.0, 2026-09-10
+  Open: no arguments; returns DINT
+  Close: no arguments; returns DINT
+  Reset: no arguments; returns DINT
+  application_handoff: after external program selection, complete standard Open before reporting selection Done or issuing SINGLE_MEAS
+  boundary: public API only; no changes to the standard library or private driver fields
 
 verified_in:
   project: Station010

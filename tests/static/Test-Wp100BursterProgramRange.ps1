@@ -70,14 +70,32 @@ Assert-That ($read -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesRea
 $eot = Read-SelectorState 50
 Assert-That ($eot -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesWritten = 1 \).*?_state := 60;') 'One EOT byte with Write still RUNNING must not start Close.'
 $close = Read-SelectorState 60
-Assert-That ($close -match '(?s)IF \( _socketResult = OK \) AND\s+\( NOT _socket.IsOpen \).*?Done\s*:= TRUE;') 'IsOpen false alone must never mean Close completed.'
+Assert-That ($close -match '(?s)IF \( _socketResult = OK \) AND\s+\( NOT _socket.IsOpen \).*?_state := 70;') 'Standard driver Open must follow completed temporary Close.'
+Assert-That ($close -notmatch 'Done\s*:= TRUE') 'Temporary Close alone is not a complete measuring-driver handoff.'
 Assert-That ($close -match '(?s)ELSIF \( _socketResult <> RUNNING \) OR\s+\( _timer.Q \).*?ErrorCode := 9;.*?_state := 195;') 'Failed, inconsistent or timed-out Close must not release Done.'
+$reopen = Read-SelectorState 70
+Assert-That ($reopen -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface\.Open\(\);.*?IF \( _closeResult = OK \).*?Done\s*:= TRUE;.*?_state := 100;') 'Done requires successful public Open of the standard measuring driver.'
+Assert-That ($reopen.Contains('_timer(IN := TRUE, PT := T#35S);')) 'Standard reconnect must have a bounded pre-motion watchdog.'
+Assert-That ($reopen -match '(?s)ELSIF \( _closeResult <> RUNNING \) OR\s+\( _timer.Q \).*?LastSocketError := Peripherals\._Wp100A103ResistantInterface.LastError;.*?ErrorCode := 11;.*?_state := 187;') 'Failed or pending timed-out standard Open must retain its error and reset that driver.'
+$standardReset = Read-SelectorState 187
+Assert-That ($standardReset -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface.Reset\(\);.*?IF \( _closeResult <> RUNNING \).*?_state := 185;') 'Cancelled standard Open must finish standard Reset before standard Close.'
+Assert-That ($standardReset -notmatch '_socket\.|Done\s*:= TRUE|Busy\s*:= FALSE') 'Standard Reset cannot be replaced by temporary-socket Reset or release readiness.'
+$standardResetTimeout = [regex]::Match($standardReset, '(?s)ELSIF \( _timer.Q \).*').Value
+Assert-That ($standardResetTimeout -notmatch '_state\s*:=|Busy\s*:= FALSE') 'Pending standard Reset remains Busy after its diagnostic timeout.'
+foreach ($state in @(70, 187)) {
+  Assert-That ((Read-SelectorState $state) -notmatch 'MeasCmd\s*\(|\.Execute\s*:=|SET_RANGE|\.ParCfg\..*:=') "Handoff state $state must not trigger measuring, motion or configuration changes."
+}
+foreach ($match in [regex]::Matches($selector, '(?ms)^  (?<state>[0-9]+):\r?\n(?<body>.*?)(?=^  (?:[0-9]+:|ELSE)|^END_CASE)')) {
+  if ($match.Groups['body'].Value -match 'Done\s*:= TRUE') {
+    Assert-That ([int]$match.Groups['state'].Value -in @(70, 100)) 'Only completed standard Open and the success-hold state may report Done.'
+  }
+}
 $reset = Read-SelectorState 195
 Assert-That ($reset -match '(?s)_socketResult := _socket.Reset\(\);.*?IF \( _socketResult <> RUNNING \).*?Busy\s*:= FALSE;') 'Reset must be polled until its return value completes, irrespective of IsOpen.'
 Assert-That ($reset -notmatch '_socket\.IsOpen|Done\s*:= TRUE') 'Reset must not skip pending Open cleanup or report selection success.'
 $resetTimeout = [regex]::Match($reset, '(?s)ELSIF \( _timer.Q \).*').Value
 Assert-That ($resetTimeout -and $resetTimeout -notmatch 'Busy\s*:= FALSE|_state\s*:=') 'Pending Reset timeout must retain Busy and keep polling.'
-foreach ($state in @(185, 190, 191, 195)) {
+foreach ($state in @(185, 187, 190, 191, 195)) {
   $cleanup = Read-SelectorState $state
   $captures = [regex]::Matches($cleanup, 'LastSocketError\s*:=')
   $guarded = [regex]::Matches($cleanup, '(?s)\( ErrorCode = 0 \)\s+THEN\s+LastSocketError\s*:=')
@@ -85,6 +103,7 @@ foreach ($state in @(185, 190, 191, 195)) {
 }
 $cancel = $selector.Substring($selector.IndexOf('IF ( NOT Execute )'), $selector.IndexOf('CASE _state OF') - $selector.IndexOf('IF ( NOT Execute )'))
 Assert-That ($cancel -match '(?s)\( _state = 60 \).*?_state := 191;.*?\( _socketResult = RUNNING \) OR\s+\( NOT _socket.IsOpen \).*?_state := 195;') 'Cancellation must continue pending Close or reset abandoned I/O, not start a conflicting method.'
+Assert-That ($cancel -match '(?s)\( _state = 70 \)\s+THEN\s+_state := 187;') 'Cancellation during handoff must clean up the standard driver, not only the temporary socket.'
 $pump = [IO.File]::ReadAllText((Join-Path $plc 'StationUnit/OnCall.BursterCleanup.st'))
 Assert-That ($pump -match '(?s)IF \( NOT AiWp100.BursterProgramSelect.Execute \) AND\s+\( AiWp100.BursterProgramSelect.Busy \)\s+THEN\s+AiWp100.BursterProgramSelect\(\);\s+END_IF') 'One-cycle OnChainFinish needs a guarded cyclic cancellation pump.'
 Assert-That ($pump -notmatch ':=|SINGLE_MEAS|MOVE_WRKPOS') 'Cancellation hook must not start selection, measurement or motion.'
@@ -106,4 +125,4 @@ foreach ($step in @('N046','N047')) {
   $comment = ($process.steps | Where-Object id -eq $step).comment
   Assert-That ($comment -and $writer.Contains("Name = '$step'; Comment = '$comment'")) 'Process and SFC step descriptions differ.'
 }
-Write-Output 'Burster source checks OK: numeric RCL frames 0..15, return-value async gates, pending-call Reset, first-error retention, cyclic cancellation cleanup, NAK/ACK interlocks, no range override, preserved grading/temperature/force checks and generated ownership. Source contracts only; Build and field acceptance remain required.'
+Write-Output 'Burster source checks OK: numeric RCL frames 0..15, ACK/EOT/temporary Close/standard Open ordering, bounded handoff, per-owner pending Reset, first-error retention, cyclic cancellation cleanup, no range override, preserved grading/temperature/force checks and generated ownership. Source contracts only; Build and field acceptance remain required.'

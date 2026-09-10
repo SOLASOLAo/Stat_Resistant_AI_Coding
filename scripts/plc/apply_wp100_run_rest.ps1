@@ -861,7 +861,7 @@ $supportObjectStatus = [ordered]@{}
 $supportObjectStatus.FB_Wp100BursterProgramSelect = Add-OrVerify-FunctionBlock `
   -Name 'FB_Wp100BursterProgramSelect' `
   -SourceFile 'FB_Wp100BursterProgramSelect.st' `
-  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1', 'f50e1a965bc105c677f06458985f187d481e943a4361323f772cf9fb168fd186')
+  -AllowedBaselineImplementationSha256 @('939dcc13eda14c3ceddbf6c27688f6899281a813410c2ef0a16b86fbb71a19e1', 'f50e1a965bc105c677f06458985f187d481e943a4361323f772cf9fb168fd186', '2a718290fe56f6418973188e6c36709cf9a65c05309f875d4a77504c33dc6fea')
 $supportObjectStatus.AiWp100 = Add-OrVerify-Gvl `
   -Name 'AiWp100' `
   -SourceFile 'AiWp100.gvl.st'
