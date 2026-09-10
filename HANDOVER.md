@@ -1294,3 +1294,12 @@
 - **本批 AI 新 F11：0 errors / 5 warnings**，观察 Build started/complete，并实际读到 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，与上一批一致，没有新增或变更正式 warning baseline。七组离线检查和 Project Pack VALID，contentId `945a1a26...90257e`。源码、事务和编译证据不等于运行库/仪表仿真或现场验收。
 - 下一步由用户安全下载，验证标准 Open、SINGLE_MEAS 完成及左中右；若仍卡 N090，抓 Kistler 超时前的 Burster 接受/通信/完成状态。完整原因仍需新现场结果确认。无需再关 AutoRange 或 CpStudio Export。PartCounter 服务问题未处理，不冒充已解决。
 - 记录：`docs/reviews/station010-burster-measuring-handoff-20260910.md`。本轮未执行任何 PLC/仪表命令、变量写入、FORCE、下载或动作；仅增加两个表达式监视项。
+
+## 2026-09-10 · LEFT 成功后 MIDDLE 重连失败（最新，离线修复/编译已完成）
+
+- 用户报告 LEFT 正常；MIDDLE 安全门关闭、压缸未下，HMI 11:26:42 报 `Socket handle invalid or closed / OpconTcpClientIpV4Stream.Close`。当前正确 PLE 只读确认 selector 首错 **ErrorCode=11**，LastSocketError -1/NativeErrCode 32766/AddText Close；临时报文 17/17 字节，EOT 1 字节、读取 2 字节。故障在标准 Open/handoff 阶段；后来取消已回 state=0，不能用此时库内部全 0 推断初始故障行。
+- 已完成共享 FB 最小修复：每次临时 EOT/Close 完成后，标准 Reset -> ClearError -> Open 各成功才 Done；Reset/ClearError 3 s、原 Open 35 s。取消使用标准 Reset 完成后直接清临时 socket，删除上批的 Reset 后多余 Close。公开文档说明 Reset 已关闭流；此清理缺陷成立，但不等于证明第一次 Open-stage Close 错误的全部内因。
+- 用户已确认 Logout；复核 exact Station010/profile、offline 后先保存并校验 checkpoint `42545d1d...89d`，再按 Plan `badd5cd7...19e` 执行 **1 个实现 PUT/一次 Save，40 目标回读通过**。声明、标准库、生成接口、量程、2500 N/2 s、27 步 SFC 和全部运动联锁均未改；未另起 PLE/MCP。
+- **本批新 F11：0 errors / 5 warnings**，已观察 Build started/complete 并实际核对 4 × C0351 OPC.UA.DA、1 × C0373 SymbolConfig ErrorCodes/DWord，和上一批一致，没有调整正式 warning 基线。七组源码/时序/事务回归通过，Project Pack VALID（contentId `7e3cef46...bc558`）；不把源码合同或编译当运行库仿真/现场验收。
+- 最终 Build 后 PlanOnly **0 操作 / 40 目标**（SHA `4d8fded0...6195e`）；工程 SHA `11c428eb...42bf` 与保存后相同，selector 实现 SHA `cae05d7f...373e2`。完整证据见 `docs/reviews/station010-burster-repeat-lifecycle-20260910.md` 和本地 `data/reports/plc/burster-repeat-lifecycle-20260910-verification.json`。
+- **未下载、未执行在线变量写入/FORCE、复位或仪表命令。** 用户安全下载后验证左中右及下一完整件；本批无需 CpStudio Export。LEFT 是用户对上一批的报告，MIDDLE/RIGHT 和重复循环尚未验收。

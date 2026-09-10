@@ -21,7 +21,9 @@ public_connection_methods:
   Open: no arguments; returns DINT
   Close: no arguments; returns DINT
   Reset: no arguments; returns DINT
-  application_handoff: after external program selection, complete standard Open before reporting selection Done or issuing SINGLE_MEAS
+  ClearError: no arguments; returns DINT
+  application_handoff: after external program selection, complete standard Reset then ClearError then Open before Done or SINGLE_MEAS; apply on every position
+  reset_contract: NxBase IOpconAsyncCall.Reset closes the stream and must complete by return value; no additional Close after Reset
   boundary: public API only; no changes to the standard library or private driver fields
 
 verified_in:

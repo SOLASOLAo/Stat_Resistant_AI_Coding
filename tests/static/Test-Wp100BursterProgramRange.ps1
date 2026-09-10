@@ -70,19 +70,34 @@ Assert-That ($read -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesRea
 $eot = Read-SelectorState 50
 Assert-That ($eot -match '(?s)ELSIF \( _socketResult = OK \) AND\s+\( _bytesWritten = 1 \).*?_state := 60;') 'One EOT byte with Write still RUNNING must not start Close.'
 $close = Read-SelectorState 60
-Assert-That ($close -match '(?s)IF \( _socketResult = OK \) AND\s+\( NOT _socket.IsOpen \).*?_state := 70;') 'Standard driver Open must follow completed temporary Close.'
+Assert-That ($close -match '(?s)IF \( _socketResult = OK \) AND\s+\( NOT _socket.IsOpen \).*?_state := 65;') 'Every completed temporary Close must enter standard lifecycle Reset, including repeated selections.'
 Assert-That ($close -notmatch 'Done\s*:= TRUE') 'Temporary Close alone is not a complete measuring-driver handoff.'
 Assert-That ($close -match '(?s)ELSIF \( _socketResult <> RUNNING \) OR\s+\( _timer.Q \).*?ErrorCode := 9;.*?_state := 195;') 'Failed, inconsistent or timed-out Close must not release Done.'
+$prepareReset = Read-SelectorState 65
+$prepareClear = Read-SelectorState 66
+Assert-That ($prepareReset -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface.Reset\(\);.*?IF \( _closeResult = OK \).*?_state := 66;') 'Each standard reconnect must finish its own Reset before clearing the previous lifecycle.'
+Assert-That ($prepareClear -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface.ClearError\(\);.*?IF \( _closeResult = OK \).*?_state := 70;') 'Standard Open requires completed public ClearError, not just a ready Unit.'
+foreach ($entry in @(@{ State = 65; Error = 12 }, @{ State = 66; Error = 13 })) {
+  $preparation = Read-SelectorState $entry.State
+  Assert-That ($preparation.Contains('_timer(IN := TRUE, PT := T#3S);')) 'Standard lifecycle preparation must be bounded.'
+  Assert-That ($preparation -match "(?s)ELSIF \( _closeResult <> RUNNING \) OR\s+\( _timer.Q \).*?LastSocketError := Peripherals\._Wp100A103ResistantInterface.LastError;.*?ErrorCode := $($entry.Error);.*?_state := 187;") 'Failed preparation must latch its own error and finish standard cleanup, not open or release Done.'
+}
+# Protect the actual source path used by all positions, not a cached successful
+# first selection. A closed handle is not valid input for another Close.
+Assert-That ($prepareReset -notmatch '\.Close\(' -and $prepareClear -notmatch '\.Close\(') 'No second Close after standard Reset has closed the stream.'
+$handoffEntryCount = [regex]::Matches($selector, '_state := 70;').Count
+Assert-That ($handoffEntryCount -eq 1) 'Every reconnect must take Reset -> ClearError -> Open; repeated selections cannot bypass preparation.'
 $reopen = Read-SelectorState 70
 Assert-That ($reopen -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface\.Open\(\);.*?IF \( _closeResult = OK \).*?Done\s*:= TRUE;.*?_state := 100;') 'Done requires successful public Open of the standard measuring driver.'
 Assert-That ($reopen.Contains('_timer(IN := TRUE, PT := T#35S);')) 'Standard reconnect must have a bounded pre-motion watchdog.'
 Assert-That ($reopen -match '(?s)ELSIF \( _closeResult <> RUNNING \) OR\s+\( _timer.Q \).*?LastSocketError := Peripherals\._Wp100A103ResistantInterface.LastError;.*?ErrorCode := 11;.*?_state := 187;') 'Failed or pending timed-out standard Open must retain its error and reset that driver.'
 $standardReset = Read-SelectorState 187
-Assert-That ($standardReset -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface.Reset\(\);.*?IF \( _closeResult <> RUNNING \).*?_state := 185;') 'Cancelled standard Open must finish standard Reset before standard Close.'
+Assert-That ($standardReset -match '(?s)_closeResult := Peripherals\._Wp100A103ResistantInterface.Reset\(\);.*?IF \( _closeResult <> RUNNING \).*?_state := 195;') 'Completed standard Reset already closes its stream and must proceed directly to temporary cleanup.'
+Assert-That ($standardReset -notmatch '\.Close\(|\.ClearError\(|_state := 185;') 'Do not close an invalid handle or clear the first error after standard Reset.'
 Assert-That ($standardReset -notmatch '_socket\.|Done\s*:= TRUE|Busy\s*:= FALSE') 'Standard Reset cannot be replaced by temporary-socket Reset or release readiness.'
 $standardResetTimeout = [regex]::Match($standardReset, '(?s)ELSIF \( _timer.Q \).*').Value
 Assert-That ($standardResetTimeout -notmatch '_state\s*:=|Busy\s*:= FALSE') 'Pending standard Reset remains Busy after its diagnostic timeout.'
-foreach ($state in @(70, 187)) {
+foreach ($state in @(65, 66, 70, 187)) {
   Assert-That ((Read-SelectorState $state) -notmatch 'MeasCmd\s*\(|\.Execute\s*:=|SET_RANGE|\.ParCfg\..*:=') "Handoff state $state must not trigger measuring, motion or configuration changes."
 }
 foreach ($match in [regex]::Matches($selector, '(?ms)^  (?<state>[0-9]+):\r?\n(?<body>.*?)(?=^  (?:[0-9]+:|ELSE)|^END_CASE)')) {
@@ -103,7 +118,7 @@ foreach ($state in @(185, 187, 190, 191, 195)) {
 }
 $cancel = $selector.Substring($selector.IndexOf('IF ( NOT Execute )'), $selector.IndexOf('CASE _state OF') - $selector.IndexOf('IF ( NOT Execute )'))
 Assert-That ($cancel -match '(?s)\( _state = 60 \).*?_state := 191;.*?\( _socketResult = RUNNING \) OR\s+\( NOT _socket.IsOpen \).*?_state := 195;') 'Cancellation must continue pending Close or reset abandoned I/O, not start a conflicting method.'
-Assert-That ($cancel -match '(?s)\( _state = 70 \)\s+THEN\s+_state := 187;') 'Cancellation during handoff must clean up the standard driver, not only the temporary socket.'
+Assert-That ($cancel -match '(?s)\( _state = 65 \) OR\s+\( _state = 66 \) OR\s+\( _state = 70 \)\s+THEN\s+_state := 187;') 'Cancellation during standard preparation or Open must reset the standard owner, not only the temporary socket.'
 $pump = [IO.File]::ReadAllText((Join-Path $plc 'StationUnit/OnCall.BursterCleanup.st'))
 Assert-That ($pump -match '(?s)IF \( NOT AiWp100.BursterProgramSelect.Execute \) AND\s+\( AiWp100.BursterProgramSelect.Busy \)\s+THEN\s+AiWp100.BursterProgramSelect\(\);\s+END_IF') 'One-cycle OnChainFinish needs a guarded cyclic cancellation pump.'
 Assert-That ($pump -notmatch ':=|SINGLE_MEAS|MOVE_WRKPOS') 'Cancellation hook must not start selection, measurement or motion.'
@@ -125,4 +140,4 @@ foreach ($step in @('N046','N047')) {
   $comment = ($process.steps | Where-Object id -eq $step).comment
   Assert-That ($comment -and $writer.Contains("Name = '$step'; Comment = '$comment'")) 'Process and SFC step descriptions differ.'
 }
-Write-Output 'Burster source checks OK: numeric RCL frames 0..15, ACK/EOT/temporary Close/standard Open ordering, bounded handoff, per-owner pending Reset, first-error retention, cyclic cancellation cleanup, no range override, preserved grading/temperature/force checks and generated ownership. Source contracts only; Build and field acceptance remain required.'
+Write-Output 'Burster source checks OK: numeric RCL frames 0..15, repeated-selection Reset/ClearError/Open path, no Close after standard Reset, bounded per-owner cleanup, first-error retention, cyclic cancellation, no range override, preserved grading/temperature/force checks and generated ownership. Source contracts only; Build and field acceptance remain required.'
