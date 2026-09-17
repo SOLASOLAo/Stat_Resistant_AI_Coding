@@ -8,22 +8,27 @@ write_modes:
   rest_composite: preserve CpStudio-owned declaration/interface and use hash-guarded official REST only for explicitly AI-owned graph and children
 
 objects:
-  - path: Application/Fbs/FB_Wp100BursterSingleOwner
+  - path: Application/Station/_this/Chains/Sub/SqS_Station_ChangeOverFile/_aN010_active
     owner: ai
-    source: src/plc/project/Station010/FB_Wp100BursterSingleOwner.st
-    specification: specs/common/FB_Wp100BursterSingleOwner.yaml
-    apply_script: scripts/plc/apply_burster_single_owner_rest.ps1
-    write_mode: full_object
-    children_owner: ai
-    deployment_status: integrated_offline_candidate
-  - path: Application/Fbs/FB_OperatorButton
+    source: src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN010_active.st
+    specification: specs/hmi/changeover_requests.yaml
+    apply_script: scripts/plc/apply_changeover_requests_rest.ps1
+    write_mode: implementation
+    interface_owner: cpstudio
+  - path: Application/Station/_this/Chains/Sub/SqS_Station_ChangeOverFile/_reset
     owner: ai
-    source: src/plc/common/FB_OperatorButton.st
-    write_mode: full_object
-  - path: Application/Fbs/FB_MainPressureControl
+    source: src/plc/project/Station010/SqS_Station_ChangeOverFile/_reset.st
+    specification: specs/hmi/changeover_requests.yaml
+    apply_script: scripts/plc/apply_changeover_requests_rest.ps1
+    write_mode: implementation
+    interface_owner: cpstudio
+  - path: Application/Station/_this/Chains/Sub/SqS_Station_ChangeOverFile/_aN999_active
     owner: ai
-    source: src/plc/common/FB_MainPressureControl.st
-    write_mode: full_object
+    source: src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN999_active.st
+    specification: specs/hmi/changeover_requests.yaml
+    apply_script: scripts/plc/apply_changeover_requests_rest.ps1
+    write_mode: implementation
+    interface_owner: cpstudio
   - path: Application/Fbs/FB_PressureFeedbackSimulation
     owner: ai
     source: src/plc/common/FB_PressureFeedbackSimulation.st
@@ -37,10 +42,6 @@ objects:
     owner: ai
     source: src/plc/project/Station010/AiWp100.gvl.st
     write_mode: full_object
-  - path: Application/Fbs/FB_MaintenanceDoorControl
-    owner: ai
-    source: src/plc/common/FB_MaintenanceDoorControl.st
-    write_mode: full_object
   - path: Application/Station/_this/Station
     owner: mixed
     write_mode: semantic_merge
@@ -49,8 +50,12 @@ objects:
     owner: mixed
     source: src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st
     source_role: cancellation_cleanup_fragment_only
+    hmi_display_source: src/plc/project/Station010/StationUnit/OnCall.HmiResistance.st
+    hmi_display_apply_script: scripts/plc/apply_hmi_resistance_rest.ps1
+    hmi_force_source: src/plc/project/Station010/StationUnit/OnCall.HmiForceTrace.st
+    hmi_force_apply_script: scripts/plc/apply_hmi_force_trace_rest.ps1
     write_mode: semantic_merge
-    hook_ids: [station_cyclic_controls]
+    hook_ids: [station_cyclic_controls, station_hmi_resistance_display, station_hmi_force_trace]
   - path: Application/Station/_this/StationUnit/OnApplyOutputs
     owner: mixed
     write_mode: semantic_merge
@@ -63,12 +68,6 @@ objects:
     owner: mixed
     write_mode: semantic_merge
     hook_ids: [wp100_home_output]
-  - path: Application/Station/Wp100/_this/Wp100Unit/OnApplyParameters
-    owner: mixed
-    source: src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st
-    source_role: non_generated_binding_fragment_only
-    write_mode: semantic_merge
-    hook_ids: [burster_single_owner_binding]
   - path: Application/Station/Wp100/_this/Wp100Unit/OnCall
     owner: mixed
     source: src/plc/project/Station010/Wp100Unit/OnCall.BursterConfiguration.st

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?mapping xmlns="http://www.inosoft.com/DTD/SmartForms" namespace="Bpp.ForceTrace;"?>
+<wfml xmlns="http://www.inosoft.com/DTD/SmartForms" xmlns:wfml="http://www.inosoft.com/DTD/WFML">
+  <ForceTraceStartupForm wfml:ID="BppForceTraceStartup" FrameItemName="" ShowInTaskbar="False" LoadDefaultContent="False" />
+</wfml>

@@ -81,7 +81,7 @@ function New-MockNode {
       $children += 'CheckPartPresent'
     }
     if ($null -ne $runPath) {
-      $children += 'CheckPressForce'
+      $children += @('CheckPressForce', 'CheckKistlerProgram')
     }
     $children += 'OnChainFinish'
     return [pscustomobject]@{
@@ -114,7 +114,7 @@ function New-MockNode {
   if ($Path -eq $forceTimeoutPath) {
     return [pscustomobject]@{
       name = 'StationDataStruct'; elementType = 'DUT'; children = @()
-      declaration = "TYPE StationDataStruct : STRUCT`n  PressForceTimeout : DINT;`nEND_STRUCT END_TYPE`n"
+      declaration = "TYPE StationDataStruct : STRUCT`n  PressForceStableTime : DINT := 2000;`n  PressForceTimeout : DINT;`nEND_STRUCT END_TYPE`n"
       implementation = ''
     }
   }
@@ -211,8 +211,8 @@ $applicationChecks
       children = @()
     }
   }
-  if ($name -eq 'CheckPressForce') {
-    $parts = Split-CanonicalMethod (Read-CanonicalText 'SqS_Wp100_Run\methods\CheckPressForce.st')
+  if ($name -in @('CheckPressForce', 'CheckKistlerProgram')) {
+    $parts = Split-CanonicalMethod (Read-CanonicalText "SqS_Wp100_Run\methods\$name.st")
     return [pscustomobject]@{
       name = $name; elementType = 'POUMethod'; children = @()
       declaration = $parts.Declaration; implementation = $parts.Implementation

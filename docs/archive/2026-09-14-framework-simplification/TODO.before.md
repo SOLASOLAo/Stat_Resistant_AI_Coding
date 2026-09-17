@@ -1,0 +1,313 @@
+# TODO.md — 任务清单
+
+> 完成即勾选;优先级 🔴 高 / 🟡 中 / 🟢 低。大项完成后把结论写进 docs/ 或 AGENTS.md。
+
+- [x] **2026-09-14 PartCounter 本地移除**：CpStudio 删除模型 add-on 和 APQ runtime 项，Save All、Fast export、原生清除四项失效签名和变量；九个电阻成员恢复 Read 后新 F11 0 errors / 原 5 warnings。五组 PlanOnly 零操作，Burster 15 对象内容一致。HMI 单独 Export 0 errors / 原 2 warnings，隐藏启动 SFC 已恢复，三张 SFC/.2 DLL 与绑定核对通过；保留原 PartCounter 文件夹及工程检查点。证据 `data/reports/partcounter-remove-20260914/`。
+- [ ] **PartCounter 现场消警**：等待用户批准停稳设备后下载当前 PLC 版本并同步 HMI；本批未更新现场。下载也包含此前未下载的电阻判定、换型重入和曲线发布改动，随后核对提示消失及相关功能；不得把离线移除写成现场已消警。
+
+- [x] **2026-09-14 本机 ForceTrace .2 原生升级**：正常移除/重启/注册，引用唯一；曲线设计器打开/保存/重开通过，HMI 单独 Export 0 errors / 原 2 warnings；已安装 DLL 的晚开/重开与双语离线检查通过。最终本地隐藏启动项已接回，PLC/电阻界面未改。
+- [x] **2026-09-14 HMI .2 现场部署与重启**：用户明确批准后，备份 IPC HMI 285 文件，通过 CpStudio 原生部署仅更新 APQ HMI；目标 .2 DLL、唯一隐藏启动项及业务/语言文件核对通过，实际 HMI 新进程与电阻结果/中文菜单已确认。无 PLC 下载或测量动作，证据 `data/reports/hmi/force-trace-ipc-20260914/`。
+- [ ] **HMI .2 自动场景验收**：保持 HMI 运行，先不开曲线页，完成左中右后再打开；再验第二轮、重开、断线及实际 zh→en→zh。原 PartCounter 超时提示仍在，本批未处理。后续 HMI Export/Smart 设计器会重建 Gui.config，仍须最后接回 startup-overlay 并核对 IPC；当前不能把已部署当作晚开曲线现场验收通过。
+
+- [x] **按“简化、马上收尾”保存并停止（2026-09-11）**：直接使用本地 `data/components/station010-set-20260911-rc.4/`，入口 `components/station010/START-HERE.md`。三核心 rc.2 + ForceTrace .2 + 最新电阻/中文/换型接入层已保存；rc.3 排序校验失败如实保留，rc.4 小幅修正后构建及 PS7/WinPS5 接收检查通过。无下载、IPC 部署、GitHub 写入、后台续做。哈希/清单仅内部记录，不再扩展为使用前提。
+- [ ] **下次按需继续实际验收**：独立 Burster 库消费仍未通过；HMI .2 及最新电阻/换型现场验收仍待。不要自动重启封装、扩大测试矩阵或清理旧包；电脑带走前保持 CpStudio/PLE 原状。
+
+- [x] **电阻 HMI OK/NOK 来源核对（2026-09-11）**：按用户明确要求，三位置 Status 均为 `HMIResistance.*Ok ← Result.{位置}.Resistance.Ok ← N090 电阻上下限比较`，不使用 Kistler Unit.OutCmd.OK/Nok。本轮只读，无额外 PLC/HMI 修改；保留原力监控门禁。
+
+- [x] **每次电阻测量显式判定（2026-09-11）**：用户改后的 TypeData 两限单位已核对为 Ω；N090 首次完成时明确比较本次 ParCmd 下限≤原始Ω电阻≤上限，含边界且要求无量程越界，锁存现有 Valid/Ok。三位置均覆盖；PLC 仅 1 个 Action 修改、41 目标保存回读、最终 0 操作 PlanOnly。12 边界用例和相关回归通过，新 F11 0 errors / 原 5 warnings。规格/工程计划已同步，冻结包不变；详见 resistance-grading review。
+- [ ] **电阻判定现场验收**：本批尚未下载。授权部署后核对活动配方实际 Ω 数值，验证左/中/右各次合格、超差、边界及重复周期；通讯/力故障不得显示有效合格结果。本次不新增整件汇总、NOK 停机或自动重测。
+
+## 2026-09-11 最新：晚开曲线与组件交付
+
+- [x] **ForceTrace .2 后台采集本地候选**：旧 .1 到开页才订阅，用户确认自动开始后开页；新 session + 隐藏 SmartForm 经原厂预加载/晚开/重开合成帧验证，59 核心检查与 121 点图/CSV 保持通过；不补造旧 LEFT 数据。
+- [x] **中文遗漏补齐**：原生保存 6 个 zh_CN 单元（含用户换型），HMI 单独 Export 更新 10 处文字、0 errors / 原 2 warnings，英文/VWN 业务配置/PLC/Symbol/9 电阻绑定不变。
+- [x] **BPP-REUSE-PACKAGING-20260911 可复用本地包**：三组件源码 rc.2、HMI 原生 .2，manifest/lock/实际 dirty 快照与包 SHA、依赖/接口/迁移/回滚齐全；23 打包检查、包内协议/生命周期/曲线/启动及 WinPS5 校验通过。`data/components/station010-set-20260911-rc.2.zip` 96 文件，旧 rc.1 的 27 文件未改。
+- [x] **原生 HMI .2 正常本地升级**：2026-09-14 已完成；现场部署/验收见最上方待办。只换 DLL 不足，最终启动配置也必须带上。
+- [ ] **Burster 原生独立库/消费 Build**：保留当前 CpStudio/唯一 PLE，未重新试建；待空闲离线窗口修 qualified-only/ctrlX 平台重定向，再 fresh library+consumer Build。失败二进制未交付，正式 Company/固件仍待。
+- [ ] **已有 Changeover PLC 修复现场复测**：当前本地版本未下载；另行授权后连续两次及取消重试。下方旧 rc.1 SOURCE_DRIFT/需先开页仅适用于历史版本。
+
+- [x] **HMI-ZH-EN-20260911 本地接入**：新增 6 个电阻原生 Text、补齐页面菜单，名称/未完成提示改为 TextGroup 引用，OK/NOK 复用标准资源；原数值/业务绑定、坐标与资源不变。CpStudio 保存、HMI 单独 Export、重开通过；48 项导出文本、36 项离线动态提示及英文宽度检查通过。UserDefined 新 SHA `7ab00c…89bc`，详见 `docs/hmi_localization.md`。
+- [ ] **HMI 原生运行时语言切换**：独立语言管理器检查未能初始化，离线翻译注入不算真实运行时验收。另行授权 IPC 部署后实测 zh→en→zh、未完成/OK/NOK、曲线运行/结束/取消/断线/保存提示和英文排版。
+- [x] **CHANGEOVER-REENTRY-20260911 离线修复**：先保留在线 N010 RUNNING、视图请求残留/对话框空的证据，再正常 Logout。仅更新 N010、_reset、N999 三个实现并保存；图/声明/其他 20 子对象不变，10 项生命周期契约检查通过，新 F11 **0 errors / 原 5 warnings**，最终 PlanOnly 0 操作。详见 `docs/reviews/station010-changeover-reentry-20260911.md`。
+- [ ] **换型现场复测**：另行授权下载后连续完成两次 TypeData 选择，并取消文件选择、取消/错误退出后重试。当前现场仍运行旧程序；本轮没有下载、在线修改、写值或停止 runtime。
+
+- [x] **2026-09-11 电阻 Read 已完成**。原生编辑器 + 官方精确 Symbol Select 完成父结构及 9 成员 Read；该次 XML 只有这 10 个 access 属性变化。新增曲线阶段 F11 为 0 errors / 原 5 warnings，五个 PlanOnly 0 操作，Burster 15 对象内容匹配，该阶段 UserDefined SHA 保持（随后双语接入更新为上方新哈希）。完整 PLC Export 原厂流缺陷仍未恢复，Fast export 与 HMI 单独 Export 已完成。
+- [x] **曲线原生扩展 0.1.0.1 已注册**：`.had` 仅含自有 DLL 与 AddonDesc.xml；按已批准有限 Std 例外通过原生 HMI add-ons 安装。原生移除旧版、正常重启清理旧引用后重装，Gui/Toolbox 各一个新版引用，安装 DLL 哈希匹配测试版本；实际设计器打开、保存、关闭和重开通过，空记录无演示曲线。证据 `data/reports/hmi/force-trace-registration-20260911/native-addon-final.audit.json`。
+- [x] **曲线 HMI 单独 Export 完成**：Station.HMIForceFrame 生成 VT_UI4/Cnt=14 数组项，原 9 个电阻项保持；除时间、新数组 Item/Text 和新菜单 Text 外 VWN 全文相同，PLC 工程及 Symbol 哈希不变。CpStudio 0 errors / 2 条原有 Burster 平台 warnings。
+
+- [x] **三位置显示接口已导出**：实际位置为 `Station.HMIResistance : HMIResistanceStruct`，9 个成员（3 REAL + 6 BOOL）已进入 Symbol/VWN，不再要求 Wp100 重建接口。
+- [x] **PLC 电阻显示赋值已离线接入（2026-09-11）**：只增加 StationUnit.OnCall 显示片段，父链保留结果换算 mΩ，Valid/Ok 门控，无效值清零；1 PUT/Save/回读、原 OnCall 与生成声明精确保留，最终 PlanOnly 为 0 写入。本次新 F11 0 errors / 5 warnings（4×C0351、1×C0373），框架及事务检查通过；未下载/推送。
+- [x] **UserDefined 三组控件自动接入（2026-09-11）**：备份后替换两个试放副本，增加三组数值/判定/未完成控件；保留原有 5 控件、944×572 画布、提示栏及图片资源。9 成员类型/路径、原厂加载器 0 错误、CpStudio 重开通过；三次 Export 尝试后 SFC SHA 保持不变。证据 `data/reports/hmi/resistance-view-20260911/`。
+- [ ] **完整 PLC Export 原厂缺陷**：PLE 符号 REST 响应截断，独立相同请求及隔离延迟流复现；重开工程和重启唯一 PLE 均未解决。电阻父结构/9 成员及曲线数组的 Read 已核实，Fast export、HMI 单独 Export 和设计器保存重开已完成。仍需原厂修复或受支持的完整导出恢复途径，不再盲目重试 Export/重启；见 `docs/reviews/cpstudio-symbol-stream-20260911.md`。
+- [ ] **显示现场验收**：每轮清零、左中右独立锁存、取消与 mΩ 换算；原生通讯质量/断线缓存单独验证，Valid 不等于通讯正常。新画面已离线创建/加载，尚未验证运行时数据和状态切换，未部署 IPC。
+
+- [x] **PLC 实时力控件核实/范围确认**：用户确认 PLC 实时力、IPC .50 本地 CSV、分左/中/右。标准 Kistler 已有 Mod_Chart；ScopeView 是 TwinCAT Scope/SVD 路线，不当作现成 ctrlX CSV。见 `specs/hmi/plc_force_curve.yaml` 与 `docs/reviews/station010-force-curve-events-20260910.md`。
+- [x] **实时曲线/CSV 与双语文本离线验证**：`src/hmi/Bpp.ForceTrace/` 使用原厂 Mod_Chart 和同一快照保存 CSV；28 项记录/CSV + 31 项帧检查通过，实际安装 DLL + 本站 SFC 的帧→图表→CSV、121 合成点坐标及空点检查通过，SFCLoader 0 错误。18 个 CpStudio 原生中英文 Text 已保存并生成；未把离线翻译注入视为运行时切换验收。
+- [x] **实时曲线本地接入完成**：CpStudio 配置 Station/ForceTrace 与 Read 数组；PLC 发布器、周期/位置/结束/首错钩子已保存，HMI 只读 Item 绑定为 `Ch1.L1.Station.HMIForceFrame`。目标发布间隔 100 ms，时间取 PLC 毫秒计数，五组最终 PlanOnly 均 0 操作。未新增仪表命令、未改变原有力/运动联锁，详见 `docs/hmi_force_trace_addon.md`。
+- [ ] **实时曲线现场验收**：HMI 启动后先打开 ForceTrace 页再开始待记录周期（loadOnStartup=False、KeepAlive=True）；首次/重连订阅不补录旧采集。核对真实 Item 质量和刷新、下压前 t=0、左中右与轮次、采集结束/取消/首错、断线/重连、运行时语言切换及 IPC CSV 权限。本批未下载、未部署 IPC。
+- [ ] **Kistler 组件版本后续发布**：冻结 0.1.0-rc.1 的 Check 因本站 N050/OnChainFinish 新增记录钩子报 SOURCE_DRIFT，已审阅；旧包和版本锁保持不变，现场验证后另行更新版本，不覆盖冻结包。见 `components/README.md`。
+- [x] **工程计划刷新**：Project Pack Build/Check 为 VALID，仅 ownership/hooks 清单哈希及 contentId 更新，SFC 计划与 I/O 未变。额外旧测试 `Test-Station010ProjectPack.ps1` 的步骤基线仍为 23 步，而 HEAD 规范已有 27 步，本批未改这两份文件；见 `project-pack-final.audit.json`。
+- [ ] **既有 Project Pack 测试基线同步**：按已审阅 SFC 汇合步核对并更新旧测试的步骤/并行断言，另核对其历史 ASC 固定哈希；保留当前流程和 I/O，不能仅为了测试通过替换现场基线。
+- [ ] **CpStudio 专用事件补充**：已核对现有 Wp100 1–5、12，建议 20–28 用于参数、力等待/下降、采力状态、压缸位置、Kistler准备、Burster选程/测量/清理。当前仅提案；人工添加并导出后才接精确触发、首错锁存/复位和 HMI 文本，避免旧 5 与新事件重复报警。CSV 文件错误先用本地提示。
+
+- [x] **设备组件源码候选0.1.0-rc.1**：Burster驱动与Kistler集成包独立清单/文档/源码版本锁、纯离线Check/Build已完成；19项打包检查、Burster包内18项及Kistler包内测试通过，两包重复Build内容不变。沿用唯一canonical源码，无PLC源码/IDE/设备改动，无新Git标签/推送；见`components/README.md`。
+- [ ] **Burster正式PLC安装库**：已试建15对象 `.library` 并临时安装/消费验证，但新 Build 依赖访问/解析失败；文件存在不等于合格库。试验库已卸载，消费工程已保存关闭，Station010 未动。先在独立库工程修正 qualified-only/ctrlX 平台解析并 fresh 消费 Build，补固件/正式 Company，才考虑现场替换；当前有效交付仍为源码包。见 `docs/reviews/burster-native-library-20260910.md`。
+- [ ] **组件现场验收/正式版本发布**：结果数值/单位/判定、重复运行、取消、断线/重启恢复及Kistler力复位/故障保持仍待验收；版本锁目前是源码锁。通过后记录实际依赖与设备设置、建立组件标签/Release；不重新启用原Burster双连接方案，不把MP000 Active经验推广为全部固件要求。
+
+- [x] **本轮源码发布检查**：用户明确要求先上传；Kistler/Burster契约、SFC事务、工程框架和18项离线协议测试通过，Project Pack重新生成后Check通过。发布范围为McpCoding当前源码/脚本/规格/记录，不含旁级Station010的加密工程和待脱敏配置；一轮完成不提升为长期稳定性验收。
+- [x] **16:59 一轮左中右自动流程完成**：按用户最新要求，AI于16:57:18只点击一次正常HMI Start；实体按钮/fixture由现场操作，未代写输入。依次观察左侧等待按钮、安全门打开、右侧测量，16:59:12显示“测量完成”、原位绿灯、Start恢复/Stop禁用，未见红色报警，仅余既有PartCounter警告。无新增PLC修改/下载，不再启动第二轮。完整自动尚未测试的下方旧记录已被本结果取代。
+- [x] **16:54 Active勾选对比：手动选程恢复**：用户仅勾选MP000 Active，保留其内容不变，现0/1均勾选，报告Set program=0/1均正常。AI只读确认实际1/Ready绿/Alarm灭/力值可见。保留当前勾选，不再要求配置或复制MP0，TypeData及实际生产测量仍用1；本项无新增PLC修改/下载。
+- [ ] **当前剩余验收**：核对`Wp100.SqC_Run.Result.Left/Middle/Right`保存的电阻数值、Valid及OK/NOK，另验证第二轮/重启和力故障保持。16:59已确认一轮完整自动结束，但未逐项读取结果、未采连续力趋势，不等于质量及长期稳定性验收。独立手动Start/End未单测，用户本轮选择直接自动；不再作为首次自动的前置阻点。既有PartCounter服务警告另待处理，稳定后统一推送GitHub。
+
+- [x] **16:39 正常MP1状态下复现标准选程序导致1→0**：本体恢复后实读1/Ready绿/无Alarm，Manual放行后单次Set program=1；首错-5/SetProg，实际降为0/Readyfalse/Alarmtrue，事后Unit两处目标参数均1。未测量/动作/改PLC/编译/下载；该证据将标准选程路径与自动SFC分开，内部时序仍未获得周期级跟踪。
+- [ ] **下一步：本体再次恢复MP001，再单独验证采力启动/停止**。自动流程已有匹配MP时跳过重复SET_PROGRAM的候选逻辑，但MEASURE是否也触发同一选程故障还未证实。仅手动受控Start/End、不动缸、不跑自动；保留故障首错和实际ProgNo。若也失败，需正式5867C适配/厂商握手方案，不强写私有发送结构或屏蔽Ready。
+- [x] **用户要求的本机屏保等待时间**：安全屏保900→1800秒；Windows API和用户保存值回读均1800，ScreenSaveActive/ScreenSaverSecure均保持1。未改公司Policies、未关闭锁屏、未改PLC/IPC设置。不得把该设置解释为已排除所有公司锁定策略，也不得对抗后续策略回写。
+
+- [ ] **最新：恢复可操作窗口及 Kistler 受控恢复验证**：用户已授权本轮改后直接下载测试，右下锁为正常手动放行；下方旧的一次命令授权限制不再是当前门禁。RDP 刷新窗口后仍连续两次无法激活，已请用户恢复 PLE/RDP，未继续输入。本轮无新的 PLC 修复/编译/下载/设备命令。公开供应参数无 BL/TL 模式，未证实位布局错误。请用户安全退出自动后在本体蓝色 PROCESS 页选现有 MP001，再读实际 ProgNo/Ready/Alarm；保持 TypeData=1，不用启用/复制 MP0 或强写 PDO 替代根因。窗口和仪表恢复后再基于实际证据决定必要代码改动、编译和已授权的下载测试。
+
+- [ ] **核实固件对Inactive MP与MP Manager Active的具体含义**：厂家5867C手册§4.13.3/p76说Active用于显示/隐藏；仅凭MP0未勾选不能推断MP0空白或配置无效。撤回此前这一推断，不要求0/1都勾选，不擅自改程序。保留TypeData=1及已验证的单次-1/SetProg错误作为下一步依据。
+
+- [x] **16:16:45 单次手动 Set program=1 已执行并保留新首错**：按钮正常放行后只点击一次，实际仍0；16:16:59驱动Number=-1/AddText=SetProg/NativeErrCode=0。不是旧-5；事后发送全0不等于完整时序。从站DeviceState=8/PdStatus=0/LastPdStatusError=0，力值仍更新。没有测量/气缸动作/改PLC/下载/推送；单次命令授权已消耗，后续不重复点击。
+- [ ] **当前Kistler阻点：标准SetProg返回设备/总线未就绪**。核对当前有效MP/报警与标准驱动正式恢复路径；公开说明没有-1内部精确条件，也未列专用ACK/ResetAlarm命令。之前照片MP0未启用、MP1有效，不能断言两者都必须启用，不能激活未配置MP0或强写Ready/PDO掩盖问题。详见Kistler review最新节。
+
+- [ ] **单次 MP1 测试已获授权，等待 HMI 正常放行**：用户已同意安全手动 Set program=1 一次；实际尚未触发，因为当前按钮仍灰色带锁。用户手动登录/取得操作权限后，刷新 Manual/目标1/按钮可用，再执行一次并读取实际MP、AUTO及首错；不绕过HMI权限、不测量/动作/跑自动。Watch3诊断发送数据和错误已准备，基线 Auto=false、MeasProgNo=0、Number=0。
+
+- [ ] **最新优先：抓取一次安全、受控的 Kistler SET_PROGRAM=1 请求/反馈（2026-09-10 16:07）**：在线两个 ParCmd 程序号现均为1，但实际 ProgNo=0、Ready=false、Alarm=true；补参数候选版未闭环。用户纠正后撤回“手动点击消警证明切程序成功”的推断。后来 _lastError=0 且 HMI 已手动，不能把旧 -5 当作此次首错。需现场安全确认/单次命令授权后观察 AUTO 与 MP 请求/确认，不需要跑自动；本轮只读、未编译/下载/推送。详见 Kistler review 顶部。
+
+- [x] **Kistler 重复切程序/参数一致性候选修正（2026-09-10 15:49）**：N045 同时赋值 SetProgram/Measure.ProgNo；已匹配、就绪、无报警且空闲时跳过重复 SET_PROGRAM，其他情况保留标准命令握手。1 个方法离线 PUT/Save/回读，生成声明/SFC/运动与力联锁未改；新 F11 0 errors / 原 5 warnings，四组相关检查通过。未下载、未推送，详见 Kistler review 顶部。
+- [ ] **当前优先：Kistler MP000 首因和候选版现场验证**：当前首错 -5/SetProg，仪表 MP000 未激活。新照片确认 AUTO=byte1.bit4、MP=byte2.bit0..3，但全0是空闲截图，不证明失败过程。安全取消自动后，受控手动验证 SET_PROGRAM=1 的实际请求与反馈，再决定能否自动验收；不启用空 MP0、不直接写私有发送结构或 PDO。OOD 2.0.7 与库 2.0.1 是供应包自身编号，不能因此盲目升级。现阶段不得称设备故障已彻底修复。
+
+- [x] **Burster E1106 根因只读确认（2026-09-10 15:03）**：HMI `B2316 E=1106 CMD=SYST:ERR?`，在线驱动 LastResponse 实际为 `0,"NO ERROR"`，MeasurementStarts=0。SelectProgram 字符串整段比较漏掉引号，误把零错误响应当故障；不是本次 socket Close 失败或真实的仪表非0错误。未改代码/编译/下载，详见 `docs/reviews/station010-burster-error-response-20260910.md`。
+- [x] **Burster E1106 最小离线修复（2026-09-10）**：共享 SelectProgram 保留原两种零错误格式，增加 `0,"NO ERROR"` / `0, "NO ERROR"`；只接受四种完整字符串，非0/空响应/异常格式仍阻断，不引入宽松解析器。已自行 Logout、确认离线、保留一份普通副本，1 个实现 PUT/Save/回读通过；18 项协议/源码测试、Burster 静态检查通过。**本次新 F11：0 errors / 原 5 warnings**（4×C0351、1×C0373），未改生成声明、量程、程序号、socket或力/运动联锁。未下载/设备动作/提交/推送。详见 `docs/reviews/station010-burster-error-response-20260910.md`。
+- [ ] **当前优先：E1106 修复现场复测**：用户安全结束旧自动后下载，确认带引号零错误响应不再误报，程序确认后正常开始测量，再完成左中右和第二轮。只编译通过，不宣称已现场修好；本次不需要 CpStudio Export，稳定后再统一上传 GitHub。
+- [ ] **Kistler 启动就绪仍有现场限制**：用户报告本轮初始 Device not ready 仍需手动选择 MP001 才解除；当前 Watch ProgNo=1、Ready=true、Alarm=false。上一轮 SET_PROGRAM 离线通过并不等于能从 inactive-MP 报警自动恢复，后续单独核对仪表上电/远程选择条件，不在自动等待中切MP或消警。
+
+- [x] **Kistler 程序选择顺序离线修复（2026-09-10）**：MP Manager 新照片证实 000 未启用、001 已启用，TypeData 保持 1。N045 新增标准 SET_PROGRAM→完成握手→程序号/Ready/Alarm/MeasRunning 确认，再进入 Burster 选程序；N050/N051 增加匹配程序和无报警检查，保留全部运动/力门禁。AI-owned 方法使用 VAR_INST，不改生成声明/SFC 图；6 对象保存回读通过，本轮 AI 新 F11 **0 errors / 原 5 warnings**。程序选择/力联锁/Burster/SFC 静态检查通过；未下载/设备动作/推送。详见 `docs/reviews/station010-kistler-program-20260910.md`。
+- [ ] **当前优先：Kistler 修复现场验证**：用户先安全结束旧自动循环后下载；检查 N045 标准 SET_PROGRAM 对当前 inactive-MP 报警是否被仪表接受、实际 ProgNo=1、Ready=true/Alarm=false，之后 Kistler MeasRunning 才允许压缸下降。不要在等待自动中手动选程序或消警。如仪表拒绝切换，保留标准事件后按现场安全流程处理，不启用空 MP0、不绕过 Ready。再验左中右和第二轮；本次无需额外 CpStudio Export，现场稳定后再统一推送 GitHub。
+
+- [x] **单连接 Burster 驱动离线暂存（2026-09-10，最新）**：用户批准后新增 `FB_Wp100BursterSingleOwner`，程序选择/测量/读值统一一个 socket，公开 IBursterResis2316/LastError 接口已核对；15 个对象保存回读一致，fresh F11 **0 errors / 原 5 warnings**，15 项协议模型/源码检查、七组回归与 Project Pack VALID。未实例化/绑定，原链、力联锁、旧 selector 均未改，未下载/动作/推送。详见 `docs/reviews/station010-burster-single-owner-20260910.md`。
+- [x] **单连接驱动已接入离线 PLE（2026-09-10，最新）**：用户 Export `47c44845` 已移除旧 Peripheral/绑定；AI 写入 `AiWp100.Burster` 唯一实例、非 OES 绑定/配置钩子、socket-free selector、N046 实际就绪检查和手动测量入口。9 个对象 PUT/一次 Save，21 目标回读通过；Run writer 40 目标零变更。新 F11 **0 errors / 5 原有 warnings**；17 项协议/源码检查和七组回归通过。生成接口、力/运动联锁、标准 Unit 判定保持，手动 SET_RANGE 禁用。未下载/动作/推送，仍非现场验收。
+- [x] **Export #2 完成并复核（2026-09-10，最新）**：request `c5beb205`，CpStudio PLC Export 输出为空；本批新 F11 **0 errors / 5 原 warnings**；21 个驱动/绑定和 40 个 Run 目标均 0 修改，56/56 I/O 匹配。新生成 Symbol XML 含 StationData/TypeData/ProgramNo 与 Detector Extension HMI 字段，旧 Peripheral 名称 0 次。工程 SHA `077eebed...af2c886`。独立 REST/UI 证据已记录，正式 Runner ledger 仍 WAITING_FOR_RUNNER，不假标 DONE；无需常规 Export #3。
+- [ ] **当前下一步：单连接版本现场验收**：由用户按现场安全流程下载，并同步本次 IPC HMI/DataSetAccess；先手动 SINGLE_MEAS，后 LEFT → MIDDLE → RIGHT，至少再重复一整轮。另验程序切换、取消/故障恢复、无重复 INIT/旧结果、压紧力联锁。AI 未下载/设备动作，尚不能称现场修好；稳定后才统一上传 GitHub。详见 `docs/reviews/station010-burster-single-owner-20260910.md` 最新节。
+
+- [x] **最新离线修复：删除引入 ErrorCode=13 的标准 ClearError 步骤（2026-09-10）**：解锁后只读现有在线 Watch，首错 13/NativeErrCode 32766/AddText Close，定位上一批额外 ClearError 阶段，不沿用旧 Open=11。授权 Logout 后，只改共享 selector 实现为标准 Reset OK → Open OK → Done，保留失败阻断、首错和全部力/运动联锁；checkpoint、1 PUT/一次 Save、40 目标回读、Build 后 0 操作 PlanOnly、七组回归和 Project Pack VALID。本次 AI 新 F11 **0 errors / 5 warnings**，逐项为 4 × C0351、1 × C0373，无新增签名。未下载、未提交/推送。详见 `docs/reviews/station010-burster-repeat-followup-20260910.md`。
+- [x] **12:45:42 复现后的通讯方向已确认**：新首错仍为 ErrorCode=11（标准 Open）/LastSocketError Close 无效句柄；用户已批准单连接通讯适配，实施及未完成接入门禁见顶部。旧 ClearError 删除版的现场失败结论保留，不再盲改 Reset/ClearError，不跳过程序确认。
+
+- [x] **Burster 第二位置重连生命周期离线修复（2026-09-10）**：用户已验证上一批 LEFT 正常；MIDDLE 压下前首错为 selector ErrorCode=11、NativeErrCode=32766、AddText=OpconTcpClientIpV4Stream.Close，发生于标准 Open 阶段。已在用户 Logout 后补齐每次 standard Reset/ClearError/Open，并删除 Reset 后多余 Close；仅一个 FB 实现 PUT/一次 Save，checkpoint 校验、40 目标回读、最终 0 操作 PlanOnly、七组回归与 Project Pack VALID。**本批新 F11：0 errors / 5 warnings**，逐项核对 4 × C0351、1 × C0373；未改正式 warning 基线。未下载。见 `docs/reviews/station010-burster-repeat-lifecycle-20260910.md`。
+- [ ] **重复位置/完整周期现场验收（由顶部单连接接入工作承接）**：88f0980 以及后续删除 ClearError 的双连接候选均已现场失败。保留历史首错 11/13 记录，不把旧候选当作现场稳定版本。
+
+- [x] **Burster 测量连接交接修复写入/编译（2026-09-10）**：现场程序 0 选择 Done、`_bursterStarted=TRUE`，首个力诊断 `LEFT FORCE_DATA_INVALID F=2637.033 N`，不是力低于 2500 N。用户 Logout 并恢复操作后，已在正确离线 PLE 写入 selector 临时 Close → 标准 Open 完成才 Done，以及标准 pending Reset/Close 清理；仅 1 个实现 PUT/一次 Save，checkpoint 校验、40 目标回读、最终 0 操作 PlanOnly、七组离线回归和 Project Pack 通过。**本批新 F11：0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373，与上一批一致。**未下载/现场验收**；下一步用户安全下载，验证标准测量连接及 SINGLE_MEAS 完成，再做中/右位置。无需 CpStudio Export。见 `docs/reviews/station010-burster-measuring-handoff-20260910.md`；完整初始因果仍需现场结果确认。
+
+- [x] **Burster 异步清理与首次错误保留（2026-09-10）**：已按用户“继续修改”完成选择器实现和 Station OnCall 取消清理片段两个离线 PUT；等待中的方法按返回值完成/Reset，不能以 IsOpen 或字节数假报成功。保留首次错误，取消后继续周期清理，无自动重试或分支放行。checkpoint、40 目标回读、零操作 PlanOnly、七组回归及 Project Pack 通过；本次新 F11 为 **0 errors / 5 warnings**，实际明细 4 × C0351、1 × C0373。未下载。详见 `docs/reviews/station010-burster-async-cleanup-20260910.md`。
+- [x] **Auto Range 状态纠正（2026-09-10）**：用户此前已关闭并导出；本次再次回读 `UseAutoRange := False`。不得继续列为用户待办，也不为本批 PLC 实现修改要求 CpStudio Export。
+- [ ] **最新 Burster 修复现场验收**：用户安全下载后验证程序 0 ACK、标准驱动重连测量、取消/Reset 完成及左中右完整循环。原始 TCP Open 超时原因仍未证实；若仍失败保留首次 ErrorCode/LastSocketError/Busy/state，不以此次离线编译替代现场结论。该项承接下面旧 N045 批次的未完成验收。
+
+- [x] **N045 Burster 程序选择 NAK 修复（2026-09-09）**：现场只读确认为 ProgramNo=0、ErrorCode=6、响应 NAK+CR；修正错误报文 `*RCL P0` 为 `*RCL 0`（手册 P1 是 0..15 数值占位符）。只改共享 FB 实现和 N045 失败时清空误导提示，保留 ACK 后才放行压缸及全部力/运动联锁。现有离线 REST 两个 PUT/一次 Save/全目标回读，最终 PlanOnly 0 操作；新 F11 0 errors / 5 warnings，明细为 4 × C0351、1 × C0373。七组回归及 Project Pack 检查通过。详见 `docs/reviews/station010-burster-rcl-20260909.md`。
+- [ ] **N045 修复现场验收**：确认安全后由用户下载并重新发起自动，验证程序 0 ACK、N045 放行、压缸/Kistler 启动、压下到位后力稳定、电阻测量和回升，再验中/右；本次无需 CpStudio Export。AI 未下载，尚无纠正报文的真机 ACK/完整循环结果。
+- [ ] **程序选择失败的 HMI 专用事件**：当前 CpStudio 没有对应事件；本次仅清空“正在测量”误导提示，保留选择器 ErrorCode 和两个分支 HAS_ERROR。若需明确红色报警，由用户在 CpStudio 添加事件并导出后接入，不借用压力/缺料事件号或强改生成接口。
+
+- [x] **N000 旧力报警复位卡住修复（2026-09-09）**：只改 CheckPressForce Phase 0，不再把 UnlockEvent/ClearEvent 的 FALSE 当成永久等待；释放旧执行句柄并读取 active StationData。用户退出在线后，经原 PLE REST 单对象保存/39 目标回读；最终 PlanOnly 0 操作。AI 本轮新 F11：0 errors / 5 warnings，已逐条读取 4 × C0351 OPC.UA.DA、1 × C0373 ErrorCodes/DWord；不扩大正式 warning 基线。规格与七组回归/Project Pack 已同步。详见 `docs/reviews/station010-force-reset-20260909.md`。
+- [x] **N000 修复的单点现场复核**：用户下载运行后的 PLE 只读观察已到 N045，CheckPressForce `_fault=FALSE`、`_eventIndex=0`、active/内部 timeout 均为 10000 ms，原 N000 卡住已解除。只确认这个复位问题；完整左中右及力故障恢复验收仍待完成，AI 未下载或执行动作。
+
+- [x] **SFC 空步骤与并行汇合修复（2026-09-09）**：全量检查 12 条应用 Chain。删除 `SqM_Station_Home.N110` 空步骤，保留 N100 的 ExecuteSubChain 完成握手后直达 N999；Run 两组并行分支新增 N065/N066、N115/N125，分别保持本分支 `_retVal` / `_retVal2 := OK`。两张图、四个 Action 经唯一用户 PLE 的离线 REST 保存/回读，所有既有业务代码和声明不变，3 个 writer 最终 PlanOnly 均为 0 操作。用户已确认本批新 F11：0 errors / 5 warnings。见 `docs/reviews/station010-sfc-completion-20260909.md`。
+- [ ] **SFC 现场复测**：用户在安全条件下下载，确认回原位 N100 → N999 正常结束；自动 LEFT/MIDDLE/RIGHT 两组并行汇合不再反复消费已完成分支的 DONE。最新五条 warning 已在 N000 修复编译中核对，现场结果仍待确认，AI 未下载。
+- [ ] **DeleteWpcData 模板清理待用户确认**：`SqC_Wp100_DeleteWpcData.N110/N120/N130/N140` 只有注释中的示例，无清数据实现。已询问该命令不用还是要清哪些具体数据；暂未修改，不能删光后把未执行的清数据命令报成功。
+
+- [x] **Kistler 非测量状态误发 END（2026-09-08）**：Run 的 OnChainFinish 清除 END，使用 Execute 下降沿触发标准 Cancel；N101/CheckPressForce 仅对本链已启动且 MeasRunning + ExecState RUNNING 的测量发 END，N120/故障保持期间及时清除。4 个实现经现有 PLE REST 保存、完整回读、零差异 PlanOnly 与离线回归验证。未改生成声明、SFC 图、运动/力联锁；09-09 用户截图确认本批 Build 0 errors / 5 warnings，警告明细和现场验收仍待核对。
+- [x] **Burster 自动量程跟随仪表程序（2026-09-08，09-09 收尾）**：用户已确认。保留 N045 的 TypeData ProgramNo → RCL ACK；取消自动 SET_RANGE 与上下量程写入。N046 检查 Peripheral UseAutoRange=false，N047 检查标准 Unit READY 且 Execute=false，不再等待未发送命令的 DONE。保留结果上下限、温度选择、程序号校验及力/运动联锁；仅移除 AI 对未使用量程字段的大小关系校验，生成接口/枚举校验不变。4 个对象已通过现有 PLE REST 保存并完整回读，09-09 磁盘 SHA 与保存报告一致；代码/规格/计划和回归测试同步。
+- [x] **Burster Auto Range 配置与导出核对（2026-09-09）**：用户已完成配置/Export/F11；新 request `04500e24-28c7-4157-a8cd-9fbfa80af5b0` 已审计。现有 PLE REST 回读 `UseAutoRange := False`，Run/SqC 全目标 PlanOnly 均为 0 操作，量程/Kistler 修复未被覆盖；56/56 designator 匹配、38 active / 18 inactive、0 mismatch。本次不重写 PLC。
+- [x] **本批 F11 Build 数量确认（2026-09-09）**：用户截图显示 `Build complete -- 0 errors, 5 warnings : Ready for download`，94 条 messages。作为用户提供的本次编译结果登记，不冒充 AI fresh Build/Runner evidence；5 条 warning 未展开，不能认定与旧基线同签名。
+- [ ] **Burster 警告明细与现场验收**：核对 5 条 warning；之后受控验收仪表实际程序/量程、SINGLE_MEAS、结果上下限判定与驱动重连。尚无本批下载/现场结果，不宣称原报警已在现场消除。
+- [x] **CpStudio 原位条件解析同步（2026-09-09）**：用户执行 Parse PLC code 后的新 Export `2a246abf-94bb-4ecd-9f87-d2d77ad55d30` 已核对：Station/Wp100 两棵原位条件树的 4 个叶绑定均为 IsInBasPosIn，AND 关系及 Station → Wp100 委托不变。正确入口是 **PLE 保存 → CpStudio Parse PLC code → 保存/导出 HMI → 更新 IPC**，不是手动重建条件树；不修改模型 XML/生成配置。这里只确认工程绑定，IPC 实际显示仍随现场测试核对。
+- [x] **昨天修改的导出后回归收尾（2026-09-09）**：上述最新 request 的 Stage 1 审计完成，56/56 designator 一致；Run/SqC PlanOnly 均为 0 操作，Home 四个已维护 Action 与源码一致，Auto Range=False、原位输入、Root Toggle 与测量逻辑修复保留。六组静态/事务回归及 Project Pack Check 通过。本轮没有 PLC PUT/Save/Build/下载，工程 SHA 前后不变；此前 0 errors / 5 warnings 截图不冒充这次 Export 后的新 Build。详情见 HANDOVER 最新记录。
+
+- [x] **启动灯闪烁源修正（2026-09-08）**：自动 N020、回原位 N010 改为 `Root.RootNode.FlashBits.Toggle500ms`，不再使用未赋值的 Station.FlashBits 或单扫描 Pulse；按钮 FB 仅修正注释。现有 PLE 离线 REST 写入、保存、完整回读和静态检查通过，生成声明/SFC 图及按键/取消握手不变。
+- [ ] **启动灯现场确认**：09-09 用户截图已确认本批 Build 0 errors / 5 warnings；受控下载后确认等待按钮时亮 500 ms / 灭 500 ms，按下或取消后熄灭。尚无现场结果，AI 未下载或操作设备。
+
+- [x] **全部应用位置判断改用输入反馈（2026-09-08）**：扫描当前 PLE Application 307 个对象，修正 Run/Home、手动放行、工位原位与力检测中的 17 个对象 / 27 处；REST 一次保存、精确回读并全量复扫，旧 `IsInBasPos/IsInWrkPos` 应用引用为 0。保留命令完成握手、所有安全继电器、生成声明及 SFC 图；规则已写入 AGENTS、规格和回归检查。未下载。
+- [x] **Fixture 左右 BMK 修正（2026-09-08）**：按用户新导出，左=`_100B603`、中=`_100B602`、右=`_100B601`；已通过现有 PLE REST 修改 SqS N010、SqC N015/N075，保存和全目标回读通过。StationData 删除 `PressDelayTime` 的改动保留，继续使用 `PressForceTimeout`。ASC 清单/流程计划同步；56 点与 BusConfig 一致，未调整硬件映射、未下载。
+- [x] **Fixture 提示实时原位反馈（2026-09-07）**：按用户确认，将 `SqC_Wp100_Run` N015/N045/N075 的安全门、压缸原位判断共六处改为 `IsInBasPosIn`；已通过现有 PLE REST 写入、保存和完整回读，静态/事务/Project Pack 检查通过。未改 SqS 动作联锁、标准 Unit 参数或生成接口，未下载。
+- [ ] **当前输入反馈修改的现场复核**：下载由用户操作；最新 Parse/Export 后的 Build 尚未取得新结果，保留此前用户截图 0 errors / 5 warnings 记录。现场核对 IPC 原位条件显示、原位输入 TRUE 而阀输出 FALSE 时 SqC/SqS N010 按输入判断；任一必要位置输入缺失仍等待/报警，手动安全继电器和命令完成握手不被绕过。再确认左 603 / 中 602 / 右 601 的提示及结果归属。
+
+- [x] **Wp100 压紧力联锁离线实现（2026-09-07）**：已消费用户新增的 `PressForceTimeout`/`EVENT_PRESS_FORCE_INVALID`；同一 SqS_Run 完成 `>2500 N` 连续 2 s、总等待超时及测量期间掉力锁存；故障不自动升缸/重测。已通过 REST 写入、保存回读及 PLE Build（0 errors / 原有 5 warnings）；未下载。
+- [ ] 🔴 **Wp100 压紧力现场验收**：IPC 实际 StationData 设置并加载 `PressForceTimeout >2000 ms`；同步事件/数据定义、用户下载。验收左中右、2500 N 等号、2 s 中断、总超时、测量中掉力/数据异常、故障保持及取消后重启；确认 Kistler watchdog 余量足够。详见 HANDOVER 最新记录。
+
+## 当前阶段：工程自动化 P0/P1 已完成，正在进入 P2；产品 Phase 1–3 离线基线已完成
+
+> 本文件有两套互不替代的编号：`Phase 1–4` 是产品化路线；`P0–P4` 是
+> CpStudio + ctrlX 工程自动化专项。讨论工程自动化进度时，以后统一使用下面的 P0–P4。
+
+### CpStudio + ctrlX 工程自动化专项（当前主线）
+
+- [x] **P0 · 统一 Runner**：`Runner -Command Run` 自动获取 Export request，串联 Stage 1/2 并可续跑；最新真实 Export 已到 `DONE`（2026-09-01）
+- [x] **P1 · 真实 ePLAN ASC**：外部电气输入只支持 ASC；真实 `AscBackup.asc` 已完成 56 点、38 active / 18 inactive 的转换、回环、CpStudio 导入和 BusConfig 核对（2026-08-31）
+- [ ] **P2 · IOE 受控硬件组态（当前）**：以模块顺序/型号 manifest 为输入，封装 `Plan → checkpoint → Apply → reopen/readback`；ASC 继续只负责 designator/描述
+- [ ] **P3 · PLE Link I/O 自动化判定**：验证稳定、受支持的官方接口；只有验证通过才自动化，否则明确保留一次人工 `Link I/O with variables`
+- [ ] **P4 · StationData/TypeData DAT 工具链**：取得 HMI IPC 真实运行时 DAT 副本后，再做格式校验、生成、备份和受控部署；不得用导出的 HMI 定义文件猜测运行时格式
+
+- [x] **Engineering Console v0.2 · 精简图形入口**：独立 .NET 8 WPF 薄壳已精简为一个状态、一个下一步、一个主按钮，P2 四步单独放在 Plan 页；仍只接入 Runner/Host/Project Pack 固定白名单。84 项 Workbench 断言、Station010 smoke 与 Workbench/Plan 可视化检查通过。P2 Apply、P3 自动 Link I/O、P4 DAT 部署继续按各自门禁禁用（2026-09-01）
+
+详细边界见 `docs/cpstudio_git_mcp_workflow.md`。历史 stale request 清理是维护项，不抢占当前 P2 主线。
+
+### 四阶段总进度（给项目成员看的简版）
+
+- [x] **Phase 1 · 稳定受控 Runner（开发基线完成）**：P1.1、P1.2、正式 Station010 基线、P1.3c 和 P1.4a 精简团队离线包已完成；AtLogOn Bootstrap 延期到商业化/无人值守部署阶段，不阻塞开发
+- [x] **Phase 2 · 项目目录与流程生成（离线实现完成）**：Project Pack、Schema、初始化器、流程事实源、确定性工程计划和 Runner 漂移门禁已完成（2026-08-29）
+- [x] **Phase 3 · HMI 产品化（离线产品基线完成）**：同一 Windows HMI 已由完整 JSON 配置驱动；Station010 与独立 ExampleCell 均通过编译、配置和 UI 冒烟（2026-08-29）
+- [ ] **Phase 4 · 商业交付（未开始）**：安装、许可、升级回滚、诊断包、DemoStation、交付与合规；前三阶段稳定后再做
+
+详细范围和验收标准见 `docs/productization_roadmap.md`；这里保持短清单，后续每完成一个里程碑直接更新状态。
+
+- [x] 🔴 Phase 2 Project Pack：`project-pack.json` 汇总 Station/I/O/Event/Unit/Process/HMI/Catalog/ownership 事实源；PowerShell 7 Build/Check 生成内容寻址的 `generated/engineering-plan.json`，Runner 在执行前拒绝缺失、draft 或漂移计划（2026-08-29）
+- [x] 🔴 Phase 2 Station010 流程：`SqC_Wp100_Run` + `SqS_Wp100_Run` 共 37 个步骤、14 条双语提示、14 条需求和 9 个验收用例；所有生成 POU 接口仍归 CpStudio（2026-08-31）
+- [x] 🔴 Phase 3 配置驱动 HMI：品牌、Overview、Manual Unit/动作/字段、模式 Chain、EtherCAT role/device-data group 全部进入 schema v2 配置；新增不含 Station010/Wp100/Kistler/Burster 名称的 ExampleCell 配置（2026-08-29）
+- [ ] 🔴 Phase 3 现场验收：在用户单独批准真机操作后，与 Nexeed HMI 做只读与模式请求 A/B；Station/Manual/参数写入继续保持锁定，不能用离线 UI 冒烟代替现场结论
+
+- [x] 🔴 固化四阶段产品路线：Runner → 项目目录与流程生成 → HMI 产品化 → 商业交付；唯一产品计划见 `docs/productization_roadmap.md`（2026-08-27）
+- [x] 🔴 P1.1 Runner 控制面：统一 CLI、OS 级单 owner 租约、项目/profile/manifest 预检、Stage 1/Stage 2 编排和结构化 run manifest（2026-08-27）
+- [x] 🔴 P1.2a Action Client：.NET 8 Core/CLI、action/hash/fingerprint 门禁、client/action 双租约、幂等终态、Named Pipe v1、NoSession 失败关闭和 evidence 封口；本客户端不启动 PLE/MCP（2026-08-27）
+- [x] 🔴 P1.2b Broker 基础：显式 interactive Broker、单 owner、current-user registration/Named Pipe v2、typed action allowlist、durable submit/query、幂等/崩溃恢复、external PLE 不关闭；纯 fake-MCP 离线回归通过（2026-08-27）
+- [x] 🔴 P1.2b 真实 PLE 技术通道：本机受控 adapter 已应用并通过 `-Check`；Station010 immutable action 完成 same-call 普通 Build（0 errors / 101 条可见 warnings）、typed warning、多重 ownership/readback/Git 基线证据、456 条 mapping facts 与 Symbol 指纹采集，工程及结构哈希不变，无在线动作（2026-08-28）
+- [x] 🔴 P1.2b 提交前失败关闭加固：截断 warning 全链路阻断、一次明确用户确认且不采集姓名/工号、同字节有界 hash/parse、畸形请求脱敏、敏感值/预算扫描、semantic 最终 dirty probe、REST 全程超时/8 MiB 流式上限，以及 patch 语法失败回滚均完成离线回归（2026-08-28）
+- [x] 🔴 P1.2b 隔离 REST 门禁：同 SHA 隔离副本已通过官方 REST 完成 `maxCompilerWarnings: 100 → <no limit> → 100` 的 GET/PUT/readback/回滚验证，`.project` 字节未变；确认 REST PUT 即使回滚也会令 PLE 内存工程变脏，因此必须关闭不保存并重开，不能直接交给 Build（2026-08-28）
+- [x] 🔴 P1.2b 显式 Clean Build 工具：新增并安装 `clean_compile_project`，契约固定为恰好一次 `application.clean()` + 一次 `application.build()`，禁止 save/clean_all/generate_code；隔离安装、语法、失败回滚和 typed-warning 回归通过（2026-08-28）
+- [x] 🔴 P1.2b 告警完整性实测：扩展重启后只在可丢弃隔离副本持久化 `<no limit>`，关闭重开并连续两次显式 Clean Build；两次均为 0 errors / 4 条完全一致的 `OPC.UA.DA` warning，无截断 sentinel，工程身份/dirty/SHA 门禁全通过，Station010 源工程 SHA 未变且没有在线操作（2026-08-28）
+- [x] 🔴 P1.2b Clean Build 执行闭环：Broker/evidence 已改为受控调用 `clean_compile_project`，相关离线测试已统一在 PowerShell 7 下通过；本项只证明执行与证据合同，不代表已创建新的正式 immutable action/candidate（2026-08-28）
+- [x] 🔴 P1.2b 正式基线验收：request `839ff68c-6ac8-4764-8258-7cef4aa10406` 的全新 immutable action 已在真实 PLE 离线闭环中完成；Clean Build 0 errors / 4 warnings，456 mapping、Symbol 与正式 baseline 全部匹配。Build 前本机内容寻址 checkpoint 已创建并回读同 SHA，工程/结构哈希前后不变，无在线操作（2026-08-28）
+- [x] 🟡 P1.3a current-user interactive Host：单实例、心跳/状态、受控停止、限定日志保留和可选 AtLogOn Scheduled Task；本机已完成真实 Install/Start/重复 Start/Status/Logs/Stop/再次 Start 验收，不启动 Broker/MCP/PLE/Node/在线操作；P1.3b 下仅在存在待处理 action 且无同会话 Agent 时保持 `WAITING_FOR_AGENT`（2026-08-28）
+- [x] 🟡 P1.3b 自动 action 消费：Host 只消费首次激活后由 operation ledger 指向的 immutable `currentAction`；无 Agent 等待、单 action 执行、历史终态隔离、open claim 恢复、结果保持 `WAITING_FOR_COORDINATOR`；本机 Install/Start/Stop/Restart 验收后为 `WAITING_FOR_ACTION`，后台任务已改用无控制台 apphost，不再弹空白终端；5 个历史终态隔离且既有 22 个 claim/result 标记不变，全程未启动 Broker/MCP/PLE/Node/在线操作（2026-08-28）
+- [x] 🟡 P1.3c result/evidence coordinator：验证 result/evidence SHA、immutable action 与 ledger 后自动推进；合法 `UNKNOWN`/`FAILED` 无 evidence 保持人工复核，busy 有界退避，畸形 ledger 失败关闭；production ingestor 默认装配 6 项 fixture E2E 和真实 ledger lock busy 均通过（2026-08-28）
+- [x] 🟡 P1.3c durable 稳定部署：`LocalAppData` 下 5 文件内容寻址不可变 release、pending journal/reconcile、幂等 Install/升级、Rollback 和失败升级恢复已实现；AtLogOn action 精确指向 release exe，description 记录 release/manifest。显式生命周期命令校验 5 个文件和 self-check，登录任务本身不做 prelaunch manifest 校验（2026-08-28）
+- [x] 🟡 P1.3c 本机生命周期：源任务禁用/已删除、`STATE_COMMITTED`、强杀后默认 `Start` 恢复、新 release 升级、同版本 no-op、回滚、损坏候选拒绝，以及 deployment 丢失时基于精确任务的安全 `Uninstall` 均通过；主 Host active `faa27c...0f1`、previous `ac89b...4b51`、状态 `WAITING_FOR_ACTION`（2026-08-28）
+- [x] 🟡 P1.3c 技术实现与本机验收完成；Host 未启动 Broker/MCP/PLE/Node 或任何在线操作（2026-08-28）
+- [x] 🟡 P1.4a 精简团队离线包：固定封装安装入口、canonical wrapper/module、包 manifest 与 Host 五文件；接收工位无需 Git/源码/SDK/build，支持完整性校验、首装/升级、精确回滚、安全卸载与状态查询；fresh Install 默认停止，升级保留原运行状态（2026-08-29）
+- [ ] 🟢 P1.4b（延期，不阻塞开发）独立 AtLogOn prelaunch Bootstrap：仅在进入商业化或明确需要无人值守登录自启时实施；开发期继续显式启动 Host
+- [ ] 🟢 P1.4c（有团队工位时执行）团队验收：固化最小兼容矩阵，在一台全新同事电脑完成包传递、安装、显式启动、升级、回滚、卸载和诊断复验；默认不自定义 ACL，签名按商业/IT 要求延期
+
+## 项目工程待办
+- [x] 🟡 HMI IPC `not connected to service` 恢复记录：用户两轮 Export/Build 并下载后恢复；完成开发机到 `.50/.51` 的端口检查及 PLE 四个数据结构 Symbol 选择状态读取。接口不同步仅为候选原因，未验证 IPC 服务日志、运行时节点权限或故障根因（2026-09-07，见 [交接记录](HANDOVER.md#2026-09-07-hmi-ipc-service-connection-diagnosis)）
+- [ ] 🟡 补齐该服务报警的 IPC 证据：读取 HMI/DataSetAccess 服务及报警日志、比较实际部署配置与 PLC 会话；再次发作时优先保留故障时证据，不把端口开放视为服务验收，也不因改 DAT 参数值强制两轮 Export
+- [x] 🟡 DIDO 描述自动导入：零依赖 CSV→CpStudio/ePLAN ASC 生成器已通过 Station010 官方回环；固定 UTF-16LE/15列/模块内连续顺序，完整源为 `specs/station010-eplan-io.csv`（2026-08-31）
+- [x] 🔴 已确认 CpStudio 导入语义：非空 `IoDesignator` 激活通道；未使用点必须为空，否则占位 `_..._Channel_N` 会被误激活。Station010 最终保持 38 active / 18 inactive（2026-08-31）
+- [x] 🟡 已使用真实 Station010 完整56点 ASC 验证 E/X 中英文、Write designators、Export→Link I/O→Build→Export #2；38 个 active 点均有英文及中文描述，18 个 unused 点保持空白，最终 PLE Build 0 errors / 0 warnings。生成机制可以复用，但每个新工位必须从自身完整 ASC 建立源数据，并重新验证语言列与 active/inactive 计数（2026-08-31）
+- [x] 🟡 DIDO 自动化已接入现有架构：Project Pack Build/Check 确定性生成并校验 ASC；Post-export Stage 1 将完整 CSV 与 CpStudio BusConfig 逐通道只读核对，漂移以 `IO_DESIGNATOR_EXPORT_MISMATCH` 阻断；Runner 核心及 CpStudio 官方操作边界不变（2026-08-31）
+- [x] 🟡 电气输入统一为 ASC：新增严格 ASC→canonical CSV 入口；真实 `AscBackup.asc` 验证为 56 点 / 38 active / 18 inactive，自动清除 15 个无描述 `_..._Channel_N` 占位名；覆盖已有 CSV 时部分模块或模块/地址/DI-DO 拓扑漂移在写入前阻断（2026-08-31）
+- [x] 🟡 日常统一 `Runner -Command Run`：复用既有 Stage 1/2，按上一轮 Run manifest 精确续跑 operation；ACTION_READY 时不消费新 Export，Export #2 自动绑定，CpStudio 边界暂停，无任务返回 `IDLE/NO_PENDING`；不认领历史 ledger、不启动 PLE/MCP/Broker（2026-08-31）
+- [x] 🔴 CpStudio Export Stage 2 验收：request `9cc8d375-f4ba-4368-832a-d7331d13ef6c` 最终 `DONE`；Clean Build 0 errors / 4 条已审阅 `OPC.UA.DA` warnings，456 mapping 与 Symbol 均验证通过，工程未变化、无需 Export #2、无在线操作；同步兼容可选 semantic snapshot retry capability（2026-09-01）
+- [ ] 🟡 显式处置历史 stale pending request/operation backlog：只做清单与人工归档，不自动认领、重跑或删除不可变证据
+- [ ] 🟢 后续 IOE 硬件拓扑自动化：为新工位建立可审阅的模块顺序/型号 manifest，经 IOE 官方接口 Plan→Apply→回读；ASC 只负责 designator/描述，不能冒充 EtherCAT 硬件 BOM
+- [ ] 🔴 解析 ../电阻测试台.pdf,整理工艺需求 → docs/requirements.md(验收标准:需求清单覆盖测量流程/IO/判定标准,并经用户确认)
+- [x] 🔴 使用 `../Station010` 作为 CpStudio + MCP 受控集成工程，不再另建 `src/ResistantStation.project`；2026-08-28 已证明同一 `.project` 字节在原路径普通 Build 为 101 条可见 warnings、隔离路径普通 Build 为 4 条 warnings，二者都不是正式语义基线；正式基线必须来自显式 Clean Build
+- [ ] 🟡 应用架构设计:对齐 OpCon Station/Module/Command 层级 + SqM/SqS 状态机 → docs/architecture.md(验收标准:经用户确认)
+
+## Backlog(以后再说)
+- [x] 🟡 开发电脑 OneDrive 迁移准备：最小脚本记录三个 Git 固定提交，打包当前加密 PLC 工程与 `Std`/技术资料，排除明文凭据、License、IDE 缓存和用户配置；旧电脑只负责生成并等待 OneDrive 同步（2026-09-07）
+- [ ] 🟡 新开发电脑验收：从 Git 固定提交 + OneDrive 资产包恢复，重新安装本机工具/配置，运行工作站体检和离线 Build；通过前保留旧电脑，不进行真机写入
+- [x] 🟢 自研 HMI Phase 1/1.1 离线实现：.NET 8 WPF + 官方 OPC UA Client；133 个只读 Symbol 节点，PublicEventList、9-Slave EtherCAT 拓扑、38 个命名 DI/DO、Kistler 语义值、StationData/TypeData 分页、keepalive 自动重连与 3 s 会话健康超时遮罩；Release Build 0 errors / 0 warnings，离线 UI smoke 通过（2026-08-25）
+- [x] 🟢 自研 HMI Phase 1.2 操作界面：增加 Auto/Home/Change-over Chain 启停、Auto 步进/下一步、Station/Wp100 Unit 与 16 个单动功能、真实 Release/Running 状态，以及 Master→EK1100→EL/Kistler 分层 EtherCAT 拓扑；所有新控制仅在 DEMO 可执行，真机写入保持锁定（2026-08-25）
+- [x] 🟢 自研 HMI Phase 1.3 Unit 详情：按 Nexeed SmartForms 补齐 Burster 5 个输入参数 + 4 个状态/结果，以及 Kistler 3 个输入参数 + 9 个状态 + 3 个结果；150 个只读 Symbol 路径校验、Release Build 和离线 Unit 切换 UI smoke 均通过，真机参数写入仍保持锁定（2026-08-25）
+- [x] 🟢 自研 HMI 导航信息架构纠正：Automatic/Manual/Homing/Change-over 固定在左侧模式栏，Overview/Events/I/O/Data 固定在顶部页面栏；Manual Unit 单动作为 Manual 模式下的 Overview，模式与页面状态彼此独立（2026-08-25）
+- [ ] 🟡 自研 HMI 真机只读验收：关闭 Nexeed HMI 后验证 PublicEventList ExtensionObject 表示、活动/清除事件过滤、EtherCAT 9 元素数组索引、38 个 I/O 与 Kistler 力/位移；本步骤不得写变量
+- [x] 🔴 自研 HMI 最小模式控制协议离线实现：APQ token=1；只允许 TokenRequest 与 ModeIdRequest；模式仅 1/3/4/5，带安全反馈、Changeover IsEmpty、Token/ModeId 回读和超时；不写 Heartbeat/TokenChangeResponse/物理 I/O/Chain（2026-08-25）
+- [ ] 🔴 自研 HMI 模式切换真机验收：只读验收通过后另行明确授权，依次验证 Automatic/Manual/Home/Changeover 请求与拒绝路径；Nexeed HMI 必须关闭，不做多面板 Token 转移
+- [ ] 🔴 自研 HMI 扩展控制真机验收：另行批准后验证 Start/Stop/Step request-bit 回零、PanelActive、Unit Exec 按住运行、Heartbeat challenge/ack、断线/失焦/退出强制释放；验收前不得开放 StationCommands/ManualFunctions capability
+- [x] 🟢 依据 `docs/hmi_userdefined_integration.md` 更新 AI Coding 展示 HTML：明确 AI-first / 最低人工边界，加入 PLC、CpStudio、EtherCAT/BMK、HMI、断网五条操作流程和 UserDefined 案例；修正 Post-export runner/checker 状态并保留官方工具限制（2026-08-23）
+- [ ] 🟢 测量数据记录(CSV/数据库)与追溯
+- [ ] 🟢 对接 OpCon DataSetAccess / EventRecorder 接口
+- [x] 🟢 硬件组态 IO 侧:按图纸页4核对树 + 删坏节点 _100A740_BL(2026-08-18,AI 经 `scripts/ioe/ioe_ipc.ps1` 驱动 IOE 完成;通道符号在 PLC 侧已存在)
+
+## 已完成(近期)
+- [x] 🟡 完成 HMI `OverView → UserDefined` 受控迁移：`OverView` 仅保留 `Mod_SmartControlHost1`，原状态灯、Station/Type 编号、设备图片和自动信息栏共 5 个控件及图片资源迁入 `UserDefined`；经 CpStudio 5.11 内置 HMI Configurator 分别加载 `UserDefined` 和宿主 `OverView`，显示及绑定正常；Station010 安全提交 `84d1577`（2026-08-23）
+- [x] 🟡 实现用户双击运行的本地离线 Post-export 检查器：只启动一组自有 MCP/PLE，执行 strict no-save fresh Build，保存不可变报告并判断 `DONE_OFFLINE/NEEDS_EXPORT_2/NEEDS_LINK_IO/RETRY/WAITING/BLOCKED`；Export #2 anchor 可跨对象占用、次数纠正和 Build 前 Link I/O 恢复，无可关联 request 时不建 anchor，任何全局锁获取失败均不落报告；根项目与通用模板各 458 项自测通过（2026-08-23）
+- [ ] 🔴 用户正常关闭现有 PLE/MCP owner 并释放 `.project.~u` 后，对 Station010 完成一次真实“启动 → fresh Build → 正常退出”离线检查器验收；不得强杀既有会话或手删活动锁
+- [x] 🔴 完成真实 CpStudio Post-export Stage2 闭环：唯一 persistent PLE 会话执行只读审计与 fresh Build（0 errors / 6 warnings），哈希绑定 evidence 经 producer/consumer 验证后 operation 到 `DONE`；确认本批无需 Export #2，并补齐 `open_project` 离线能力白名单(2026-08-23)
+- [x] 🔴 纠正 CpStudio/AI 接口所有权：生成 POU 的接口与 OES Declaration 仅由 CpStudio 配置，AI 只读消费；旧的整声明 REST 写入器在完成接口保持改造前标记为 blocked(2026-08-22)
+- [x] 🔴 增加 Station010 提交安全门：禁止整体暂存，含实体连接凭据的生成配置必须字段级审阅/脱敏，当前脏生成批次不上传(2026-08-22)
+- [x] 🟡 用 `DummySymbolProbe : BOOL` 完成新增与删除双向验证：新增第一遍即 available/selected；删除后同一 PLE 会话虽二次 Export 仍有 2 条旧签名警告，保存关闭并重开后 Build 恢复 0 errors / 6 warnings。门禁改为“条件二次 Export → 必要时重开验证”，禁止对 REST GET 不可见的失效签名构造精确 UnSelect(2026-08-22)
+- [x] 🔴 完成 EtherCAT 单通道 BMK 双向实验：验证 Save → Write designators → Export #1 → Link I/O → mixed 引用语义合并 → Build → 条件 Export #2 → final Build；识别并规避 Symbol Configuration 并发对象锁，恢复原 BMK 后最终 Build 0 errors / 9 warnings(2026-08-22)
+- [x] 从 vibe-coding-templates 派生仓库骨架 + git init(2026-08-17)
+- [x] 吸收 ctrlx-ai-coding 方法论;环境体检(CRLF 补丁/模板/库仓库)通过(2026-08-17)
+- [x] 🔴 修复 persistent MCP 编译完成后超时：去除重复 Build 和全类别×严重级别消息扫描，统一使用有界 Build summary 读取；Station010 实测编译约 7.6 s、缓存读取约 0.8 s，0 errors / 7 warnings(2026-08-20)
+- [x] 🔴 修复 PLE `Bit type at the wrong position!` 与 501 条级联错误：补齐 3 个 AI 生成 SFC 的 39 个 Transition 内部名、修复 Home 两个陈旧 Transition 名、恢复 Symbol Configuration，并隔离损坏的 `Stat010_V5.precompilecache`；正式工程关闭重开后 Clean Build 0 errors / 7 warnings(2026-08-20)
+- [x] 🔴 修复 persistent MCP 误接管复用 PID：启动器同时校验 PLE 可执行文件身份和 watcher 握手，避免旧 `ready.signal` 指向无关进程；补丁检查及实际重启通过(2026-08-20)
+- [x] 🟡 清除 C0198：把 `CheckPartPresent` 双路产品传感器 AdditionalInfo 从 79 字符缩为 60 字符，满足 OpCon `SetEvent.STRING(63)`；增加静态长度门禁及 REST Transition 名称读回标准化，Clean Build 0 errors / 6 warnings(2026-08-20)
+## 补充(2026-08-18 夜 转接)
+- [x] 🔴 清理 3 个非 ST 残留并编译到 0 errors：最终定位为 A1 的旧 I/O 映射，离线重映射后为 0 errors / 7 warnings(2026-08-18)
+- [ ] 🟡 用户决定:是否在 CpStudio 删除 Wp100A740* 站(Engineering_Data.xml 残留,不删则重新生成会带回)
+- [ ] 🟡 CpStudio 重新生成后 git diff 分析 → docs/cpstudio_generation_analysis.md
+- [x] 🟡 建立 CpStudio→Git→MCP 协同规范 + 确定性 PLC 文本快照/校验工具(2026-08-18;`scripts/plc/export_plc_snapshot.py`,`scripts/plc/verify_plc_snapshot.ps1`)
+- [x] 🔴 建立可跨项目复制的目录标准：`config/specs/ai/src/catalog/scripts/tests/data/docs`，录入 Station010 当前规格、AI 归属、通用 FB 源码和已验证 Unit Catalog；加入结构冒烟测试与自定义 Post-export 信号脚本(2026-08-18)
+- [x] 🔴 把目录标准产品化为 `New-CtrlXOpconProject.ps1`：事务化创建新 AI 旁车、统一相对路径、拒绝覆盖且不复制 `.project`/Std/闭源资料；50 项离线断言通过(2026-08-20)
+- [x] 🔴 新增并安装 `$ctrlx-opcon-engineering` Codex Skill：按初始化、CpStudio 导出、PLC 离线开发和故障诊断组合流程；独立前向测试及安装一致性测试通过(2026-08-20)
+- [x] 🟡 建立 MCP 产品化路线：受控 fork → 租约/operation → `project_health`/`compile_project_v2`/`apply_change_set` → 正式 Symbol/I/O/SFC 工具(2026-08-20)
+- [x] 🟡 建立团队工作站交接：新增 `TEAM_SETUP.md`、无个人账号的 Codex MCP 配置样例和只读环境体检脚本，区分长期部署说明与会话型 HANDOVER(2026-08-19)
+- [x] 🟡 将受控集成工程目录去日期化为 `Station010`，同步配置、脚本、规格、测试和部署文档；关键工程哈希与既有 Git 状态保持不变(2026-08-20)
+- [x] 🟢 新增离线 AI Coding 展示页：覆盖 CpStudio/AI/ctrlX 分工、标准目录、两类开发闭环、对象归属、Home Chain、主气压联锁、BMK 改名复盘和验收证据；支持交互演示与打印 PDF(2026-08-19)
+- [x] 🟡 在 CpStudio `Engineering settings → Export` 配置官方 Post-export hook 为 `..\McpCoding\scripts\cpstudio\post_export_signal.bat`；真实普通导出已生成 schema-v2 请求，Stage 1 完成只读审计并进入 Stage 2 `WAITING_FOR_RUNNER`（2026-08-22）
+- [x] 🟡 实现 export request 第一阶段消费者：独立请求队列、排他锁、只读 Git diff、关键文件指纹、ownership 清单、JSON/Markdown 报告和失败留痕；不会启动 PLE/MCP(2026-08-20)
+- [x] 🟡 实现 Stage 2 PlanOnly operation ledger：消费 Stage 1 报告，生成幂等/哈希绑定 action，持久化 `WAITING_FOR_RUNNER/WAITING_FOR_CPSTUDIO/WAITING_FOR_EXPORT_2/DONE/BLOCKED/FAILED`，并校验 runner evidence；协调器不启动 PLE/MCP/REST(2026-08-22)
+- [x] 🟡 实现 runner evidence 封装边界：复核 action/Stage 1/ownership/所需关键 Station 指纹和当前 PLC SHA，要求显式离线/lease/验收事实，按固定算法生成 warning 签名多重集；封装器不调用 PLE/MCP/REST，PS5.1 根项目/模板自测通过（2026-08-23）
+- [x] 🟡 实现受控 Runner P1.1 控制面：单 owner、Stage 1/Stage 2 编排、immutable action hash 复核和 run manifest（2026-08-27）
+- [x] 🔴 实现 P1.2a .NET action client：严格 action 合同、双层租约、崩溃后 UNKNOWN 阻断、Named Pipe v1 Broker 客户端和不可变 evidence；P1.2b 唯一 session Agent/Broker 继续按本页当前阶段待办推进（2026-08-27）
+- [x] 🔴 最小骨架只读基线:删除 Wp100 下全部 5 个 Unit 已获确认;导出 215 个文本对象并记录编译 66 errors/40 warnings(2026-08-18)
+- [x] 🔴 PLC 写入落点决策:用户授权 `../Station010` 作为 CpStudio + MCP 受控集成工作工程(2026-08-18)
+- [x] 🔴 经 MCP 清理最小骨架的 10 个旧 ST 对象，编译由 66 errors 降到 3 errors(2026-08-18)
+- [x] 🔴 Symbol/I/O 联合审计完成：用户清理 25 个失效 Symbol 签名；AI 修正 A1 三条旧映射并编译到 0 errors(2026-08-18)
+- [x] 🔴 CpStudio I/O BMK 改名批次：修正 16 个有效映射、清空 17 个停用映射；经 PLE REST Symbol Configuration 接口同步 18 个新名/清零 33 个旧名，编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 提交并推送 Station010 已验证的 I/O BMK 改名批次（15 个生成/工程文件，`78f91e8`）
+- [x] 🔴 CpStudio C1 小改动快速闭环：清除 `Channel_6.Output` 旧映射 + REST `UnSelect` 旧 Symbol，编译恢复 0 errors / 7 warnings；Station010 `482c77a`，方法论补丁 `142721c`(2026-08-18)
+- [ ] 🔴 受控增量实验:每次只添加 1 个设备并完成生成→Git diff→ST 快照→编译→提交;设备稳定后再逐条添加自动 Chains
+- [x] 🔴 BasMove 受控增量：依次加入 `Wp100K101SafetyDoor` 与 `Wp100K102PressingCylinder`，核对 2I2O、层级和快照边界；安全门手动放行并绑定 `Wp100.IsInHomePosition`，编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 压缸手动联锁：安全门 `IsInWrkPos` 后才允许压缸两个手动动作；Wp100 Home 同时要求安全门和压缸 `IsInBasPos`(2026-08-18)
+- [x] 🔴 Burster 2316 受控增量：加入 `Wp100K103ResistantDetector` + `_Wp100K103ResistantInterface`，核对 Unit/Peripheral/StationData HostName 绑定并编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 EmergencySwitch 受控增量：两路急停绑定 `_000S900A/_000S900B`，Control Off 绑定 `_000S902`；核对 AddOn 参数、HMI 与物理通道并编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 主气压控制 FB：新增可跨项目复用的 `Application/Fbs/FB_MainPressureControl`，由 `StationUnit.OnCall` 周期调用；联动 `ControlOn.OutImm.IsCtrlOn`、`ControlOn.ParImm.UserEnableControlOn`、`_000K085A` 和两路压力反馈，5 s 超时/互斥诊断后编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 操作按钮 FB：新增可复用 `Application/Fbs/FB_OperatorButton`，以 `Execute` 管理初始化/执行生命周期；接入 `SqS_Wp100_Home` 的 `_000S610/_000P610` 步骤，并在 `OnChainFinish` 强制复位，编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 SubChain 受控增量：CpStudio 新增 `Wp100.SqS_Run : SqS_Wp100_Run`，核对实例、SubChain ID=2、rUnit 引用、状态概览及 5 个新增 PLC 对象，基线编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 Burster 手动放行：`Wp100K103ResistantDetector` 的 `SetRange/StartMeas` 均改为 `CommonManRelease AND TRUE`，AI 前后快照仅改变 `OnManRelease`，编译 0 errors / 7 warnings(2026-08-18)
+- [x] 🔴 CpStudio 参数/描述改动快速闭环：核对 4 条安全回路英文描述、停用 `_000K980D`、StationData 公开字段变化；Symbol Configuration 无旧成员，既有 AI 代码未被覆盖，编译 0 errors / 7 warnings；Station010 `7c4422e`(2026-08-18)
+- [x] 🔴 Wp100 Home 原子操作：`SqS_Wp100_Home` 实现拍按钮后按状态跳过/执行“安全门到工作位 → 压缸回原位 → 安全门回原位”，并在 `OnChainFinish` 复位按钮灯、两个 Unit Execute 与本轮标记；编译 0 errors / 7 warnings，Station010 `bb853e5`(2026-08-18)
+- [x] 🔴 维修门—主气压联锁：新增通用 `FB_MaintenanceDoorControl`，由 `_000S901`/ControlOn 状态驱动 `_000K980/_000K981`，仅在 `_000K980_A AND _000K981_B` 时向 `FB_MainPressureControl.xValveRelease` 放行；原门锁 dummy 条件同步改为真实反馈，Station010 `bb853e5`(2026-08-18)
+- [x] 🔴 维修门未锁报警：使用 CpStudio 生成的 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED=-2`；门锁请求后 5 s 内 A/B 反馈未同时到位则锁存报警并保持主气压禁止，Control Off 后按 `UnlockEvent + ClearEvent` 清除；编译 0 errors / 7 warnings，Station010 `93379fd`(2026-08-18)
+- [x] 🔴 StationLamp AddOn 受控增量：CpStudio 新增 Station Lamp V2.3.1.0（InstanceId 7），黄/绿/红绑定 `_000P960_1/_000P960_2/_000P960_3`，层级、参数、HMI 和输出映射核对完成(2026-08-18)
+- [x] 🔴 Home Chain 步骤检索注释：经 PLC Engineering 官方 REST 扩展接口为 `SqS_Wp100_Home` 的 9 个 Step 写入简短 Comment；标准化差异确认 Action/Transition/顺序均未改变，编译 0 errors / 7 warnings，Station010 `6399377`(2026-08-18)
+- [x] 🔴 实现 `SqS_Wp100_Run` 首个可复用原子工艺：位置改为正式 `VAR_INPUT MeasurePos`，三位置 DI 一取一联锁，拍按钮，关门/安全反馈；下压+Kistler 启动及抬压+Kistler 结束均为可诊断的 SFC 同步分支，按 OpCon 约定分别使用 `_retVal/_retVal2`，结构化保存结果并统一处理 DONE/ERROR/CANCEL；离线编译 0 errors / 6 warnings，Additional code checks 0 errors(2026-08-20)
+- [x] 🔴 `SqC_Wp100_Run` 顺序调用原子操作：LEFT→MIDDLE→RIGHT，每轮仅在 READY 写 `Wp100.SqS_Run.MeasurePos` 并以 `CheckSubChainDone` 等待；每轮开始前检查 `_100B701 AND _100B702`，缺失时用 `EVENT_PART_DETECT_SENSOR` 和具体 BMK AdditionalInfo 阻塞提示；三位置结果分别保留，编译 0 errors / 6 warnings(2026-08-20)
+- [x] 🟡 统一 AI-owned PLC ST 条件排版：独立条件加括号且括号内侧留空格，换行 `AND`/`OR` 放上一行末尾；静态门禁、REST 哈希迁移、幂等回读及 Application Build 0 errors / 8 warnings 完成(2026-08-20)
+- [x] 🔴 产品参数来源：CpStudio 生成 Wp100 TypeData/量程枚举；PLE 在 N046/N047 先应用 Burster 量程，在 N051/N080 应用 Kistler 程序号及 Burster 上下限/温度开关，并在 OnCheckData 补充上下量程/上下限关系校验；离线 Build 0 errors / 5 条既有生成告警（2026-08-31）
+- [x] 🔴 Burster 程序号离线集成：不修改 CpStudio 接口；新增 AI-owned `FB_Wp100BursterProgramSelect`/`AiWp100`，N045 在标准 Unit READY 时短暂释放其 socket，以 2316 `*RCL Pn` 选择 TypeData `ProgramNo`（0..15），ACK 后发送 EOT 并关闭，再进入 SET_RANGE；事务 Apply、完整读回及真实 Clean Build 0 errors / 4 条既有 warning（2026-09-04）
+- [x] 🔴 Burster 现场手动功能：用户完成下载/运行并确认 Nexeed HMI 中 Burster 手动测试正常；量程枚举保持 9 个真实量程（0..8），不包含无效的 `NONE/0 Ω`（2026-09-04）
+- [ ] 🔴 Burster 程序号真机验收：另行确认下载/运行后，用一个已知安全程序号验证 `Done/Error/ErrorCode`、2316 当前程序及其保存的量程、标准 Nexeed driver 重连与 SINGLE_MEAS；自动不再使用 SET_RANGE，CpStudio Auto Range 必须为 False。禁止用独立 TCP 探针和 PLC driver 同时占用 5555
+- [ ] 🟡 若追溯要求保存 Kistler 完整曲线，另行设计 `READ_DATA` 分页读取与数据记录；当前 `Result.Kistler` 保存 OK/NOK、NoPass、程序号及压缸上升前锁存的循环力/位移
+- [x] 🟡 CpStudio 模型中的 Burster `SetRange/StartMeas` 对象级手动放行已设为 TRUE，本次导出已同步 HMI 条件树(2026-08-18)
+- [x] 🟡 完成 Run Chain 操作提示：用户在 CpStudio 追加并导出 `AutoInfoLineEnum` 4–16；AI 经官方 PLE REST 验证实际枚举顺序，按确定性 Plan SHA 事务写入 SqS/SqC 提示与 14-step 图，接口原样保留；fresh Build 0 errors / 4 managed-library warnings(2026-08-24)
+- [x] 🔴 定位 Nexeed License Server 61863 故障：确认 App 在 `DENIED net_admin → StatusCode 999 → SIGSEGV` 后循环重启，端口关闭是结果；记录包权限边界并加入只读诊断脚本（2026-08-24）
+- [ ] 🔴 由 Bosch/Nexeed 提供适配 ctrlX CORE X3 / OS 2.6 的修正版或正式处置；安装后验证 Logbook 无 crash-loop、61863 连续 60 s 可达、CpStudio `Read from target` 成功
+- [x] 🟡 StationData 的 `LineNo`、`TestMode`、`NokCounter`、`Wp100.Active` 已经本次 CpStudio 导出从 PLC 主结构与数据检查中正式移除；生成后编译正常(2026-08-18)
+- [ ] 🟡 决定是否删除当前仅剩自声明、无任何业务引用的 `StationSdNokCounter` 与 `Wp100StationDataStruct` DUT；在 CpStudio 不再生成它们前先保留
+- [ ] 🔴 真机专项验证操作按钮：确认 `FlashBits.Pulse500ms` 的现场闪烁观感、按下后步骤跳转，以及切换模式/CANCEL/ERROR/DONE 时 `_000P610` 必定熄灭；决定按钮在步骤激活前已被按住时是否允许立即完成
+- [ ] 🔴 真机专项验证主气压时序：两路物理压力输入已取消接线；确认 `_000K085A` 最终命令变化后 1 s 虚拟 HIGH/LOW 切换、5 s 诊断及故障恢复；覆盖维修门放行延迟、正常 Control On/Off 和联锁中途撤销；补充两个事件的中文文本
+- [ ] 🔴 真机专项验证 Home 原子操作：覆盖压缸已/未在原位、安全门已/未在原位四种分支，确认 `_000S610/_000P610`、WRKPOS/BASPOS 顺序、Unit 超时/报错和模式切换 CANCEL 后所有输出复位
+- [ ] 🔴 真机专项验证 Run 原子操作：覆盖 LEFT/MIDDLE/RIGHT 一取一联锁、按钮、门/压缸动作、安全反馈、PressForceTimeout、Burster/Kistler 时序、测量失败及 CANCEL 后输出复位；真机操作前另行确认下载与运行授权
+- [ ] 🔴 真机专项验证维修门联锁：确认按 `_000S901` 后 `_000K980/_000K981` 上电并由 ControlOn 状态保持；任一 `_000K980_A/_000K981_B` 缺失时 `_000K085A` 立即不上电，持续 5 s 后触发 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED`，Control Off 后报警正确清除；同时验证模式不放行及故障恢复
+- [x] 🟡 P1.1 `ProcessOne` 已把 Post-export 请求、Stage 1 离线审计和 Stage 2 PlanOnly ledger 串成受控入口；CpStudio hook 继续只发 signal，不自动启动 Broker/PLE/MCP，也不直接改写 `Engineering_Data.xml`（2026-08-27）
+- [x] 🔴 Burster HostName 与标准连接已由用户现场调通，Nexeed HMI 无设备错误且 Control On 恢复；`SetRange/StartMeas` 手动放行已由 CpStudio 正式导出（2026-09-04）
+- [x] 🔴 重载 Codex/VS Code 恢复 MCP transport；单一 persistent 调用链完成最小骨架快照和编译(2026-08-18)
+- [x] 🟢 记录 Ponytail 开发辅助边界：仅在 Phase 收口时按需做减法审查，不进入产品/交付/客户环境，不覆盖 ctrlX/OpCon 安全门禁（2026-08-29）
+
+## 已完成(近期)补充
+- [x] Station010 GitHub 私有备份 Stat_Resistant_Station010(基线+快照,本地已同步 origin/main)(2026-08-18)
+- [x] 🔴 Kistler 5867C EtherCAT ESI 仓库闭环：经 IOE 官方 ScriptEngine 导入新 ESI，精确回读 `58A_0000E52F00000001 / Revision=1`；新增幂等安装脚本、Catalog、规格与同事部署检查(2026-08-19)
+- [x] 🔴 在 IOE 受控工程中添加 Kistler `_100A104`：位于 `_000SA620_X1` 下并与 EK1100 同级，保存后重开精确回读 `58A_0000E52F00000001 / Revision=1`(2026-08-19)
+- [x] 🔴 CpStudio 一键读取 ctrlX IDE EtherCAT IO 组态：`_100A104` 已自动匹配旧标题 `Kistler MaXYmos BL5867B TL5877B0`；Peripheral 已成功生成到 PLC/HMI(2026-08-19)
+- [x] 🔴 Kistler Peripheral 导出闭环：修复同批 Burster BMK 改名的 PLC/Symbol 双层旧引用；经 IOE EtherCAT 离线导出 + PLE `keepExisting` 导入同步从站，400 个 PDO byte 全部映射且回读零差异；PLC 快照 234 objects，离线编译 0 errors / 7 warnings(2026-08-19)
+- [x] 🔴 在 CpStudio 添加 `NexeedKistlerForceStroke` Unit，放到 `Wp100` 下并把 `IKistlerForceStroke` Channel 绑定到 `_100A104` Peripheral；PLC 侧 8 个手动功能均为 `CommonManRelease AND TRUE`，400/400 PDO 映射零差异，离线编译 0 errors / 7 warnings(2026-08-19)
+- [x] 🔴 CpStudio 模型中 `Wp100A104Kistler` 的 8 个对象级手动条件已改为 `TRUE` 并重新导出；HMI 回读 8 个 TRUE、0 个 FALSE，与 PLC OnManRelease 一致(2026-08-19)
+- [x] 🔴 维修门/安全回路反馈闭环：维修门 A/B 缺失与 `_000K981_Y32` 1 s 超时共用 `EVENT_MAINTENANCE_DOOR_NOT_LOAKED` 并写入具体 BMK AdditionalInfo；安全门、压缸手动与 Home 关门步骤加入 `_000K981_Y32/_000K913_Y32/_000K912_Y32` 联锁；四种 Mode Release 加入急停和维修门继电器反馈，离线编译 0 errors / 7 warnings(2026-08-19)
+- [ ] 🔴 真机专项验证维修门安全继电器：两门关闭后 `_000K981_Y32` 应在 1 s 内成立；分别断开 A 门、B 门和继电器反馈，核对 AdditionalInfo BMK、主气压禁止、模式释放与 Control Off 恢复流程
+- [x] 🔴 真实 Export `08bd1cc9-f16d-4903-99ff-7d83a88b0dae` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings；action 因 Clean Build 后首次 Symbol REST 瞬态响应而失败关闭，sealed evidence 与 warning candidate 已生成（2026-08-28）
+- [x] 🔴 第二次真实 Export `fa0c5fa1-3fff-4b3c-a8d3-05f590538fb4` 已经 Runner 执行：完整 Clean Build 0 errors / 4 warnings、工程/结构 SHA 不变；action 停在合并式 semantic stability 错误门禁，审查发现并修复 raw mapping 表示噪声与 Symbol 多阶段重建两个缺陷，新 warning candidate 已生成（2026-08-28）
+- [x] 🔴 semantic adapter 已改为三组 Mapping/Symbol 交叉权威读取 + Symbol 最多 4 次有界 settle + 最终 Mapping/dirty guard；逐条 mapping 完整性与末端 Symbol TOCTOU 反例均纳入回归，补丁、全局安装和 `-Check` 通过（2026-08-28）
+- [x] 🔴 已经 CpStudio 官方 Export 生成 request `cb1af562-25e6-4523-b2d8-037751d9433d`，修复版 Runner 取得稳定 semantic canonical facts 并生成 warning/semantic candidates（0 errors / 4 complete warnings；456 mapping records）（2026-08-28）
+- [x] 🔴 用户已确认当前 candidates：18 个 unbound EtherCAT 通道当前不用，4 条相同 `OPC.UA.DA` managed-library warning 暂不处理；baseline 不采集姓名/工号，改用 `confirmedByUser` 与机器生成元数据（2026-08-28）
+- [x] 🔴 已由 `Approve-PostExportBaselines.ps1` 原子建立两个正式 baseline 和无身份确认记录；未收集姓名/工号（2026-08-28）

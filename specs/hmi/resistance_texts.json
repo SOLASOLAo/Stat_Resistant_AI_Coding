@@ -1,0 +1,18 @@
+{
+  "purpose": "CpStudio Station HMI Text resources for the three resistance result rows",
+  "text_group": "Station",
+  "registered_in_cpstudio": true,
+  "verified_2026_09_11": "Native Text import, Save, HMI Export and designer reopen passed; exported translations and offline rendering checked; runtime language switching remains unverified",
+  "texts": {
+    "ResistanceLeft": {"1033": "Left resistance", "2052": "左侧电阻"},
+    "ResistanceMiddle": {"1033": "Middle resistance", "2052": "中间电阻"},
+    "ResistanceRight": {"1033": "Right resistance", "2052": "右侧电阻"},
+    "ResistanceLeftPending": {"1033": "Left resistance — Not measured", "2052": "左侧电阻 — 未完成"},
+    "ResistanceMiddlePending": {"1033": "Middle resistance — Not measured", "2052": "中间电阻 — 未完成"},
+    "ResistanceRightPending": {"1033": "Right resistance — Not measured", "2052": "右侧电阻 — 未完成"}
+  },
+  "shared_status_resources": {"text_group": "NexeedStateAddon", "false": "Nok", "true": "Ok"},
+  "shared_status_note": "Reuse the existing standard OK/NOK resources in both project languages.",
+  "language_invariant_text": ["mΩ", "—"],
+  "view_description": {"1033": "Measurement results", "2052": "测量结果"}
+}

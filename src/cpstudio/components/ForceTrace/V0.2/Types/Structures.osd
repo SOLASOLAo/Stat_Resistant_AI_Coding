@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition def="1.0">
+  <TypesDef def="1.0">
+    <Structure name="ForceTraceData">
+      <Item name="LeftFrame" varType="DWORD" minLim_Dim1="0" maxLim_Dim1="30035" exportMembers="False">
+        <Properties>
+          <Property name="UseInHmi" value="True" />
+          <Property name="OpcUaVisible" value="True" />
+          <Property name="OpcUaAccess" value="Read" />
+        </Properties>
+      </Item>
+      <Item name="MiddleFrame" varType="DWORD" minLim_Dim1="0" maxLim_Dim1="30035" exportMembers="False">
+        <Properties>
+          <Property name="UseInHmi" value="True" />
+          <Property name="OpcUaVisible" value="True" />
+          <Property name="OpcUaAccess" value="Read" />
+        </Properties>
+      </Item>
+      <Item name="RightFrame" varType="DWORD" minLim_Dim1="0" maxLim_Dim1="30035" exportMembers="False">
+        <Properties>
+          <Property name="UseInHmi" value="True" />
+          <Property name="OpcUaVisible" value="True" />
+          <Property name="OpcUaAccess" value="Read" />
+        </Properties>
+      </Item>
+      <Item name="StatisticsFrame" varType="DWORD" minLim_Dim1="0" maxLim_Dim1="209" exportMembers="False">
+        <Properties>
+          <Property name="UseInHmi" value="True" />
+          <Property name="OpcUaVisible" value="True" />
+          <Property name="OpcUaAccess" value="Read" />
+        </Properties>
+      </Item>
+    </Structure>
+  </TypesDef>
+</OpconStdDefinition>

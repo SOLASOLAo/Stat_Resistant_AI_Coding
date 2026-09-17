@@ -1,0 +1,80 @@
+{
+  "scope": "Local implementation and offline validation only",
+  "version": "0.2.0.0",
+  "baselineTag": "baseline-before-force-3sigma-20260915",
+  "baselineCommit": "b93d44a8a57ac33a9d73c2af9496f9e0280dc34a",
+  "plcBuild": {
+    "method": "Native F11",
+    "observedLocalTime": "2026-09-15 20:19",
+    "errors": 0,
+    "warnings": 5,
+    "signatures": [
+      "4 x C0351 unknown OPC.UA.DA attribute",
+      "1 x C0373 ErrorCodes base type DWord unsupported"
+    ],
+    "nominalMainTaskMs": 6,
+    "watchdogMs": 12,
+    "physicalTimingVerified": false
+  },
+  "cpstudio": {
+    "hmiExportErrors": 0,
+    "originalBursterWarnings": 2,
+    "designerSaveReopen": true,
+    "nativePickerObserved": "Ch1.L1.Station.HMIForceTraceLeft, ARRAY OF DWORD",
+    "localizedTextsPerLanguage": 41
+  },
+  "hmiNative": {
+    "scope": "Offline native loader/Mod_Chart/PLC frame fixtures; no PLC connection",
+    "points": 2001,
+    "sfc_loader_errors": 0,
+    "native_item_pickers": 4,
+    "bindings": {
+      "LeftTraceItem": "HMIForceTraceLeft",
+      "MiddleTraceItem": "HMIForceTraceMiddle",
+      "RightTraceItem": "HMIForceTraceRight",
+      "StatisticsItem": "HMIForceStatistics"
+    },
+    "two_csv_ranges_match": true,
+    "late_open_complete_curve": true,
+    "invalid_quality_cleared": true,
+    "runtime_language_switch": false,
+    "output": "C:\\A_Documents\\A_Projects\\A_Software\\BPP_ResistantStation\\McpCoding\\data\\reports\\hmi\\force-3sigma-v2-installed-final"
+  },
+  "numericalModelAssertions": 844,
+  "resistanceBoundaryCases": 12,
+  "sourceChecks": [
+    "Test-ProjectFramework PASS",
+    "Test-Wp100ForceInterlock PASS",
+    "Test-Wp100BursterProgramRange PASS"
+  ],
+  "componentCheck": "Kistler and ForceTrace source drift versus frozen rc.4; existing package preserved",
+  "compiledSources": [
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStore.cs",
+      "sha256": "B1ADF74A4D3DD6044404B6BBFE21A149A38E53F414135C3E940BF0F5EEDB5E7D"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceFrames.cs",
+      "sha256": "DA99CF846C62403B90E456F6691BA33D659E0752F054CB03A33F4CEBA84C0FDC"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceSession.cs",
+      "sha256": "A106F9266E4ED772C05316B38CFCF21ED53C5506F8A2C420163EA5C7BEE5BC70"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceView.cs",
+      "sha256": "A86CAB064DB1E0F368BC208051E5C6E1FF81C0CF687B0B766A79D41C7BD18616"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/AssemblyInfo.cs",
+      "sha256": "40860111549E18F388DF590EB7A3FF32564778F9DF7BC193EBE613BD42456405"
+    }
+  ],
+  "installedDllSha256": "2AD650AF2ACD2676292C1CF91595B6AE1E07E5321F19A150185869034F5FE2D5",
+  "hadSha256": "57996528BCF2890418354B1CE718C01B169481789710545769F894E310C4D86B",
+  "physicalPlcAction": false,
+  "ipcDeployed": false,
+  "newImplementationPushed": false,
+  "nativeFrameAssertions": 29,
+  "plcLrealVerdictPreservedAtRealRoundingBoundary": true
+}

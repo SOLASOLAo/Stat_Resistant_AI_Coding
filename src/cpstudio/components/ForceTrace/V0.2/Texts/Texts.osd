@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition def="1.0">
+  <HmiTextsDef def="1.0">
+    <HmiTextGroup name="ForceTrace">
+      <HmiText name="ForceTraceLeft">
+        <Text lcid="1033" value="Left" />
+        <Text lcid="2052" value="左侧" />
+      </HmiText>
+      <HmiText name="ForceTraceMiddle">
+        <Text lcid="1033" value="Middle" />
+        <Text lcid="2052" value="中间" />
+      </HmiText>
+      <HmiText name="ForceTraceRight">
+        <Text lcid="1033" value="Right" />
+        <Text lcid="2052" value="右侧" />
+      </HmiText>
+      <HmiText name="ForceTraceSave">
+        <Text lcid="1033" value="Save current curve" />
+        <Text lcid="2052" value="保存当前曲线" />
+      </HmiText>
+      <HmiText name="ForceTraceSaving">
+        <Text lcid="1033" value="Saving..." />
+        <Text lcid="2052" value="正在保存…" />
+      </HmiText>
+      <HmiText name="ForceTraceSaved">
+        <Text lcid="1033" value="Curve snapshot saved" />
+        <Text lcid="2052" value="曲线快照已保存" />
+      </HmiText>
+      <HmiText name="ForceTraceSaveFailed">
+        <Text lcid="1033" value="Save failed. Check the folder and available space." />
+        <Text lcid="2052" value="保存失败，请检查目录权限和剩余空间。" />
+      </HmiText>
+      <HmiText name="ForceTraceNoData">
+        <Text lcid="1033" value="No curve recorded for this position in this cycle" />
+        <Text lcid="2052" value="本轮此位置尚无曲线记录" />
+      </HmiText>
+      <HmiText name="ForceTraceForceAxis">
+        <Text lcid="1033" value="Force [N]" />
+        <Text lcid="2052" value="力 [N]" />
+      </HmiText>
+      <HmiText name="ForceTraceTimeAxis">
+        <Text lcid="1033" value="Time [s]" />
+        <Text lcid="2052" value="时间 [s]" />
+      </HmiText>
+      <HmiText name="ForceTraceRunning">
+        <Text lcid="1033" value="Recording" />
+        <Text lcid="2052" value="正在记录" />
+      </HmiText>
+      <HmiText name="ForceTraceCompleted">
+        <Text lcid="1033" value="Recording complete" />
+        <Text lcid="2052" value="记录完成" />
+      </HmiText>
+      <HmiText name="ForceTraceCancelled">
+        <Text lcid="1033" value="Cancelled - partial curve retained" />
+        <Text lcid="2052" value="已取消，保留部分曲线" />
+      </HmiText>
+      <HmiText name="ForceTraceProcessFault">
+        <Text lcid="1033" value="Process fault - recording stopped" />
+        <Text lcid="2052" value="流程故障，记录已停止" />
+      </HmiText>
+      <HmiText name="ForceTraceInvalidData">
+        <Text lcid="1033" value="Invalid force data - recording stopped" />
+        <Text lcid="2052" value="力数据无效，记录已停止" />
+      </HmiText>
+      <HmiText name="ForceTraceDisconnected">
+        <Text lcid="1033" value="Data connection lost - recording stopped" />
+        <Text lcid="2052" value="数据连接中断，记录已停止" />
+      </HmiText>
+      <HmiText name="ForceTraceCapacity">
+        <Text lcid="1033" value="Recording limit reached" />
+        <Text lcid="2052" value="已达到记录容量上限" />
+      </HmiText>
+      <HmiText name="ForceTraceNewCycle">
+        <Text lcid="1033" value="New cycle started" />
+        <Text lcid="2052" value="新一轮已开始" />
+      </HmiText>
+      <HmiText name="ForceTraceFullRange">
+        <Text lcid="1033" value="Full curve from record start" />
+        <Text lcid="2052" value="从记录开始的全部曲线" />
+      </HmiText>
+      <HmiText name="ForceTraceAfterStableRange">
+        <Text lcid="1033" value="Curve from first 3-sigma stability" />
+        <Text lcid="2052" value="首次3σ稳定后的曲线" />
+      </HmiText>
+      <HmiText name="ForceTraceNoAfterStable">
+        <Text lcid="1033" value="No curve after 3-sigma stability is available for this position. No file created." />
+        <Text lcid="2052" value="当前位置没有可保存的3σ稳定后曲线，未生成文件。" />
+      </HmiText>
+      <HmiText name="ForceTraceTraceTitle">
+        <Text lcid="1033" value="Force vs time · fixture position" />
+        <Text lcid="2052" value="力—时间曲线 · 夹具位置" />
+      </HmiText>
+      <HmiText name="ForceTraceDistributionTitle">
+        <Text lcid="1033" value="Pressure distribution · same PLC window" />
+        <Text lcid="2052" value="压力分布 · 同一PLC统计窗口" />
+      </HmiText>
+      <HmiText name="ForceTraceDensityAxis">
+        <Text lcid="1033" value="Density [1/N]" />
+        <Text lcid="2052" value="概率密度 [1/N]" />
+      </HmiText>
+      <HmiText name="ForceTracePdfReference">
+        <Text lcid="1033" value="Orange: reference normal density" />
+        <Text lcid="2052" value="橙线：正态密度参考曲线" />
+      </HmiText>
+      <HmiText name="ForceTraceZeroSpread">
+        <Text lcid="1033" value="Zero spread: concentrated at mean" />
+        <Text lcid="2052" value="零波动：样本集中于均值" />
+      </HmiText>
+      <HmiText name="ForceTraceMean">
+        <Text lcid="1033" value="Mean" />
+        <Text lcid="2052" value="均值" />
+      </HmiText>
+      <HmiText name="ForceTraceThreeSigma">
+        <Text lcid="1033" value="3σ" />
+        <Text lcid="2052" value="3σ" />
+      </HmiText>
+      <HmiText name="ForceTraceThreshold">
+        <Text lcid="1033" value="Force threshold" />
+        <Text lcid="2052" value="压力门槛" />
+      </HmiText>
+      <HmiText name="ForceTraceSigmaLimit">
+        <Text lcid="1033" value="3σ limit" />
+        <Text lcid="2052" value="3σ标准值" />
+      </HmiText>
+      <HmiText name="ForceTraceWindow">
+        <Text lcid="1033" value="Window" />
+        <Text lcid="2052" value="统计窗口" />
+      </HmiText>
+      <HmiText name="ForceTraceSamples">
+        <Text lcid="1033" value="Samples" />
+        <Text lcid="2052" value="样本数" />
+      </HmiText>
+      <HmiText name="ForceTraceStable">
+        <Text lcid="1033" value="Stable" />
+        <Text lcid="2052" value="压力稳定" />
+      </HmiText>
+      <HmiText name="ForceTraceFilling">
+        <Text lcid="1033" value="Filling window" />
+        <Text lcid="2052" value="统计窗口未满" />
+      </HmiText>
+      <HmiText name="ForceTraceUnstable">
+        <Text lcid="1033" value="Unstable" />
+        <Text lcid="2052" value="压力不稳定" />
+      </HmiText>
+      <HmiText name="ForceTraceFrozen">
+        <Text lcid="1033" value="Measurement snapshot" />
+        <Text lcid="2052" value="测量时刻快照" />
+      </HmiText>
+      <HmiText name="ForceTraceHistorical">
+        <Text lcid="1033" value="Previous valid window (historical)" />
+        <Text lcid="2052" value="最后有效窗口（历史数据）" />
+      </HmiText>
+      <HmiText name="ForceTraceBindingRequired">
+        <Text lcid="1033" value="Configure all four PLC array items." />
+        <Text lcid="2052" value="请配置四个PLC数组绑定。" />
+      </HmiText>
+      <HmiText name="ForceTraceTruncated">
+        <Text lcid="1033" value="Curve truncated at 60 s / 10001 points" />
+        <Text lcid="2052" value="曲线已在60秒/10001点上限截断" />
+      </HmiText>
+      <HmiText name="ForceTraceEmpty">
+        <Text lcid="1033" value="No measurement in this cycle" />
+        <Text lcid="2052" value="本轮尚未测量" />
+      </HmiText>
+      <HmiText name="ForceTraceConnectionLost">
+        <Text lcid="1033" value="HMI data unavailable; PLC recording is independent" />
+        <Text lcid="2052" value="HMI数据不可用，PLC独立记录" />
+      </HmiText>
+      <HmiText name="ForceTraceNoStatistics">
+        <Text lcid="1033" value="No usable statistical window data" />
+        <Text lcid="2052" value="尚无可用的统计窗口数据" />
+      </HmiText>
+      <HmiText name="ForceTraceSamplingRule">
+        <Text lcid="1033" value="PLC sampling: once per task cycle; configured cycle for this record: {0} ms. HMI displays PLC results." />
+        <Text lcid="2052" value="PLC采样：每个任务周期一次；本次记录配置周期：{0} ms。HMI显示PLC计算结果。" />
+      </HmiText>
+      <HmiText name="ForceTraceQualificationRule">
+        <Text lcid="1033" value="Stable: cylinder down, data good, force &gt; {0} N, full {1} ms window, and 3σ &lt; {2} N; then resistance measurement may start." />
+        <Text lcid="2052" value="判稳标准：下压到位、数据正常、力 &gt; {0} N，统计窗口完整达到 {1} ms，且3σ &lt; {2} N，才允许开始测电阻。" />
+      </HmiText>
+      <HmiText name="ForceTraceSigmaRule">
+        <Text lcid="1033" value="3σ = 3 × √[Σ(Fᵢ − F̄)² / (n − 1)], n = window samples. Force ≤ threshold or bad data resets the window." />
+        <Text lcid="2052" value="计算：3σ = 3 × √[Σ(Fᵢ − F̄)² / (n − 1)]，n为窗口样本数；力≤门槛或数据异常时重置窗口。" />
+      </HmiText>
+      <HmiText name="ForceTraceStatisticsRule">
+        <Text lcid="1033" value="PLC updates 3σ through qualification and resistance measurement; DONE/fault freezes statistics. Page opening and PDF drawing do not control qualification." />
+        <Text lcid="2052" value="PLC在等待判稳及电阻测量期间持续更新3σ；测量完成或故障后冻结统计。无需提前打开此页，PDF不参与判稳。" />
+      </HmiText>
+    </HmiTextGroup>
+  </HmiTextsDef>
+</OpconStdDefinition>

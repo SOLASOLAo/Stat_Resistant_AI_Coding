@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "project": "Station010",
+  "scope": "Current local native integration; old component-versions.json and rc.4 retained as historical source selection",
+  "selectedAt": "2026-09-16",
+  "components": [
+    {
+      "id": "burster2316",
+      "library": "Burster2316",
+      "version": "0.1.0.2",
+      "revision": 5,
+      "releaseManifest": "components/releases/burster2316-0.1.0.2-local-rev5.json",
+      "compiledSha256": "EC606F6E432C63597D79CE910621C31B48060F3808D5A1B816485B896DEDED0D",
+      "installedInLocalPrjExt": true,
+      "physicalDeployment": false
+    },
+    {
+      "id": "forcetrace",
+      "library": "ForceTrace",
+      "version": "0.2.1.0",
+      "revision": null,
+      "releaseManifest": null,
+      "localBuildEvidence": "data/native-packages/20260915/forcetrace-0.2.1.0-20260916/build-01-final.json",
+      "previousPackagedRelease": "components/releases/forcetrace-0.2.0.0-local-rev2.json",
+      "compiledSha256": "06396BE4DBDCF506F3920E42A2F9057D3167A4206204F09F8B912EFB1A1DB261",
+      "installedInLocalPrjExt": true,
+      "physicalDeployment": false
+    },
+    {
+      "id": "machinecommon",
+      "library": "MachineCommon",
+      "version": "0.1.0.0",
+      "revision": 2,
+      "releaseManifest": "components/releases/machinecommon-0.1.0.0-local-rev2.json",
+      "compiledSha256": "6EC14CB55277433AA73D754C63ECA8D8766534267AB25933D5322579D53BF0A3",
+      "installedInLocalPrjExt": true,
+      "physicalDeployment": false
+    }
+  ],
+  "hmiAddon": "ForceTrace.Hmi 0.2.1.1",
+  "hmiPatch": {
+    "version": "0.2.1.1",
+    "installedInLocalStd": true,
+    "physicalDeployment": false,
+    "package": "data/components/native/forcetrace-hmi-0.2.1.1/ForceTrace.Hmi.had",
+    "verification": "data/components/native/forcetrace-hmi-0.2.1.1/native-check.json",
+    "localReadback": "2026-09-17: DLL, AddonDesc, Gui.config and VisiWinNETSmart.config are 0.2.1.1; actual SFC retains all four Station.ForceTrace array bindings. Existing native-check uses offline fixtures; no new runtime or deployment acceptance."
+  },
+  "verification": "data/reports/hmi/forcetrace-sampling-20260916/station-reopened-final.json",
+  "deviceOperations": false,
+  "packageRevisionNote": "Local ForceTrace PLC/object/HMI upgraded to 0.2.1.0. No new complete ZIP or release manifest was created, per user closeout request. Other components and previous ZIPs retained; recorded hashes reuse existing build evidence without additional hash checks.",
+  "packageVerification": "data/station-native-integration/20260916/documentation-closeout/package-verification.json"
+}

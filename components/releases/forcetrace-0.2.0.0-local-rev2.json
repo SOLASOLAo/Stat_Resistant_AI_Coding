@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 3,
+  "id": "forcetrace",
+  "libraryName": "ForceTrace",
+  "version": "0.2.0.0",
+  "revision": 2,
+  "status": "local-native-candidate",
+  "company": "Internal Engineering",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "compatibility": [
+    "CpStudio V5.11",
+    "ctrlX PLC 2.6.8"
+  ],
+  "files": [
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Common/Picture.png",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Common/Picture.png",
+      "sha256": "929107A13B6BFC05C7BF5343C5CB96B9C0635633106D685BA9FA63B218D3E8AE"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Export/StartupParams.otd",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Export/StartupParams.otd",
+      "sha256": "353BE4E2BD74C16D7599336C45D637237F0C7D8EA15C99052C9F26CF880E8CD0"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/ForceTrace.ood",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/ForceTrace.ood",
+      "sha256": "3FDBFA05EF85110F71F7D7E788B85EE2181D9BF8BA26FB2EC50CC9F680915E33"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Library/Library.osd",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Library/Library.osd",
+      "sha256": "7D0784CF21D27A752C1A544F58BF0B362D433B87F31CD641AFAB799F97C1BBF5"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Texts/Texts.osd",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Texts/Texts.osd",
+      "sha256": "D393AC7339986FCBB1B6799D53CE320CB2D9CBB250A9DD074C073DF2BE9A1E47"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Types/CodeEntities.osd",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Types/CodeEntities.osd",
+      "sha256": "25B514C9A0BBBCE1C4363111878AF1A26ECD2F8831FC44991865E81493B55C69"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Types/Structures.osd",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Types/Structures.osd",
+      "sha256": "4226C24C7CABFB170E8A84E03B7349253C41006321D6CE720B8D53EB36CD2D44"
+    },
+    {
+      "source": "src/cpstudio/components/ForceTrace/V0.2/Views/ForceTrace.sfc",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Views/ForceTrace.sfc",
+      "sha256": "35E2B7CBE91DD7A7941A863CB25C46F0CCE8ADABAC77BFF61B0840FB77A1103B"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/ForceTrace/ForceTrace.compiled-library",
+      "path": "PrjExt/Objects/ForceTrace/V0.2/Library/ForceTrace.compiled-library",
+      "sha256": "E649D0871AE05D9144840979494F50A716E688C93CCD5921A52E18DE8867C7A4"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/ForceTrace/ForceTrace.library",
+      "path": "plc/ForceTrace.library",
+      "sha256": "7D51889B4C511464C7311C87DCFDC546804BD52BCEF5FD0A37C0256FFAC1F467"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/FB_HmiForceTrace.st",
+      "path": "plc/source/FB_HmiForceTrace.st",
+      "sha256": "EED40511F44628FCD016F0C32E8FE42F8525A21BA7C467A63F5415F7AF12AA9D"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/FB_PressForceStatistics.st",
+      "path": "plc/source/FB_PressForceStatistics.st",
+      "sha256": "45BE82CFAC97837D5D18E6B27E69324F8703E1480E10C0A369666BAE497BAB54"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/ForceTraceAddon.st",
+      "path": "plc/source/ForceTraceAddon.st",
+      "sha256": "C56F72419AA3CBE70B64E6D297108D334DF5D18B070504175FE5C3FE1AEFC47F"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/ForceTraceData.st",
+      "path": "plc/source/ForceTraceData.st",
+      "sha256": "9EC76528A0E4CE9332494F678C2BE73AB65BB5F161197B2ADCA27BA1DEACE80A"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/ForceTraceParCfg.st",
+      "path": "plc/source/ForceTraceParCfg.st",
+      "sha256": "DB08B8650F9E66FE5F8CC4160518731D47894AD8027E6F2EC4CF2B8B1605E92D"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/T_HmiForceBuffer.st",
+      "path": "plc/source/T_HmiForceBuffer.st",
+      "sha256": "EB577A2D3F274ED6B675D6FB7440BCA5230D26588F385580673133E786EA395F"
+    },
+    {
+      "source": "src/plc/libraries/ForceTrace/U_HmiForceWord.st",
+      "path": "plc/source/U_HmiForceWord.st",
+      "sha256": "3154C6B28F8D5F9F80508AA7994AE6CF4DFCB9145F76D89255F2738661A20133"
+    },
+    {
+      "source": "examples/plc/components/ForceTrace/PLC_PRG.st",
+      "path": "examples/PLC_PRG.st",
+      "sha256": "C5346A3EF03D83974899368D894CC5FAB57280D928704CB89DA3A3F4EB7105A3"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/consumer/ForceTrace/Consumer.project",
+      "path": "reference/Consumer.project",
+      "sha256": "8D78D960FC2FCA4A28549BFD391D11F917D5FF298A73C73C25AB417440068B51"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/consumer/ForceTrace/Consumer.xml",
+      "path": "reference/Consumer.xml",
+      "sha256": "D63A6BD4750DB1AD163FEE35D663123286EF3D965E75342FE78ED45432EDEABD"
+    },
+    {
+      "source": "docs/components/ForceTrace.md",
+      "path": "README.md",
+      "sha256": "EA58AB9608F198418B9AA35BA9F8ACEC361A60B29D710DFE72C690E196DD9DEB"
+    },
+    {
+      "source": "docs/components/INSTALL-GENERIC.md",
+      "path": "INSTALL-GENERIC.md",
+      "sha256": "63467F93C61A1C3730C39EB9FAD3F1AB8350AD605662B4FFB06440C7EFCE68F9"
+    },
+    {
+      "source": "docs/components/STATION010-NATIVE-20260916.md",
+      "path": "STATION010-NATIVE-20260916.md",
+      "sha256": "F397D818AE0AAFDC982388A6A939894177A614A591C51E909A27EADDDDC1BE40"
+    },
+    {
+      "source": "scripts/components/Install-NativeComponent.ps1",
+      "path": "scripts/Install-NativeComponent.ps1",
+      "sha256": "DAB531DECB3E48C12780FF182E5DE2C317BBDF5562344EA24EE1D824144620FB"
+    },
+    {
+      "source": "scripts/components/Test-ComponentPackage.ps1",
+      "path": "scripts/Test-ComponentPackage.ps1",
+      "sha256": "B73FEF02F57E3DCED02FA2D409746FA8015A61F801CC3233B956EFBBA6A8B78C"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04-final.json",
+      "path": "evidence/library-build.json",
+      "sha256": "8064E36EA6FA0D94CD5757E1FA68B225BC4885E49E7AFDD449CA7C3F220B6191"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04-final.json",
+      "path": "evidence/consumer-build.json",
+      "sha256": "8064E36EA6FA0D94CD5757E1FA68B225BC4885E49E7AFDD449CA7C3F220B6191"
+    },
+    {
+      "source": "data/station-native-integration/20260916/cpstudio-proof.json",
+      "path": "evidence/cpstudio-native.json",
+      "sha256": "A6A9C3EA0D4EB5EA934248B289F27E78920689E7C4FA8C3681ECFD73573E1623"
+    },
+    {
+      "source": "data/station-native-integration/20260916/FINAL-VERIFICATION.json",
+      "path": "evidence/station-native.json",
+      "sha256": "C5CDDF44D32BA268642D1FD7A9D53B357D56254CB4EED6831A2E2DE6C67A2B2A"
+    },
+    {
+      "source": "data/station-native-integration/20260916/release-metadata/ForceTrace/DEPENDENCIES.json",
+      "path": "DEPENDENCIES.json",
+      "sha256": "02F96C6224EBAC3495AA00E3A4F6632069DB2700E8F69DFEB8450FEAD406D6F7"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/hmi/ForceTrace.Hmi.had",
+      "path": "hmi/ForceTrace.Hmi.had",
+      "sha256": "40CC4E8DFCAB8F9BD91CEBEEDFC8685529968AAF6A72EEFD52FB252E2F80B1B8"
+    },
+    {
+      "source": "data/station-native-integration/20260916/hmi-installed-final/native-check.json",
+      "path": "evidence/hmi-native.json",
+      "sha256": "901640B2A0827CE3CA3A9CE732BA8635BBC431C587B69C2462F5DB1C73C604B5"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/unpacked-consumers-final.json",
+      "path": "evidence/unpacked-consumers.json",
+      "sha256": "14C53A6F0DA449A911AC77DE016DE19E778C6B40359777841536414A8AEB2C9A"
+    },
+    {
+      "source": "data/station-native-integration/20260916/documentation-closeout/forcetrace-revision.json",
+      "path": "evidence/package-revision.json",
+      "sha256": "AC9C81C10C730252C6B131049417FA3A2BF1A6673A30FEAAC79DBC6CE1AD7817"
+    }
+  ],
+  "validation": {
+    "library": {
+      "path": "evidence/library-build.json",
+      "warningSignatures": []
+    },
+    "consumer": {
+      "path": "evidence/consumer-build.json",
+      "warningSignatures": []
+    },
+    "cpstudio": {
+      "path": "evidence/cpstudio-native.json"
+    }
+  },
+  "revisionNote": "Documentation and existing evidence only; all engineering payload bytes unchanged.",
+  "previousRelease": {
+    "manifest": "components/releases/forcetrace-0.2.0.0-local-rev1.json",
+    "zipSha256": "063A4825A429A4E9167717DF7DC0BAADA43CB05DF93FE237968A10CF2B2F29D6"
+  }
+}

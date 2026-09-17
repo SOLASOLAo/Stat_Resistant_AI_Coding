@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 3,
+  "id": "machinecommon",
+  "libraryName": "MachineCommon",
+  "version": "0.1.0.0",
+  "revision": 1,
+  "status": "local-native-candidate",
+  "company": "Internal Engineering",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "compatibility": [
+    "CpStudio V5.11",
+    "ctrlX PLC 2.6.8"
+  ],
+  "files": [
+    {
+      "source": "src/cpstudio/components/MachineCommon/V0.1/Common/Picture.png",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/Common/Picture.png",
+      "sha256": "6E615E207482A0A5E0960A4566B3431043C3C5C8555E08B5256C127417F265B2"
+    },
+    {
+      "source": "src/cpstudio/components/MachineCommon/V0.1/Export/Addon.otd",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/Export/Addon.otd",
+      "sha256": "89855C2DA35C745528D5D401E87D0341D881C3272FA0EAA67A0AEC9D15F00D92"
+    },
+    {
+      "source": "src/cpstudio/components/MachineCommon/V0.1/Library/Library.osd",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/Library/Library.osd",
+      "sha256": "1E0D0DB04DF7346DB8D45F26FEBF9EC75D320830B9A09CE9DA4803A9475E0AF9"
+    },
+    {
+      "source": "src/cpstudio/components/MachineCommon/V0.1/MachineCommon.ood",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/MachineCommon.ood",
+      "sha256": "A4B7EBC4E5AB34166DCB77305746E99F5F5D88C28A6EAC12053DBBC4447BE162"
+    },
+    {
+      "source": "src/cpstudio/components/MachineCommon/V0.1/Types/CodeEntities.osd",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/Types/CodeEntities.osd",
+      "sha256": "F8D16B4E763C1A71CDA6AFDFD8922B0FB23CCFD5E1754B1105FB91377F4E265D"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01/MachineCommon/MachineCommon.compiled-library",
+      "path": "PrjExt/Objects/MachineCommon/V0.1/Library/MachineCommon.compiled-library",
+      "sha256": "6EC14CB55277433AA73D754C63ECA8D8766534267AB25933D5322579D53BF0A3"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01/MachineCommon/MachineCommon.library",
+      "path": "plc/MachineCommon.library",
+      "sha256": "7A8640AAE10BD1F79789DED6AAE2BE253800CBD45034BF0CC87BFE5E48A6BAD9"
+    },
+    {
+      "source": "src/plc/libraries/MachineCommon/FB_MainPressureControl.st",
+      "path": "plc/source/FB_MainPressureControl.st",
+      "sha256": "F51EFAE090D707A4325A19BDE680A4E53BFED5AA06DACBAA4F39506ECF429192"
+    },
+    {
+      "source": "src/plc/libraries/MachineCommon/FB_MaintenanceDoorControl.st",
+      "path": "plc/source/FB_MaintenanceDoorControl.st",
+      "sha256": "4A680B16A8C42115775BF8ADF8A42E4413EB38E667B3ACA822F2C2B09026874F"
+    },
+    {
+      "source": "src/plc/libraries/MachineCommon/FB_OperatorButton.st",
+      "path": "plc/source/FB_OperatorButton.st",
+      "sha256": "9F71E60C247BF5C55CC6D0245FF71A152E496307070E0D462B80E5F3A142168E"
+    },
+    {
+      "source": "examples/plc/components/MachineCommon/FB_PressureFeedbackSimulation.st",
+      "path": "examples/FB_PressureFeedbackSimulation.st",
+      "sha256": "3D29084E7639F6BF0A5A8617F8330668670C5F68DA9030B10FB84146053F134C"
+    },
+    {
+      "source": "examples/plc/components/MachineCommon/PLC_PRG.st",
+      "path": "examples/PLC_PRG.st",
+      "sha256": "BC8554583B46D9429227EE559CB68D6F09DB5FA1E8F9FC0E86CE02322832EA1A"
+    },
+    {
+      "source": "examples/plc/components/MachineCommon/Validation.st",
+      "path": "examples/Validation.st",
+      "sha256": "122CB2004D1086DF88BC18BA3A3658D540B5791FCFABD6B43EDB9AB36B4B364D"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01/consumer/MachineCommon/Consumer.project",
+      "path": "reference/Consumer.project",
+      "sha256": "7A1D2CDAF8DCD897110BA56EE73FCBBC4F0AD2B9B598A1E6E60F52EA563AD524"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01/consumer/MachineCommon/Consumer.xml",
+      "path": "reference/Consumer.xml",
+      "sha256": "2A125C0B472F17B6AB96CAE47406F8DFF6EC2A83BB78BEBEE31E0CD551E0DF7B"
+    },
+    {
+      "source": "docs/components/MachineCommon.md",
+      "path": "README.md",
+      "sha256": "F4C8E46ECAC4ACF33C76DFE0AEDDE96BC646854F37EA1AB2BEDDE4887EDAD7F6"
+    },
+    {
+      "source": "docs/components/INSTALL-GENERIC.md",
+      "path": "INSTALL-GENERIC.md",
+      "sha256": "63467F93C61A1C3730C39EB9FAD3F1AB8350AD605662B4FFB06440C7EFCE68F9"
+    },
+    {
+      "source": "docs/components/STATION010-NATIVE-20260916.md",
+      "path": "STATION010-NATIVE-20260916.md",
+      "sha256": "DE671197EA2E964AEB51F879CF5F033275C9F9F051DF3D40E6A1E91C6A677453"
+    },
+    {
+      "source": "scripts/components/Install-NativeComponent.ps1",
+      "path": "scripts/Install-NativeComponent.ps1",
+      "sha256": "DAB531DECB3E48C12780FF182E5DE2C317BBDF5562344EA24EE1D824144620FB"
+    },
+    {
+      "source": "scripts/components/Test-ComponentPackage.ps1",
+      "path": "scripts/Test-ComponentPackage.ps1",
+      "sha256": "B73FEF02F57E3DCED02FA2D409746FA8015A61F801CC3233B956EFBBA6A8B78C"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01.json",
+      "path": "evidence/library-build.json",
+      "sha256": "5126DCA513549A3C607940EADC27260F2064B9390A04A4BD13C8EEF0EED4517B"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-01.json",
+      "path": "evidence/consumer-build.json",
+      "sha256": "5126DCA513549A3C607940EADC27260F2064B9390A04A4BD13C8EEF0EED4517B"
+    },
+    {
+      "source": "data/station-native-integration/20260916/cpstudio-proof.json",
+      "path": "evidence/cpstudio-native.json",
+      "sha256": "A6A9C3EA0D4EB5EA934248B289F27E78920689E7C4FA8C3681ECFD73573E1623"
+    },
+    {
+      "source": "data/station-native-integration/20260916/FINAL-VERIFICATION.json",
+      "path": "evidence/station-native.json",
+      "sha256": "C5CDDF44D32BA268642D1FD7A9D53B357D56254CB4EED6831A2E2DE6C67A2B2A"
+    },
+    {
+      "source": "data/station-native-integration/20260916/release-metadata/MachineCommon/DEPENDENCIES.json",
+      "path": "DEPENDENCIES.json",
+      "sha256": "CFD68AC807D355143AFA5E73D67BE2DE2717240FABB08532135504E275B4D7DD"
+    }
+  ],
+  "validation": {
+    "library": {
+      "path": "evidence/library-build.json",
+      "warningSignatures": []
+    },
+    "consumer": {
+      "path": "evidence/consumer-build.json",
+      "warningSignatures": []
+    },
+    "cpstudio": {
+      "path": "evidence/cpstudio-native.json"
+    }
+  }
+}

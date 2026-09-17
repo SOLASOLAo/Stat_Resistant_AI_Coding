@@ -14,7 +14,7 @@ END_VAR
 
 VAR
   _positionValid         : BOOL;
-  _startButton           : FB_OperatorButton;
+  _startButton           : MachineCommon.FB_OperatorButton;
   _safetyDoorCloseStarted : BOOL;
   _pressDownStarted      : BOOL;
   _kistlerStarted        : BOOL;

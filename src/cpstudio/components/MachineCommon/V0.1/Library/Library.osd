@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition>
+  <PlcContentDef>
+    <Library version="0.1.0.0" file="MachineCommon.compiled-library" vendor="Internal Engineering" />
+  </PlcContentDef>
+</OpconStdDefinition>

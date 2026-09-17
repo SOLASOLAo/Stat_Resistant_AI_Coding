@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<OpConData xmlns="Bosch.OpCon.Data">
+  <xs:schema id="OpConData" targetNamespace="Bosch.OpCon.Data" xmlns:mstns="Bosch.OpCon.Data" xmlns="Bosch.OpCon.Data" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" attributeFormDefault="qualified" elementFormDefault="qualified">
+    <xs:element name="OpConData" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+      <xs:complexType>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="HandlerTable">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" default="00000000-0000-0000-0000-000000000000" />
+                <xs:element name="FileName" type="xs:string" default="" minOccurs="0" />
+                <xs:element name="ClassName" type="xs:string" default="Bosch.OpCon.Data.BaseDataLogicHandler" minOccurs="0" />
+                <xs:element name="ClassGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" default="774ceddb-6059-41d1-819c-5ff84d8e235d" minOccurs="0" />
+                <xs:element name="AssemblyName" type="xs:string" default="OpCon.Data" minOccurs="0" />
+                <xs:element name="ParentGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" default="00000000-0000-0000-0000-000000000000" minOccurs="0" />
+                <xs:element name="Num" msdata:AutoIncrement="true" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="LogicTable">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ClassName" type="xs:string" minOccurs="0" />
+                <xs:element name="TableName" type="xs:string" minOccurs="0" />
+                <xs:element name="ClassGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="AssemblyName" type="xs:string" minOccurs="0" />
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+                <xs:element name="Root" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="HandlerGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Num" msdata:AutoIncrement="true" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="ClassTable">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ClassName" type="xs:string" minOccurs="0" />
+                <xs:element name="TableName" type="xs:string" minOccurs="0" />
+                <xs:element name="AssemblyName" type="xs:string" minOccurs="0" />
+                <xs:element name="ClassGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+                <xs:element name="BaseClassGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="HandlerGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Num" msdata:AutoIncrement="true" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="ClipBoardTable">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+                <xs:element name="Name" type="xs:string" minOccurs="0" />
+                <xs:element name="LogicGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="HandlerGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Num" msdata:AutoIncrement="true" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="LangDefTable">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="CultureName" type="xs:string" minOccurs="0" />
+                <xs:element name="LCID" type="xs:int" />
+                <xs:element name="OpConId" type="xs:string" minOccurs="0" />
+                <xs:element name="GermanLanguage" type="xs:string" minOccurs="0" />
+                <xs:element name="EnglischLanguage" type="xs:string" minOccurs="0" />
+                <xs:element name="Font" type="xs:string" minOccurs="0" />
+                <xs:element name="Flags" type="xs:int" minOccurs="0" />
+                <xs:element name="HandlerGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="HmiLogic">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Name" type="xs:string" minOccurs="0" />
+                <xs:element name="ClassGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+                <xs:element name="LogicGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="ParentGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Flags" type="xs:int" minOccurs="0" />
+                <xs:element name="Num" msdata:AutoIncrement="true" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="_Lng_HmiLogic">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+                <xs:element name="LogicGuid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="en_US" msdata:Caption="en-US" type="xs:string" minOccurs="0" />
+                <xs:element name="zh_CN" msdata:Caption="zh-CN" type="xs:string" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="HmiTextData">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="MultiLanguageString">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="_Lng_Comment" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="_Lng_Value" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="VarBaseData">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="Active" type="xs:boolean" minOccurs="0" />
+                <xs:element name="_Ref_Defined" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="_Ref_Defined_Lgc_" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" minOccurs="0" />
+                <xs:element name="Error" type="xs:boolean" minOccurs="0" />
+                <xs:element name="OptionFlags" type="xs:int" minOccurs="0" />
+                <xs:element name="RefLink" type="xs:string" minOccurs="0" />
+                <xs:element name="Guid" msdata:DataType="System.Guid, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" type="xs:string" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+      <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:HandlerTable" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="LogicTable_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:LogicTable" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="ClassTable_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:ClassTable" />
+        <xs:field xpath="mstns:ClassGuid" />
+      </xs:unique>
+      <xs:unique name="ClipBoardTable_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:ClipBoardTable" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="LangDefTable_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:LangDefTable" />
+        <xs:field xpath="mstns:LCID" />
+      </xs:unique>
+      <xs:unique name="HmiLogic_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:HmiLogic" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="_Lng_HmiLogic_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:_Lng_HmiLogic" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="HmiTextData_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:HmiTextData" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="MultiLanguageString_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:MultiLanguageString" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+      <xs:unique name="VarBaseData_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+        <xs:selector xpath=".//mstns:VarBaseData" />
+        <xs:field xpath="mstns:Guid" />
+      </xs:unique>
+    </xs:element>
+  </xs:schema>
+  <HandlerTable>
+    <Guid>66779edc-a323-4833-9c4f-f2ca3702c4c5</Guid>
+    <FileName />
+    <ClassName>Bosch.OpCon.Data.BaseDataLogicHandler</ClassName>
+    <ClassGuid>774ceddb-6059-41d1-819c-5ff84d8e235d</ClassGuid>
+    <AssemblyName>OpCon.Data</AssemblyName>
+    <ParentGuid>00000000-0000-0000-0000-000000000000</ParentGuid>
+    <Num>0</Num>
+  </HandlerTable>
+  <LogicTable>
+    <ClassName>Bosch.OpCon.Engineering.Hmi.HmiLogic</ClassName>
+    <TableName>HmiLogic</TableName>
+    <ClassGuid>bb38a0f2-7068-43b0-b81d-fd748e7567f3</ClassGuid>
+    <AssemblyName>OpCon.Engineering.Hmi</AssemblyName>
+    <Guid>5c19917c-6d23-4b54-9934-90dd57a9b312</Guid>
+    <Root>171db97f-09d2-4f18-9efb-d919cca58a66</Root>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+    <Num>0</Num>
+  </LogicTable>
+  <ClassTable>
+    <ClassName>Bosch.OpCon.Engineering.Hmi.HmiTextData</ClassName>
+    <TableName>HmiTextData</TableName>
+    <AssemblyName>OpCon.Engineering.ControlSystems.Interfaces</AssemblyName>
+    <ClassGuid>6d319101-3cc9-4c41-8f60-efea8000c12b</ClassGuid>
+    <BaseClassGuid>36e5e726-b90c-4595-8c1c-b68bf8673961</BaseClassGuid>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+    <Num>0</Num>
+  </ClassTable>
+  <ClassTable>
+    <ClassName>Bosch.OpCon.Data.MultiLanguageString</ClassName>
+    <TableName>MultiLanguageString</TableName>
+    <AssemblyName>OpCon.Data.Components</AssemblyName>
+    <ClassGuid>36e5e726-b90c-4595-8c1c-b68bf8673961</ClassGuid>
+    <BaseClassGuid>3038a9a9-aadb-43dc-badf-00af315b4bd8</BaseClassGuid>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+    <Num>1</Num>
+  </ClassTable>
+  <ClassTable>
+    <ClassName>Bosch.OpCon.Data.VarBaseData</ClassName>
+    <TableName>VarBaseData</TableName>
+    <AssemblyName>OpCon.Data.Components</AssemblyName>
+    <ClassGuid>3038a9a9-aadb-43dc-badf-00af315b4bd8</ClassGuid>
+    <BaseClassGuid>fa2b248a-ed8a-4305-ad35-2689dc0e3f13</BaseClassGuid>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+    <Num>2</Num>
+  </ClassTable>
+  <ClipBoardTable>
+    <Guid>171db97f-09d2-4f18-9efb-d919cca58a66</Guid>
+    <Name>ForceTraceLeft</Name>
+    <LogicGuid>5c19917c-6d23-4b54-9934-90dd57a9b312</LogicGuid>
+    <HandlerGuid>084fdef7-25c6-4b5b-859e-251a71bac12a</HandlerGuid>
+    <Num>0</Num>
+  </ClipBoardTable>
+  <LangDefTable>
+    <CultureName>en-US</CultureName>
+    <LCID>1033</LCID>
+    <OpConId>E</OpConId>
+    <GermanLanguage>Englisch</GermanLanguage>
+    <EnglischLanguage>English</EnglischLanguage>
+    <Font />
+    <Flags>1</Flags>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+  </LangDefTable>
+  <LangDefTable>
+    <CultureName>zh-CN</CultureName>
+    <LCID>2052</LCID>
+    <OpConId>X</OpConId>
+    <GermanLanguage>Chinesisch</GermanLanguage>
+    <EnglischLanguage>Chinese</EnglischLanguage>
+    <Font />
+    <Flags>1</Flags>
+    <HandlerGuid>66779edc-a323-4833-9c4f-f2ca3702c4c5</HandlerGuid>
+  </LangDefTable>
+  <HmiLogic>
+    <Name>ForceTraceLeft</Name>
+    <ClassGuid>6d319101-3cc9-4c41-8f60-efea8000c12b</ClassGuid>
+    <Guid>171db97f-09d2-4f18-9efb-d919cca58a66</Guid>
+    <LogicGuid>5c19917c-6d23-4b54-9934-90dd57a9b312</LogicGuid>
+    <ParentGuid>00000000-0000-0000-0000-000000000000</ParentGuid>
+    <Flags>0</Flags>
+    <Num>0</Num>
+  </HmiLogic>
+  <_Lng_HmiLogic>
+    <Guid>f1238067-8de4-4cf1-9296-7711d5665fc2</Guid>
+    <LogicGuid>5c19917c-6d23-4b54-9934-90dd57a9b312</LogicGuid>
+    <en_US />
+    <zh_CN />
+  </_Lng_HmiLogic>
+  <_Lng_HmiLogic>
+    <Guid>3b00d7fd-1a6f-49b9-bac9-94fb9e6f1bc3</Guid>
+    <LogicGuid>5c19917c-6d23-4b54-9934-90dd57a9b312</LogicGuid>
+    <en_US>Left</en_US>
+    <zh_CN>左侧</zh_CN>
+  </_Lng_HmiLogic>
+  <HmiTextData>
+    <Guid>171db97f-09d2-4f18-9efb-d919cca58a66</Guid>
+  </HmiTextData>
+  <MultiLanguageString>
+    <_Lng_Comment>f1238067-8de4-4cf1-9296-7711d5665fc2</_Lng_Comment>
+    <_Lng_Value>3b00d7fd-1a6f-49b9-bac9-94fb9e6f1bc3</_Lng_Value>
+    <Guid>171db97f-09d2-4f18-9efb-d919cca58a66</Guid>
+  </MultiLanguageString>
+  <VarBaseData>
+    <Active>true</Active>
+    <_Ref_Defined>00000000-0000-0000-0000-000000000000</_Ref_Defined>
+    <_Ref_Defined_Lgc_>00000000-0000-0000-0000-000000000000</_Ref_Defined_Lgc_>
+    <Error>false</Error>
+    <OptionFlags>0</OptionFlags>
+    <RefLink />
+    <Guid>171db97f-09d2-4f18-9efb-d919cca58a66</Guid>
+  </VarBaseData>
+</OpConData>

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "ctrlx-opcon-engineering-plan",
   "builderVersion": "1.1.0",
-  "contentId": "5a74fd56de07f33d63f7e4e92ec3dfd9d0abb3bc2630d8157126ea125093ecc0",
+  "contentId": "da9ec37f77e867f861f7183baf48efeff8769993c6a762298b401e8dae3da0d5",
   "projectPackSha256": "d020615f3b269cf122828d1709fff7583f66f70b9cc09d622ca64d35d4f61e8c",
   "readyForEngineering": true,
   "sources": [
@@ -53,8 +53,8 @@
     },
     {
       "path": "specs/processes/SqS_Wp100_Run.process.json",
-      "length": 25561,
-      "sha256": "e30c3853c92d3d39dafe3766a4d74501eae31e4b51268b4783f43f417e5592cf"
+      "length": 27131,
+      "sha256": "fe1f2f241fd3cb9094a10fd1c8bb5ca74d80bbb02b4edda1d9f44a8500b9ff49"
     },
     {
       "path": "specs/hmi/auto_info_line.yaml",
@@ -88,18 +88,18 @@
     },
     {
       "path": "ai/ownership.yaml",
-      "length": 17720,
-      "sha256": "a0ec76c801b0e7ca413d2e8a2ec254b7e5f889cb636c3fabcca131caa56bae8b"
+      "length": 19731,
+      "sha256": "241edca59ad506ab1394c22f3ad33f326f1c1be728ecaa66c7b61d09b075fb59"
     },
     {
       "path": "ai/hooks.yaml",
-      "length": 11373,
-      "sha256": "e6c738612141c076e8c97a19123df6660c514dd52fb8fa0d42d52a3f251142aa"
+      "length": 13610,
+      "sha256": "16c7c77125566523025a756369e150f484723a4e9f11613826412fa66b4e0ac6"
     },
     {
       "path": "ai/graphical.yaml",
-      "length": 6423,
-      "sha256": "5abf6d76265ed427bcfb478826a69574db11dd1ddd17f50cbe28ee84561b0732"
+      "length": 6492,
+      "sha256": "ba026b0d7bf06958e06f18be04f79b993ed62b21a7fd3d59ce73d4148bcc022c"
     },
     {
       "path": "specs/station010-eplan-io.csv",
@@ -674,7 +674,7 @@
           "id": "N051",
           "kind": "start",
           "comment": "Start Kistler MEASURE",
-          "operation": "Validate and latch PressForceTimeout >2000 ms through CheckPressForce Phase 1. Copy KistlerProgramNo and start MEASURE on branch 2. Keep a larger configured watchdog, otherwise set its minimum to PressForceTimeout plus a 30 s movement/Burster/end-handshake budget.",
+          "operation": "Validate and latch StationData.PressForceStableTime >0 ms and PressForceTimeout >PressForceStableTime through CheckPressForce Phase 1. Parameter edits after this boundary apply to the next position. Copy KistlerProgramNo and start MEASURE on branch 2. Keep a larger configured watchdog, otherwise set its minimum to PressForceTimeout plus a 30 s movement/Burster/end-handshake budget.",
           "transition": "The Kistler measurement command is accepted.",
           "prompt": null,
           "promptVariants": null,
@@ -769,16 +769,17 @@
         {
           "id": "N070",
           "kind": "delay",
-          "comment": "Wait force >2500N for 2s",
-          "operation": "CheckPressForce Phase 2 requires valid force >2500 N continuously for 2 s. Force bounce resets only the stability TON, never the total PressForceTimeout wait. A fault stays latched until an explicit chain boundary.",
-          "transition": "Force is valid and strictly >2500 N continuously for 2 s without a latched fault.",
+          "comment": "Wait stable force >2500N",
+          "operation": "CheckPressForce Phase 2 requires valid force >2500 N continuously for the latched PressForceStableTime. Force bounce resets only the stability TON, never the total PressForceTimeout wait. A fault stays latched until an explicit chain boundary.",
+          "transition": "Force is valid and strictly >2500 N continuously for the configured stable time without a latched fault.",
           "prompt": null,
           "promptVariants": null,
           "requirements": [
             "REQ-RESISTANCE"
           ],
           "acceptance": [
-            "At exactly 2500 N the stable timer resets; a 1.9 s rise followed by a dip cannot release measurement.",
+            "At exactly 2500 N the stable timer resets. With stable time set to 2000 ms, a 1.9 s rise followed by a dip cannot release measurement; verify 500 and 3500 ms settings also use their own durations.",
+            "Reject zero or negative stable time and timeout less than or equal to stable time. A parameter change during a position leaves its latched values unchanged and takes effect at the next position.",
             "Repeated force bounce still reaches the total timeout. Timeout holds the press command state and logs position, reason and force; safety remains authoritative."
           ],
           "parallel": null
@@ -787,7 +788,7 @@
           "id": "N080",
           "kind": "start",
           "comment": "Start resistance test",
-          "operation": "Recheck force qualification, copy upper/lower limits and ReadTemperature, and issue SINGLE_MEAS once. After the request, Phase 3 guards force even if single-step mode holds this action; do not retrigger the instrument.",
+          "operation": "Recheck force qualification, copy TypeData upper/lower tolerance limits in Ohm and ReadTemperature into this command's ParCmd, and issue SINGLE_MEAS once. After the request, Phase 3 guards force even if single-step mode holds this action; do not retrigger the instrument or recopy limits.",
           "transition": "The resistance-meter command is accepted.",
           "prompt": null,
           "promptVariants": null,
@@ -804,7 +805,7 @@
           "id": "N090",
           "kind": "capture",
           "comment": "Wait resistance result",
-          "operation": "Run CheckPressForce Phase 3 before checking Burster completion. Force <=2500 N or invalid force data latches a soft error and invalidates the result even if DONE arrives in the same scan. Only a valid completed command may be copied.",
+          "operation": "Run CheckPressForce Phase 3 before checking Burster completion. Force <=2500 N or invalid force data latches a soft error and invalidates the result even if DONE arrives in the same scan. On the first successful completion only, capture the raw resistance in Ohm and grade it against this command's ParCmd limits copied from TypeData in N080: LowerLimit <= Resistance <= UpperLimit and NOT OutOfLimit. Limits are inclusive; an out-of-tolerance value is a completed NOK result, not a communication failure. Keep the captured result during a single-step hold. Parent LEFT/MIDDLE/RIGHT executions each receive their own result.",
           "transition": "The Burster command completes; command ERROR is propagated.",
           "prompt": null,
           "promptVariants": null,
@@ -812,7 +813,8 @@
             "REQ-RESISTANCE"
           ],
           "acceptance": [
-            "Result.Resistance is complete before the return sequence starts.",
+            "Result.Resistance is complete before the return sequence starts. Equal-to-lower and equal-to-upper values pass; below/above limits, reversed limits, NaN comparisons and OutOfLimit never pass. Use raw Ohm, not the rounded mOhm HMI value.",
+            "Each position is graded once per completed command using the limits copied at its start. A later TypeData change does not regrade an already captured result. New executions clear Valid/Ok; incomplete or failed commands do not publish a valid result.",
             "A force fault never advances to press-up or the next fixture position, and restored force cannot automatically clear/retry the failed measurement. Instrument requests are ended/cancelled while waiting for the operator."
           ],
           "parallel": null
@@ -1353,7 +1355,7 @@
       "expected": [
         "Both groups retain branch diagnostics and convergence, but press-down is gated by Kistler MeasRunning before loading.",
         "For either branch finishing first, its own completion-hold Action keeps OK until its peer completes. A pending/error branch cannot be bypassed and no completed device check is consumed twice.",
-        "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for 2 s; equality or a dip restarts stability but never the total diagnosis wait.",
+        "Each LEFT/MIDDLE/RIGHT operation requires force >2500 N continuously for its latched StationData.PressForceStableTime; equality or a dip restarts stability but never the total diagnosis wait.",
         "Qualification timeout and force loss during resistance measurement latch the soft error and prevent result acceptance, press-up and next-position release. Force loss wins over same-scan DONE, including single-step holds.",
         "The Burster acknowledges the active TypeData program; its saved range is preserved with Peripheral AutoRange false. No SET_RANGE is issued. Grading limits, temperature selection and Kistler program still come from active TypeData.",
         "Resistance, Kistler verdict, program, force and stroke are retained in Result."
@@ -1534,7 +1536,7 @@
     {
       "processId": "wp100-run-atomic",
       "requirementId": "REQ-RESISTANCE",
-      "text": "After confirmed press-down require force strictly greater than 2500 N continuously for 2 s within StationData.PressForceTimeout. Then run one Burster measurement and monitor force through completion. Timeout, force <=2500 N during measurement or invalid force data latches EVENT_PRESS_FORCE_INVALID, invalidates the result and holds the step without automatic press-up or retry.",
+      "text": "After confirmed press-down require force strictly greater than 2500 N continuously for StationData.PressForceStableTime milliseconds (default 2000) within StationData.PressForceTimeout. Latch both values at each position start; stable time must be positive and total timeout must exceed it. Then run one Burster measurement and monitor force through completion. Timeout, force <=2500 N during measurement or invalid force data latches EVENT_PRESS_FORCE_INVALID, invalidates the result and holds the step without automatic press-up or retry.",
       "stepIds": [
         "N070",
         "N080",

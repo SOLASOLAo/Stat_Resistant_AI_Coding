@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 2,
+  "id": "bpp-forcetrace",
+  "version": "0.1.0-rc.2",
+  "kind": "native-hmi-addon",
+  "status": "source-candidate",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "releaseTag": "bpp-forcetrace-v0.1.0-rc.2",
+  "nativeLibrary": {
+    "status": "not-applicable-hmi-addon"
+  },
+  "nativeAssembly": "Bpp.ForceTrace, Version=0.1.0.2, Culture=neutral, PublicKeyToken=null",
+  "nativeArtifacts": [
+    {
+      "file": "Bpp.ForceTrace.dll",
+      "sha256": "F40FD24A7739465D95994D006ACE0557D44AAFF98F0E54170C0B1DDA799EE9D9"
+    },
+    {
+      "file": "Bpp.ForceTrace.had",
+      "sha256": "BE166135ED327576CA7A0686115527D7A61AF84F86C61C479C2CC6EFED01CB1D"
+    }
+  ],
+  "contract": {
+    "frameVersion": 1,
+    "frameWords": 14,
+    "forceUnit": "N",
+    "elapsedUnit": "ms in frame, seconds on axis and CSV",
+    "positions": [
+      "Left",
+      "Middle",
+      "Right"
+    ],
+    "readonly": true,
+    "startup": "Exactly one hidden native SmartForm per Item",
+    "automaticCsvSave": false
+  },
+  "compatibility": {
+    "cpstudio": "5.11",
+    "dotnet": "Windows .NET Framework",
+    "nativeDependencies": "specs/hmi/force_trace_build_evidence.json",
+    "plcPublisherDependencies": "Standard IEC types and TIME(); no Kistler dependency in publisher core"
+  },
+  "validation": {
+    "nativeBuild": "0 errors / 0 warnings",
+    "offlineEvidence": "specs/hmi/force_trace_build_evidence.json",
+    "pending": [
+      "Actual OPC startup timing",
+      "IPC deployment",
+      "Runtime language switch",
+      "Repeat/cancel/disconnect field tests"
+    ]
+  },
+  "files": [
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStore.cs",
+      "role": "hmi-source",
+      "sha256": "111B5E753133171F74C90AB4DEC8D4808C6CA1EB191F176556B27A937F889E55"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceFrames.cs",
+      "role": "hmi-source",
+      "sha256": "5709C2D1F55338620FA65F8EB1A284CA5BC09160C00D471E1834D40D99C515A4"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceSession.cs",
+      "role": "hmi-source",
+      "sha256": "69FDD1B4F537E7B7F9762285A76A160F8C437AFEAF4333E5D69957C2126E4489"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStartupForm.cs",
+      "role": "hmi-source",
+      "sha256": "3B638CFD9587B7385B38E7240C1E9AC292504A37E52371B4E7EA927BD81B9959"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceView.cs",
+      "role": "hmi-source",
+      "sha256": "A69E7FB1B213551D6B7C48021F6D28BE1F1FD5FB18499AB4C7263770C4BBA7DC"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/AssemblyInfo.cs",
+      "role": "hmi-source",
+      "sha256": "93185BB44FB6530D948F049104B5A777A7E75D9BEBE4976D5657657BB95B84C9"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/AddonDesc.xml",
+      "role": "hmi-source",
+      "sha256": "CCFDE79A5C4D8777FC7ED4EC35696E46BA3B8C01195C9D41F8978313B1F28E08"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStartup.sfc",
+      "role": "hmi-source",
+      "sha256": "13E6CF505118BC0821968465AC38F2B4DDEBA279EEAAAD27C9FE9EA694F52B27"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/NativeText.seed.cpsds",
+      "role": "hmi-source",
+      "sha256": "1668F46689BBB23E1318F7346922D0F9021E4FE2B11D260C3E7CDB7C976569DD"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/README.md",
+      "role": "hmi-source",
+      "sha256": "B8F790C01665CA10E699D75D9C7038CDE0A1434555404D0CC3A049EFD96973BA"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTrace.sfc",
+      "role": "station-reference",
+      "sha256": "67A240EFD07B5AC5D9CE317AABD828B17365CC4FB3FAE7E780159DE6BABE4966"
+    },
+    {
+      "path": "src/plc/project/Station010/FB_HmiForceTrace.st",
+      "role": "plc-publisher",
+      "sha256": "BA3EC7A88FEC1ABC3B52140CE56B3732C197F618A70F658B858F623F69EE4293"
+    },
+    {
+      "path": "src/plc/project/Station010/U_HmiForceWord.st",
+      "role": "plc-publisher",
+      "sha256": "3154C6B28F8D5F9F80508AA7994AE6CF4DFCB9145F76D89255F2738661A20133"
+    },
+    {
+      "path": "src/plc/project/Station010/AiForceTrace.gvl.st",
+      "role": "station-reference",
+      "sha256": "9ACBDC30F56523F0C0A199351D3F250E0D46DC8D864EE66814D3989D85D45682"
+    },
+    {
+      "path": "src/plc/project/Station010/StationUnit/OnCall.HmiForceTrace.st",
+      "role": "station-reference",
+      "sha256": "0F00D9DD23843EAB545CFD35AF1726BFF50C22770579F398AFF52E5EF6FDB422"
+    },
+    {
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N000.st",
+      "role": "station-reference",
+      "sha256": "2F0A1EE03EFF5F1A170BACA51F8BD06B5498F76F068BC8F8D8405A331DC8FD00"
+    },
+    {
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/OnChainFinish.st",
+      "role": "station-reference",
+      "sha256": "EA952E77CC289C8FFF7630B137FB6ED9F9EAB50519C7DDF82B902A624E57A815"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st",
+      "role": "station-reference",
+      "sha256": "C13ADC98C56C5227314F964E994973F3EF125D0D68052197FA958352B2E59BBD"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N101.st",
+      "role": "station-reference",
+      "sha256": "7357A155CBEA3434625C78D562B42F299E4ACC2D320398C989945A1B9604C288"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st",
+      "role": "station-reference",
+      "sha256": "7742CAB63F03E632F7EA90B7E6EE819BC1941A96D278184097C6473AABE70B45"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st",
+      "role": "station-reference",
+      "sha256": "AA6AA29806076A59AE203CFB3E3ABC140DA8555C3C051063A0C8FDF0E5DB8AE1"
+    },
+    {
+      "path": "specs/hmi/force_trace_texts.json",
+      "role": "source-specification",
+      "sha256": "2ADA40B1453D4DE626605D839FF6C931F769C7D5E25B4AB56349855451D42214"
+    },
+    {
+      "path": "specs/hmi/resistance_texts.json",
+      "role": "source-specification",
+      "sha256": "E704721FE251F60E5C0C1D58B11C1B5659701F22C620C04E5225D88272A7343F"
+    },
+    {
+      "path": "specs/hmi/station_menu_texts.json",
+      "role": "source-specification",
+      "sha256": "A980761622A25B83B72078B4DC74DB342ECA0D46FAC3A7AA1262B27183C7D8B5"
+    },
+    {
+      "path": "specs/hmi/plc_force_curve.yaml",
+      "role": "source-specification",
+      "sha256": "192EDFE8E42E10448C609713D13D85692E79A081EB7029E6D1F23151862EA4D3"
+    },
+    {
+      "path": "specs/hmi/force_trace_build_evidence.json",
+      "role": "source-specification",
+      "sha256": "3261188B82E3118B5BDE19B6E3D7D25F97FA72AA24413AF437D7789EE67A811A"
+    },
+    {
+      "path": "scripts/hmi/Test-ForceTrace.ps1",
+      "role": "tooling",
+      "sha256": "4787CCA064618EF054C2EEE77DBF1450DA761ACC37877893CBA0B5943126ED49"
+    },
+    {
+      "path": "scripts/hmi/Test-ForceTraceNative.ps1",
+      "role": "tooling",
+      "sha256": "90AE4773189CAEEFD03829DADAB84EEFC76A0534E7A65D9EA3B65A6104D0E255"
+    },
+    {
+      "path": "scripts/hmi/New-ForceTraceStartupOverlay.ps1",
+      "role": "tooling",
+      "sha256": "D64D793FBA6FE3F7082053F5F8BA91A28DDA028B680CC7F40089919837ADECCF"
+    },
+    {
+      "path": "scripts/hmi/New-ForceTraceViews.ps1",
+      "role": "tooling",
+      "sha256": "0D2520FABA36CB3B15BD1F81F828AAE134AEAC2DEE6107F1BF9B378A9F64368C"
+    },
+    {
+      "path": "scripts/hmi/New-ForceTraceTexts.ps1",
+      "role": "tooling",
+      "sha256": "DC56E4A34C17B2167E92706CA31678D736D4743225A503028E94CE335780273F"
+    },
+    {
+      "path": "tests/hmi/ForceTraceFrameTests.cs",
+      "role": "offline-test",
+      "sha256": "202C68803583130E0B93580AA2BEA70D126BAB0530F6F60C1A3B5A29254E6A51"
+    },
+    {
+      "path": "tests/hmi/ForceTraceStoreTests.cs",
+      "role": "offline-test",
+      "sha256": "5A9CF13B35C473794AC396B62B4C4D7241AE495161D95B75988A561C26A30CDE"
+    },
+    {
+      "path": "tests/hmi/Test-ForceTraceStartup.ps1",
+      "role": "offline-test",
+      "sha256": "AA2713D53B95E11E6E043F5921F082F5C47F6DDBF72B67E63C6CC51E4831EC84"
+    },
+    {
+      "path": "tests/hmi/Render-ForceTraceNative.ps1",
+      "role": "offline-test",
+      "sha256": "1D2FC83341B27CDE8527580D7142E2047024DB7AA6C17168C071C828C29797EB"
+    },
+    {
+      "path": "tests/hmi/Test-HmiLocalization.ps1",
+      "role": "offline-test",
+      "sha256": "09723F735FD9A75267339E22048BD0DD8B9F00535A15620E97A00C3AB1DE9A96"
+    },
+    {
+      "path": "docs/hmi_force_trace_addon.md",
+      "role": "guide",
+      "sha256": "E237EDD5815021B8D66AD1D7B5ED0878B6B0DC14FC11D8B5A47F8CC7F252AF34"
+    },
+    {
+      "path": "docs/hmi_localization.md",
+      "role": "guide",
+      "sha256": "7C823F20C754C110D58416953A598DF0792AA73E59038B7B382088252F79B213"
+    },
+    {
+      "path": "scripts/components/Test-ComponentPackage.ps1",
+      "role": "tooling",
+      "sha256": "13202758F2C9B28152D5D828F2C240F297805A11E8111CB785DBF808F662EC3B"
+    },
+    {
+      "path": "specs/hmi/station_component_dependencies.json",
+      "role": "station-reference",
+      "sha256": "F249484ACB846E08BA56AA0B3FC1772EBF1919A0C6C36E8B6FF61D1C5CFCA76F"
+    },
+    {
+      "path": "docs/station010-component-set.md",
+      "role": "station-reference",
+      "sha256": "BF27A9866E4C2837B41A89A68366641BC3DD0B394C50680FE301E38EAF4A828F"
+    }
+  ],
+  "sourceSnapshot": {
+    "sha256": "A27F015957DC98D186FFD8282960FA4A20A8A52A390B3300F3CB694AC5D3D58C",
+    "dirty": true,
+    "algorithm": "SHA256 of sorted path|length|SHA256 lines, UTF-8 with LF terminators",
+    "description": "Actual candidate bytes; sourceRevision is the anchor, not a claim that dirty changes are committed"
+  }
+}

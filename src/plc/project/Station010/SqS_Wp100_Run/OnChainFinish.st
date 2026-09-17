@@ -5,6 +5,16 @@ VAR_INPUT
 END_VAR
 
 // Call base method
+// AI_HMI_FORCE_TRACE_BEGIN
+CASE Reason OF
+  OpconChainFinishReason.ERROR:
+    Station.ForceTraceAddon.Recorder.Finish(Reason := 4,
+      LastForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+  OpconChainFinishReason.CANCEL:
+    Station.ForceTraceAddon.Recorder.Finish(Reason := 3,
+      LastForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+END_CASE
+// AI_HMI_FORCE_TRACE_END
 SUPER^.OnChainFinish(Reason);
 
 // A cancelled/finished SFC no longer calls its active action. Reset every

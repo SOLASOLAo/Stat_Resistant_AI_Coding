@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Object xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" objectName="Force Trace" refId="67760EC4-181D-5E04-B4E1-92EF2F1CCD9D" version="0.2.1.0" formatVersion="1" toolVersions="5.11" hierarchyNodeType="AddOn" xsi:noNamespaceSchemaLocation="..\..\OpconOodObjectSchema_V4_11.xsd">
+  <Misc>
+    <Platform name="Nexeed Automation" />
+    <Type name="Add-on" />
+    <Picture path="Common\Picture.png" />
+    <Author name="WANG Zhi (RBCD\TEF2)" />
+    <Vendor name="Internal Engineering" />
+    <Visibility value="Always" />
+    <Interface name="None" />
+    <Description textEn="PLC force acquisition, rolling 3-sigma statistics and three-position HMI traces." textDe="PLC-Krafterfassung, gleitende 3-Sigma-Statistik und HMI-Kurven fuer drei Positionen." />
+    <SupportedPlcTypes>
+      <PlcType name="CXA" supported="Yes" />
+    </SupportedPlcTypes>
+  </Misc>
+  <Common>
+    <BaseRefIds>
+      <BaseRefId name="NxAddonBase" refLink="A467FB09-013E-11E1-8619-000423132FC8" version="1.0" />
+    </BaseRefIds>
+    <UseAs>
+      <Unit refLink="62788D21-9837-5490-8CC7-E35C1E1D2816" />
+    </UseAs>
+    <Templates>
+      <ApplyParametersStartup name="Export\StartupParams.otd" />
+      <ApplyParametersOnlineChange name="Export\StartupParams.otd" />
+    </Templates>
+  </Common>
+  <Content>
+    <Types>
+      <CodeEntity name="Addon types" link="Types\CodeEntities.osd" refId="892779D5-E74B-58D3-B96B-A3EE1D551EE4" />
+      <Structure name="Trace frames" link="Types\Structures.osd" refId="72C182DF-72BA-513E-8F6F-403227E59456" />
+    </Types>
+    <Variables>
+      <Variable name="" structRef="ForceTraceData" refId="2100A226-47F7-5B3C-826A-1618B09864E2" />
+      <Variable name="Addon" structRef="ForceTraceAddon" refId="62788D21-9837-5490-8CC7-E35C1E1D2816" />
+    </Variables>
+    <Hmi>
+      <View name="ForceTrace" refId="75641E86-D7BA-556C-8955-25138AF746AE" file="Views\ForceTrace.sfc" selectable="True">
+        <Description>
+          <Text lcid="1033" value="Force trace" />
+          <Text lcid="2052" value="力曲线" />
+        </Description>
+      </View>
+      <HmiText name="Texts" link="Texts\Texts.osd" refId="DC67D13D-F6C4-5DDD-B18F-907E5264623E" />
+    </Hmi>
+    <PlcContent>
+      <Library name="Library" link="Library\Library.osd" refId="92744A3E-5BBB-5BEF-9882-861F548CCD22" />
+    </PlcContent>
+  </Content>
+  <Parameters>
+    <ParameterValue name="SamplePeriodMs" refId="FCDCFB93-3D7B-4FD0-A128-06827E8B43AB" varType="DINT" variable="true" initialValue="6" minValue="1" maxValue="1000" textEn="PLC sampling task cycle in ms (must match the actual task; does not change it)" textDe="Zyklus der PLC-Abtasttask in ms (muss mit der Task uebereinstimmen)" />
+    <ParameterVariable name="ForceN" refId="32FFA1BA-1980-5D08-9BD9-DF5B01EB810D" varType="REAL" optional="False" textEn="Force in N" textDe="Force in N" />
+    <ParameterVariable name="QualityGood" refId="9C8A6110-2604-51EF-AF89-A71A4EBEC171" varType="BOOL" optional="False" textEn="Force signal quality is good" textDe="Force signal quality is good" />
+    <ParameterVariable name="Measuring" refId="10F90CF3-5580-5A5C-9FCC-67F5B05524F1" varType="BOOL" optional="False" textEn="Acquisition enabled by process sequence" textDe="Acquisition enabled by process sequence" />
+    <ParameterVariable name="ThresholdN" refId="5C5CF4E7-7573-50A5-8409-F41E37A01308" varType="REAL" optional="False" textEn="StationData force threshold in N" textDe="StationData force threshold in N" />
+    <ParameterVariable name="LimitN" refId="162EC3D0-EE7D-5179-A462-2DDE21230FBD" varType="REAL" optional="False" textEn="StationData 3 sigma limit in N; zero means not configured" textDe="StationData 3 sigma limit in N; zero means not configured" />
+    <ParameterVariable name="WindowMs" refId="DFBBABB0-457D-513F-ABCE-FB23720C0F42" varType="DINT" optional="False" textEn="StationData statistics window in ms" textDe="StationData statistics window in ms" />
+    <ParameterVariable name="TimeoutMs" refId="E4F5F72F-6D8C-5DF9-9485-90D4A615DCFA" varType="DINT" optional="False" textEn="StationData qualification timeout in ms" textDe="StationData qualification timeout in ms" />
+  </Parameters>
+</Object>

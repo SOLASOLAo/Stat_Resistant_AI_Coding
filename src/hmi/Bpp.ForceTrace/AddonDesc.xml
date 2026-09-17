@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HMIAddon>
+  <Assemblies>
+    <Assembly assemblyName="Bpp.ForceTrace" assemblyInfo="Bpp.ForceTrace, Version=0.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <Control name="Bpp.ForceTrace.ForceTraceView" />
+    </Assembly>
+  </Assemblies>
+</HMIAddon>

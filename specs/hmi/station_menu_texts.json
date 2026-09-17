@@ -1,0 +1,75 @@
+{
+  "scope": "Station010 reference text values; edit native CpStudio fields then HMI-only export",
+  "changes": [
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "6a13e817-6ea9-4991-ad44-59bb7224355dL1",
+      "before": "Manual function",
+      "after": "手动功能"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "996fd334-06cc-45c1-822a-48ee2c6bc56fL1",
+      "before": "Test functions",
+      "after": "测试功能"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "e238fde0-b979-4d5b-af54-2dd018ec448fL1",
+      "before": "OverView",
+      "after": "主界面"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "b95a905c-1748-4d31-a0d8-7c832a7472faL1",
+      "before": "User guidance",
+      "after": "操作引导"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "eb39955a-7118-41fb-823d-18cc6293fb69L1",
+      "before": "Station lamp",
+      "after": "工位指示灯"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "feb82f4b-028f-4891-8044-2619a09f125cL1",
+      "before": "Automatic",
+      "after": "自动"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "17fb5f5e-be6e-47bf-bf99-82ce3668309fL1",
+      "before": "Manual",
+      "after": "手动"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "ce77563b-7801-4de8-9f4f-16e867bf485dL1",
+      "before": "Homing",
+      "after": "回原位"
+    },
+    {
+      "lcid": "2052",
+      "group": "Generated",
+      "key": "5ef7c195-02cf-4b61-933c-3925aca115a5L1",
+      "before": "Change-over",
+      "after": "换型"
+    },
+    {
+      "lcid": "2052",
+      "group": "ChgOvGuidanceView",
+      "key": "HeaderLabel",
+      "before": "User guidance",
+      "after": "操作引导"
+    }
+  ]
+}

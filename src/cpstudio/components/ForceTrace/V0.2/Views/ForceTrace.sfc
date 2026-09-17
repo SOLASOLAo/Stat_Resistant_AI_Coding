@@ -1,0 +1,15 @@
+<%para 2100A226-47F7-5B3C-826A-1618B09864E2; TraceData%>
+<?xml version="1.0" encoding="utf-8"?>
+<?mapping xmlns="http://www.inosoft.com/DTD/SmartForms" namespace="Bosch.OpCon.HMI.Modulo.Shared;ForceTrace.Hmi;"?>
+<wfml xmlns="http://www.inosoft.com/DTD/SmartForms" xmlns:wfml="http://www.inosoft.com/DTD/WFML">
+  <SmartControl wfml:ID="View" Font="Bosch Sans Regular, 12pt" Size="944, 680" KeepAlive="True">
+    <property.Controls>
+      <ForceTraceView wfml:ID="ForceTrace" Location="0, 0" Size="944, 680" Dock="Fill" TextGroup="ForceTrace" SaveDirectory="C:\OpconData\ForceTraces">
+        <property.LeftTraceItem Name="<%=TraceData.HmiFullName%>.LeftFrame" />
+        <property.MiddleTraceItem Name="<%=TraceData.HmiFullName%>.MiddleFrame" />
+        <property.RightTraceItem Name="<%=TraceData.HmiFullName%>.RightFrame" />
+        <property.StatisticsItem Name="<%=TraceData.HmiFullName%>.StatisticsFrame" />
+      </ForceTraceView>
+    </property.Controls>
+  </SmartControl>
+</wfml>

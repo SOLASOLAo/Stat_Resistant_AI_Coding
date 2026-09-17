@@ -1,0 +1,748 @@
+{
+  "schemaVersion": 1,
+  "id": "station010-integration-reference",
+  "version": "0.1.0-rc.4",
+  "guide": "components/station010/README.md",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "releaseEligible": false,
+  "gradingEvidence": "data/reports/plc/resistance-grading-20260911-174805/verification.json",
+  "files": [
+    {
+      "root": "sidecar",
+      "path": "components/station010/README.md",
+      "target": "components/station010/README.md",
+      "role": "station-integration-contract",
+      "length": 9522,
+      "sha256": "4AA027EFC419B91E1C2BDD36771C73823461329738DE6F7CD1FE602FA8553081"
+    },
+    {
+      "root": "sidecar",
+      "path": "docs/hmi_localization.md",
+      "target": "docs/hmi_localization.md",
+      "role": "station-integration-contract",
+      "length": 4377,
+      "sha256": "7C823F20C754C110D58416953A598DF0792AA73E59038B7B382088252F79B213"
+    },
+    {
+      "root": "sidecar",
+      "path": "docs/reviews/burster-native-library-20260910.md",
+      "target": "docs/reviews/burster-native-library-20260910.md",
+      "role": "station-integration-contract",
+      "length": 3936,
+      "sha256": "8B4A7C06B7AC624D2B3025CAECB59FC53E8B2A3442B216C7A8C9B99A7E02143C"
+    },
+    {
+      "root": "sidecar",
+      "path": "docs/reviews/station010-changeover-reentry-20260911.md",
+      "target": "docs/reviews/station010-changeover-reentry-20260911.md",
+      "role": "station-integration-contract",
+      "length": 4244,
+      "sha256": "D29B719C368519A123F1F564E4223F5861372DBA2CE4184D6EE43B319419475B"
+    },
+    {
+      "root": "sidecar",
+      "path": "docs/reviews/station010-resistance-grading-20260911.md",
+      "target": "docs/reviews/station010-resistance-grading-20260911.md",
+      "role": "station-integration-contract",
+      "length": 3264,
+      "sha256": "E030214C899D6FE15D72C47E45E95213940C243A6E5D9821F8BADA99CE359E55"
+    },
+    {
+      "root": "sidecar",
+      "path": "data/reports/components/station-set-20260911-180713/packaging-validation.json",
+      "target": "evidence/packaging-validation.json",
+      "role": "current-offline-checks",
+      "length": 6993,
+      "sha256": "3682BE98CA3D8BFD939F002321E5B51EA718C2D91FDF09DF27A5FA12A7D6CB70"
+    },
+    {
+      "root": "sidecar",
+      "path": "data/reports/plc/resistance-grading-20260911-174805/verification.json",
+      "target": "evidence/resistance-grading.json",
+      "role": "prior-exact-project-compile",
+      "length": 2925,
+      "sha256": "A55B735FA330B67669040904B7141B60337CBBE33B9BE456FC696D9458485900"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/hmi/station_menu_texts.json",
+      "target": "menu-texts.json",
+      "role": "own-native-menu-delta",
+      "length": 1941,
+      "sha256": "A980761622A25B83B72078B4DC74DB342ECA0D46FAC3A7AA1262B27183C7D8B5"
+    },
+    {
+      "root": "sidecar",
+      "path": "data/reports/hmi/hmi-zh-en-changeover-20260911/ResistanceTexts.cpsds",
+      "target": "native/ResistanceTexts.cpsds",
+      "role": "own-native-text-fragment",
+      "length": 25677,
+      "sha256": "337E6DB0439B261AC6D7CB502DDBC0E9D5EDA9678FF47EC4BBCA4A32F53AFD5A"
+    },
+    {
+      "root": "station",
+      "path": "Hmi/SmartForms/17ad895f-b172-4b13-8b11-8fde8b79013f/UserDefined.sfc",
+      "target": "native/UserDefined.sfc",
+      "role": "own-native-station-view",
+      "length": 10598,
+      "sha256": "7AB00C02F4150E1DF30DC8A06617B04C1669107692B1C88B706662D583E789BC"
+    },
+    {
+      "root": "sidecar",
+      "path": "scripts/plc/apply_changeover_requests_rest.ps1",
+      "target": "scripts/plc/apply_changeover_requests_rest.ps1",
+      "role": "station-integration-contract",
+      "length": 6185,
+      "sha256": "CF9021AF0AD98BA05CB164AF8978171E4AB595A2E06453AB1973A7DBD75DC57F"
+    },
+    {
+      "root": "sidecar",
+      "path": "scripts/plc/apply_hmi_resistance_rest.ps1",
+      "target": "scripts/plc/apply_hmi_resistance_rest.ps1",
+      "role": "station-integration-contract",
+      "length": 6499,
+      "sha256": "76A0F477AF715D2923782081D7769752DF717F272D203342B1090E60E3BBE1A0"
+    },
+    {
+      "root": "sidecar",
+      "path": "scripts/plc/apply_wp100_run_rest.ps1",
+      "target": "scripts/plc/apply_wp100_run_rest.ps1",
+      "role": "station-integration-contract",
+      "length": 58561,
+      "sha256": "634A3CC44ED764F10AD132071EDBBEA062102B0261CA4A1B34CAC4D1AEC062E9"
+    },
+    {
+      "root": "sidecar",
+      "path": "scripts/plc/SfcRestWriter.Transaction.ps1",
+      "target": "scripts/plc/SfcRestWriter.Transaction.ps1",
+      "role": "station-integration-contract",
+      "length": 22925,
+      "sha256": "C11474DF4FCBBB5E8F59AFEBA18D94C72F5DE85340BD9AE1795CE033905660D8"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/hmi/changeover_requests.yaml",
+      "target": "specs/hmi/changeover_requests.yaml",
+      "role": "station-integration-contract",
+      "length": 1487,
+      "sha256": "968B9C39ECC3A74C5D34D2BD9E1E52C01ED04BCF93E00B7A636CE449B5ED860B"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/hmi/resistance_results.yaml",
+      "target": "specs/hmi/resistance_results.yaml",
+      "role": "station-integration-contract",
+      "length": 8828,
+      "sha256": "0F739A53D3C70AD5BF30DEFE9221A6D724006175CE4795BFD509F9EB0A195B18"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/hmi/resistance_texts.json",
+      "target": "specs/hmi/resistance_texts.json",
+      "role": "station-integration-contract",
+      "length": 1256,
+      "sha256": "E704721FE251F60E5C0C1D58B11C1B5659701F22C620C04E5225D88272A7343F"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/hmi/station_component_dependencies.json",
+      "target": "specs/hmi/station_component_dependencies.json",
+      "role": "station-integration-contract",
+      "length": 2846,
+      "sha256": "F249484ACB846E08BA56AA0B3FC1772EBF1919A0C6C36E8B6FF61D1C5CFCA76F"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/processes/SqC_Wp100_Run.process.json",
+      "target": "specs/processes/SqC_Wp100_Run.process.json",
+      "role": "station-integration-contract",
+      "length": 12368,
+      "sha256": "F6458A7D290625AE204628F5207E9D88D8BD550D974F95392A2C0F6D1C4BDEBE"
+    },
+    {
+      "root": "sidecar",
+      "path": "specs/processes/SqS_Wp100_Run.process.json",
+      "target": "specs/processes/SqS_Wp100_Run.process.json",
+      "role": "station-integration-contract",
+      "length": 26455,
+      "sha256": "8CFE1537EF2F9BC981633FBA22639EDC78DAACA79C00B508161ED56211B6AF24"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/AiForceTrace.gvl.st",
+      "target": "src/plc/project/Station010/AiForceTrace.gvl.st",
+      "role": "station-reference-source",
+      "length": 79,
+      "sha256": "9ACBDC30F56523F0C0A199351D3F250E0D46DC8D864EE66814D3989D85D45682"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/AiWp100.gvl.st",
+      "target": "src/plc/project/Station010/AiWp100.gvl.st",
+      "role": "station-reference-source",
+      "length": 143,
+      "sha256": "8D0BBF1005499B0D0D32F20495209247AFEC60B87D6E98167032E4AC9236B491"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/FB_HmiForceTrace.st",
+      "target": "src/plc/project/Station010/FB_HmiForceTrace.st",
+      "role": "station-reference-source",
+      "length": 4122,
+      "sha256": "BA3EC7A88FEC1ABC3B52140CE56B3732C197F618A70F658B858F623F69EE4293"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/FB_Wp100BursterProgramSelect.st",
+      "target": "src/plc/project/Station010/FB_Wp100BursterProgramSelect.st",
+      "role": "station-reference-source",
+      "length": 3362,
+      "sha256": "B2BEC61DE92D0D1E109C1AA7E4E317DDB2678BA5E204091B62AA6707B6884B84"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/FB_Wp100BursterSingleOwner.st",
+      "target": "src/plc/project/Station010/FB_Wp100BursterSingleOwner.st",
+      "role": "station-reference-source",
+      "length": 28485,
+      "sha256": "37B77C8EA795557EE9EE532D159B598ABAE1C1B7B6B4A053A3F9835A9E865E32"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N000.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N000.st",
+      "role": "station-reference-source",
+      "length": 331,
+      "sha256": "2F0A1EE03EFF5F1A170BACA51F8BD06B5498F76F068BC8F8D8405A331DC8FD00"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N010.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N010.st",
+      "role": "station-reference-source",
+      "length": 262,
+      "sha256": "02364AAD3C2E67929690FBE03087F2207296FFF0D7D5EB96C905DF9C73FB11C0"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N015.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N015.st",
+      "role": "station-reference-source",
+      "length": 825,
+      "sha256": "9124A5E1D827F03F52375754D68A65DD0475ACE9F568212D233B507A31BEDDA5"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N020.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N020.st",
+      "role": "station-reference-source",
+      "length": 257,
+      "sha256": "134C61568483729D8621BA7D08756221BC018DB883424366E0ADCCB4CD5512A0"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N030.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N030.st",
+      "role": "station-reference-source",
+      "length": 191,
+      "sha256": "95855D428D9EF00FAF5968D910C3BD803DDCF76CD8347237F3A235EA330BC3D7"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N040.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N040.st",
+      "role": "station-reference-source",
+      "length": 251,
+      "sha256": "D684848394771D18C0037F364067BF0DD7D493EE721AFFF52EA2459F01F13E57"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N045.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N045.st",
+      "role": "station-reference-source",
+      "length": 827,
+      "sha256": "191783DF8B6272B044E6E3291E2A3635D6CFD47A7C12AA65121EC72FE454E487"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N050.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N050.st",
+      "role": "station-reference-source",
+      "length": 257,
+      "sha256": "439770A3EC9D19BE9FBD41F051490C1BABC5FBDE8949E7178E276D1BE1674F6E"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N060.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N060.st",
+      "role": "station-reference-source",
+      "length": 195,
+      "sha256": "7E975DDF6394928D9FEB68C540F97D4E835D25DEDDE52C9F92F477A44000EB5D"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N070.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N070.st",
+      "role": "station-reference-source",
+      "length": 250,
+      "sha256": "F00BD6D71461A1AB282DE0EBAA7E27822F4F8C4C7B199AF78BBAF0787A506CA9"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N075.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N075.st",
+      "role": "station-reference-source",
+      "length": 826,
+      "sha256": "08A0FCD1AEF7E397F6A757B35615F21939B3C2CF481C9FC249BD1920C9102316"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N080.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N080.st",
+      "role": "station-reference-source",
+      "length": 255,
+      "sha256": "DE7B7A6073F119C20778C2C131BD72C95A8D5E969E33E1CAE22801FC29DF8E8F"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N090.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N090.st",
+      "role": "station-reference-source",
+      "length": 193,
+      "sha256": "360E33AE261DD0B61B8BFF5B3CBE59A61913729EA01D8F7A0C979A518402957C"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/actions/N999.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/actions/N999.st",
+      "role": "station-reference-source",
+      "length": 182,
+      "sha256": "26E33B55E3E0C6527C393F6277FF037C2C9A89C1A0A95217EAC65F3719541EB0"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/declaration.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/declaration.st",
+      "role": "station-reference-source",
+      "length": 531,
+      "sha256": "D37B83ADD587D04B99C9437994736A915F298FD9CA38EFD64C13B56E85C64491"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/methods/CheckPartPresent.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/methods/CheckPartPresent.st",
+      "role": "station-reference-source",
+      "length": 2399,
+      "sha256": "14E24890D811F5AD239108082E28448D56C18464E7CE5E468225CA6E160D4BE1"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqC_Wp100_Run/OnChainFinish.st",
+      "target": "src/plc/project/Station010/SqC_Wp100_Run/OnChainFinish.st",
+      "role": "station-reference-source",
+      "length": 1358,
+      "sha256": "EA952E77CC289C8FFF7630B137FB6ED9F9EAB50519C7DDF82B902A624E57A815"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN010_active.st",
+      "target": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN010_active.st",
+      "role": "station-reference-source",
+      "length": 534,
+      "sha256": "ADAC7BBF95C2611495C90A9BC361C43E10A3E28CE814BDEF676AB40944E7370E"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN999_active.st",
+      "target": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_aN999_active.st",
+      "role": "station-reference-source",
+      "length": 198,
+      "sha256": "94683CDF06F196113E00FF3E0555359CC2D4FF069964F7F6C509CA25D77D0CEA"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_reset.st",
+      "target": "src/plc/project/Station010/SqS_Station_ChangeOverFile/_reset.st",
+      "role": "station-reference-source",
+      "length": 314,
+      "sha256": "4477AF8614881ECF757E0A2B9F03144E3E5B6E0EE5C6183A30CACD742024B38A"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st",
+      "role": "station-reference-source",
+      "length": 673,
+      "sha256": "7E4193E824DF810303D26A078B3C178657624A838442716A6E08B8D694A5216C"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N010.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N010.st",
+      "role": "station-reference-source",
+      "length": 1586,
+      "sha256": "E4B1F35E33F06B6B7047B603F88DE808DBC03E2FAEDAC696CD190EA5E73AC21A"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N020.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N020.st",
+      "role": "station-reference-source",
+      "length": 806,
+      "sha256": "55B8D0DB9943866A9C2DE03E62225F799D03078D9A56C89A2E7721D1AB269118"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N030.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N030.st",
+      "role": "station-reference-source",
+      "length": 886,
+      "sha256": "DBF31AD7FB2860377FE49B53FC6CCFFD15A6A5F9988DF19FB17B264543495CE4"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N040.st",
+      "role": "station-reference-source",
+      "length": 523,
+      "sha256": "5E202D2C28F8D534CB9D06BD34A9E2CFD6E75BFD5458D4285FA25937ABF5AD64"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N045.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N045.st",
+      "role": "station-reference-source",
+      "length": 1974,
+      "sha256": "A546D4B47CA4572C26E05677C0C7CB0C13FF87712022484DD3512A6CD087B699"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N046.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N046.st",
+      "role": "station-reference-source",
+      "length": 521,
+      "sha256": "956E12C581CFAAE99D28E292226CCA7F47ED1DEAEF4AC567B1F2D7656796F95B"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N047.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N047.st",
+      "role": "station-reference-source",
+      "length": 337,
+      "sha256": "3552BE5443A89C61DC6CFBD7954AFE5E90FC131F0452908B9B2AAE3372ABA49B"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st",
+      "role": "station-reference-source",
+      "length": 1704,
+      "sha256": "C13ADC98C56C5227314F964E994973F3EF125D0D68052197FA958352B2E59BBD"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N051.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N051.st",
+      "role": "station-reference-source",
+      "length": 1390,
+      "sha256": "0E5AC9E815E3B1C8E87E5B5375B5FF1818EA839615E52A90F3EEB1EBEB6C9B7B"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N060.st",
+      "role": "station-reference-source",
+      "length": 561,
+      "sha256": "562B7C228C3A74D31B7C32F3908881161187E4FD61A93308050D1643BD117E32"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N061.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N061.st",
+      "role": "station-reference-source",
+      "length": 312,
+      "sha256": "E9E9082E5D3C0E86E0CFA98AFE808A99B19A96FE3454662F214B414DB284BE55"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N065.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N065.st",
+      "role": "station-reference-source",
+      "length": 94,
+      "sha256": "AA636E184444FE1FE9C9F1F7CDCA1799338FFE167696CEF4B38AF9385E825875"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N066.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N066.st",
+      "role": "station-reference-source",
+      "length": 90,
+      "sha256": "499F386EC89DE198B2EC780186D55ED924BB671F69904BD8598BB97843DABF7C"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N070.st",
+      "role": "station-reference-source",
+      "length": 114,
+      "sha256": "C9BF1420EF5C78F039BD9AE97943833EFD3BC454D820F25F21299A42E6652081"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N080.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N080.st",
+      "role": "station-reference-source",
+      "length": 1201,
+      "sha256": "DD77E222DFCF807432879E323D72A1004DF8E34777D70828F53E4FF46F9C72D2"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N090.st",
+      "role": "station-reference-source",
+      "length": 1253,
+      "sha256": "33399CC11AC2616CB8E2EF27265E89ED6044A4BBACB3D300C4B46997931487CA"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N095.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N095.st",
+      "role": "station-reference-source",
+      "length": 757,
+      "sha256": "861C15CA5CE9758A9C8B7CF0D532F7DF2A6BFDC9DB553B4CA1D373E9E755449C"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N100.st",
+      "role": "station-reference-source",
+      "length": 643,
+      "sha256": "634832B7DC038A0F917690AD3068ADE260F728544D558FE45A7902D6278A9D1D"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N101.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N101.st",
+      "role": "station-reference-source",
+      "length": 1019,
+      "sha256": "7357A155CBEA3434625C78D562B42F299E4ACC2D320398C989945A1B9604C288"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N110.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N110.st",
+      "role": "station-reference-source",
+      "length": 208,
+      "sha256": "8D0464DECF27050BB70EE43DF736BBF6B82D25D9D0A71AE35C87CB8ABC69C50A"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N115.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N115.st",
+      "role": "station-reference-source",
+      "length": 94,
+      "sha256": "E5E003DC42D52AD0C595F0A1DD27AC20DF6DFA1EA463F26DE6867DD3019A3DFA"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N120.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N120.st",
+      "role": "station-reference-source",
+      "length": 719,
+      "sha256": "F21DB89A9BDDEFEF40B4AE2639F6AF502EA1DDBCE9B3DB2F250D84BD34AD68A7"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N125.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N125.st",
+      "role": "station-reference-source",
+      "length": 93,
+      "sha256": "FD428C7E940DF4C8CF9BB86582AB698CE15AB09A423AC4867F9F13AA923397C8"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N130.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N130.st",
+      "role": "station-reference-source",
+      "length": 757,
+      "sha256": "ABCA473E01184C4BB8002B4863A73BE4BD7A60FACA10111EBA906D884279B117"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N140.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N140.st",
+      "role": "station-reference-source",
+      "length": 215,
+      "sha256": "5A4B79239566297C0AB1F7456C6D51E3434DECBB80895DCE43CAFEBFF98164BD"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/actions/N999.st",
+      "role": "station-reference-source",
+      "length": 186,
+      "sha256": "BC13D88106CF4296E2528112E92F5EDCD19AB9EA2383BC97C258A3B148F438C1"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/declaration.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/declaration.st",
+      "role": "station-reference-source",
+      "length": 769,
+      "sha256": "A65E6BBE0A0172E83CA1E6FAAD4C20CF9FB85A8FA1D0930DED7AA6B47607641F"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckKistlerProgram.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckKistlerProgram.st",
+      "role": "station-reference-source",
+      "length": 2375,
+      "sha256": "0C6467B89D6B3FC819BC268A1182823A430E717C125DEEDF787538162FB269CF"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st",
+      "role": "station-reference-source",
+      "length": 4869,
+      "sha256": "7742CAB63F03E632F7EA90B7E6EE819BC1941A96D278184097C6473AABE70B45"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st",
+      "target": "src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st",
+      "role": "station-reference-source",
+      "length": 2034,
+      "sha256": "AA6AA29806076A59AE203CFB3E3ABC140DA8555C3C051063A0C8FDF0E5DB8AE1"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st",
+      "target": "src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st",
+      "role": "station-reference-source",
+      "length": 358,
+      "sha256": "62031457F181D2F0EE7FD485394EB6BB0247F8CDD3D48DDD91F9A1A83304376F"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/StationUnit/OnCall.HmiForceTrace.st",
+      "target": "src/plc/project/Station010/StationUnit/OnCall.HmiForceTrace.st",
+      "role": "station-reference-source",
+      "length": 511,
+      "sha256": "0F00D9DD23843EAB545CFD35AF1726BFF50C22770579F398AFF52E5EF6FDB422"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/StationUnit/OnCall.HmiResistance.st",
+      "target": "src/plc/project/Station010/StationUnit/OnCall.HmiResistance.st",
+      "role": "station-reference-source",
+      "length": 1616,
+      "sha256": "3BDD92F0426A5F817D3468BFB5BEB647DA21FEBC5B128DA909E7F0D434F93F4C"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/TypeDataSetManagerAddon/OnCheckData.ApplicationChecks.st",
+      "target": "src/plc/project/Station010/TypeDataSetManagerAddon/OnCheckData.ApplicationChecks.st",
+      "role": "station-reference-source",
+      "length": 737,
+      "sha256": "AFB7F1EBB6EC39FA25390FBB88D70066456B2CFA990332F50B6C171227F39E7B"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/U_HmiForceWord.st",
+      "target": "src/plc/project/Station010/U_HmiForceWord.st",
+      "role": "station-reference-source",
+      "length": 79,
+      "sha256": "3154C6B28F8D5F9F80508AA7994AE6CF4DFCB9145F76D89255F2738661A20133"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100A103ResistantDetectorExtension/OnManRelease.st",
+      "target": "src/plc/project/Station010/Wp100A103ResistantDetectorExtension/OnManRelease.st",
+      "role": "station-reference-source",
+      "length": 239,
+      "sha256": "AB0FB4155DEFD52F9B9AA81709A8C1F5EE6E376040B535BC0217673B029B02C5"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100KistlerResultStruct.st",
+      "target": "src/plc/project/Station010/Wp100KistlerResultStruct.st",
+      "role": "station-reference-source",
+      "length": 332,
+      "sha256": "7C573CE24B9507FEEB1F8655E53F858083C1F7653988D9E8CE6DDD1A02F4EEFB"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100ResistanceResultStruct.st",
+      "target": "src/plc/project/Station010/Wp100ResistanceResultStruct.st",
+      "role": "station-reference-source",
+      "length": 293,
+      "sha256": "A1228CA05DA7514B958CED65EB73550CD4FDA99290EEA6EFFF5A7E5B58E18FB7"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100RunResultStruct.st",
+      "target": "src/plc/project/Station010/Wp100RunResultStruct.st",
+      "role": "station-reference-source",
+      "length": 500,
+      "sha256": "127C096D78D87991E8174CC9E60ACA6123FF73A908209FF98ADC05627ABAC773"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100RunSequenceResultStruct.st",
+      "target": "src/plc/project/Station010/Wp100RunSequenceResultStruct.st",
+      "role": "station-reference-source",
+      "length": 360,
+      "sha256": "F028DA0A5A6BA958781AC133F91E23FB5DBDA9504DCE11BE8A88297966EE0E09"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st",
+      "target": "src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st",
+      "role": "station-reference-source",
+      "length": 567,
+      "sha256": "24BA61687B376008086965563C2A0725894B6F0E4DA69B23B8EDC7EA9834F872"
+    },
+    {
+      "root": "sidecar",
+      "path": "src/plc/project/Station010/Wp100Unit/OnCall.BursterConfiguration.st",
+      "target": "src/plc/project/Station010/Wp100Unit/OnCall.BursterConfiguration.st",
+      "role": "station-reference-source",
+      "length": 328,
+      "sha256": "0E682933A2C5645B5B28CE1EDCEFC96D05E29E80F3C6A60B978BE6147873E0E8"
+    },
+    {
+      "root": "sidecar",
+      "path": "tests/static/Test-ChangeoverRequests.ps1",
+      "target": "tests/static/Test-ChangeoverRequests.ps1",
+      "role": "station-integration-contract",
+      "length": 4302,
+      "sha256": "B6E1E794F2596D5A4F5EF33402FEBACDA1E80DEF6AF5D5693A38485BD21BB2DB"
+    },
+    {
+      "root": "sidecar",
+      "path": "tests/static/Test-Wp100BursterProgramRange.ps1",
+      "target": "tests/static/Test-Wp100BursterProgramRange.ps1",
+      "role": "station-integration-contract",
+      "length": 10820,
+      "sha256": "4F190EC3546F2503D190CBF05B03065343419252EF1325D67D2E6780ADA186F8"
+    },
+    {
+      "root": "sidecar",
+      "path": "tests/static/Test-Wp100ForceInterlock.ps1",
+      "target": "tests/static/Test-Wp100ForceInterlock.ps1",
+      "role": "station-integration-contract",
+      "length": 11594,
+      "sha256": "63683C302123A9B8DD37C760D120FF9802D30B4F1746B23A3FD34582DFEDD1C7"
+    },
+    {
+      "root": "sidecar",
+      "path": "tests/static/Test-Wp100KistlerProgram.ps1",
+      "target": "tests/static/Test-Wp100KistlerProgram.ps1",
+      "role": "station-integration-contract",
+      "length": 8011,
+      "sha256": "A87BD2A0E1F33D2489C0ABAC034946A26B68F190C2C1A98BD7F32C46A4D0B29A"
+    }
+  ]
+}

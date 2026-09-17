@@ -1,0 +1,2 @@
+TYPE T_HmiForceBuffer : ARRAY [0..30035] OF DWORD;
+END_TYPE

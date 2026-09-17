@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition def="1.0">
+  <TypesDef def="1.0">
+    <CodeEntity name="Burster2316Peripheral">
+      <Item name="Hostname" varType="STRING">
+        <Properties>
+          <Property name="ParameterDirection" value="Input" />
+        </Properties>
+      </Item>
+      <Item name="RequestedProgramNo" varType="INT">
+        <Properties>
+          <Property name="ParameterDirection" value="Input" />
+        </Properties>
+      </Item>
+      <Item name="MeasurementTimeout" varType="TIME">
+        <Properties>
+          <Property name="ParameterDirection" value="Input" />
+        </Properties>
+      </Item>
+    </CodeEntity>
+  </TypesDef>
+</OpconStdDefinition>

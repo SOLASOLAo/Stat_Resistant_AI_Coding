@@ -78,11 +78,30 @@ input:
       required_false: [_100B602, _100B603]
 
 station_data:
+  PressForceStableTime:
+    plc_path: Station.StationData.PressForceStableTime
+    type: DINT
+    unit: ms
+    default: 1000
+    validation: statistics window 1..60000 ms; zero must not bypass qualification
+    snapshot: at Kistler preflight for each position; edits apply to the next position
+  PressForceThreshold:
+    plc_path: Station.StationData.PressForceThreshold
+    type: REAL
+    unit: N
+    default: 2500
+    validation: finite and nonnegative; force must be strictly greater
+  PressForce3SigmaLimit:
+    plc_path: Station.StationData.PressForce3SigmaLimit
+    type: REAL
+    unit: N
+    default: 0
+    validation: finite and positive; zero means unconfigured and blocks automatic measurement
   PressForceTimeout:
     plc_path: Station.StationData.PressForceTimeout
     type: DINT
     unit: ms
-    validation: greater than 2000; zero must not disable monitoring
+    validation: greater than PressForceStableTime; zero must not disable monitoring
     snapshot: at Kistler preflight for each position
 
 position_feedback:
@@ -92,11 +111,14 @@ position_feedback:
 
 force_interlock:
   source: Wp100A104Kistler.Unit.OutImm.ForceAct
-  threshold_n: 2500
-  stable_time_ms: 2000
+  threshold_n: Station.StationData.PressForceThreshold
+  statistics_window_ms: Station.StationData.PressForceStableTime
+  statistics_window_default_ms: 1000
+  three_sigma_limit_n: Station.StationData.PressForce3SigmaLimit
+  statistic: sample standard deviation n-1; full rolling window; 3*sigma strictly below the limit
   comparison: strictly greater; equality is insufficient force
-  implementation: CheckPressForce method with VAR_INST state and the existing _pressDelay TON
-  waiting: independent total wait starts at confirmed press work position; force bounce resets only the stable TON
+  implementation: CheckPressForce latched parameters and fault; shared FB_HmiForceTrace / FB_PressForceStatistics PLC samples
+  waiting: independent total wait starts at confirmed press work position; force at or below threshold resets only the statistics window
   measurement: check force before start and before accepting completion; force loss wins over completion in the same scan
   fault_event: Wp100.EVENT_PRESS_FORCE_INVALID
   fault_class: SOFTERROR
@@ -125,7 +147,7 @@ type_data:
     Burster.ProgramNo:
       target: Burster 2316 active measuring program before the first measurement
       command: "*RCL <programNo> through FB_Wp100BursterProgramSelect; numeric 0..15, no P prefix"
-      transport: same AiWp100.Burster TCP 5555 owner for program selection and all standard Unit measurements
+      transport: same Peripherals._Burster2316 TCP 5555 owner for program selection and all standard Unit measurements
     KistlerProgramNo:
       target: Wp100A104Kistler.Unit.ParCmd.SetProgram.ProgNo and ParCmd.Measure.ProgNo
       command: stage both command program fields at N045; SET_PROGRAM only if the actual MP is not already matching, ready and alarm-free
@@ -183,7 +205,7 @@ steps:
       protocol: RESISTOMAT 2316 *RCL <programNo> over TCP 5555; numeric 0..15, no P prefix
       failure_display: clear the measuring prompt; retain selector ErrorCode and block both branches. A dedicated HMI alarm requires a CpStudio-owned event.
       completion: same-owner Open succeeds, RCL is acknowledged and read back, SYST:ERR is zero
-      measuring_driver_handoff: none; selector is a socket-free delegator to AiWp100.Burster, also used by the standard Unit
+      measuring_driver_handoff: none; selector is a socket-free delegator to Peripherals._Burster2316, also used by the standard Unit
       asynchronous_contract: driver Open is bounded at 5 seconds and selection at 10 seconds; each I/O completes by return value, with stable buffers until terminal
       cancellation: StationUnit.OnCall continues Execute=false and Busy=true cleanup; only pending selector calls use same-owner Reset; clearing Done never cancels a later Unit measurement
       diagnostics: preserve first driver ErrorCode and LastSocketError through cleanup; no automatic error clearing or reconnect after failure
@@ -192,7 +214,7 @@ steps:
     comment: Check program range mode
     purpose: retain the range loaded by the instrument program; do not issue SET_RANGE
     completion_requires:
-      - AiWp100.Burster Connected and SelectionVerified are true
+      - Peripherals._Burster2316 Connected and SelectionVerified are true
       - SelectedProgram matches active TypeData ProgramNo
       - Operation is idle and ErrorCode is zero
     configuration_owner: instrument program owns range; CpStudio optional channel remains empty, AI non-generated hook binds the single owner
@@ -223,7 +245,7 @@ steps:
     command: Wp100A104Kistler.MEASURE
     program: Station.TypeData.Wp100.KistlerProgramNo
     start_requires: [Kistler Unit READY, device Ready, no Kistler Alarm, matching active TypeData Kistler program]
-    preflight: CheckPressForce Phase 1 validates PressForceTimeout before START
+    preflight: CheckPressForce Phase 1 latches and validates window, timeout, threshold and 3-sigma limit before START
     watchdog: max of configured Kistler MeasuringTimeout and PressForceTimeout plus 30 s; overhead budget needs field acceptance
   - id: N061
     comment: Wait Kistler running
@@ -248,8 +270,8 @@ steps:
   - parallel_convergence: measurement_start
     completion_requires: [_retVal = OK, _retVal2 = OK]
   - id: N070
-    comment: Wait force >2500N for 2s
-    wait_for: CheckPressForce Phase 2; continuous force qualification within PressForceTimeout
+    comment: Wait stable force >2500N
+    wait_for: CheckPressForce Phase 2; full-window 3-sigma qualification within PressForceTimeout
   - id: N080
     comment: Start resistance test
     command: Wp100A103ResistantDetector.SINGLE_MEAS

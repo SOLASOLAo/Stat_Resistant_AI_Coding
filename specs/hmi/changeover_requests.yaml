@@ -1,0 +1,31 @@
+schema_version: 1
+status: offline_candidate
+chain: Application/Station/_this/Chains/Sub/SqS_Station_ChangeOverFile
+view_request: Station.Extension.StationViewRequest
+owned_view: ChgOvGuidanceView
+dialog_request: Station.Extension.StationDialogRequest
+owned_dialog: DataFileDialog
+observed_failure:
+  step: N010
+  return_value: RUNNING
+  current_step: INIT
+  view_request: ChgOvGuidanceView
+  dialog_request: empty
+contract:
+  - N010 accepts an empty request or its own already requested guidance view.
+  - N010 preserves and waits for an unrelated view request.
+  - N999 calls _reset before reporting DONE.
+  - Existing OnChainCancel and OnChainError callbacks call _reset.
+  - _reset clears only the owned view and dialog names.
+  - N030 still initializes the file dialog only when the dialog request is empty.
+  - N040 remains responsible for the file dialog result and normal dialog closure.
+  - Preserve the native SFC graph, declarations, TypeData loading and physical actions.
+validation:
+  - Two consecutive completed changeovers can re-enter N010.
+  - Cancellation and error cleanup allow a retry.
+  - A retained own view can re-enter; an unrelated view stays untouched.
+  - An unrelated dialog remains untouched during cleanup.
+field_acceptance:
+  - After separately authorized deployment, select TypeData twice in succession.
+  - Cancel file selection and retry; cancel or error the chain and retry.
+  - Confirm the existing TypeData apply and homing choices remain unchanged.

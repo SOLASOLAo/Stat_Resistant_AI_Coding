@@ -44,8 +44,8 @@ objects:
     language: SFC
     apply_script: scripts/plc/apply_wp100_run_rest.ps1
     apply_status: applied_offline_verified
-    source_state: parallel_completion_holds_applied_and_readback_verified
-    last_plan_sha256: 346bebd3cf1291e37c29858c7debebecedc3531c96ae47f464a95e3fc0f2c44a
+    source_state: configurable_force_stable_time_applied_and_readback_verified
+    last_plan_sha256: 345210495858b09e41e9ea3787b2b4a4575f0be61d00d1c2394a96fc9d8cd281
     write_strategy:
       - default to PlanOnly and require explicit Apply plus the fresh deterministic plan SHA-256
       - GET the complete object and every child before any mutation
@@ -56,7 +56,7 @@ objects:
       - send only canonical request JSON already bound into the reviewed plan SHA-256
       - rollback every attempted mutation in reverse order and verify/save the exact preflight snapshots on failure
       - save through ProjectJob
-      - verify the parent and Method declarations as exact original text/SHA and read back every Action/Method/DUT
+      - preserve the parent and generated Method declarations exactly; AI-owned CheckPressForce accepts only its reviewed declaration migration; read back every Action/Method/DUT
     step_comment_attribute_guid: 7d894980-aeea-405c-a0f6-e2b26429c58f
     step_comments:
       N000: Initialize run
@@ -73,7 +73,7 @@ objects:
       N061: Wait Kistler running
       N065: Press start branch complete
       N066: Kistler start branch complete
-      N070: Wait force >2500N for 2s
+      N070: Wait stable force >2500N
       N080: Start resistance test
       N090: Wait resistance result
       N095: Check release ready

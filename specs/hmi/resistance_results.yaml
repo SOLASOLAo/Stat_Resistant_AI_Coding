@@ -1,0 +1,146 @@
+schema_version: 1
+status: plc_and_view_applied_offline_export_blocked_by_symbol_rest_stream
+
+responsibility_2026_09_11:
+  user: process decisions and field commissioning approval
+  ai: authorized CpStudio local model configuration and Save/Export; PLC implementation; UserDefined controls and offline validation
+  commissioning: no download, runtime write or IPC deployment authorized by this change
+
+requirement:
+  requested_view: Station/UserDefinedView
+  actual_exported_view: ../Station010/Hmi/SmartForms/17ad895f-b172-4b13-8b11-8fde8b79013f/UserDefined.sfc
+  display: latest sequence's fixture LEFT, MIDDLE and RIGHT retained resistance results, labelled by workpiece position RIGHT, MIDDLE and LEFT
+  editable: false
+  plc_source_unit: Ohm
+  display_unit: mOhm
+  display_scale: 1000.0
+  grading: use the existing PLC Resistance.Ok; never recompute quality from rounded display values
+
+verified_2026_09_10:
+  source: Wp100.SqC_Run.Result
+  members: [Left, Middle, Right]
+  source_fields: [Resistance.Value, Resistance.Valid, Resistance.Ok]
+  reset: SqC_Wp100_Run.N000 clears the complete Result at the start of each new sequence
+  capture:
+    Left: SqC_Wp100_Run.N030 copies SqS_Run.Result only after CheckSubChainDone returns OK
+    Middle: SqC_Wp100_Run.N060 copies SqS_Run.Result only after CheckSubChainDone returns OK
+    Right: SqC_Wp100_Run.N090 copies SqS_Run.Result only after CheckSubChainDone returns OK
+  historical_publication_gap_before_interface_export:
+    - Current Symbol XML exports SqC_Run.ChainExecState and SFCCurrentStep, but not Result.
+    - The HMI VWN variable pool has the same gap; the three custom result types are not in the Symbol type list.
+    - Current UserDefined.sfc has station/type/home-position/picture/infoline controls, but no resistance result controls.
+    - The detector's single live Resistance output is reused for each measurement and must not feed all three displays.
+
+verified_interface_2026_09_11:
+  instance: Station.HMIResistance
+  type: HMIResistanceStruct
+  member_count: 9
+  data_types: {REAL: 3, BOOL: 6}
+  plc_path: Application/Station/_this/Structs/Common/HMIResistanceStruct
+  hmi_prefix: Ch1.L1.Station.HMIResistance
+  symbol_and_vwn: all nine members present
+  access_at_initial_audit: ReadWrite
+  current_model_access: Read; verified in CpStudio and saved model
+  current_symbol_access: Read on parent and all nine members; native editor plus exact official Symbol REST Select; final XML differs only in these ten access attributes
+  export_blocker: docs/reviews/cpstudio-symbol-stream-20260911.md
+
+# The interface exists. Do not recreate these fields under Wp100.
+cpstudio_prerequisite:
+  location: Model -> Station -> Variables -> Station -> HMIResistance
+  create_via: already created and exported by the user; preserve the current structure
+  shared_settings:
+    UseInHMI: true
+    OpcUaVisible: true
+    OpcUaAccess: Read
+    Persistent: false
+  source_unit_note: Only display values are converted to mOhm; stored result, limits and grading remain unchanged.
+  positions:
+    - position: LEFT
+      source: Wp100.SqC_Run.Result.Left.Resistance
+      variables:
+        value: {name: _HmiResistanceLeft_mOhm, type: REAL, initial: 0.0}
+        valid: {name: _HmiResistanceLeftValid, type: BOOL, initial: false}
+        ok: {name: _HmiResistanceLeftOk, type: BOOL, initial: false}
+    - position: MIDDLE
+      source: Wp100.SqC_Run.Result.Middle.Resistance
+      variables:
+        value: {name: _HmiResistanceMiddle_mOhm, type: REAL, initial: 0.0}
+        valid: {name: _HmiResistanceMiddleValid, type: BOOL, initial: false}
+        ok: {name: _HmiResistanceMiddleOk, type: BOOL, initial: false}
+    - position: RIGHT
+      source: Wp100.SqC_Run.Result.Right.Resistance
+      variables:
+        value: {name: _HmiResistanceRight_mOhm, type: REAL, initial: 0.0}
+        valid: {name: _HmiResistanceRightValid, type: BOOL, initial: false}
+        ok: {name: _HmiResistanceRightOk, type: BOOL, initial: false}
+  follow_up: Read permissions verified locally; resolve the PLE symbol REST stream failure and verify complete CpStudio Export roundtrip; field verification remains separate.
+
+plc_mapping:
+  ownership: implementation-only display hook; new declarations remain CpStudio-owned
+  source: src/plc/project/Station010/StationUnit/OnCall.HmiResistance.st
+  object: Application/Station/_this/StationUnit/OnCall
+  apply_script: scripts/plc/apply_hmi_resistance_rest.ps1
+  offline_applied: true
+  build: {errors: 0, warnings: 5, signatures: [C0351, C0351, C0351, C0351, C0373]}
+  value: source.Value * 1000.0 when source.Valid; otherwise 0.0 hidden by the HMI validity gate
+  valid: source.Valid
+  ok: source.Valid AND source.Ok
+  behavior:
+    - Copy from the retained parent results, never the reusable atomic result or live instrument result.
+    - Continue publishing while the sequence is idle so completed results remain visible until the next N000 reset.
+    - Cancellation does not invent results for uncompleted positions; completed positions can remain for inspection.
+    - Do not change source retention, force checks, cylinder interlocks or instrument commands.
+
+implemented_view:
+  location: Model -> Station -> HMI configuration -> UserDefined
+  preserve: existing station/type labels, home-position indication, picture and bottom auto-infoline
+  layout: three compact vertically stacked result rows in the unused area to the right of the picture
+  value_control: Mod_VarOut; read-only; top-to-bottom label Right/Middle/Left resistance; unit mOhm displayed as mΩ
+  position_reference: PLC members and control IDs retain fixture position; displayed titles and pending labels identify workpiece position
+  text_resource_by_fixture:
+    Left: {value: ResistanceRight, pending: ResistanceRightPending}
+    Middle: {value: ResistanceMiddle, pending: ResistanceMiddlePending}
+    Right: {value: ResistanceLeft, pending: ResistanceLeftPending}
+  status_control: standard indicator/label with validity gating; not an editable Mod_VarIn
+  states:
+    invalid: grey dash and Not completed; never show zero as a valid measurement or false Ok as NOK
+    valid_ok: value and green OK
+    valid_nok: value and red NOK
+    communication_bad: required but unverified; native quality behavior and stale status labels need runtime validation
+  binding_note: Use Ch1.L1.Station.HMIResistance members from the picker; do not use the obsolete Wp100 display paths.
+  precision_note: Suggested numeric format is '{0:F4}' in mOhm; display precision does not change stored precision or imply instrument accuracy.
+  user_steps: docs/hmi_resistance_cpstudio_steps.md
+  canvas: {width: 944, height: 572}
+  row_y: [100, 212, 324]
+  new_control_ids: AI_Resistance{Left|Middle|Right}{Value|Status|Pending}
+  original_controls_preserved: 5
+  replaced_trial_copies: [Mod_VarOut1, Mod_Led2]
+  total_controls: 14
+  offline_validation:
+    - Nine members match the existing VWN pool with three VT_R4 and six VT_BOOL types.
+    - Official SFCLoader 6.5 loads all fourteen controls without errors, including fifteen property bindings.
+    - Native control rendering confirms layout and original picture; numeric output is a designer placeholder.
+    - CpStudio HMI Configurator reopened the generated Station/UserDefined without a new error dialog.
+  runtime_validation: pending; design-time rendering does not prove data updates, state transitions or communication quality
+  save_export_roundtrip: model saved and SFC preserved through three attempts; complete Export blocked by symbol REST stream failure
+
+acceptance_pending:
+  - New sequence starts with all three positions not completed; no previous-cycle result remains green.
+  - Finishing LEFT updates only LEFT; MIDDLE and RIGHT stay not completed until each atomic chain finishes.
+  - Changing the live instrument reading cannot overwrite a previously completed position's display.
+  - Known conversion example 0.001 Ohm displays 1 mOhm; quality follows the raw PLC result, not rounding.
+  - NOK is distinguishable from not-completed and from a communication failure.
+  - Cancel/force fault leaves uncompleted positions invalid; it does not imply an overall sequence pass.
+  - Save/Export/Build and generated Symbol/VWN/view readback succeed before IPC deployment.
+  - IPC .50 field check agrees with PLC Value/Valid/Ok for all three positions.
+
+evidence:
+  plc_source: src/plc/project/Station010/SqC_Wp100_Run
+  symbol: ../Station010/Plc/Stat010_V5.11_CtrlX_PLC.Device.Application.xml
+  hmi_pool: ../Station010/Hmi/OpCon.HMI.Modulo.vwn
+  vendor_help: CpStudio 5.11 Creating Variables; Configuring a Variable of Type REAL/BOOL; Mod_VarOut
+  current_evidence: data/reports/plc/hmi-resistance-20260911-092122
+  view_evidence: data/reports/hmi/resistance-view-20260911
+  view_scope: one UserDefined.sfc replacement after backup and clean design-page close; resources unchanged; official loader and Configurator open verified; model saved and full Export attempted but blocked; no IPC deployment
+  integration_evidence: data/reports/hmi/cpstudio-integration-20260911-104241
+  scope: one OnCall implementation PUT, Save, exact original-code/interface preservation, zero-write follow-up plan and fresh offline F11; no physical connection, download, runtime write or GitHub push

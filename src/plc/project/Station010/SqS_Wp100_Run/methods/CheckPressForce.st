@@ -1,4 +1,4 @@
-/// v1.0.0 - One-position force qualification and latched measurement interlock.
+/// v2.0.0 - PLC rolling 3-sigma qualification and latched measurement interlock.
 METHOD PROTECTED CheckPressForce : DINT
 VAR_INPUT
   /// 0 = reset at chain boundary; 1 = preflight; 2 = qualify; 3 = measuring
@@ -7,6 +7,11 @@ END_VAR
 VAR_INST
   _waitLimit : TON;
   _timeoutMs : DINT;
+  _stableMs : DINT;
+  _thresholdN : REAL;
+  _sigmaLimitN : REAL;
+  _samplePeriodMs : DINT;
+  _latched : BOOL;
   _fault : BOOL;
   _eventIndex : UDINT;
   _reason : STRING(24);
@@ -15,6 +20,8 @@ END_VAR
 VAR
   forceN : REAL;
   forceAboveLimit : BOOL;
+  qualified : BOOL;
+  dataHealthy : BOOL;
 END_VAR
 
 CheckPressForce := RUNNING;
@@ -33,64 +40,105 @@ THEN
   END_IF
   _eventIndex := 0;
   _fault := FALSE;
+  _latched := FALSE;
   _reason := '';
   _additionalInfo := '';
-  // Freeze the active dataset value for this position, not the shadow dataset.
-  _timeoutMs := Station.StationData.PressForceTimeout;
+  // Parameters are latched at preflight, after native references are configured.
+  _timeoutMs := 0;
+  _stableMs := 0;
   CheckPressForce := OK;
   RETURN;
 END_IF
 
-forceN := Wp100A104Kistler.Unit.OutImm.ForceAct;
-forceAboveLimit := ( forceN > REAL#2500.0 );
+forceN := 0;
+IF ( Station.ForceTraceAddon.Configured )
+THEN
+  forceN := Station.ForceTraceAddon.ParCfg.rForceN;
+END_IF
+forceAboveLimit := ( forceN > _thresholdN );
+dataHealthy := ( Peripherals._000SA620_X1.BusInfo.BusOk ) AND
+               ( Station.Unit.UnitState = OpconUnitState.OPERATIONAL ) AND
+               ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND
+               ( Wp100A104Kistler.Unit.ExecState <> OpconExecState.ERROR ) AND
+               ( NOT Wp100A104Kistler.Unit.OutImm.Alarm ) AND
+               ( forceN = forceN ) AND ( ABS(forceN) <= REAL#3.402823E38 );
 
 IF ( NOT _fault )
 THEN
-  IF ( Phase = 1 )
+  IF ( Phase = 1 ) AND ( NOT _latched )
   THEN
     // Operator/fixture waiting can precede this call. Latch at Kistler start.
-    _timeoutMs := Station.StationData.PressForceTimeout;
+    IF ( Station.ForceTraceAddon.Configured )
+    THEN
+      _timeoutMs := Station.ForceTraceAddon.ParCfg.rTimeoutMs;
+      _stableMs := Station.ForceTraceAddon.ParCfg.rWindowMs;
+      _thresholdN := Station.ForceTraceAddon.ParCfg.rThresholdN;
+      _sigmaLimitN := Station.ForceTraceAddon.ParCfg.rLimitN;
+      _samplePeriodMs := Station.ForceTraceAddon.ParCfg.SamplePeriodMs;
+      _latched := TRUE;
+    END_IF
   END_IF
-  IF ( _timeoutMs <= 2000 )
+  IF ( NOT Station.ForceTraceAddon.Configured ) OR ( NOT _latched )
+  THEN
+    _reason := 'FORCE_NOT_CONFIGURED';
+  ELSIF ( _stableMs <= 0 ) OR ( _stableMs > 60000 )
+  THEN
+    _reason := 'INVALID_STABLE_MS';
+  ELSIF ( _timeoutMs <= _stableMs )
   THEN
     _reason := 'INVALID_TIMEOUT_MS';
+  ELSIF ( NOT ( _thresholdN >= 0 ) ) OR ( _thresholdN > REAL#3.402823E38 )
+  THEN
+    _reason := 'INVALID_FORCE_THRESHOLD';
+  ELSIF ( NOT ( _sigmaLimitN > 0 ) ) OR ( _sigmaLimitN > REAL#3.402823E38 )
+  THEN
+    _reason := 'INVALID_3SIGMA_LIMIT';
+  ELSIF ( _samplePeriodMs < 1 ) OR ( _samplePeriodMs > 1000 )
+  THEN
+    _reason := 'INVALID_SAMPLE_PERIOD';
+  ELSIF ( _stableMs > _samplePeriodMs * 10000 )
+  THEN
+    _reason := 'STAT_WINDOW_CAPACITY';
   ELSIF ( Phase = 1 )
   THEN
-    // Preflight runs before Kistler START; it does not require MeasRunning.
+    // Preflight does not require MeasRunning. Values were latched only once.
+    Station.ForceTraceAddon.Recorder.Configure(ThresholdN := _thresholdN, LimitN := _sigmaLimitN,
+      WindowMs := DINT_TO_UDINT(_stableMs), TimeoutMs := DINT_TO_UDINT(_timeoutMs),
+      SamplePeriodMs := DINT_TO_UDINT(_samplePeriodMs));
     CheckPressForce := OK;
     RETURN;
-  ELSIF ( NOT Wp100A104Kistler.Unit.OutImm.MeasRunning ) OR
-        ( Wp100A104Kistler.Unit.ExecState = OpconExecState.ERROR ) OR
-        ( Wp100A104Kistler.Unit.OutImm.Alarm ) OR
-        ( NOT ( forceN = forceN ) ) OR
-        ( ABS(forceN) > REAL#3.402823E38 )
+  ELSIF ( NOT dataHealthy )
   THEN
     _reason := 'FORCE_DATA_INVALID';
   ELSIF ( NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn )
   THEN
     _reason := 'PRESS_POSITION_LOST';
-  ELSIF ( Phase = 2 )
+  ELSIF ( Phase = 2 ) OR ( Phase = 3 )
   THEN
-    // Total wait never restarts on force bounce; only the 2 s TON restarts.
-    _waitLimit(IN := TRUE, PT := DINT_TO_TIME(_timeoutMs));
-    _pressDelay(IN := forceAboveLimit, PT := T#2S);
-    IF ( _waitLimit.Q ) AND
-       ( NOT _pressDelay.Q )
+    qualified := Station.ForceTraceAddon.Recorder.Evaluate(ValueN := forceN,
+      Healthy := dataHealthy, AtWork := Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn);
+    IF ( NOT Station.ForceTraceAddon.Recorder.DataGood )
     THEN
-      _reason := 'FORCE_WAIT_TIMEOUT';
-    ELSIF ( _pressDelay.Q )
+      _reason := 'FORCE_SAMPLE_INVALID';
+    ELSIF ( Phase = 2 )
     THEN
-      CheckPressForce := OK;
-    END_IF
-  ELSIF ( Phase = 3 )
-  THEN
-    // No debounce here: <=2500 N invalidates the current resistance result.
-    _waitLimit(IN := FALSE, PT := T#0MS);
-    _pressDelay(IN := FALSE, PT := T#0MS);
-    IF ( NOT forceAboveLimit )
+      // Force bounce resets the statistical window, never the total timeout.
+      _waitLimit(IN := TRUE, PT := DINT_TO_TIME(_timeoutMs));
+      IF ( _waitLimit.Q )
+      THEN
+        _reason := 'FORCE_WAIT_TIMEOUT';
+      ELSIF ( qualified )
+      THEN
+        CheckPressForce := OK;
+      END_IF
+    ELSIF ( NOT forceAboveLimit )
     THEN
       _reason := 'FORCE_LOST_DURING_MEAS';
+    ELSIF ( NOT qualified )
+    THEN
+      _reason := 'FORCE_3SIGMA_UNSTABLE';
     ELSE
+      _waitLimit(IN := FALSE, PT := T#0MS);
       CheckPressForce := OK;
     END_IF
   ELSE
@@ -100,6 +148,14 @@ THEN
   IF ( _reason <> '' )
   THEN
     _fault := TRUE;
+    // AI_HMI_FORCE_TRACE_BEGIN
+    IF ( _reason = 'FORCE_DATA_INVALID' ) OR ( _reason = 'FORCE_SAMPLE_INVALID' )
+    THEN
+      Station.ForceTraceAddon.Recorder.Finish(Reason := 5, LastForceN := forceN);
+    ELSE
+      Station.ForceTraceAddon.Recorder.Finish(Reason := 4, LastForceN := forceN);
+    END_IF
+    // AI_HMI_FORCE_TRACE_END
     CASE Result.MeasurePos OF
       MeasurePsoEnum.LEFT:   _additionalInfo := 'LEFT ';
       MeasurePsoEnum.MIDDLE: _additionalInfo := 'MIDDLE ';

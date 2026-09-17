@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition def="1.0">
+  <TypesDef def="1.0">
+    <CodeEntity name="FB_OperatorButton" />
+    <CodeEntity name="FB_MainPressureControl" />
+    <CodeEntity name="FB_MaintenanceDoorControl" />
+  </TypesDef>
+</OpconStdDefinition>

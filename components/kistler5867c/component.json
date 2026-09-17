@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "id": "kistler5867c",
+  "version": "0.1.0-rc.2",
+  "kind": "standard-driver-integration-kit",
+  "status": "source-candidate",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "releaseTag": "kistler5867c-v0.1.0-rc.2",
+  "nativeLibrary": {
+    "status": "not-applicable-standard-driver-retained"
+  },
+  "compatibility": {
+    "pleProfile": "ctrlX PLC 2.6.8",
+    "cpstudio": "5.11",
+    "device": "Kistler maXYmos BL 5867C001",
+    "firmware": null,
+    "transport": "EtherCAT",
+    "dependencies": [
+      {
+        "name": "NexeedEcKistlerMaxymosBl",
+        "placeholderName": "NexeedEcKistlerMaxymosBl",
+        "effectiveVersion": "2.0.1.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "AtmoKistlerForceStroke",
+        "placeholderName": "AtmoKistlerForceStroke",
+        "effectiveVersion": "1.2.2.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "AtmoKistlerForceStrokeBase",
+        "placeholderName": "AtmoKistlerForceStrokeBase",
+        "effectiveVersion": "1.2.1.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      }
+    ],
+    "dependencyEvidence": "Read-only current offline PLE 2026-09-11; exact Base title verified; object package 2.0.7.0 is distinct from library 2.0.1.0"
+  },
+  "station010Configuration": {
+    "productionProgram": 1,
+    "activePrograms": [
+      0,
+      1
+    ],
+    "mp000Change": "Active checkbox only; no contents configured or copied",
+    "scope": "observed working setting on this installed combination, not universal firmware requirement",
+    "cycleMode": "Y(t); start and stop Dig-Input reported by user",
+    "forceReset": "confirm actual sensor/reset mode; do not use Zero X as force reset"
+  },
+  "validation": {
+    "fieldObservation": "manual Set program 0/1 user-reported working; one automatic left/middle/right cycle observed completed on 2026-09-10",
+    "pending": [
+      "instrument firmware capture",
+      "repeat cycles and power-up program selection",
+      "force reset confirmation",
+      "continuous force and force-fault hold",
+      "numeric result grading"
+    ]
+  },
+  "files": [
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckKistlerProgram.st",
+      "role": "station-reference",
+      "sha256": "0C6467B89D6B3FC819BC268A1182823A430E717C125DEEDF787538162FB269CF"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N000.st",
+      "role": "station-reference",
+      "sha256": "7E4193E824DF810303D26A078B3C178657624A838442716A6E08B8D694A5216C"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N045.st",
+      "role": "station-reference",
+      "sha256": "A546D4B47CA4572C26E05677C0C7CB0C13FF87712022484DD3512A6CD087B699"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N050.st",
+      "role": "station-reference",
+      "sha256": "C13ADC98C56C5227314F964E994973F3EF125D0D68052197FA958352B2E59BBD"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N051.st",
+      "role": "station-reference",
+      "sha256": "0E5AC9E815E3B1C8E87E5B5375B5FF1818EA839615E52A90F3EEB1EBEB6C9B7B"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/OnChainFinish.st",
+      "role": "station-reference",
+      "sha256": "AA6AA29806076A59AE203CFB3E3ABC140DA8555C3C051063A0C8FDF0E5DB8AE1"
+    },
+    {
+      "path": "catalog/units/NexeedKistlerForceStroke/V1.2/unit.yaml",
+      "role": "source-specification",
+      "sha256": "4DAFC7A684DFA7F6D20D98F2F216E8EDAF17EF6DFFB5A2F309A1B1B5CEF29E0F"
+    },
+    {
+      "path": "tests/static/Test-Wp100KistlerProgram.ps1",
+      "role": "offline-test",
+      "sha256": "A87BD2A0E1F33D2489C0ABAC034946A26B68F190C2C1A98BD7F32C46A4D0B29A"
+    },
+    {
+      "path": "scripts/components/Test-ComponentPackage.ps1",
+      "role": "tooling",
+      "sha256": "13202758F2C9B28152D5D828F2C240F297805A11E8111CB785DBF808F662EC3B"
+    },
+    {
+      "path": "specs/hmi/station_component_dependencies.json",
+      "role": "station-reference",
+      "sha256": "F249484ACB846E08BA56AA0B3FC1772EBF1919A0C6C36E8B6FF61D1C5CFCA76F"
+    },
+    {
+      "path": "docs/station010-component-set.md",
+      "role": "station-reference",
+      "sha256": "BF27A9866E4C2837B41A89A68366641BC3DD0B394C50680FE301E38EAF4A828F"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/actions/N101.st",
+      "role": "station-reference",
+      "sha256": "7357A155CBEA3434625C78D562B42F299E4ACC2D320398C989945A1B9604C288"
+    },
+    {
+      "path": "src/plc/project/Station010/SqS_Wp100_Run/methods/CheckPressForce.st",
+      "role": "station-reference",
+      "sha256": "7742CAB63F03E632F7EA90B7E6EE819BC1941A96D278184097C6473AABE70B45"
+    }
+  ],
+  "requiredComponents": {
+    "bpp-forcetrace": "0.1.0-rc.2 (PLC publisher for the included Station010 hooks)"
+  },
+  "sourceSnapshot": {
+    "sha256": "3AB6B97C0BB87D36DAB5B76EA304A5F3072D10E3F121A3FCC2DC4F2EED65CE3E",
+    "dirty": true,
+    "algorithm": "SHA256 of sorted path|length|SHA256 lines, UTF-8 with LF terminators",
+    "description": "Actual candidate bytes; sourceRevision is the anchor, not a claim that dirty changes are committed"
+  }
+}

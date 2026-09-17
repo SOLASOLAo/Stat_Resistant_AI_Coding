@@ -1,0 +1,114 @@
+schema_version: 2
+status: local_integrated_offline_validated_field_acceptance_pending
+addon_version: 0.2.1.0
+plc_library_version: 0.2.1.0
+cpstudio_object_version: 0.2.1.0
+hmi_fix_candidate:
+  version: 0.2.1.0
+  status: local_installed_field_update_pending
+  package: data/components/native/forcetrace-hmi-0.2.1.0/ForceTrace.Hmi.had
+  report: data/reports/hmi/forcetrace-sampling-20260916/installed-native/native-check.json
+  installation_report: data/reports/hmi/forcetrace-sampling-20260916/installed-native/native-check.json
+  rejected_transport_frame: retain last verified snapshot; never refresh statistics heartbeat
+  actual_bad_quality_or_statistics_timeout: clear display
+  completed_record_republication: retain same immutable snapshot without redrawing all points
+  plc_download_required: true
+details: docs/hmi_force_trace_addon.md
+
+acquisition:
+  owner: PLC
+  source: Wp100A104Kistler.Unit.OutImm.ForceAct
+  nominal_sample_period_ms: 6
+  sample_period_configuration: {path: Station.ForceTraceAddon.ParCfg.SamplePeriodMs, type: DINT, unit: ms, range: [1, 1000], default: 6}
+  sample_period_editor: CpStudio / Station / Parameters / ForceTrace / SamplePeriodMs
+  sample_period_rule: must match actual calling task; configuring this value does not change task scheduling
+  task: MainTask
+  scheduling: once per MainTask scan; duplicate same-millisecond reads rejected
+  time_axis: PLC elapsed milliseconds; actual timestamps retained
+  publish_period_ms: 100
+  maximum_valid_gap_ms: ceil(2.5 * SamplePeriodMs); default 15
+  window_capacity_rule: WindowMs <= min(60000, 10000 * SamplePeriodMs)
+  retain: current parent cycle, three separate fixture positions
+  positions: [LEFT, MIDDLE, RIGHT]
+  start: Kistler START acknowledged, before press-down, initial sample at t=0
+  end: Kistler acquisition ends normally, cancellation, or first fault
+  capacity_per_position: {points: 10001, time_ms: 60000}
+  on_capacity: retain initial segment, set truncated, continue statistics and interlock
+  persistence: PLC RAM only; new parent cycle or PLC restart clears old records
+  physical_timing_verified: false
+
+qualification:
+  owner: PLC
+  latch_at: each position preflight before Kistler start
+  parameters:
+    threshold: {path: Station.StationData.PressForceThreshold, type: REAL, unit: N, default: 2500}
+    three_sigma_limit: {path: Station.StationData.PressForce3SigmaLimit, type: REAL, unit: N, default: 5, reference_default: 0, zero: unconfigured_fail_closed}
+    window: {path: Station.StationData.PressForceStableTime, type: DINT, unit: ms, default: 1000, range: [1, 60000]}
+    timeout: {path: Station.StationData.PressForceTimeout, type: DINT, unit: ms, rule: greater_than_window}
+  statistic: time-based rolling sample standard deviation, n-1, LREAL accumulator
+  formula: 3sigma = 3 * sqrt(sum((Fi - mean)^2) / (n - 1))
+  require: healthy data, cylinder at work, force strictly above threshold, full time window, 3*sigma strictly below limit
+  window_reset: force at or below threshold, invalid data, or acquisition not qualified
+  timeout: total wait; force bounce does not restart it; timeout wins on same-scan qualification
+  during_resistance: continue monitoring; first fault invalidates result and beats same-scan DONE
+  fault_hold: preserve original event, cancel/end instruments, no automatic press-up or recovery
+  freeze_statistics: first accepted resistance DONE or first fault
+  histogram: 20 bins from the exact PLC statistical window; retain last valid window as Historical on reset/fault
+  resistance_grading: unchanged; inclusive TypeData limits in ohms, range validity required
+
+interface:
+  protocol_version: 2
+  whole_array_read: true
+  channel: existing native Ch1.L1
+  properties:
+    LeftTraceItem: {item: Ch1.L1.Station.ForceTrace.LeftFrame, type: DWORD, count: 30036, access: Read}
+    MiddleTraceItem: {item: Ch1.L1.Station.ForceTrace.MiddleFrame, type: DWORD, count: 30036, access: Read}
+    RightTraceItem: {item: Ch1.L1.Station.ForceTrace.RightFrame, type: DWORD, count: 30036, access: Read}
+    StatisticsItem: {item: Ch1.L1.Station.ForceTrace.StatisticsFrame, type: DWORD, count: 210, access: Read}
+  validation: version, boot/cycle/acquisition/position identity, sequence, FNV checksum, length, timestamps, quality
+  stale_statistics_ms: 500
+  selected_subscriptions: one position buffer and shared statistics
+  parameter_binding: used StationData values copied by PLC into the same snapshots; no second parameter client
+
+display:
+  chart: native Mod_Chart; force N versus PLC elapsed time
+  distribution: actual density histogram plus normal reference PDF, same PLC window
+  normality_assumed_for_judgment: false
+  zero_sigma: concentration marker; no division by zero or invented PDF
+  statistics: mean, 3sigma, sample count, used threshold/limit/window, healthy/full/stable/frozen/historical state
+  late_open: load retained PLC arrays, independent of page opening time
+  invalid: clear live values/curve explicitly; never invent zero-force samples
+  coordinate_names: fixture positions; main resistance page remains workpiece right/middle/left
+  native_texts: 46 ForceTrace text-group resources, English and Chinese
+  empty_distribution: 尚无可用的统计窗口数据 / No usable statistical window data
+  sampling_notes: bilingual sampling, full-window, strict-boundary, n-1 formula and PLC ownership rules below charts
+  notes_parameters: same selected record's latched values including SamplePeriodMs; dash when unavailable
+  hidden_startup_required: false
+
+csv:
+  explicit_save: selected position only
+  ranges:
+    full: all retained points from recording start
+    after_stable: first PLC qualifying sample inclusive through retained end, including later faults
+  no_after_stable: no file if marker absent or beyond retained data; localized operator message
+  while_running: immutable click-time snapshot with Running end reason
+  timestamp: PLC elapsed ms; snapshot_received_at_utc is HMI receipt time, not per-sample UTC
+  metadata: schema/cycle/acquisition/fixture/range/quality/end/truncation/used_parameters/stable_marker
+  directory: C:/OpconData/ForceTraces
+  policy: atomic unique files, UTF-8, culture-independent decimals, asynchronous save
+  quota: {files: 1000, bytes: 536870912, automatic_deletion: false}
+
+verification:
+  numerical_model_assertions: 847
+  native_frame_csv_assertions: 685
+  native_chart_points_checked: 2001
+  native_item_pickers_checked: 4
+  native_loader_errors: 0
+  cpstudio_errors: 0
+  cpstudio_warnings: 2 original Burster compatibility warnings
+  plc_errors: 0
+  plc_warnings: 4 original C0351 OPC.UA.DA and 1 original C0373 ErrorCodes DWORD
+  report: data/reports/hmi/forcetrace-sampling-20260916/installed-native/native-check.json
+  station_compile: data/reports/hmi/forcetrace-sampling-20260916/station-reopened-final.json
+  actual_plc_or_ipc_deployment: false
+  remaining: real sample cadence and CPU/watchdog margin, channel array transfer, late opening/reconnect, real process limits, runtime language switching, IPC CSV access

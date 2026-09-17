@@ -1,0 +1,6 @@
+<%para BEFB0657-BA37-5401-A9F8-E6FD3A4E8D23; Hostname%>
+<%para E4A77351-34AA-56CA-8C08-5399DFC2D4A7; RequestedProgramNo%>
+<%para 5DE12EBC-35EE-5468-B09F-4D92E9442820; MeasurementTimeout%>
+<%=@this.PeripheralInstance.FullName%>.Hostname <% *luAssign* %>:= <%=Hostname.ValueAsString%>;
+<%=@this.PeripheralInstance.FullName%>.RequestedProgramNo <% *luAssign* %>:= <%=RequestedProgramNo.ValueAsString%>;
+<%=@this.PeripheralInstance.FullName%>.MeasurementTimeout <% *luAssign* %>:= DINT_TO_TIME(<%=MeasurementTimeout.ValueAsString%>);

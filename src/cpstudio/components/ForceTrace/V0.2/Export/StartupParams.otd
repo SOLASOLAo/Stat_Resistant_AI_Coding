@@ -1,0 +1,18 @@
+<%para 2100A226-47F7-5B3C-826A-1618B09864E2; TraceData%>
+<%para 32FFA1BA-1980-5D08-9BD9-DF5B01EB810D; ForceN%>
+<%para 9C8A6110-2604-51EF-AF89-A71A4EBEC171; QualityGood%>
+<%para 10F90CF3-5580-5A5C-9FCC-67F5B05524F1; Measuring%>
+<%para 5C5CF4E7-7573-50A5-8409-F41E37A01308; ThresholdN%>
+<%para 162EC3D0-EE7D-5179-A462-2DDE21230FBD; LimitN%>
+<%para DFBBABB0-457D-513F-ABCE-FB23720C0F42; WindowMs%>
+<%para E4F5F72F-6D8C-5DF9-9485-90D4A615DCFA; TimeoutMs%>
+<%para FCDCFB93-3D7B-4FD0-A128-06827E8B43AB; SamplePeriodMs%>
+<%=@this.UnitInstance.FullName%>.ParCfg.rData <% *luAssignState* %>REF= <%=TraceData.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rForceN <% *luAssignState* %>REF= <%=ForceN.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rQualityGood <% *luAssignState* %>REF= <%=QualityGood.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rMeasuring <% *luAssignState* %>REF= <%=Measuring.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rThresholdN <% *luAssignState* %>REF= <%=ThresholdN.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rLimitN <% *luAssignState* %>REF= <%=LimitN.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rWindowMs <% *luAssignState* %>REF= <%=WindowMs.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.rTimeoutMs <% *luAssignState* %>REF= <%=TimeoutMs.FullName%>;
+<%=@this.UnitInstance.FullName%>.ParCfg.SamplePeriodMs <% *luAssignState* %>:= <%=SamplePeriodMs.ValueAsString%>;

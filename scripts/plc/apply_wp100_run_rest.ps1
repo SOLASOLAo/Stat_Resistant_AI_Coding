@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [string]$BaseUri = 'http://localhost:9002/plc/engineering/api/v2',
   [string]$ExpectedProject = 'C:\A_Documents\A_Projects\A_Software\BPP_ResistantStation\Station010\Plc\Stat010_V5.11_CtrlX_PLC.project',
@@ -369,6 +369,7 @@ function Set-Action {
 
   $node = Get-Node $path
   $target = $implementation
+  $updateForceDeclaration = $false
   if ($isMethod) {
     $split = $implementation -split "`n`n", 2
     if ($split.Count -ne 2) {
@@ -376,7 +377,15 @@ function Set-Action {
     }
     $targetDeclaration = $split[0] + "`n"
     if ((Get-Sha256 ([string]$node.declaration)) -ne (Get-Sha256 $targetDeclaration)) {
-      throw "$Step declaration differs from the reviewed interface; refusing to write."
+      # Only this AI-owned method may add its reviewed private timing/cycle latch.
+      # The complete old method is checked again against AllowedBaselineSha256 below.
+      if (($Step -ne 'CheckPressForce') -or
+          ((Get-Sha256 ([string]$node.declaration)) -notin @('3984ae2555d0df73f8ba156b7bbbbb96c7403a2636991e82fd0f7c2b014b9777',
+            '2da5662e2dd0d84f44e58edd6530a862bb8433ae8ad59134ab85c2f576ae590f',
+            'f9cb603ecd4bf42822d06288211b2cfe39d0b20ddcbc8dd2a3605e374d7a8657'))) {
+        throw "$Step declaration differs from the reviewed interface; refusing to write."
+      }
+      $updateForceDeclaration = $true
     }
     $script:PreservedDeclarations[$path] = [string]$node.declaration
     $current = [string]$node.declaration + "`n" + [string]$node.implementation
@@ -395,6 +404,7 @@ function Set-Action {
   }
 
   if ($isMethod) {
+    if ($updateForceDeclaration) { $node.declaration = $targetDeclaration }
     $node.implementation = $split[1]
   }
   else {
@@ -403,7 +413,7 @@ function Set-Action {
   Add-WriteRequest -Method Put `
     -Uri (ConvertTo-ApiUri $path) `
     -Path $path `
-    -Kind $(if ($isMethod) { 'update-method-implementation' } else { 'update-action' }) `
+    -Kind $(if ($updateForceDeclaration) { 'update-ai-owned-full-object' } elseif ($isMethod) { 'update-method-implementation' } else { 'update-action' }) `
     -Body $node `
     -BeforeFingerprint $script:PreflightObservations[$path].Fingerprint `
     -TargetSha256 $targetSha256
@@ -767,8 +777,16 @@ function Assert-Wp100RunTargets {
 function Assert-ForceInterfaces {
   $dataNode = Get-Node $forceTimeoutPath
   $eventNode = Get-Node $forceEventPath
-  if ([string]$dataNode.declaration -notmatch '(?m)^\s*PressForceTimeout\s*:\s*DINT\s*;') {
+  if ([string]$dataNode.declaration -notmatch '(?m)^\s*PressForceTimeout\s*:\s*DINT\s*(?::=\s*[+-]?\d+\s*)?;') {
     throw 'CpStudio must export StationDataStruct.PressForceTimeout : DINT before applying the force interlock.'
+  }
+  if ([string]$dataNode.declaration -notmatch '(?m)^\s*PressForceStableTime\s*:\s*DINT\s*(?::=\s*1000\s*)?;') {
+    throw 'CpStudio must export PressForceStableTime : DINT (statistics window, default 1000 ms).'
+  }
+  foreach ($parameter in @('PressForceThreshold','PressForce3SigmaLimit')) {
+    if ([string]$dataNode.declaration -notmatch "(?m)^\s*$parameter\s*:\s*REAL\s*(?::=\s*[0-9.]+\s*)?;") {
+      throw "CpStudio must export StationDataStruct.$parameter : REAL first."
+    }
   }
   if ([string]$eventNode.declaration -notmatch '(?m)^\s*EVENT_PRESS_FORCE_INVALID\s*:\s*DINT\s*:=\s*-5\s*;') {
     throw 'CpStudio must export the reviewed Wp100.EVENT_PRESS_FORCE_INVALID = -5 before applying the force interlock.'
@@ -805,7 +823,7 @@ $steps = @(
   [pscustomobject]@{ Name = 'N061'; Comment = 'Wait Kistler running' },
   [pscustomobject]@{ Name = 'N065'; Comment = 'Press start branch complete' },
   [pscustomobject]@{ Name = 'N066'; Comment = 'Kistler start branch complete' },
-  [pscustomobject]@{ Name = 'N070'; Comment = 'Wait force >2500N for 2s' },
+  [pscustomobject]@{ Name = 'N070'; Comment = 'Wait stable force >2500N' },
   [pscustomobject]@{ Name = 'N080'; Comment = 'Start resistance test' },
   [pscustomobject]@{ Name = 'N090'; Comment = 'Wait resistance result' },
   [pscustomobject]@{ Name = 'N095'; Comment = 'Check release ready' },
@@ -828,6 +846,7 @@ $preTypeDataImplementationSha = '0352fb0535c1588373103c50638da3cccb2d01a091f4b40
 $preForceImplementationSha = 'fc48810ed7ecf1372bcf7c1e32b495ab27950870126ea54882fb57efd8a925d5'
 $preProgramRangeImplementationSha = 'cd41ae0232adab90612334eca8cbec0ec64b53324a257c8d3a05ce1248497cd8'
 $preBranchCompletionImplementationSha = '958647ca286c35b1f23114706b792c8279437ca32e383a1075145b7491d9f4ca'
+$preConfigurableStableTimeImplementationSha = '577d6305809dcaf57e41270262572e49736d99210394f283bfb00a4ab39b1241'
 $currentDeclarationSha = Get-Sha256 $runNode.declaration
 $currentImplementationSha = Get-Sha256 $runNode.implementation
 $targetDeclarationSha = Get-Sha256 $targetDeclaration
@@ -839,7 +858,7 @@ if ($currentDeclarationSha -ne $targetDeclarationSha) {
 $preservedRunDeclaration = [string]$runNode.declaration
 $preservedRunDeclarationExactSha = Get-ExactSha256 $preservedRunDeclaration
 $script:PreservedDeclarations[$runPath] = $preservedRunDeclaration
-if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $preProgramRangeImplementationSha, $preBranchCompletionImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
+if ($currentImplementationSha -notin @($baselineImplementationSha, $preTypeDataImplementationSha, $preForceImplementationSha, $preProgramRangeImplementationSha, $preBranchCompletionImplementationSha, $preConfigurableStableTimeImplementationSha, $targetImplementationSha, $targetRestReadbackImplementationSha)) {
   throw 'SqS_Wp100_Run SFC graph changed after audit; refusing overwrite.'
 }
 $runNeedsUpdate = ($currentImplementationSha -notin @($targetImplementationSha, $targetRestReadbackImplementationSha))
@@ -1064,7 +1083,7 @@ else {
 # parent's child list on POST. Do not predict that order or weaken its hash gate.
 # VAR_INST belongs to this AI-owned method; the CpStudio parent stays unchanged.
 $forceMethodStatus = Set-Action -Step 'CheckPressForce' -SourceFile 'SqS_Wp100_Run\methods\CheckPressForce.st' `
-  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc', 'c25d2775cc7cc19a2de83d83244fbb72cbc53d9ccd2c4946c34dbe8726a04c18')
+  -AllowedBaselineSha256 @('44464618a427d8e0a3305c10302d453f69725653cc58ae44431b61b11bba9315', 'e273ea11d6b016a85a8dbc36316283cd4b8188a7e1c8c8d526574313329302d7', '74314ef397162459391de780b15ac5ee4de7c1db780c0178e8b0d989a794d4bc', 'c25d2775cc7cc19a2de83d83244fbb72cbc53d9ccd2c4946c34dbe8726a04c18', '7742cab63f03e632f7ea90b7e6ee819bc1941a96d278184097c6473aabe70b45', 'c3073bbfad99dc257e733bc560c425f9f576e5d185ad816c8733699a179e1753', 'bafe263d0924d7d6f50f90aa9ba4c4abfdf247caf1b6545e293233721048742e', '0e43c89de42294cf0153ca3fe6b12bc00b90bc6c214d4b16e2653ea91dbfe699')
 $kistlerProgramMethodStatus = Set-Action -Step 'CheckKistlerProgram' -SourceFile 'SqS_Wp100_Run\methods\CheckKistlerProgram.st' `
   -AllowedBaselineSha256 @()
 
@@ -1105,6 +1124,8 @@ foreach ($step in $steps) {
     # Reviewed source before connecting the standard RootNode toggle (2026-09-08).
     $allowedSha256 += '9715b5f9da9eb401bf146aeccf7fb33fc7f05d13f3a295ae1407fc4177acaaca'
   }
+  # Reviewed N090 before explicit inclusive Ohm grading and one-time capture.
+  if ($step.Name -eq 'N090') { $allowedSha256 += @('8708cffbe7f9273cd8b9f62bdea8f742480b27e32701f4b2e0fc908542879164', '33399cc11ac2616cb8e2ef27265e89ed6044a4bbacb3d300c4b46997931487ca') }
   # Reviewed source before the 2026-09-08 running-only Kistler END fix.
   if ($step.Name -eq 'N101') { $allowedSha256 += 'aec5df547020d1614cb761a97080a87804237e53979c6285c2aa783657addb2f' }
   if ($step.Name -eq 'N120') { $allowedSha256 += '11be31e548158ce44c000e5c15419a64da5135959f0b6cf0a1899274fb82b076' }

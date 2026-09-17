@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 3,
+  "id": "burster2316",
+  "libraryName": "Burster2316",
+  "version": "0.1.0.2",
+  "revision": 5,
+  "status": "local-native-candidate",
+  "company": "Internal Engineering",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "compatibility": [
+    "CpStudio V5.11",
+    "ctrlX PLC 2.6.8"
+  ],
+  "files": [
+    {
+      "source": "src/cpstudio/components/Burster2316/V0.1/Burster2316.ood",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Burster2316.ood",
+      "sha256": "2A769F569D1A6C36B144976F0432FAF8290350A5F1AD4C1FA2E9727CB8831827"
+    },
+    {
+      "source": "src/cpstudio/components/Burster2316/V0.1/Common/Picture.png",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Common/Picture.png",
+      "sha256": "93A6DDF635138AA7383858F6FDEF5889528AAECF73722CF1FDCD6D125ACC3A54"
+    },
+    {
+      "source": "src/cpstudio/components/Burster2316/V0.1/Export/ConfigParams.otd",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Export/ConfigParams.otd",
+      "sha256": "676BD8C6A80203290169704DB0D53B2B52A6341FC8887817C2A272604D2E0FD2"
+    },
+    {
+      "source": "src/cpstudio/components/Burster2316/V0.1/Library/Library.osd",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Library/Library.osd",
+      "sha256": "69D3625B961C81434F0D4AA5E8282756E8A8426DFDF82BEB60068904834E35EF"
+    },
+    {
+      "source": "src/cpstudio/components/Burster2316/V0.1/Types/CodeEntities.osd",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Types/CodeEntities.osd",
+      "sha256": "45B3A24D31C90D1023EEE546BF703186A672AB207A69A2C994B4EB089031598B"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-03/Burster2316/Burster2316.compiled-library",
+      "path": "PrjExt/Peripherals/Burster2316/V0.1/Library/Burster2316.compiled-library",
+      "sha256": "EC606F6E432C63597D79CE910621C31B48060F3808D5A1B816485B896DEDED0D"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-03/Burster2316/Burster2316.library",
+      "path": "plc/Burster2316.library",
+      "sha256": "0980C6C8A0D69C153BDA8064AB366D8F8D007EBB1C9CE82F61AD219D21854E72"
+    },
+    {
+      "source": "src/plc/libraries/Burster2316/Burster2316Peripheral.st",
+      "path": "plc/source/Burster2316Peripheral.st",
+      "sha256": "C5668C5B5A5090299899907D3BDA23674D75C4FC6DB9DFF675C73DE94E2D2F89"
+    },
+    {
+      "source": "src/plc/libraries/Burster2316/FB_Wp100BursterSingleOwner.st",
+      "path": "plc/source/FB_Wp100BursterSingleOwner.st",
+      "sha256": "37B77C8EA795557EE9EE532D159B598ABAE1C1B7B6B4A053A3F9835A9E865E32"
+    },
+    {
+      "source": "examples/plc/components/Burster2316/PLC_PRG.st",
+      "path": "examples/PLC_PRG.st",
+      "sha256": "F490836295D4F0F2768C29BC644CD5A62E319CD45DDEAC3B9DAED0B8C5DD3006"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/consumer/Burster2316/Consumer.project",
+      "path": "reference/Consumer.project",
+      "sha256": "533BB22122F629CBD16EAEB23028FE92A0C7D57F28AA2D0EB7D9EE46B0C3B827"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04/consumer/Burster2316/Consumer.xml",
+      "path": "reference/Consumer.xml",
+      "sha256": "31B6CF44E4BA5367A631CD47E1C37D0B27BEC9426063B15140C1B4CF6430B064"
+    },
+    {
+      "source": "docs/components/Burster2316.md",
+      "path": "README.md",
+      "sha256": "65E0D6A3D2E16A38DCAEDE1EAB23A28F6A6C94AF18DFBB7F3225B09B6ED4D302"
+    },
+    {
+      "source": "docs/components/INSTALL-GENERIC.md",
+      "path": "INSTALL-GENERIC.md",
+      "sha256": "63467F93C61A1C3730C39EB9FAD3F1AB8350AD605662B4FFB06440C7EFCE68F9"
+    },
+    {
+      "source": "docs/components/STATION010-NATIVE-20260916.md",
+      "path": "STATION010-NATIVE-20260916.md",
+      "sha256": "F397D818AE0AAFDC982388A6A939894177A614A591C51E909A27EADDDDC1BE40"
+    },
+    {
+      "source": "scripts/components/Install-NativeComponent.ps1",
+      "path": "scripts/Install-NativeComponent.ps1",
+      "sha256": "DAB531DECB3E48C12780FF182E5DE2C317BBDF5562344EA24EE1D824144620FB"
+    },
+    {
+      "source": "scripts/components/Test-ComponentPackage.ps1",
+      "path": "scripts/Test-ComponentPackage.ps1",
+      "sha256": "B73FEF02F57E3DCED02FA2D409746FA8015A61F801CC3233B956EFBBA6A8B78C"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-03-burster.json",
+      "path": "evidence/library-build.json",
+      "sha256": "99B43F449F918EB1011BA8A2348926B956DDF33E0DFDB98A931D51A43FCC2069"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/build-04-final.json",
+      "path": "evidence/consumer-build.json",
+      "sha256": "8064E36EA6FA0D94CD5757E1FA68B225BC4885E49E7AFDD449CA7C3F220B6191"
+    },
+    {
+      "source": "data/station-native-integration/20260916/cpstudio-proof.json",
+      "path": "evidence/cpstudio-native.json",
+      "sha256": "A6A9C3EA0D4EB5EA934248B289F27E78920689E7C4FA8C3681ECFD73573E1623"
+    },
+    {
+      "source": "data/station-native-integration/20260916/FINAL-VERIFICATION.json",
+      "path": "evidence/station-native.json",
+      "sha256": "C5CDDF44D32BA268642D1FD7A9D53B357D56254CB4EED6831A2E2DE6C67A2B2A"
+    },
+    {
+      "source": "data/station-native-integration/20260916/release-metadata/Burster2316/DEPENDENCIES.json",
+      "path": "DEPENDENCIES.json",
+      "sha256": "14E3892BD5B21F9665C70B322D33C58D7CF2E0D96F64B2AC28761635304C5038"
+    },
+    {
+      "source": "data/native-packages/20260915/generic-20260916/unpacked-consumers-final.json",
+      "path": "evidence/unpacked-consumers.json",
+      "sha256": "14C53A6F0DA449A911AC77DE016DE19E778C6B40359777841536414A8AEB2C9A"
+    },
+    {
+      "source": "data/station-native-integration/20260916/documentation-closeout/burster2316-revision.json",
+      "path": "evidence/package-revision.json",
+      "sha256": "1DED115E676DC603AC0A18E1B2D1A086D6DC33B617662045CB6B82FAB3D40DDB"
+    }
+  ],
+  "validation": {
+    "library": {
+      "path": "evidence/library-build.json",
+      "warningSignatures": []
+    },
+    "consumer": {
+      "path": "evidence/consumer-build.json",
+      "warningSignatures": []
+    },
+    "cpstudio": {
+      "path": "evidence/cpstudio-native.json"
+    }
+  },
+  "revisionNote": "Documentation and existing evidence only; all engineering payload bytes unchanged.",
+  "previousRelease": {
+    "manifest": "components/releases/burster2316-0.1.0.2-local-rev4.json",
+    "zipSha256": "81B0C319813C298A5E4D8FB399F6123B92BC9DF7BDB374A6817F7B4DFDA8F321"
+  }
+}

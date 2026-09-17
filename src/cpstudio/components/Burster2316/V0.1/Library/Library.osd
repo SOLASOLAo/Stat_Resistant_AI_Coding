@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition>
+  <PlcContentDef>
+    <Library version="0.1.0.2" file="Burster2316.compiled-library" vendor="Internal Engineering" />
+  </PlcContentDef>
+</OpconStdDefinition>

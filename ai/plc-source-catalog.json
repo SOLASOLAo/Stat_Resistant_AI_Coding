@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Non-application source ownership; never PLC restore targets",
+  "files": [
+    {
+      "file": "src/plc/common/FB_MainPressureControl.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/common/FB_MaintenanceDoorControl.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/common/FB_OperatorButton.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/libraries/Burster2316/Burster2316Peripheral.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/Burster2316/FB_Wp100BursterSingleOwner.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/FB_HmiForceTrace.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/FB_PressForceStatistics.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/ForceTraceAddon.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/ForceTraceData.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/ForceTraceParCfg.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/T_HmiForceBuffer.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/ForceTrace/U_HmiForceWord.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/MachineCommon/FB_MainPressureControl.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/MachineCommon/FB_MaintenanceDoorControl.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/libraries/MachineCommon/FB_OperatorButton.st",
+      "owner": "compiled-library"
+    },
+    {
+      "file": "src/plc/project/Station010/AiForceTrace.gvl.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/FB_HmiForceTrace.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/FB_PressForceStatistics.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/FB_Wp100BursterSingleOwner.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/T_HmiForceBuffer.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/U_HmiForceWord.st",
+      "owner": "recovery-only"
+    },
+    {
+      "file": "src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st",
+      "owner": "recovery-only"
+    }
+  ]
+}

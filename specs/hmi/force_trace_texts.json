@@ -1,0 +1,218 @@
+{
+  "purpose": "Force-trace v2 bilingual native resources; PLC acquisition and qualification",
+  "text_group": "Station",
+  "text_name_prefix": "ForceTrace",
+  "registered_in_cpstudio": false,
+  "verified_2026_09_11": "18 native Text objects saved; generated en-US and zh-CN language files match; runtime language switching remains unverified",
+  "texts": {
+    "Left": {
+      "1033": "Left",
+      "2052": "左侧"
+    },
+    "Middle": {
+      "1033": "Middle",
+      "2052": "中间"
+    },
+    "Right": {
+      "1033": "Right",
+      "2052": "右侧"
+    },
+    "Save": {
+      "1033": "Save current curve",
+      "2052": "保存当前曲线"
+    },
+    "Saving": {
+      "1033": "Saving...",
+      "2052": "正在保存…"
+    },
+    "Saved": {
+      "1033": "Curve snapshot saved",
+      "2052": "曲线快照已保存"
+    },
+    "SaveFailed": {
+      "1033": "Save failed. Check the folder and available space.",
+      "2052": "保存失败，请检查目录权限和剩余空间。"
+    },
+    "NoData": {
+      "1033": "No curve recorded for this position in this cycle",
+      "2052": "本轮此位置尚无曲线记录"
+    },
+    "NoStatistics": {
+      "1033": "No usable statistical window data",
+      "2052": "尚无可用的统计窗口数据"
+    },
+    "SamplingRule": {
+      "1033": "PLC sampling: once per task cycle; configured cycle for this record: {0} ms. HMI displays PLC results.",
+      "2052": "PLC采样：每个任务周期一次；本次记录配置周期：{0} ms。HMI显示PLC计算结果。"
+    },
+    "QualificationRule": {
+      "1033": "Stable: cylinder down, data good, force > {0} N, full {1} ms window, and 3σ < {2} N; then resistance measurement may start.",
+      "2052": "判稳标准：下压到位、数据正常、力 > {0} N，统计窗口完整达到 {1} ms，且3σ < {2} N，才允许开始测电阻。"
+    },
+    "SigmaRule": {
+      "1033": "3σ = 3 × √[Σ(Fᵢ − F̄)² / (n − 1)], n = window samples. Force ≤ threshold or bad data resets the window.",
+      "2052": "计算：3σ = 3 × √[Σ(Fᵢ − F̄)² / (n − 1)]，n为窗口样本数；力≤门槛或数据异常时重置窗口。"
+    },
+    "StatisticsRule": {
+      "1033": "PLC updates 3σ through qualification and resistance measurement; DONE/fault freezes statistics. Page opening and PDF drawing do not control qualification.",
+      "2052": "PLC在等待判稳及电阻测量期间持续更新3σ；测量完成或故障后冻结统计。无需提前打开此页，PDF不参与判稳。"
+    },
+    "ForceAxis": {
+      "1033": "Force [N]",
+      "2052": "力 [N]"
+    },
+    "TimeAxis": {
+      "1033": "Time [s]",
+      "2052": "时间 [s]"
+    },
+    "Running": {
+      "1033": "Recording",
+      "2052": "正在记录"
+    },
+    "Completed": {
+      "1033": "Recording complete",
+      "2052": "记录完成"
+    },
+    "Cancelled": {
+      "1033": "Cancelled - partial curve retained",
+      "2052": "已取消，保留部分曲线"
+    },
+    "ProcessFault": {
+      "1033": "Process fault - recording stopped",
+      "2052": "流程故障，记录已停止"
+    },
+    "InvalidData": {
+      "1033": "Invalid force data - recording stopped",
+      "2052": "力数据无效，记录已停止"
+    },
+    "Disconnected": {
+      "1033": "Data connection lost - recording stopped",
+      "2052": "数据连接中断，记录已停止"
+    },
+    "Capacity": {
+      "1033": "Recording limit reached",
+      "2052": "已达到记录容量上限"
+    },
+    "NewCycle": {
+      "1033": "New cycle started",
+      "2052": "新一轮已开始"
+    },
+    "FullRange": {
+      "1033": "Full curve from record start",
+      "2052": "从记录开始的全部曲线"
+    },
+    "AfterStableRange": {
+      "1033": "Curve from first 3-sigma stability",
+      "2052": "首次3σ稳定后的曲线"
+    },
+    "NoAfterStable": {
+      "1033": "No curve after 3-sigma stability is available for this position. No file created.",
+      "2052": "当前位置没有可保存的3σ稳定后曲线，未生成文件。"
+    },
+    "TraceTitle": {
+      "1033": "Force vs time · fixture position",
+      "2052": "力—时间曲线 · 夹具位置"
+    },
+    "DistributionTitle": {
+      "1033": "Pressure distribution · same PLC window",
+      "2052": "压力分布 · 同一PLC统计窗口"
+    },
+    "DensityAxis": {
+      "1033": "Density [1/N]",
+      "2052": "概率密度 [1/N]"
+    },
+    "PdfReference": {
+      "1033": "Orange: reference normal density",
+      "2052": "橙线：正态密度参考曲线"
+    },
+    "ZeroSpread": {
+      "1033": "Zero spread: concentrated at mean",
+      "2052": "零波动：样本集中于均值"
+    },
+    "Mean": {
+      "1033": "Mean",
+      "2052": "均值"
+    },
+    "ThreeSigma": {
+      "1033": "3σ",
+      "2052": "3σ"
+    },
+    "Threshold": {
+      "1033": "Force threshold",
+      "2052": "压力门槛"
+    },
+    "SigmaLimit": {
+      "1033": "3σ limit",
+      "2052": "3σ标准值"
+    },
+    "Window": {
+      "1033": "Window",
+      "2052": "统计窗口"
+    },
+    "Samples": {
+      "1033": "Samples",
+      "2052": "样本数"
+    },
+    "Stable": {
+      "1033": "Stable",
+      "2052": "压力稳定"
+    },
+    "Filling": {
+      "1033": "Filling window",
+      "2052": "统计窗口未满"
+    },
+    "Unstable": {
+      "1033": "Unstable",
+      "2052": "压力不稳定"
+    },
+    "Frozen": {
+      "1033": "Measurement snapshot",
+      "2052": "测量时刻快照"
+    },
+    "Historical": {
+      "1033": "Previous valid window (historical)",
+      "2052": "最后有效窗口（历史数据）"
+    },
+    "BindingRequired": {
+      "1033": "Configure all four PLC array items.",
+      "2052": "请配置四个PLC数组绑定。"
+    },
+    "Truncated": {
+      "1033": "Curve truncated at 60 s / 10001 points",
+      "2052": "曲线已在60秒/10001点上限截断"
+    },
+    "Empty": {
+      "1033": "No measurement in this cycle",
+      "2052": "本轮尚未测量"
+    },
+    "ConnectionLost": {
+      "1033": "HMI data unavailable; PLC recording is independent",
+      "2052": "HMI数据不可用，PLC独立记录"
+    }
+  },
+  "new_v2_keys": [
+    "FullRange",
+    "AfterStableRange",
+    "NoAfterStable",
+    "TraceTitle",
+    "DistributionTitle",
+    "DensityAxis",
+    "PdfReference",
+    "ZeroSpread",
+    "Mean",
+    "ThreeSigma",
+    "Threshold",
+    "SigmaLimit",
+    "Window",
+    "Samples",
+    "Stable",
+    "Filling",
+    "Unstable",
+    "Frozen",
+    "Historical",
+    "BindingRequired",
+    "Truncated",
+    "Empty",
+    "ConnectionLost"
+  ]
+}

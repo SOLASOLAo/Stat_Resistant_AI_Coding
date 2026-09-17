@@ -1,6 +1,6 @@
 (*
   Canonical AI-owned POU. Same-owner adapter for the existing SFC API.
-  No socket here: all protocol operations belong to AiWp100.Burster.
+  No socket here: all protocol operations belong to Peripherals._Burster2316.
 *)
 (* ===== DECLARATION ===== *)
 FUNCTION_BLOCK FB_Wp100BursterProgramSelect
@@ -65,10 +65,10 @@ CASE _state OF
       _state := 10;
     END_IF
   10:
-    _ret := AiWp100.Burster.Open();
+    _ret := Peripherals._Burster2316.Open();
     IF ( _ret = OK ) THEN _state := 20; END_IF
   20:
-    _ret := AiWp100.Burster.SelectProgram(ProgramNo := _requestedProgramNo);
+    _ret := Peripherals._Burster2316.SelectProgram(ProgramNo := _requestedProgramNo);
     IF ( _ret = OK )
     THEN
       Busy := FALSE;
@@ -78,21 +78,21 @@ CASE _state OF
   90:
     // Continue only cancellation of our Open/Select call. If the Unit already
     // owns a measurement/error-clear, never replace it with a second Reset.
-    IF ( AiWp100.Burster.Operation = 0 ) OR
-       ( AiWp100.Burster.Operation = 1 ) OR
-       ( AiWp100.Burster.Operation = 2 ) OR
-       ( AiWp100.Burster.Operation = 9 )
+    IF ( Peripherals._Burster2316.Operation = 0 ) OR
+       ( Peripherals._Burster2316.Operation = 1 ) OR
+       ( Peripherals._Burster2316.Operation = 2 ) OR
+       ( Peripherals._Burster2316.Operation = 9 )
     THEN
-      _ret := AiWp100.Burster.Reset();
+      _ret := Peripherals._Burster2316.Reset();
       IF ( _ret <> RUNNING )
       THEN
         IF ( _ret < OK )
         THEN
           IF ( ErrorCode = 0 )
           THEN
-            ErrorCode := AiWp100.Burster.ErrorCode;
+            ErrorCode := Peripherals._Burster2316.ErrorCode;
             IF ( ErrorCode = 0 ) THEN ErrorCode := 1502; END_IF
-            LastSocketError := AiWp100.Burster.LastError;
+            LastSocketError := Peripherals._Burster2316.LastError;
           END_IF
           Error := TRUE;
         END_IF
@@ -116,9 +116,9 @@ IF ( ( _state = 10 ) OR ( _state = 20 ) ) AND
 THEN
   IF ( ErrorCode = 0 )
   THEN
-    ErrorCode := AiWp100.Burster.ErrorCode;
+    ErrorCode := Peripherals._Burster2316.ErrorCode;
     IF ( ErrorCode = 0 ) THEN ErrorCode := 1502; END_IF
-    LastSocketError := AiWp100.Burster.LastError;
+    LastSocketError := Peripherals._Burster2316.LastError;
   END_IF
   Error := TRUE;
   Done := FALSE;

@@ -5,6 +5,16 @@ VAR_INPUT
 END_VAR
 
 // Call base method first, then reset every child execution owned by this chain.
+// AI_HMI_FORCE_TRACE_BEGIN
+CASE Reason OF
+  OpconChainFinishReason.ERROR:
+    Station.ForceTraceAddon.Recorder.Finish(Reason := 4,
+      LastForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+  OpconChainFinishReason.CANCEL:
+    Station.ForceTraceAddon.Recorder.Finish(Reason := 3,
+      LastForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+END_CASE
+// AI_HMI_FORCE_TRACE_END
 SUPER^.OnChainFinish(Reason);
 
 CASE Reason OF

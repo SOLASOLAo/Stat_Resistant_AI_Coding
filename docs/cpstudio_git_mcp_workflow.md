@@ -1,5 +1,7 @@
 # CpStudio + Git + MCP 协同工作流
 
+本文件是按需工程手册，不是每轮任务清单。只读问答和文档编辑不启动 IDE、导出或编译；实际工程操作按影响选择下面的步骤，受控写入的恢复点、归属检查、保存回读和相关编译保持有效。当前状态与授权以 [HANDOVER](../HANDOVER.md) 为准，待办见 [TODO](../TODO.md)。已知完整 Export 流缺陷按对应 review 处理，没有新证据不重复失败的 Export/重启。
+
 ## 目的
 
 CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配置的事实源；Git 记录模型与生成结果；AI 通过 codesys-persistent MCP 读取、编写和编译底层 PLC ST。三者各司其职，避免 CpStudio 重新生成时无声覆盖 AI 逻辑。
@@ -17,7 +19,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 ## 工程自动化实施路线（P0–P4）
 
 这套 P0–P4 只描述 CpStudio + ctrlX 工程自动化，不等同于产品化路线的 Phase 1–4。
-截至 2026-09-01，当前进度为 **P0、P1 完成，P2 是当前主线**：
+以下是 2026-09-01 的路线定义；当前是否开展由工位 TODO 和用户任务决定：
 
 1. **P0 · 已完成**：统一 `Runner -Command Run`，自动获取 Export request，串联并续跑 Stage 1/2。
 2. **P1 · 已完成**：电气交换格式统一为真实 ePLAN ASC；不实现 AML/XML/OHD 万能解析器。
@@ -25,7 +27,7 @@ CpStudio 继续作为 OpCon 工程模型、层级、Handler、HMI 和符号配�
 4. **P3 · 待验证**：只有找到稳定、受支持的 PLE Link I/O 接口才自动化，否则保留一次人工点击。
 5. **P4 · 待开始**：取得 HMI IPC 的真实 StationData/TypeData DAT 副本后，开发校验、生成、备份和受控部署。
 
-完成证据和当前勾选状态以 `TODO.md` 为准；会话结论写入 `HANDOVER.md`。
+完成证据和当前状态以工位 TODO/HANDOVER 为准；状态或下一步变化时更新，不按每次会话重复写入。
 
 ### Engineering Console 图形入口
 
@@ -50,11 +52,11 @@ pwsh -NoProfile -File .\scripts\workbench\Start-CtrlXOpconWorkbench.ps1
 1. 确认相关仓库工作区状态，并验证 Git/工程归档能恢复精确起点；无法恢复时只建立一个内容寻址 checkpoint。
 2. 每次在 CpStudio 中只做一类可描述的改动。
 3. CpStudio 重新生成后，先执行 `git diff`，不要立即修补生成物。
-4. AI 通过 MCP 对 PLC `Application` 生成稳定文本快照。
+4. 通过正式 MCP/REST 保存受影响 PLC 对象的可读文本；整次生成或影响难以限定时，使用下文仅遍历 `Application` 的快照工具。
 5. 对比 CpStudio 模型、Symbolconfiguration、HMI/config 和 PLC 文本快照。
 6. 把变化分成 CpStudio 所有、AI 所有和需要人工决策三类。
-7. AI 只通过 MCP 写回 PLC，随后重新编译，以 `errors=0` 为验收标准。
-8. 提交模型变化、可读生成物、PLC 文本快照、编译基线和分析结论。
+7. 只通过正式 PLE MCP/REST 写回归属允许的对象，保存后回读并新编译，核对 `errors=0` 和 warning 签名。
+8. 保留本次修改与验证结果；仅在已有提交/推送授权内纳入已审阅文件，不把 Git 发布作为完成本地工程的固定步骤。
 
 ### EtherCAT BMK 改名闭环（2026-08-22 实测）
 
@@ -114,7 +116,7 @@ Build，并在 Build 前后核对 `.project` SHA-256。它不调用任何真机�
   anchor，重试不增加次数。Export #2 一旦真正进入 Build，anchor 即被消费，不会被后续
   新流程误复活。
 - Export #1 没有带时间戳的 Post-export request 时，不创建 Export #2 anchor；先确认
-  signal-only Post-export 脚本并重新执行 Export #1。
+  已配置的 Post-export 脚本并重新执行 Export #1。
 - 全局检查器锁覆盖 anchor 读取到报告写入；锁竞争、权限、文件或目录异常均不执行 Build、
   不写报告，避免未持锁的运行破坏 anchor 顺序。
 - Export #2 后仍有 Symbol 错误，或 Build 汇总无法验证：停止循环，等待 AI。
@@ -136,7 +138,7 @@ ownership、warning 签名和最终验收；`DONE_OFFLINE` 也只表示无需继
 
 ### 通过 MCP 执行
 
-先用正规 MCP `open_project` 打开目标 PLC 工程，再将下面三个全局量注入只读审计调用：
+先核对现有唯一 PLE 会话；已有目标工程时复用，确需打开且没有冲突 owner 时才调用正规 `open_project`。随后将下面三个全局量注入只读审计调用：
 
 ```python
 SNAPSHOT_PROJECT_PATH = r"C:\path\Station.project"
@@ -158,16 +160,20 @@ execfile(r"C:\path\McpCoding\scripts\plc\export_plc_snapshot.py")
 
 所有新项目采用 `docs/project_structure_standard.md` 定义的旁车结构。CpStudio
 官方提供 Post-export script 挂钩；本项目自定义脚本
-`scripts/cpstudio/post_export_signal.bat` 只发布被忽略的
-`data/requests/export_request.json`，不启动 PLC Engineering/MCP、不编译也不执行
-在线操作。当前唯一 persistent MCP 会话读取请求后，再根据
+`scripts/cpstudio/post_export_signal.bat` 发布被忽略的
+`data/requests/pending/<timestamp>_<id>.json`，不启动 PLC Engineering/MCP、不编译也不执行
+在线操作。2026-09-15 用户批准有限例外：发布成功后自动运行 `Restore-ForceTraceStartup.ps1`，
+备份并仅补回本地 HMI 的后台曲线启动项及启动 SFC，正确时不写；详见 [曲线说明](hmi_force_trace_addon.md)。
+PLC 侧仍由当前唯一 persistent MCP 会话读取请求后，根据
 `ai/ownership.yaml`、`ai/hooks.yaml` 和 `ai/graphical.yaml` 串行完成审计与写回。
 
-## Station010 当前基线
+## Station010 历史基线（2026-08-18）
+
+以下数量、仓库状态及未完成步骤仅保留作历史依据，不代替当前 HANDOVER/TODO。
 
 - `Plc/Stat010_V5.11_CtrlX_PLC.Struct.json` 中有 350 个 POU/GVL/DUT/Method/Action 类型对象；实际文本快照只收录声明或实现非空的对象。
 - 当前私有仓库已经跟踪 CpStudio 模型、HMI/config、Symbolconfiguration 和两个 `.project`，但此前没有纯文本 ST 镜像。
-- `../Station010` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；任何 PLC 写入都必须先确认可恢复起点、导出文本快照，并且只经 MCP/正式 PLE REST 执行。
+- `../Station010` 已由用户批准作为 CpStudio + MCP 受控集成工作工程；PLC 写入前确认可恢复起点并保留受影响对象文本，写入只经 MCP/正式 PLE REST 执行；全应用快照按影响范围选择。
 - `.project` 是否作为 Station010 私有备份仓库的受控例外继续纳管，需要单独形成项目决策；不能依赖二进制 diff 理解 PLC 逻辑。
 
 ### 2026-08-18 当前未提交生成批次

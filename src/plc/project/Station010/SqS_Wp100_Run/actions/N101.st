@@ -3,6 +3,10 @@
 _retVal2 := RUNNING;
 
 // This action can repeat in single-step mode; never leave END set after stop.
+// AI_HMI_FORCE_TRACE_BEGIN
+// An END request marks intent only; recording ends on MeasRunning falling.
+Station.ForceTraceAddon.Recorder.RequestEnd();
+// AI_HMI_FORCE_TRACE_END
 Wp100A104Kistler.Unit.ParImm.EndMeasurement :=
   ( _kistlerStarted ) AND
   ( Wp100A104Kistler.Unit.OutImm.MeasRunning ) AND

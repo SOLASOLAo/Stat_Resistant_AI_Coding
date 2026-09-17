@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 3,
+  "id": "burster2316",
+  "libraryName": "BppBurster2316",
+  "version": "0.1.0.2",
+  "revision": 1,
+  "status": "local-native-candidate",
+  "company": "BPP Internal Engineering",
+  "author": "WANG Zhi (RBCD\\TEF2)",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "compatibility": [
+    "CpStudio V5.11",
+    "ctrlX PLC 2.6.8"
+  ],
+  "files": [
+    {
+      "source": "src/cpstudio/components/BppBurster2316/V0.1/BppBurster2316.ood",
+      "path": "PrjExt/Peripherals/BppBurster2316/V0.1/BppBurster2316.ood",
+      "sha256": "EBD75ABC2516AB16992F900281F11EAC6FB91DBF83DC3C01D134289358499E40"
+    },
+    {
+      "source": "src/cpstudio/components/BppBurster2316/V0.1/Export/ConfigParams.otd",
+      "path": "PrjExt/Peripherals/BppBurster2316/V0.1/Export/ConfigParams.otd",
+      "sha256": "676BD8C6A80203290169704DB0D53B2B52A6341FC8887817C2A272604D2E0FD2"
+    },
+    {
+      "source": "src/cpstudio/components/BppBurster2316/V0.1/Library/Library.osd",
+      "path": "PrjExt/Peripherals/BppBurster2316/V0.1/Library/Library.osd",
+      "sha256": "34F6E6F40620827EC53D22A706F7220BEBD5D41F72F6073299CBD364E17B6146"
+    },
+    {
+      "source": "src/cpstudio/components/BppBurster2316/V0.1/Types/CodeEntities.osd",
+      "path": "PrjExt/Peripherals/BppBurster2316/V0.1/Types/CodeEntities.osd",
+      "sha256": "F2D98C3173B5A9BF9AFBDBC54AADA879147ED69CFD0CF2136C197F752B102160"
+    },
+    {
+      "source": "data/native-packages/20260915/build-13/BppBurster2316/BppBurster2316.compiled-library",
+      "path": "PrjExt/Peripherals/BppBurster2316/V0.1/Library/BppBurster2316.compiled-library",
+      "sha256": "C3E70CC1D476B48B4A0458F78FB113F43709B39A2E94535E0DEAC60837C0D016"
+    },
+    {
+      "source": "data/native-packages/20260915/build-13/BppBurster2316/BppBurster2316.library",
+      "path": "plc/BppBurster2316.library",
+      "sha256": "A14376670C6324D313EE7078033028BFEBC7EAE5C997BEA39B46BC01DAE68C0E"
+    },
+    {
+      "source": "src/plc/libraries/BppBurster2316/BppIpBurster2316.st",
+      "path": "plc/source/BppIpBurster2316.st",
+      "sha256": "8F16BDFD07EEFC6AAB77E0905F7DF06655A7D9F7E15433A8AE528B539A968829"
+    },
+    {
+      "source": "src/plc/libraries/BppBurster2316/FB_Wp100BursterSingleOwner.st",
+      "path": "plc/source/FB_Wp100BursterSingleOwner.st",
+      "sha256": "37B77C8EA795557EE9EE532D159B598ABAE1C1B7B6B4A053A3F9835A9E865E32"
+    },
+    {
+      "source": "examples/plc/components/BppBurster2316/PLC_PRG.st",
+      "path": "examples/PLC_PRG.st",
+      "sha256": "8DBFBA155981A08C254744131C8B814C4BAD3B64EBAEAB05243777BC9493D739"
+    },
+    {
+      "source": "data/native-packages/20260915/build-13/consumer/BppBurster2316/Consumer.project",
+      "path": "reference/Consumer.project",
+      "sha256": "672F598C77526064271243F947BA994E4862647FA7267BAF6A9E58FF47F0D586"
+    },
+    {
+      "source": "data/native-packages/20260915/build-13/consumer/BppBurster2316/Consumer.xml",
+      "path": "reference/Consumer.xml",
+      "sha256": "7ED33758800C5C0D52743A4BA35D8699BEEFEB8D0111657F55BB79C90381D5B8"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/StationTemplate/Engineering/Engineering_Data.xml",
+      "path": "reference/CpStudio/StationTemplate/Engineering/Engineering_Data.xml",
+      "sha256": "56A038DE7703A8F0909EF9A2A1930DB599F1A2214800DD72A32028853C15C89B"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/StationTemplate/Engineering/ObjectVersions.xml",
+      "path": "reference/CpStudio/StationTemplate/Engineering/ObjectVersions.xml",
+      "sha256": "1C5F0675B33D90F4E4FCDBFCF26A0F4B4A6C1C2536725992F2DB7BF45ECE1F99"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/StationTemplate/Engineering/ProjectName.txt",
+      "path": "reference/CpStudio/StationTemplate/Engineering/ProjectName.txt",
+      "sha256": "21863FF372F89676309D429024D6E44BF31F53418EC02AC0AFD5EAC50A0441D5"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/StationTemplate/Engineering/Stat010_V5.11_CtrlX.cpsp",
+      "path": "reference/CpStudio/StationTemplate/Engineering/Stat010_V5.11_CtrlX.cpsp",
+      "sha256": "27C4B140AE0112B95D19F7BA8ED7F0911713204767F1957F55DC74B7FC4AFC70"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/StationTemplate/Plc/Stat010_V5.11_CtrlX_PLC.project",
+      "path": "reference/CpStudio/StationTemplate/Plc/Stat010_V5.11_CtrlX_PLC.project",
+      "sha256": "833148C85701F60B5BFB4502BE13D06DE2A4E7EC33C99CB67A0C0DDFEC03AFE7"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/BppForceTrace.ood",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/BppForceTrace.ood",
+      "sha256": "6C36D9F9C32AD9BCFC6FE7CD5B52E7CF7B7AB0CD0DFE7E3C01818E5310DE9C5D"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Export/StartupParams.otd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Export/StartupParams.otd",
+      "sha256": "353BE4E2BD74C16D7599336C45D637237F0C7D8EA15C99052C9F26CF880E8CD0"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Library/BppForceTrace.compiled-library",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Library/BppForceTrace.compiled-library",
+      "sha256": "B11ECE8940879D0AD7D1457B1A23725D8716EC3268A7CBAD7904A18C1C966938"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Library/Library.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Library/Library.osd",
+      "sha256": "D26190BC305B6A0912061B65FB1BD209B54A1C8F7E6FE50BC183F0E2F32640B4"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Texts/Texts.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Texts/Texts.osd",
+      "sha256": "36BEB39A4DD65F27C3EA0CDE01294C8689D065465AFE8E467B3D91B5B18549AD"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Types/CodeEntities.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Types/CodeEntities.osd",
+      "sha256": "D5D5AD75EF9A4BD6AE3F3FAEBA3D407A9F5B1E30690C00976CCCAB5A7ECB690E"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Types/Structures.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Types/Structures.osd",
+      "sha256": "7C7FE1E5FB163A0A27036F7C0BB185AC43E6E4A1BBDF2EAD4EF833BDE6DB5583"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppForceTrace/V0.2/Views/ForceTrace.sfc",
+      "path": "reference/CpStudio/PrjExt/Objects/BppForceTrace/V0.2/Views/ForceTrace.sfc",
+      "sha256": "6D4369676A413DDD66B2925DF17790EBF514D452DF51BA6F733E40F665BF42E9"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppMachineCommon/V0.1/BppMachineCommon.ood",
+      "path": "reference/CpStudio/PrjExt/Objects/BppMachineCommon/V0.1/BppMachineCommon.ood",
+      "sha256": "D9ABD441796E86AA82AFEEAEE30C2332DB64173C80FECA33A2098E8B11984490"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppMachineCommon/V0.1/Export/Addon.otd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppMachineCommon/V0.1/Export/Addon.otd",
+      "sha256": "89855C2DA35C745528D5D401E87D0341D881C3272FA0EAA67A0AEC9D15F00D92"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppMachineCommon/V0.1/Library/BppMachineCommon.compiled-library",
+      "path": "reference/CpStudio/PrjExt/Objects/BppMachineCommon/V0.1/Library/BppMachineCommon.compiled-library",
+      "sha256": "69BC4781077FB0BAE965643D1D20F09A95677D2EF40D12D2A7BA877671037376"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppMachineCommon/V0.1/Library/Library.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppMachineCommon/V0.1/Library/Library.osd",
+      "sha256": "DD0725754BDE267619276CEE86D5A4637A1A9B92367A4E7B95B30583BCC494A5"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/BppMachineCommon/V0.1/Types/CodeEntities.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/BppMachineCommon/V0.1/Types/CodeEntities.osd",
+      "sha256": "F8D16B4E763C1A71CDA6AFDFD8922B0FB23CCFD5E1754B1105FB91377F4E265D"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Common/Picture.png",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Common/Picture.png",
+      "sha256": "CFE3C55F19EC67D30E11E4CD069238364FE0B64AFD5FEDA6D3000B4C8519EB96"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/DanikorScrewer.ood",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/DanikorScrewer.ood",
+      "sha256": "544034F6E04B7B09E381EAD151923B2035411B0E14F089D7B796B9144985D0E0"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Events/EventTexts.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Events/EventTexts.osd",
+      "sha256": "17AACB1F83FDB97D613F2E1560BD2E14F36D437C20F6BE787E5137DD38E1544F"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Export/ConfigParams.otd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Export/ConfigParams.otd",
+      "sha256": "1368F9CA1995DBCFDDC49B9042C5629D94DC2492522C69B80825DAB32F8322DB"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Export/StartupParams.otd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Export/StartupParams.otd",
+      "sha256": "1368F9CA1995DBCFDDC49B9042C5629D94DC2492522C69B80825DAB32F8322DB"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Library/DanikorScrewer.compiled-library",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Library/DanikorScrewer.compiled-library",
+      "sha256": "D0661C0A3F5EDE66853D800275359A3F75F02F76B3E16DC52C2A8EC90FABA165"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Library/Library.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Library/Library.osd",
+      "sha256": "D08CA9D66DFE07885B77AEF28C02136BCA865FDE89B429D5EE523B751CF04036"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/README.md",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/README.md",
+      "sha256": "5C047B041463217F10407AF57196E807900EB9F5C481D2D243479119507AB785"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Texts/Texts.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Texts/Texts.osd",
+      "sha256": "FC1A572FF25C77CB4177A00FC5908E4BACC1655EF374A8C0ED249EFAD28BE9BD"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Types/CodeEntities.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Types/CodeEntities.osd",
+      "sha256": "5D980DF80FFCB1C22758A86136E4158CC125375C04829DA3FA18D430FF295141"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Types/Enumerations.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Types/Enumerations.osd",
+      "sha256": "5FEA0786731E7C46DDA98724E7556AC7D7E0D342CD130A0C45BED9089967281E"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Types/Structures.osd",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Types/Structures.osd",
+      "sha256": "7836C0AB989564DB2B17192FD809D1F04953F963B097FCC5C5EB1DB38432CE36"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Objects/DanikorScrewer/V1.1/Views/Overview.sfc",
+      "path": "reference/CpStudio/PrjExt/Objects/DanikorScrewer/V1.1/Views/Overview.sfc",
+      "sha256": "4D134993B0DB6B4C01583767B9616354A25830EBCBA3301C8080DBFE8432CE7E"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Peripherals/BppBurster2316/V0.1/BppBurster2316.ood",
+      "path": "reference/CpStudio/PrjExt/Peripherals/BppBurster2316/V0.1/BppBurster2316.ood",
+      "sha256": "EBD75ABC2516AB16992F900281F11EAC6FB91DBF83DC3C01D134289358499E40"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Peripherals/BppBurster2316/V0.1/Export/ConfigParams.otd",
+      "path": "reference/CpStudio/PrjExt/Peripherals/BppBurster2316/V0.1/Export/ConfigParams.otd",
+      "sha256": "676BD8C6A80203290169704DB0D53B2B52A6341FC8887817C2A272604D2E0FD2"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Peripherals/BppBurster2316/V0.1/Library/BppBurster2316.compiled-library",
+      "path": "reference/CpStudio/PrjExt/Peripherals/BppBurster2316/V0.1/Library/BppBurster2316.compiled-library",
+      "sha256": "C3E70CC1D476B48B4A0458F78FB113F43709B39A2E94535E0DEAC60837C0D016"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Peripherals/BppBurster2316/V0.1/Library/Library.osd",
+      "path": "reference/CpStudio/PrjExt/Peripherals/BppBurster2316/V0.1/Library/Library.osd",
+      "sha256": "34F6E6F40620827EC53D22A706F7220BEBD5D41F72F6073299CBD364E17B6146"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/ReferenceProject/PrjExt/Peripherals/BppBurster2316/V0.1/Types/CodeEntities.osd",
+      "path": "reference/CpStudio/PrjExt/Peripherals/BppBurster2316/V0.1/Types/CodeEntities.osd",
+      "sha256": "F2D98C3173B5A9BF9AFBDBC54AADA879147ED69CFD0CF2136C197F752B102160"
+    },
+    {
+      "source": "docs/components/BppBurster2316.md",
+      "path": "README.md",
+      "sha256": "85F35817C05A34DDF9383B88E9932945B7B18747B1DE9984A812CC669CD75C20"
+    },
+    {
+      "source": "docs/components/INSTALL.md",
+      "path": "INSTALL.md",
+      "sha256": "9AF1A880EB34725ABBE1B4D9187E8B69FC98FA5559B02FEB00DBAA4A3B364C5E"
+    },
+    {
+      "source": "data/native-packages/20260915/release-metadata/BppBurster2316/DEPENDENCIES.json",
+      "path": "DEPENDENCIES.json",
+      "sha256": "6F5B636377EA0907BEB86DA185228515D1DD1E73DD2491B65342908D394E757F"
+    },
+    {
+      "source": "scripts/components/Install-NativeComponent.ps1",
+      "path": "scripts/Install-NativeComponent.ps1",
+      "sha256": "4443A9E8E79A3805AA481C1281974A7D2C9200A8026FEC5115F524D7563517CB"
+    },
+    {
+      "source": "scripts/components/Test-ComponentPackage.ps1",
+      "path": "scripts/Test-ComponentPackage.ps1",
+      "sha256": "13202758F2C9B28152D5D828F2C240F297805A11E8111CB785DBF808F662EC3B"
+    },
+    {
+      "source": "data/native-packages/20260915/bpp-build-13.json",
+      "path": "evidence/library-build.json",
+      "sha256": "738ACE6B3FA934580F5DA5A590DD95FCFEE3BF5409B2080AA84D0E4AE6EDBEF8"
+    },
+    {
+      "source": "data/native-packages/20260915/bpp-build-13.json",
+      "path": "evidence/consumer-build.json",
+      "sha256": "738ACE6B3FA934580F5DA5A590DD95FCFEE3BF5409B2080AA84D0E4AE6EDBEF8"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio-proof.json",
+      "path": "evidence/cpstudio-native.json",
+      "sha256": "F9FE1DF3D7ABA042B4AB41408B47BD5BCF95015B70AE357C1247FCAEC1EA808C"
+    },
+    {
+      "source": "data/native-packages/20260915/cpstudio/reference-20260915T172642.json",
+      "path": "evidence/reference-native-readback.json",
+      "sha256": "8EC89AF6D3AE71D268E5243BB8C637A4E6D134CD8E8F2C7A42699C7EDCE74336"
+    },
+    {
+      "source": "data/native-packages/20260915/source-baselines.json",
+      "path": "evidence/source-baselines.json",
+      "sha256": "363F655D12158BA953EA9AD242E24DD749D9CF9922B760B7B0D6DB4EBF18446B"
+    },
+    {
+      "source": "data/native-packages/20260915/model-tests.json",
+      "path": "evidence/model-tests.json",
+      "sha256": "1A24CB5F5FEDD8DD6507EC5B05C05194624EBB9E89D457EB506193006B2BA0B6"
+    },
+    {
+      "source": "data/native-packages/20260915/hmi-burster-native.json",
+      "path": "evidence/hmi-native.json",
+      "sha256": "0EC4C9B886559206A85F102A59A06384FFF1BF94B643217D2F895E812BDB31E4"
+    }
+  ],
+  "validation": {
+    "library": {
+      "path": "evidence/library-build.json",
+      "warningSignatures": []
+    },
+    "consumer": {
+      "path": "evidence/consumer-build.json",
+      "warningSignatures": []
+    },
+    "cpstudio": {
+      "path": "evidence/cpstudio-native.json"
+    }
+  }
+}

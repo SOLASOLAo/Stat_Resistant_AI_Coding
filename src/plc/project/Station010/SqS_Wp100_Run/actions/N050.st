@@ -16,6 +16,20 @@ ELSIF ( Wp100K101SafetyDoor.Unit.OutImm.IsInWrkPosIn ) AND
       ( Wp100K102PressingCylinder.Unit.OutImm.IsInBasPosIn ) AND
       ( Wp100K102PressingCylinder.Unit.ExecState = OpconExecState.READY )
 THEN
+  // AI_HMI_FORCE_TRACE_BEGIN
+  // Latch PLC elapsed-time origin and force after Kistler acknowledgement.
+  CASE MeasurePos OF
+    MeasurePsoEnum.LEFT:
+      Station.ForceTraceAddon.Recorder.Start(Position := 1,
+        InitialForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+    MeasurePsoEnum.MIDDLE:
+      Station.ForceTraceAddon.Recorder.Start(Position := 2,
+        InitialForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+    MeasurePsoEnum.RIGHT:
+      Station.ForceTraceAddon.Recorder.Start(Position := 3,
+        InitialForceN := Wp100A104Kistler.Unit.OutImm.ForceAct);
+  END_CASE
+  // AI_HMI_FORCE_TRACE_END
   Wp100K102PressingCylinder.Unit.ParCmd.PreStartCheck :=
     ( Station.Unit.ModeSet <> StationMode.HOME );
   Wp100K102PressingCylinder.Unit.ParCmd.OutputPulsing :=

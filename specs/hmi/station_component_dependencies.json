@@ -1,0 +1,85 @@
+{
+  "scope": "Read-only existing Station010 offline Library Manager; not minimum independent-library proof",
+  "checkedAtUtc": "2026-09-11T09:04:19.7841332Z",
+  "pleProfile": "ctrlX PLC 2.6.8",
+  "plcConnected": false,
+  "libraries": [
+    {
+      "name": "OpconBase",
+      "placeholderName": "OpconBase",
+      "effectiveVersion": "1.0.102.0",
+      "company": "Robert Bosch GmbH - OpCon Platform Team",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "OpconBaseCommonDef",
+      "placeholderName": "OpconBaseCommonDef",
+      "effectiveVersion": "1.0.7.0",
+      "company": "Robert Bosch GmbH - OpCon Platform Team",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "OpconTcpDDL",
+      "placeholderName": "OpconTcpDDL",
+      "effectiveVersion": "1.2.19.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "NexeedBursterResis2316Base",
+      "placeholderName": "NexeedBursterResis2316Base",
+      "effectiveVersion": "1.0.0.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "Standard",
+      "placeholderName": "Standard",
+      "effectiveVersion": "3.5.18.0",
+      "company": "System",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "NxBaseSysDep_CXA",
+      "placeholderName": "OpconBaseSysDep",
+      "effectiveVersion": "1.0.6.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "NxSocketSysDep_CXA",
+      "placeholderName": "OpconSocketSysDep",
+      "effectiveVersion": "1.0.7.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "IecSfc",
+      "placeholderName": "Tc2_System",
+      "effectiveVersion": "4.1.0.0",
+      "company": "System",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "NexeedEcKistlerMaxymosBl",
+      "placeholderName": "NexeedEcKistlerMaxymosBl",
+      "effectiveVersion": "2.0.1.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "AtmoKistlerForceStroke",
+      "placeholderName": "AtmoKistlerForceStroke",
+      "effectiveVersion": "1.2.2.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    },
+    {
+      "name": "AtmoKistlerForceStrokeBase",
+      "placeholderName": "AtmoKistlerForceStrokeBase",
+      "effectiveVersion": "1.2.1.0",
+      "company": "Bosch Group",
+      "resolutionInfo": "Resolved by placeholder redirection"
+    }
+  ]
+}

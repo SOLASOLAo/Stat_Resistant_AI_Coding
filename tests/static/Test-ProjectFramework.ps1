@@ -98,7 +98,7 @@ function Get-OwnershipRecords {
             continue
         }
         if (($null -ne $current) -and
-            ($line -match '^\s+(?<key>source|specification|apply_script|write_mode):\s*(?<value>.+?)\s*$')) {
+            ($line -match '^\s+(?<key>(?:[a-z_]+_)?source|specification|(?:[a-z_]+_)?apply_script|write_mode):\s*(?<value>.+?)\s*$')) {
             $current[$Matches['key']] = $Matches['value'].Trim().Trim('"').Trim("'")
         }
     }
@@ -190,7 +190,7 @@ else {
 }
 $ownedSources = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($record in $ownershipRecords) {
-    foreach ($key in @('source', 'specification', 'apply_script')) {
+    foreach ($key in @($record.Keys | Where-Object { $_ -match '^(?:[a-z_]+_)?source$|^specification$|^(?:[a-z_]+_)?apply_script$' })) {
         if (-not $record.ContainsKey($key)) {
             continue
         }
@@ -199,12 +199,26 @@ foreach ($record in $ownershipRecords) {
         if (-not [System.IO.File]::Exists($absolutePath)) {
             $failures.Add("Ownership reference is missing: $($record.path) -> ${key}=$relativePath")
         }
-        if ($key -eq 'source') {
+        if ($key -match '^(?:[a-z_]+_)?source$') {
             [void]$ownedSources.Add($relativePath)
         }
     }
 }
 
+# Compiled-library and retained recovery sources are deliberately not PLC
+# application restore targets. Keep their ownership explicit in a separate list.
+$sourceCatalogPath = Join-Path $repositoryRoot 'ai/plc-source-catalog.json'
+if (Test-Path -LiteralPath $sourceCatalogPath) {
+    $catalog = Get-Content -LiteralPath $sourceCatalogPath -Raw | ConvertFrom-Json
+    foreach ($entry in $catalog.files) {
+        if ($entry.owner -notin @('compiled-library','recovery-only') -or
+            $entry.file -notmatch '^src/plc/' -or $entry.file.Contains('..') -or
+            -not (Test-Path -LiteralPath (Join-Path $repositoryRoot $entry.file))) {
+            $failures.Add("Invalid non-application source ownership: $($entry.file)")
+        }
+        else { [void]$ownedSources.Add($entry.file) }
+    }
+}
 $stSourceRoot = Join-Path $repositoryRoot 'src\plc'
 if ([System.IO.Directory]::Exists($stSourceRoot)) {
     foreach ($file in Get-ChildItem -LiteralPath $stSourceRoot -Recurse -File -Filter '*.st') {
@@ -327,6 +341,12 @@ foreach ($file in $stFiles) {
         }
     }
 
+    # Ignore complete block comments, preserving line numbers for diagnostics.
+    $codeForStyle = [regex]::Replace($text, '(?s)\(\*.*?\*\)', {
+        param($match)
+        [regex]::Replace($match.Value, '[^\r\n]', ' ')
+    })
+    $lines = $codeForStyle -split '\r?\n'
     for ($lineIndex = 0; $lineIndex -lt $lines.Count; $lineIndex++) {
         $line = $lines[$lineIndex]
         $lineNumber = $lineIndex + 1
@@ -456,7 +476,27 @@ foreach ($restApplier in $restAppliers) {
             $failures.Add("PLC REST applier is missing interface-preserving plan/apply guard '$requiredText': $restApplier")
         }
     }
-    if ([regex]::IsMatch($restApplierText, '(?im)\.declaration\s*=')) {
+    $implementationOnlyText = $restApplierText
+    if ($restApplier -eq 'scripts/plc/apply_wp100_run_rest.ps1') {
+        # CheckPressForce is a full AI-owned method. Permit only its exact,
+        # baseline-guarded private-latch migration; generated interfaces stay protected.
+        $forceDeclarationWrite = 'if ($updateForceDeclaration) { $node.declaration = $targetDeclaration }'
+        foreach ($migrationGuard in @(
+            '$updateForceDeclaration = $false',
+            "(`$Step -ne 'CheckPressForce')",
+            '3984ae2555d0df73f8ba156b7bbbbb96c7403a2636991e82fd0f7c2b014b9777',
+            '7742cab63f03e632f7ea90b7e6ee819bc1941a96d278184097c6473aabe70b45',
+            '$currentSha256 -notin $AllowedBaselineSha256',
+            "'update-ai-owned-full-object'",
+            $forceDeclarationWrite
+        )) {
+            if (-not $restApplierText.Contains($migrationGuard)) {
+                $failures.Add("AI-owned force method migration lacks its exact guard '$migrationGuard': $restApplier")
+            }
+        }
+        $implementationOnlyText = $implementationOnlyText.Replace($forceDeclarationWrite, '')
+    }
+    if ([regex]::IsMatch($implementationOnlyText, '(?im)\.declaration\s*=')) {
         $failures.Add("PLC REST applier assigns an existing object's declaration instead of preserving it: $restApplier")
     }
     if ([regex]::IsMatch($restApplierText, '(?im)Invoke-RestMethod\s+-Method\s+Delete')) {

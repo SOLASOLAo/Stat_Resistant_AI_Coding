@@ -1,0 +1,9 @@
+<* FunctionBlock name="<%=@this.Name%>" extends="<%=@this.BaseType%>" comment="Container for explicitly called machine function blocks" path="<%=@this.Path%>" *>
+<%T= ?system?_Common\CodeEntityDeclaration.otd %>
+////<OES_CODE MergeId="LocalVars">{{{
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+////<END_OES_CODE>}}}
+<* DeclarationEnd *>

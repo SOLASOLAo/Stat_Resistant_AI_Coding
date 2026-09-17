@@ -1,0 +1,86 @@
+{
+  "scope": "Offline .NET Framework native build and synthetic samples; no project/channel/device started",
+  "sourceCommit": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "sourceDirty": true,
+  "nativeAssembly": "Bpp.ForceTrace, Version=0.1.0.2, Culture=neutral, PublicKeyToken=null",
+  "dllSha256": "F40FD24A7739465D95994D006ACE0557D44AAFF98F0E54170C0B1DDA799EE9D9",
+  "hadSha256": "BE166135ED327576CA7A0686115527D7A61AF84F86C61C479C2CC6EFED01CB1D",
+  "compiledSources": [
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStore.cs",
+      "sha256": "111B5E753133171F74C90AB4DEC8D4808C6CA1EB191F176556B27A937F889E55"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceFrames.cs",
+      "sha256": "5709C2D1F55338620FA65F8EB1A284CA5BC09160C00D471E1834D40D99C515A4"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceSession.cs",
+      "sha256": "69FDD1B4F537E7B7F9762285A76A160F8C437AFEAF4333E5D69957C2126E4489"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceStartupForm.cs",
+      "sha256": "3B638CFD9587B7385B38E7240C1E9AC292504A37E52371B4E7EA927BD81B9959"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/ForceTraceView.cs",
+      "sha256": "A69E7FB1B213551D6B7C48021F6D28BE1F1FD5FB18499AB4C7263770C4BBA7DC"
+    },
+    {
+      "path": "src/hmi/Bpp.ForceTrace/AssemblyInfo.cs",
+      "sha256": "93185BB44FB6530D948F049104B5A777A7E75D9BEBE4976D5657657BB95B84C9"
+    }
+  ],
+  "compiler": "Windows .NET Framework v4.0.30319 csc",
+  "errors": 0,
+  "warnings": 0,
+  "dependencies": [
+    {
+      "file": "VisiWinNET.Embedded.Systems.dll",
+      "assembly": "VisiWinNET.Embedded.Systems, Version=6.5.0.0, Culture=neutral, PublicKeyToken=3d70d0e64510241c",
+      "fileVersion": "6.5.5.25",
+      "sha256": "4AC1B80F4C268FC9A79FC09E8F1EF1DC4B55C60F13F88CE8492ECD8FAA5510A0"
+    },
+    {
+      "file": "VisiWinNET.Embedded.Forms.dll",
+      "assembly": "VisiWinNET.Embedded.Forms, Version=6.5.0.0, Culture=neutral, PublicKeyToken=3d70d0e64510241c",
+      "fileVersion": "6.5.5.25",
+      "sha256": "9FFCBD3306A553C93A653F08126F37867901646DD842CA3B57EE61644464ED20"
+    },
+    {
+      "file": "OpCon.HMI.Modulo.Shared.dll",
+      "assembly": "OpCon.HMI.Modulo.Shared, Version=5.11.0.0, Culture=neutral, PublicKeyToken=4241dc8872ae9833",
+      "fileVersion": "5.11.1.52",
+      "sha256": "7A9F47737017DEDB87A6B06CFAA3655753F66DB7981C0E2F546F4A2F018ABE6F"
+    },
+    {
+      "file": "OpCon.HMI.Modulo.Forms.dll",
+      "assembly": "OpCon.HMI.Modulo.Forms, Version=5.11.0.0, Culture=neutral, PublicKeyToken=4241dc8872ae9833",
+      "fileVersion": "5.11.1.52",
+      "sha256": "74E7AC3472866FFF7D3B29A47C41EEE01886ABE564AAB1D5AF0EAF5828B0A81A"
+    },
+    {
+      "file": "TeeChart.dll",
+      "assembly": "TeeChart, Version=2.0.3033.18431, Culture=neutral, PublicKeyToken=9c8126276c77bdb7",
+      "fileVersion": "2.0.3033.18431",
+      "sha256": "181B0340A146F79A385059E1ED47D8680E10DE6D213F271837F81A8E97C29A72"
+    }
+  ],
+  "checks": {
+    "storeAndCsv": 28,
+    "frameDecoder": 31,
+    "nativeCoordinatesAndCsvPoints": 121,
+    "nativeSfcLoaderErrors": 0,
+    "guiPreloadLateOpenReopen": "Passed with local initialized/path fixtures and injected coherent frames",
+    "exportedBusinessTexts": 48,
+    "dynamicCaptions": 36,
+    "runtimeLanguageSwitch": "Not verified",
+    "actualOpcStartupTiming": "Not verified"
+  },
+  "evidence": {
+    "nativeCheckSha256": "E3DCB059873C1E6B67FC693E15805010CD3E050825E6D47FAD124F580F53625C",
+    "startupCheckSha256": "B2C3C344C484730069AAFAB762D66860B206ED92A913F1474C991B6BB8CCDF0F"
+  },
+  "installed": false,
+  "ipcDeployed": false
+}

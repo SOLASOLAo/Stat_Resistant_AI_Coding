@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Peripheral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" objectName="Burster 2316" refId="08DD4AF2-40EB-5814-A60F-84177CCE7AFE" version="0.1.0.2" formatVersion="1" toolVersions="5.11" type="NonBus" xsi:noNamespaceSchemaLocation="..\..\OpconOodPeripheralSchema_V4_11.xsd">
+  <Misc>
+    <Platform name="Nexeed Automation" />
+    <Type name="Measurement" />
+    <Picture path="Common\Picture.png" />
+    <Author name="WANG Zhi (RBCD\TEF2)" />
+    <Vendor name="Internal Engineering" />
+    <Visibility value="Always" />
+    <Interface name="IP" />
+    <Description textEn="TCP/IP communication for Burster RESISTOMAT 2316 with an IBursterResis2316 channel." textDe="TCP/IP-Kommunikation fuer Burster RESISTOMAT 2316 mit IBursterResis2316-Kanal." />
+    <SupportedPlcTypes>
+      <PlcType name="CXA" supported="Yes" />
+    </SupportedPlcTypes>
+  </Misc>
+  <Common>
+    <BaseRefIds>
+      <BaseRefId name="NxBase" refLink="A467FB00-013E-11E1-8619-000423132FC8" version="1.0" />
+      <BaseRefId name="NxSocketSysDep" refLink="A467FB15-013E-11E1-8619-000423132FC8" version="1.0" />
+      <BaseRefId name="NexeedBursterResis2316Base" refLink="A46800CB-013E-11E1-8619-000423132FC8" version="1.0" />
+    </BaseRefIds>
+    <UseAs>
+      <Peripheral refLink="5ADACC37-B76E-534D-B9FB-A5A7E940AD15" />
+    </UseAs>
+    <Templates>
+      <ApplyParametersConfiguration name="Export\ConfigParams.otd" />
+    </Templates>
+  </Common>
+  <Content>
+    <Types>
+      <CodeEntity name="Driver types" link="Types\CodeEntities.osd" refId="4F844339-E3D7-5272-945C-6ABF12EDC89A" />
+    </Types>
+    <Variables>
+      <Variable name="" structRef="Burster2316Peripheral" refId="5ADACC37-B76E-534D-B9FB-A5A7E940AD15" />
+    </Variables>
+    <PlcContent>
+      <Library name="Library" link="Library\Library.osd" refId="6B2B7B97-4FC6-5B7E-9BE4-B3F475A8789B" />
+    </PlcContent>
+  </Content>
+  <Parameters>
+    <ParameterValue name="Hostname" refId="BEFB0657-BA37-5401-A9F8-E6FD3A4E8D23" varType="STRING" variable="true" textEn="IP address or project variable" textDe="IP address or project variable" />
+    <ParameterValue name="RequestedProgramNo" refId="E4A77351-34AA-56CA-8C08-5399DFC2D4A7" varType="INT" variable="true" textEn="Requested instrument program (0..15)" initialValue="0" minValue="0" maxValue="15" textDe="Requested instrument program (0..15)" />
+    <ParameterValue name="MeasurementTimeoutMs" refId="5DE12EBC-35EE-5468-B09F-4D92E9442820" varType="DINT" variable="true" textEn="Measurement response timeout in ms" initialValue="30000" textDe="Antwortzeitlimit der Messung in ms" minValue="1" />
+  </Parameters>
+  <Channels>
+    <Channel name="Channel">
+      <Types>
+        <Type name="IBursterResis2316" />
+      </Types>
+    </Channel>
+  </Channels>
+</Peripheral>

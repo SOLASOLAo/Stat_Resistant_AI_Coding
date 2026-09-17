@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 2,
+  "id": "burster2316",
+  "version": "0.1.0-rc.2",
+  "kind": "plc-source-driver",
+  "status": "source-candidate",
+  "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+  "releaseTag": "burster2316-v0.1.0-rc.2",
+  "nativeLibrary": {
+    "status": "consumer-build-failed",
+    "proposedTitle": "BppBurster2316",
+    "proposedNamespace": "BppBurster2316",
+    "proposedVersion": "0.1.0.1",
+    "company": null,
+    "lastAttempt": "2026-09-10: failed consumer build, 500 errors at cap; trial uninstalled. No usable native binary in this package.",
+    "currentBlocker": "Current CpStudio-owned Station010 PLE preserved; no separate writer or project takeover for this package task."
+  },
+  "compatibility": {
+    "pleProfile": "ctrlX PLC 2.6.8",
+    "cpstudio": "5.11",
+    "device": "Burster RESISTOMAT 2316",
+    "firmware": null,
+    "transport": "Ethernet fast selection; TCP 5555; address 0000; no BCC",
+    "dependencies": [
+      {
+        "name": "OpconBase",
+        "placeholderName": "OpconBase",
+        "effectiveVersion": "1.0.102.0",
+        "company": "Robert Bosch GmbH - OpCon Platform Team",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "OpconBaseCommonDef",
+        "placeholderName": "OpconBaseCommonDef",
+        "effectiveVersion": "1.0.7.0",
+        "company": "Robert Bosch GmbH - OpCon Platform Team",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "OpconTcpDDL",
+        "placeholderName": "OpconTcpDDL",
+        "effectiveVersion": "1.2.19.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "NexeedBursterResis2316Base",
+        "placeholderName": "NexeedBursterResis2316Base",
+        "effectiveVersion": "1.0.0.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "Standard",
+        "placeholderName": "Standard",
+        "effectiveVersion": "3.5.18.0",
+        "company": "System",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "NxBaseSysDep_CXA",
+        "placeholderName": "OpconBaseSysDep",
+        "effectiveVersion": "1.0.6.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "NxSocketSysDep_CXA",
+        "placeholderName": "OpconSocketSysDep",
+        "effectiveVersion": "1.0.7.0",
+        "company": "Bosch Group",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      },
+      {
+        "name": "IecSfc",
+        "placeholderName": "Tc2_System",
+        "effectiveVersion": "4.1.0.0",
+        "company": "System",
+        "resolutionInfo": "Resolved by placeholder redirection"
+      }
+    ],
+    "dependencyScope": "Observed Station010 effective versions; independent library minimum and namespace/platform resolution still unvalidated"
+  },
+  "contract": {
+    "pou": "FB_Wp100BursterSingleOwner",
+    "interface": "IBursterResis2316",
+    "oneTcpOwner": true,
+    "resistanceUnit": "Ohm",
+    "temperatureUnit": "Celsius",
+    "programRange": [
+      0,
+      15
+    ],
+    "rangeOwner": "instrument-program",
+    "unsupportedCommands": [
+      "SET_RANGE"
+    ],
+    "automaticRetry": false
+  },
+  "validation": {
+    "sourceIntegratedBuild": "0 errors / 5 existing warnings on 2026-09-10; not a native library build",
+    "fieldObservation": "one Station010 automatic left/middle/right cycle completed on 2026-09-10",
+    "pending": [
+      "native-library build and consumer test",
+      "exact dependency and firmware capture",
+      "numeric grading",
+      "repeat cycles",
+      "cancel",
+      "disconnect and restart recovery"
+    ]
+  },
+  "files": [
+    {
+      "path": "src/plc/project/Station010/FB_Wp100BursterSingleOwner.st",
+      "role": "driver",
+      "sha256": "37B77C8EA795557EE9EE532D159B598ABAE1C1B7B6B4A053A3F9835A9E865E32"
+    },
+    {
+      "path": "src/plc/project/Station010/FB_Wp100BursterProgramSelect.st",
+      "role": "station-reference",
+      "sha256": "B2BEC61DE92D0D1E109C1AA7E4E317DDB2678BA5E204091B62AA6707B6884B84"
+    },
+    {
+      "path": "src/plc/project/Station010/AiWp100.gvl.st",
+      "role": "station-reference",
+      "sha256": "8D0BBF1005499B0D0D32F20495209247AFEC60B87D6E98167032E4AC9236B491"
+    },
+    {
+      "path": "src/plc/project/Station010/Wp100Unit/OnApplyParameters.BursterBinding.st",
+      "role": "station-reference",
+      "sha256": "24BA61687B376008086965563C2A0725894B6F0E4DA69B23B8EDC7EA9834F872"
+    },
+    {
+      "path": "src/plc/project/Station010/Wp100Unit/OnCall.BursterConfiguration.st",
+      "role": "station-reference",
+      "sha256": "0E682933A2C5645B5B28CE1EDCEFC96D05E29E80F3C6A60B978BE6147873E0E8"
+    },
+    {
+      "path": "src/plc/project/Station010/StationUnit/OnCall.BursterCleanup.st",
+      "role": "station-reference",
+      "sha256": "62031457F181D2F0EE7FD485394EB6BB0247F8CDD3D48DDD91F9A1A83304376F"
+    },
+    {
+      "path": "src/plc/project/Station010/Wp100A103ResistantDetectorExtension/OnManRelease.st",
+      "role": "station-reference",
+      "sha256": "AB0FB4155DEFD52F9B9AA81709A8C1F5EE6E376040B535BC0217673B029B02C5"
+    },
+    {
+      "path": "specs/common/FB_Wp100BursterSingleOwner.yaml",
+      "role": "source-specification",
+      "sha256": "9B413E42E2C73D2C429698935E65C4DEA266328A9BF2B1046B826D545E15AEC2"
+    },
+    {
+      "path": "tests/offline/test_burster_single_owner_protocol.py",
+      "role": "offline-test",
+      "sha256": "A2E53FA5B5D7D2C523CD6FA9C563BD581190532D44B9C76287254E96F88DD7FA"
+    },
+    {
+      "path": "scripts/components/Test-ComponentPackage.ps1",
+      "role": "tooling",
+      "sha256": "13202758F2C9B28152D5D828F2C240F297805A11E8111CB785DBF808F662EC3B"
+    },
+    {
+      "path": "specs/hmi/station_component_dependencies.json",
+      "role": "station-reference",
+      "sha256": "F249484ACB846E08BA56AA0B3FC1772EBF1919A0C6C36E8B6FF61D1C5CFCA76F"
+    },
+    {
+      "path": "docs/station010-component-set.md",
+      "role": "station-reference",
+      "sha256": "BF27A9866E4C2837B41A89A68366641BC3DD0B394C50680FE301E38EAF4A828F"
+    },
+    {
+      "path": "docs/reviews/burster-native-library-20260910.md",
+      "role": "guide",
+      "sha256": "8B4A7C06B7AC624D2B3025CAECB59FC53E8B2A3442B216C7A8C9B99A7E02143C"
+    }
+  ],
+  "sourceSnapshot": {
+    "sha256": "5249BD7234525D2B8867E25712C2B504A74D11ADEDF04508C67A4979A43983F0",
+    "dirty": true,
+    "algorithm": "SHA256 of sorted path|length|SHA256 lines, UTF-8 with LF terminators",
+    "description": "Actual candidate bytes; sourceRevision is the anchor, not a claim that dirty changes are committed"
+  }
+}

@@ -9,14 +9,15 @@ function Assert-That([bool]$Condition, [string]$Message) {
 }
 
 foreach ($fragment in @(
-  'VAR_INST', 'forceN > REAL#2500.0', '_timeoutMs <= 2000',
+  'VAR_INST', 'forceN > _thresholdN', '_stableMs <= 0', '_timeoutMs <= _stableMs',
+  "_reason := 'INVALID_STABLE_MS'",
   '_waitLimit(IN := TRUE, PT := DINT_TO_TIME(_timeoutMs))',
-  '_pressDelay(IN := forceAboveLimit, PT := T#2S)',
+  'qualified := Station.ForceTraceAddon.Recorder.Evaluate(ValueN := forceN',
   'IF ( NOT _fault )', 'OpconEventClass.SOFTERROR', 'Lock := TRUE',
   'Wp100.EVENT_PRESS_FORCE_INVALID', '_additionalInfo : STRING(63)',
   'Result.Resistance.Valid := FALSE', 'Result.Resistance.Ok := FALSE',
-  'Wp100A104Kistler.Unit.OutImm.MeasRunning', 'Wp100A104Kistler.Unit.ExecState = OpconExecState.ERROR',
-  'NOT ( forceN = forceN )', 'ABS(forceN) > REAL#3.402823E38',
+  'Wp100A104Kistler.Unit.OutImm.MeasRunning', 'Wp100A104Kistler.Unit.ExecState <> OpconExecState.ERROR',
+  '( forceN = forceN )', 'ABS(forceN) <= REAL#3.402823E38',
   'NOT Wp100K102PressingCylinder.Unit.OutImm.IsInWrkPosIn',
   'Wp100A103ResistantDetector.Unit.Execute := FALSE'
 )) {
@@ -24,6 +25,12 @@ foreach ($fragment in @(
 }
 Assert-That ($source -notmatch 'BasMoveCmd\.BASPOS|PressingCylinder\.Unit\.(Command|Execute)\s*:=') 'Force fault must not command cylinder movement.'
 Assert-That ($source.IndexOf('_fault := FALSE') -lt $source.IndexOf('forceN :=')) 'Latch reset must remain in the explicit reset branch.'
+Assert-That (-not $source.Contains('T#2S')) 'Stable time must come from StationData, not a fixed delay.'
+$stableRead = '_stableMs := Station.ForceTraceAddon.ParCfg.rWindowMs;'
+Assert-That ([regex]::Matches($source, [regex]::Escape($stableRead)).Count -eq 1) 'Window must be latched once, only at preflight.'
+$preflight = $source.Substring($source.IndexOf('IF ( Phase = 1 )'), $source.IndexOf('IF ( NOT Station.ForceTraceAddon.Configured )') - $source.IndexOf('IF ( Phase = 1 )'))
+Assert-That ($preflight.Contains($stableRead)) 'Preflight must latch the active stable time before Kistler starts.'
+Assert-That (-not $source.Substring($source.IndexOf('IF ( NOT Station.ForceTraceAddon.Configured )')).Contains(':= Station.ForceTraceAddon.ParCfg.rWindowMs')) 'A parameter edit during qualification or measurement must not alter this position.'
 
 # Regression: an acknowledged/invalid event handle must not strand N000 in
 # RUNNING. The two BOOL returns describe event operations, not SFC completion.
@@ -31,26 +38,27 @@ $reset = $source.Substring($source.IndexOf('IF ( Phase = 0 )'), $source.IndexOf(
 $resetWithoutComments = [regex]::Replace($reset, '//[^\r\n]*', '')
 Assert-That ($resetWithoutComments -match '(?s)IF \( _eventIndex <> 0 \)\s+THEN\s+UnlockEvent\(Class := OpconEventClass.SOFTERROR, Index := _eventIndex\);\s+ClearEvent\(Class := OpconEventClass.SOFTERROR, Index := _eventIndex\);\s+END_IF') 'Reset must attempt unlock AND clear without waiting on either BOOL.'
 Assert-That ($reset.IndexOf('RETURN;') -gt $reset.IndexOf('CheckPressForce := OK;')) 'Reset may not return RUNNING before releasing its old handle.'
-foreach ($fragment in @('_eventIndex := 0;', '_fault := FALSE;', "_reason := '';", "_additionalInfo := '';", '_timeoutMs := Station.StationData.PressForceTimeout;')) {
+foreach ($fragment in @('_eventIndex := 0;', '_fault := FALSE;', "_reason := '';", "_additionalInfo := '';", '_timeoutMs := 0;', '_stableMs := 0;')) {
   Assert-That ($reset.Contains($fragment)) "Reset lost state cleanup: $fragment"
 }
 # Independent reset lifecycle model, not an implementation of the vendor API.
-function Invoke-ForceResetModel($State, [bool]$UnlockResult, [bool]$ClearResult, [int]$ActiveTimeout) {
+function Invoke-ForceResetModel($State, [bool]$UnlockResult, [bool]$ClearResult, [int]$ActiveTimeout, [int]$ActiveStableMs=2000) {
   if ($State.EventIndex -ne 0) {
     $State.Calls += @('UnlockEvent', 'ClearEvent')
     $State.EventResults = @($UnlockResult, $ClearResult)
   }
-  $State.EventIndex=0; $State.Fault=$false; $State.Reason=''; $State.Timeout=$ActiveTimeout
+  $State.EventIndex=0; $State.Fault=$false; $State.Reason=''; $State.Timeout=$ActiveTimeout; $State.StableMs=$ActiveStableMs
   return 0
 }
 foreach ($unlockResult in @($false,$true)) {
   foreach ($clearResult in @($false,$true)) {
-    $resetState=@{ EventIndex=2; Fault=$true; Reason='INVALID_TIMEOUT_MS'; Timeout=2000; Calls=@() }
+    $resetState=@{ EventIndex=2; Fault=$true; Reason='INVALID_TIMEOUT_MS'; Timeout=2000; StableMs=500; Calls=@() }
     Assert-That ((Invoke-ForceResetModel $resetState $unlockResult $clearResult 10000) -eq 0) 'Old event cleanup stranded N000.'
     Assert-That (($resetState.Calls -join ',') -eq 'UnlockEvent,ClearEvent') 'Both cleanup calls must run in order.'
-    Assert-That ($resetState.EventIndex -eq 0 -and -not $resetState.Fault -and $resetState.Reason -eq '' -and $resetState.Timeout -eq 10000) 'New execution retained the old fault or timeout.'
-    $null=Invoke-ForceResetModel $resetState $unlockResult $clearResult 10000
+    Assert-That ($resetState.EventIndex -eq 0 -and -not $resetState.Fault -and $resetState.Reason -eq '' -and $resetState.Timeout -eq 10000 -and $resetState.StableMs -eq 2000) 'New execution retained old fault or timing parameters.'
+    $null=Invoke-ForceResetModel $resetState $unlockResult $clearResult 10000 3500
     Assert-That ($resetState.Calls.Count -eq 2) 'Repeated reset reused a released event handle.'
+    Assert-That ($resetState.StableMs -eq 3500) 'The next position did not take the new stable-time setting.'
   }
 }
 $init = [IO.File]::ReadAllText((Join-Path $chain 'actions\N000.st'))
@@ -65,7 +73,7 @@ Assert-That ($start.IndexOf('IF ( _bursterStarted )') -lt $start.IndexOf('Phase 
 Assert-That ($start.IndexOf('Phase := 3') -lt $start.IndexOf('Phase := 2')) 'Single-step hold cannot use waiting/debounce logic.'
 $finish = [IO.File]::ReadAllText((Join-Path $chain 'actions\N090.st'))
 Assert-That ($finish.IndexOf('Phase := 3') -lt $finish.IndexOf('CheckUnitDone(')) 'Force failure must win over same-scan DONE.'
-Assert-That ($finish.IndexOf('RETURN;') -lt $finish.IndexOf('Result.Resistance.Valid')) 'Fault must exit before accepting a result.'
+Assert-That ($finish.IndexOf('RETURN;', $finish.IndexOf('Phase := 3')) -lt $finish.IndexOf('Result.Resistance.Valid      := TRUE')) 'Fault must exit before accepting a result.'
 $press = [IO.File]::ReadAllText((Join-Path $chain 'actions\N050.st'))
 Assert-That ($press.IndexOf('OutImm.MeasRunning') -lt $press.IndexOf('BasMoveCmd.WRKPOS')) 'Kistler must be measuring before press-down.'
 $writer = [IO.File]::ReadAllText((Join-Path $root 'scripts\plc\apply_wp100_run_rest.ps1'))
@@ -103,54 +111,15 @@ foreach ($sample in @(
   Assert-That ($end -eq $sample[3]) "END lifecycle case failed: $sample"
 }
 
-# Small independent process model. Source assertions above tie its threshold,
-# two timers, latched fault and call ordering to the implementation being built.
-function New-ForceState([int]$Timeout = 10000) {
-  return @{ Timeout=$Timeout; WaitStart=$null; StableStart=$null; Fault=''; Qualified=$false }
-}
-function Invoke-ForceSample($State, [int]$Ms, [double]$Force, [bool]$Measuring=$false, [bool]$Valid=$true) {
-  if ($State.Fault) { return $false }
-  if ($State.Timeout -le 2000) { $State.Fault='INVALID_TIMEOUT'; return $false }
-  if (-not $Valid -or -not [double]::IsFinite($Force)) { $State.Fault='INVALID_DATA'; return $false }
-  if ($Measuring) {
-    if ($Force -le 2500) { $State.Fault='FORCE_LOST'; return $false }
-    return $true
-  }
-  if ($null -eq $State.WaitStart) { $State.WaitStart=$Ms }
-  if ($Force -gt 2500) {
-    if ($null -eq $State.StableStart) { $State.StableStart=$Ms }
-  } else { $State.StableStart=$null }
-  $State.Qualified=($null -ne $State.StableStart -and $Ms-$State.StableStart -ge 2000)
-  if ($Ms-$State.WaitStart -ge $State.Timeout -and -not $State.Qualified) {
-    $State.Fault='WAIT_TIMEOUT'; return $false
-  }
-  return $State.Qualified
-}
 
-foreach ($position in @('LEFT','MIDDLE','RIGHT')) {
-  $state=New-ForceState
-  Assert-That (-not (Invoke-ForceSample $state 0 2501)) "$position released before stability."
-  Assert-That (-not (Invoke-ForceSample $state 1999 2501)) "$position released at 1999 ms."
-  Assert-That (Invoke-ForceSample $state 2000 2501) "$position did not release at 2000 ms."
-  Assert-That (Invoke-ForceSample $state 2100 3000 $true) "$position rejected valid measurement."
-  Assert-That (-not (Invoke-ForceSample $state 2200 2500 $true)) "$position accepted equality during measurement."
-  Assert-That (-not (Invoke-ForceSample $state 2300 4000 $true)) "$position automatically recovered a latched fault."
-}
-$state=New-ForceState
-$null=Invoke-ForceSample $state 0 3000
-$null=Invoke-ForceSample $state 1900 2500
-Assert-That (-not (Invoke-ForceSample $state 2000 3000)) 'A dip failed to reset stability.'
-Assert-That (-not (Invoke-ForceSample $state 3999 3000)) 'Stability resumed from accumulated time.'
-Assert-That (Invoke-ForceSample $state 4000 3000) 'Continuous requalification failed.'
-$state=New-ForceState 5000
-for ($ms=0; $ms -le 5000; $ms+=1000) { $null=Invoke-ForceSample $state $ms $(if ($ms%2000 -eq 0) {2500} else {3000}) }
-Assert-That ($state.Fault -eq 'WAIT_TIMEOUT') 'Force bounce restarted the total diagnostic timer.'
-foreach ($timeout in @(-1,0,1999,2000)) {
-  Assert-That (-not (Invoke-ForceSample (New-ForceState $timeout) 0 3000)) 'Invalid timeout bypassed monitoring.'
-}
-foreach ($force in @([double]::NaN,[double]::PositiveInfinity,[double]::NegativeInfinity)) {
-  Assert-That (-not (Invoke-ForceSample (New-ForceState) 0 $force $true)) 'Non-finite force released measurement.'
-}
-Assert-That (-not (Invoke-ForceSample (New-ForceState) 0 3000 $true $false)) 'Invalid communication accepted stale force.'
-Assert-That (Invoke-ForceSample (New-ForceState) 0 3000 $true) 'A clean new execution cannot be evaluated.'
-Write-Output 'Wp100 force checks OK: three positions, strict threshold, continuous 2 s, total timeout, single-step start guard, first-fault latch, same-scan completion priority, invalid data and no press-up on fault. Timing model only; field acceptance remains required.'
+foreach ($fragment in @('IF ( Phase = 1 ) AND ( NOT _latched )', '_thresholdN := Station.ForceTraceAddon.ParCfg.rThresholdN', '_sigmaLimitN := Station.ForceTraceAddon.ParCfg.rLimitN', "_reason := 'INVALID_3SIGMA_LIMIT'", "_reason := 'FORCE_3SIGMA_UNSTABLE'", 'Peripherals._000SA620_X1.BusInfo.BusOk')) {Assert-That ($source.Contains($fragment)) "Missing v2 contract: $fragment"}
+Assert-That (-not $source.Contains('_pressDelay(IN := forceAboveLimit')) 'Old stability timer is still active.'
+Assert-That ($source.IndexOf('IF ( _waitLimit.Q )') -lt $source.IndexOf('ELSIF ( qualified )')) 'Total timeout must win over qualification in the same scan.'
+Assert-That ($finish.Contains('Station.ForceTraceAddon.Recorder.FreezeStatistics();')) 'Resistance DONE must freeze its statistics.'
+$stats=[IO.File]::ReadAllText((Join-Path $root 'src/plc/project/Station010/FB_PressForceStatistics.st'))
+foreach($fragment in @('UDINT_TO_LREAL(Count - 1)', '( ThreeSigma < REAL_TO_LREAL(LimitN) )', '( ForceN <= ThresholdN )', '( ( NowMs - FirstMs ) >= WindowMs )')) {Assert-That ($stats.Contains($fragment)) "Missing statistical contract: $fragment"}
+$recorder=[IO.File]::ReadAllText((Join-Path $root 'src/plc/project/Station010/FB_HmiForceTrace.st'))
+Assert-That ($recorder.Contains('( _sampledScan = _scan )')) 'Sampling must follow MainTask scans instead of HMI timer or rounded milliseconds.'
+Assert-That ($recorder.Contains('_trace[_position][9] := _trace[_position][17]')) 'First stable stream sample must be latched in PLC.'
+Assert-That ($recorder.IndexOf('IF ( _guardActive ) AND ( NOT _frozen[_position] )', $recorder.IndexOf('count < 10001')) -gt $recorder.IndexOf('_trace[_position][8] := DWORD#1')) 'Statistics must continue after trace capacity.'
+Write-Output 'PASS: force interlock source contracts, reset/END lifecycle truth tables, latched parameters, strict 3-sigma, fault-over-DONE and PLC scan ownership. Offline checks only.'

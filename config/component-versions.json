@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "project": "Station010",
+  "scope": "Local development candidate selection by Git anchor plus actual source digest; not online PLC/HMI installation inventory",
+  "components": {
+    "burster2316": {
+      "version": "0.1.0-rc.2",
+      "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+      "sourceSnapshotSha256": "5249BD7234525D2B8867E25712C2B504A74D11ADEDF04508C67A4979A43983F0",
+      "delivery": "source-candidate",
+      "installedNativeLibrary": false
+    },
+    "kistler5867c": {
+      "version": "0.1.0-rc.2",
+      "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+      "sourceSnapshotSha256": "3AB6B97C0BB87D36DAB5B76EA304A5F3072D10E3F121A3FCC2DC4F2EED65CE3E",
+      "delivery": "source-candidate",
+      "installedNativeLibrary": false
+    },
+    "bpp-forcetrace": {
+      "version": "0.1.0-rc.2",
+      "sourceRevision": "d37918a4863bdaaf7937df5daa3b948ef124e22d",
+      "sourceSnapshotSha256": "A27F015957DC98D186FFD8282960FA4A20A8A52A390B3300F3CB694AC5D3D58C",
+      "delivery": "source-candidate",
+      "installedNativeLibrary": false
+    }
+  },
+  "stationReference": {
+    "plcProjectSha256": "1762C81B21D37EE994568E3134BF7ECF3F023BCBC3B4CF3FD957A9A8B81C6F81",
+    "symbolSha256": "9FFCAB1160993733A711D6C18BC978E4B7541C33F19E3D5263CF751ADFDBC9D6",
+    "installedHmiAddon": "0.1.0.1 read-only observed",
+    "candidateHmiAddon": "0.1.0.2 not installed/deployed",
+    "guide": "components/station010/README.md",
+    "startupGuiSha256": "2A47428F279742AFB2C748D109351F6B7B5B4309909B85949F7194EE13EB1688",
+    "forceTraceViewSha256": "67A240EFD07B5AC5D9CE317AABD828B17365CC4FB3FAE7E780159DE6BABE4966"
+  },
+  "stationSet": {
+    "version": "0.1.0-rc.4",
+    "referenceManifest": "components/station010/reference.json",
+    "referenceSha256": "0E3B043162C649DFED0A49EF6996CAB7A2556B1FA58A6423F64DD9B6F143693C"
+  }
+}

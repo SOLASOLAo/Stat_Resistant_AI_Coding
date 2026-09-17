@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Object xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" objectName="Machine Common" refId="A83E0FBB-E37E-5713-A576-7181D60D3234" version="0.1.0.0" formatVersion="1" toolVersions="5.11" hierarchyNodeType="AddOn" xsi:noNamespaceSchemaLocation="..\..\OpconOodObjectSchema_V4_11.xsd">
+  <Misc>
+    <Platform name="Nexeed Automation" />
+    <Type name="Add-on" />
+    <Picture path="Common\Picture.png" />
+    <Author name="WANG Zhi (RBCD\TEF2)" />
+    <Vendor name="Internal Engineering" />
+    <Visibility value="Always" />
+    <Interface name="None" />
+    <Description textEn="Common machine functions: operator button, main air pressure and maintenance door." textDe="Allgemeine Maschinenfunktionen: Bedientaster, Hauptluftdruck und Wartungstuer." />
+    <SupportedPlcTypes>
+      <PlcType name="CXA" supported="Yes" />
+    </SupportedPlcTypes>
+  </Misc>
+  <Common>
+    <BaseRefIds>
+      <BaseRefId name="NxAddonBase" refLink="A467FB09-013E-11E1-8619-000423132FC8" version="1.0" />
+    </BaseRefIds>
+    <UseAs>
+      <Unit refLink="4BF67E7C-F40D-4E75-A458-62C06C09E977" />
+    </UseAs>
+  </Common>
+  <Content>
+    <Types>
+      <CodeEntity name="Addon" baseType="OpconAddonBase" codeTemplate="Export\Addon.otd" refId="2DF9D258-A83D-4B92-9E31-F7497C9A74D9" />
+      <CodeEntity name="Common function blocks" link="Types\CodeEntities.osd" refId="FC53A8BC-6925-5616-A521-BB61534EAB89" />
+    </Types>
+    <Variables>
+      <Variable name="" refLink="2DF9D258-A83D-4B92-9E31-F7497C9A74D9" refId="4BF67E7C-F40D-4E75-A458-62C06C09E977" />
+      <Variable name="Button" structRef="FB_OperatorButton" refId="CB7499D5-F725-4D0C-9291-09E96C51B88B" />
+      <Variable name="Pressure" structRef="FB_MainPressureControl" refId="126CF1CB-139F-4F75-87AB-20E392EAF5C3" />
+      <Variable name="Door" structRef="FB_MaintenanceDoorControl" refId="CC88F57E-C62A-42E4-973F-F5C596447B9D" />
+    </Variables>
+    <PlcContent>
+      <Library name="Library" link="Library\Library.osd" refId="28CB9ED0-A1A5-5951-A618-79C44DA57EC1" />
+    </PlcContent>
+  </Content>
+</Object>

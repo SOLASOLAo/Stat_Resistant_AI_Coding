@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpconStdDefinition def="1.0">
+  <TypesDef def="1.0">
+    <CodeEntity name="ForceTraceAddon" baseType="OpconAddonBase" />
+  </TypesDef>
+</OpconStdDefinition>
